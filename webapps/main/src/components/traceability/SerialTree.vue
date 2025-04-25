@@ -35,9 +35,16 @@
           >
             <q-icon name="mdi-link-off" size="12px" />
           </q-badge>
+          <q-badge
+            v-if="prop.node.confirmed === false"
+            color="theme-grey"
+            outline
+          >
+            <q-icon name="mdi-cog" size="12px" />
+          </q-badge>
 
           <!-- NODE CONTEXT MENU -->
-          <q-menu context-menu auto-close>
+          <q-menu context-menu auto-close v-if="canEditComponentLink(prop.node)">
             <q-list>
               <q-item
                 clickable
@@ -158,6 +165,7 @@ function convertNode(node, parent_key) {
     selectable: props.edit_mode ? false : true,
     children: children_data,
     replaced: node.replaced,
+    confirmed: node.confirmed,
     extra_bom: node.extra_bom,
     product_key: node.product_key,
     product_code: node.product_code,
@@ -182,6 +190,11 @@ async function getSerialHierarcy() {
   }
 
   loading.value = false
+}
+
+function canEditComponentLink(node) {
+  // Do not allow to edit component link if the serial is not confirmed or replaced or is the root node
+  return node.confirmed !== false && node.replaced !== true && node.parent_key
 }
 
 function editComponentLink(node) {

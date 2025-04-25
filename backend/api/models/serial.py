@@ -76,6 +76,7 @@ class SerialTreeNode(BaseModel):
   serial_code: str | None = None
   product_code: str | None = None
   replaced: bool | None = False
+  confirmed: bool | None = True
   extra_bom: bool | None = False
   product_description: str | None = None
   children: list["SerialTreeNode"] = []

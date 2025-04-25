@@ -74,7 +74,7 @@ class Queries:
   GET_SERIAL_ROOT_ANCESTOR = """
     // The root ancestor is the last vertex of the longest path in the inbound contains chain
     LET ancestors = (
-      FOR v, e, p IN 0..9999 INBOUND @serial_id contains
+      FOR v, e, p IN 0..999 INBOUND @serial_id contains
       FILTER
         v.deleted == false
         && e.replaced == false
@@ -95,16 +95,18 @@ class Queries:
   GET_SERIAL_CHILDREN = """
     LET start = @serial_id
     FOR v, e IN 1..999 OUTBOUND start contains
+    PRUNE e.replaced == true || e.confirmed == false
     LET product = DOCUMENT(Product, v.product_key)
-    RETURN merge({
+    RETURN {
       parent_key: PARSE_IDENTIFIER(e._from).key,
       serial_key: v._key,
       replaced: e.replaced,
       serial_code: v.code,
       product_key: product._key,
       product_code: product.code,
-      product_description: product.description
-    })
+      product_description: product.description,
+      confirmed: NOT_NULL(e.confirmed, true)
+    }
   """
 
 
@@ -509,6 +511,10 @@ def search_children(serial_key, children):
 
 
 def get_serial_child_nodes(parent: SerialTreeNode, serial_list: list[dict]) -> list[SerialTreeNode]:
+  # If the parent serial is not confirmed or replaced, don't build the children
+  if parent.confirmed == False or parent.replaced == True:
+    return []
+
   components = get_bom_components_requiring_traceability(parent.product_key)
   children = []
   try:
@@ -532,17 +538,18 @@ def get_serial_child_nodes(parent: SerialTreeNode, serial_list: list[dict]) -> l
             # Add serial data to the child node
             serial_key = child_serial['serial_key'],
             serial_code = child_serial['serial_code'],
-            replaced = child_serial['replaced']
+            replaced = child_serial.get('replaced', False),
+            confirmed = child_serial.get('confirmed', True)
           )
           # Recursively build the child node's children
-          if not child_serial['replaced']:
+          if child_serial.get('replaced') == False:
             child_node.children = get_serial_child_nodes(child_node, serial_list)
 
           # Add the child node to the start node's children
           children.append(child_node)
 
       # If there are no active child serials, add an empty node for the component
-      if sum(1 for child in child_serials if not child['replaced']) == 0:
+      if sum(1 for child in child_serials if child.get('replaced') == False) == 0:
         children.append(SerialTreeNode(**bom_node_base_data))
 
     # Then, handle non-BOM serials that are children of this parent
@@ -560,11 +567,11 @@ def get_serial_child_nodes(parent: SerialTreeNode, serial_list: list[dict]) -> l
         product_description=serial['product_description'],
         serial_key=serial['serial_key'],
         serial_code=serial['serial_code'],
-        replaced=serial['replaced'],
+        replaced=serial.get('replaced', False),
+        confirmed=serial.get('confirmed', True),
         extra_bom=True
       )
-      if not serial['replaced']:
-        child_node.children = get_serial_child_nodes(child_node, serial_list)
+      child_node.children = get_serial_child_nodes(child_node, serial_list)
       children.append(child_node)
 
     return children
