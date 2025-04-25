@@ -28,7 +28,7 @@ class IssueCreatedEvent(BaseCollaboration):
      self._update_production_status(new_issue_id)
 
      issue_key=new_issue_id.split('/')[1]
-     self.issue_data.key = issue_key
+     self.info.issue_data['_key'] = issue_key
 
      self.response = dict(
        message="Issue created correctly",
