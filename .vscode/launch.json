@@ -21,38 +21,6 @@
       "justMyCode": true
     },
     {
-      "name": "Python: Traceability service Remote Attach",
-      "type": "debugpy",
-      "request": "attach",
-      "connect": {
-        "host": "0.0.0.0",
-        "port": 5778
-      },
-      "pathMappings": [
-        {
-          "localRoot": "${workspaceFolder}/backend/traceability-service",
-          "remoteRoot": "/traceability-service"
-        }
-      ],
-      "justMyCode": true
-    },
-    {
-      "name": "Python: Traceability service Remote Attach",
-      "type": "debugpy",
-      "request": "attach",
-      "connect": {
-        "host": "0.0.0.0",
-        "port": 5778
-      },
-      "pathMappings": [
-        {
-          "localRoot": "${workspaceFolder}/backend/traceability-service",
-          "remoteRoot": "/traceability-service"
-        }
-      ],
-      "justMyCode": true
-    },
-    {
       "name": "Launch webapp",
       "type": "node",
       "request": "launch",
