@@ -255,11 +255,12 @@ async def store_temp_step_data(data: ExecutionDataUpdate):
           field_data.value = new_field.value
       form_data.append(field_data)
 
-    record = execution_data.insert(StepExecutionData(
+    step_execution_data = StepExecutionData(
       batch_key = data.batch_key,
       step_key = data.step_key,
       form_data = form_data
-    ))
+    )
+    record = execution_data.insert(step_execution_data.model_dump(by_alias=True))
 
   return APIResponse(message="Step data stored", detail=dict(
     execution_record_key = record['_key']
