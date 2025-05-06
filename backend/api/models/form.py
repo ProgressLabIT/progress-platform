@@ -80,6 +80,9 @@ class FormFieldValue(BaseModel):
 class SerialFormFieldValue(BaseModel):
   form_field_key: str | None = None
   custom_field_key: str | None = None
+  label: str | None = None
+  hint: str | None = None
+  mandatory: bool | None = None
   value: Any | None = None
   batch_key: str | None = None
   step_key: str | None = None

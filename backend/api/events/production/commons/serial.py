@@ -81,21 +81,13 @@ class BaseSerialEvent:
     return batch_data
 
 
-  def _define_serial_form_fields(self, product_key):
-    phases_data = self._get_production_process(product_key=product_key)
-    data = []
-    for phase in phases_data:
-      for step in phase['steps']:
-        if 'form_fields' in step:
-          for field in step['form_fields']:
-            field_data = SerialFormFieldValue(
-              form_field_key = field['_key'],
-              custom_field_key = field['custom_field_key'],
-              phase_key = phase['_key'],
-              step_key = step['_key']
-            )
-            data.append(field_data)
-    return data
+  def _get_serial_fields_from_wo(self):
+    work_order = self.tx.collection('WorkOrder').get(self.info.work_order_key)
+    try:
+      return work_order['serial_fields']
+    except KeyError:
+      raise ValueError("Serial fields not found in work order")
+
 
   def _create_serial_records(
     self,
@@ -111,14 +103,11 @@ class BaseSerialEvent:
     if serial_codes and len(serial_codes) != quantity:
       raise ValueError("Serial codes must be provided for each serial, if provided")
 
-    # Define the data to be sent to the serial created event
-    data = self._define_serial_form_fields(product_key=product_key)
-
     # Create the serial records
     new_serials = []
     for i in range(int(quantity)):
       new_serial_key = SerialCreatedEvent.create_as_child(self, dict(
-        data = data,
+        data = self._get_serial_fields_from_wo(),
         code = serial_codes[i] if serial_codes else None,
         batch_key = batch_key,
         wo_key = wo_key,

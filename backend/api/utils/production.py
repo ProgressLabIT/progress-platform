@@ -3,10 +3,11 @@ import traceback
 from fastapi import HTTPException
 from fastapi.encoders import jsonable_encoder
 
+from models.form import SerialFormFieldValue
 from models.process import PhaseData
 from models.production import Job, WorkOrderNew, WorkOrderFull
 from utils.bom import get_bom_from_db
-from utils.process import search_step_media
+from utils.process import search_step_media, Queries as ProcessQueries
 from utils.product import get_product_docs
 
 
@@ -425,12 +426,29 @@ def _define_wo_bom(tx, wo: WorkOrderNew):
     return [line.model_dump() for line in get_bom_from_db(tx, wo.product_key)]
 
 
+def _define_serial_fields(tx, product_key: str):
+  phase_data = list(tx.aql.execute(ProcessQueries.GET_PRODUCTION_PROCESS, bind_vars=dict(product_key=product_key)))
+  serial_fields = []
+  for phase in phase_data:
+    for step in phase['steps']:
+      for field in step.get('form_fields', []):
+        serial_fields.append(SerialFormFieldValue(
+          form_field_key = field['_key'],
+          custom_field_key = field['custom_field_key'],
+          label = field['label'],
+          hint = field['hint'],
+          mandatory = field['mandatory'],
+          phase_key = phase['_key'],
+          step_key = step['_key']
+        ))
+  return serial_fields
 
 def create_wo_record(tx, wo: WorkOrderNew):
   input_data = wo.model_dump()
   input_data.update(
     wo_docs = get_product_docs(wo.product_key),
     wo_bom = _define_wo_bom(tx, wo),
+    serial_fields = _define_serial_fields(tx, wo.product_key),
     output_position_key = _get_production_position(tx, wo)
   )
   new_wo_record = WorkOrderFull(**input_data)

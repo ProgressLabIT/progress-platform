@@ -8,6 +8,7 @@ from models.bom import WOBomLine, WOBomLineInput
 from models.process import PhaseParameters, StepWithMediaInfo
 from models.product import ProductDoc
 from models.product import TraceabilityLevel
+from models.form import SerialFormFieldValue
 from models.base_models import FlexModel, ArangoDocument
 from utils.dt import timestamp
 
@@ -75,7 +76,7 @@ class WorkOrderFull(ArangoDocument, WorkOrderNew):
   critical: bool | None = False
   progress: int | None = Field(0, ge=0)
   wo_bom: list[WOBomLine] | None = None
-
+  serial_fields: list[SerialFormFieldValue] | None = None
   created: datetime = Field(default_factory=timestamp)
   start: datetime | None = None
   end: datetime | None = None

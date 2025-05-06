@@ -28,7 +28,7 @@ class SerialUpdatedEvent(BaseSerialEvent):
       new_field = existing_field
       for field in self.info.serial_data:
         if field.form_field_key == existing_field['form_field_key']:
-          new_field.update(field.model_dump())
+          new_field['value'] = field.value
           break
       merged_data.append(new_field)
     return merged_data

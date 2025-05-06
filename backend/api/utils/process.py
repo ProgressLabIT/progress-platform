@@ -7,7 +7,7 @@ from fastapi.encoders import jsonable_encoder
 from utils.db import db
 from utils.file import FileHandler
 from models.process import PhaseData
-
+from models.form import FormFieldDefinition
 def search_step_media(step_key: str):
 
   step_media = FileHandler.step_media(step_key)
@@ -58,10 +58,11 @@ def copy_process_to_product(
 
       # Recreate the form fields with new keys
       step_data['form_fields'] = [
-        dict(
-          field,
+        FormFieldDefinition(
+          # Overwrite the key with a new uuid (exclude used with attribute name, add it using the alias)
+          **field.model_dump(by_alias=True, exclude={'key'}),
           _key=str(uuid4())
-        )
+        ).model_dump(by_alias=True)
         for field in step.form_fields
       ]
 
