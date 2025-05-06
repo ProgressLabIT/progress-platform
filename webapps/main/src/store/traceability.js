@@ -282,12 +282,6 @@ const traceability = {
       state.current_batch_data = batch_data;
     },
 
-    RESUME_BATCH(state, batch_data) {
-      let step_data = cloneDeep(state.current_batch_data?.step_data);
-      state.current_batch_data = batch_data;
-      state.current_batch_data.step_data = step_data;
-    },
-
     UPDATE_BATCH_SERIALS(state, batch_serials) {
       state.current_batch_serials = batch_serials;
     },
@@ -320,10 +314,6 @@ const traceability = {
           'Salva o annulla le modifiche prima di passare a un altro step',
         );
         return;
-      }
-      const batchStep = this.getters.getBatchStep(stepKey);
-      if (batchStep === undefined) {
-        commit('CREATE_BATCH_STEP', stepKey);
       }
       commit('SET_CURRENT_STEP_KEY', stepKey);
       commit('SET_CURRENT_STEP_EDIT_MODE', false);
@@ -423,7 +413,7 @@ const traceability = {
           const { job_data, batch_data } = data.detail;
           commit('UPDATE_JOB', job_data);
           if (batch_data) {
-            commit('RESUME_BATCH', batch_data);
+            commit('UPDATE_BATCH', batch_data);
           }
         }
         commit('SET_HEARTBEAT', true);

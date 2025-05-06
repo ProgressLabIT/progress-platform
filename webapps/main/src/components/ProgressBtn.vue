@@ -394,6 +394,7 @@ export default {
 
       if (!this.ensureMandatoryFields()) {
         window.alert(this.$t('fill_mandatory_fields'));
+        this.$router.push(this.step_destination);
         return;
       }
 
@@ -408,15 +409,6 @@ export default {
           this.$router.push(this.bom_destination);
           return;
         }
-
-        const serialCodeOk = await this.ensureBatchSerialCounter();
-        if (
-          this.traceability_enabled &&
-          !serialCodeOk
-        ) {
-          window.alert(this.$t('declare_all_serials'));
-          return;
-        }
       }
 
       let can_proceed = true;
@@ -427,6 +419,16 @@ export default {
           can_proceed = window.confirm(this.confirm_job_done_message);
         } else if (can_proceed && !this.job.next_batch_available) {
           can_proceed = window.confirm(this.confirm_stop_session_message);
+        }
+        if (can_proceed) {
+          const serialCodeOk = await this.ensureBatchSerialCounter();
+          if (
+            this.traceability_enabled &&
+            !serialCodeOk
+          ) {
+            window.alert(this.$t('declare_all_serials'));
+            return;
+          }
         }
       }
 
