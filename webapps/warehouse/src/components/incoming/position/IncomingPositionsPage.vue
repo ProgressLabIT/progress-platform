@@ -30,7 +30,7 @@
     <!-- SELECTED POSITIONS -->
     <div class="col-auto q-mt-md">
       <div class="text-h6 q-mb-sm">POSIZIONI SELEZIONATE</div>
-      <div class="row col-auto q-col-gutter-x-sm">
+      <div class="row col-auto q-col-gutter-sm">
         <div
           v-for="selected in tempPositions"
           :key="selected._key"
