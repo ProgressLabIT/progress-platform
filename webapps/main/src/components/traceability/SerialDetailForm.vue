@@ -1,5 +1,5 @@
 <template>
-  <div class="column q-px-md fit">
+  <div class="column q-px-md fit q-col-gutter-md">
     <!-- HEADER -->
     <div class="row items-center">
       <div
@@ -45,12 +45,12 @@
       </q-btn>
     </div>
 
-    <!-- SUB HEADER -->
-    <div class="row q-pt-md q-col-gutter-lg items-center text-h6">
+    <!-- SUB HEADER 1 - SERIAL CREATION -->
+    <div class="row q-col-gutter-x-lg items-center text-h6">
       <div class="col-auto text-h5 text-low text-uppercase">
         {{ $t('creation_date') }}
       </div>
-      <div class="col-auto">{{ serial_created_time_string }}</div>
+      <div class="col-auto">{{ serialTimeString(serial?.created) }}</div>
       <div class="col-auto row items-center">
         <BaseUserAvatar
           :user="$store.getters.user_data(serial?.user_key)"
@@ -58,16 +58,30 @@
           class="q-ml-md"
         />
       </div>
-      <div class="col-auto q-ml-md hover-underline" @click="goToWorkOrderPage">
-        {{ $t('work_order.short').toUpperCase() + ' ' + serial?.wo_code }}
+    </div>
+
+    <!-- SUB HEADER 2 - SERIAL RELEASE -->
+    <div class="row q-col-gutter-x-lg items-center text-h6">
+      <div class="col-auto text-h5 text-low text-uppercase">
+        {{ $t('release_date') }}
+      </div>
+      <div class="col-auto">{{ serialTimeString(serial?.released) }}</div>
+    </div>
+
+    <!-- SUB HEADER 3 - SERIAL RELEASE -->
+    <div class="row q-col-gutter-x-lg items-center text-h6">
+      <div class="col-auto text-h5 text-low text-uppercase">{{ $t('work_order.long').toUpperCase() }}</div>
+      <div class="col-auto hover-underline" @click="goToWorkOrderPage">
+        {{ serial?.wo_code }}
       </div>
     </div>
+
 
     <!-- SERIAL DATA -->
     <q-tabs
       v-model="tab"
       dense
-      class="q-mt-md text-low"
+      class="q-mt-lg text-low"
       content-class="text-h5"
       indicator-color="theme-blue"
       align="left"
@@ -85,9 +99,9 @@
             <div class="column col scroll q-pt-sm">
               <FormField
                 v-for="field in serial?.data"
-                :key="field._key"
+                :key="field?.form_field_key"
                 :field="field"
-                :root-path="`/media/serial/${serial_key}/${field._key}`"
+                :root-path="`/media/serial/${serial_key}/${field?.form_field_key}`"
                 :disable="!(edit_mode && can_edit)"
                 @update="field.value = $event"
               />
@@ -198,7 +212,7 @@ const serialAvailable = ref(false);
 // Computed properties
 const serial = computed(() => store.getters.getSerialData(props.serial_key));
 
-const serial_created_time_string = computed(() => {
+const serialTimeString = (isoString) => {
   const config = {
     year: '2-digit',
     month: 'short',
@@ -206,8 +220,8 @@ const serial_created_time_string = computed(() => {
     hour: '2-digit',
     minute: '2-digit',
   };
-  return capitalize(formatDateTime(serial.value?.created, locale.value, config));
-});
+  return capitalize(formatDateTime(isoString, locale.value, config));
+};
 
 const can_edit = computed(() => !store.getters.getSerialData(props.serial_key).deleted);
 

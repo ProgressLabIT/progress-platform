@@ -173,7 +173,7 @@ export default {
     },
 
     can_edit() {
-      return !this.$store.getters.getSerialData(this.serialKey)?.deleted;
+      return !this.serial.deleted && this.serial.released;
     },
   },
 
@@ -182,6 +182,7 @@ export default {
     this.saving = false;
     this.selected = null;
     this.$store.dispatch('loadUsers');
+    this.$store.dispatch('appendSerial', { serial_key: this.serialKey });
   },
 
   methods: {
