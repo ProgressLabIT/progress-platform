@@ -239,7 +239,8 @@ export default {
           const target = {
             bucket: 'serial',
             object_key: serial_key,
-            subfolder: field._key,
+            // TODO: change to form_field_key
+            subfolder: field.form_field_key,
           };
 
           // Upload new files
@@ -363,11 +364,8 @@ export default {
     async onSerialSelection(selected_key) {
       // Fetch data from server is serial data is not present
       if (!this.$store.getters.getSerialData(selected_key)) {
-        await this.$store
-          .dispatch('appendSerial', {
-            serial_key: selected_key,
-          })
-          .then(this.goToSerial(selected_key));
+        await this.$store.dispatch('appendSerial', { serial_key: selected_key })
+        this.goToSerial(selected_key);
       } else {
         this.goToSerial(selected_key);
       }
@@ -376,7 +374,7 @@ export default {
     deleteSerial() {
       this.$q
         .dialog({
-          cancel: true,
+   cancel: true,
           title: this.$t('serial_delete_confirm_title'),
           message: this.$t('serial_delete_confirm_question'),
           options: {
