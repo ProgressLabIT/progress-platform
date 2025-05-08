@@ -203,12 +203,11 @@ def copy_process_to_product(
       # Fetch existing bom lines
       bom_lines = list(tx.aql.execute(
         """
-        FOR component, edge IN 2..2 OUTBOUND @product_id requires
-        PRUNE edge.trashed
-        FILTER edge.type == 'BomLine' and not edge.trashed
-        RETURN edge
+        FOR bom_line IN requires
+        FILTER bom_line._from IN @phase_ids AND bom_line.type == 'BomLine'
+        RETURN bom_line
         """,
-        bind_vars=dict(product_id=f'Product/{product_key}')
+        bind_vars=dict(phase_ids=[f'Phase/{phase_key}' for phase_key in old_phases])
       ))
 
       # Create new bom lines with the new phase id

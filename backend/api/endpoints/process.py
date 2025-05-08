@@ -611,7 +611,7 @@ async def update_process(product_key, process: List[PhaseData]):
       ).next()
 
       if has_bom_lines:
-        return HTTPException(status_code=409, detail="Phase has components, cannot be deleted")
+        return HTTPException(status_code=409, detail=f"Phase { p['alias'] } has components, cannot be deleted")
 
       delete_phase(tx, p)
 
