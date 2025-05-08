@@ -118,9 +118,20 @@ def copy_process_to_product(
   Use the returned phase sequence to update the Product.process_phases field
   """
 
+  # Delete phases in the old process
+  try:
+    old_phases = tx.collection('Product').get(product_key)['process_phases']
+  except StopIteration:
+    raise HTTPException(status_code=404, detail=f"Product {product_key} not found")
+
+  for phase_key in old_phases:
+    delete_phase(tx, phase_key)
+
   phase_sequence = []
+  last_phase_key = process[-1].key
 
   for phase in process:
+    is_last_phase = phase.key == last_phase_key
     step_sequence = []
     for step in phase.steps:
       step_data = step.model_dump(by_alias=True, exclude={'key', 'form_fields', 'media', 'print_templates'})
@@ -144,7 +155,7 @@ def copy_process_to_product(
       print_template_ids = tx.aql.execute(
         """
         FOR t IN 1..1 OUTBOUND @step_id can_use_print_template
-          RETURN t._id
+        RETURN t._id
         """,
         bind_vars=dict(step_id=f'Step/{step.key}')
       )
@@ -169,8 +180,8 @@ def copy_process_to_product(
       return_new=True
     )['new']
 
-    # Create the new phase relationships
 
+    # Create the new phase relationships
     tx.collection('requires').insert(dict(
       _from=f'Product/{product_key}',
       _to=new_phase['_id'],
@@ -183,30 +194,38 @@ def copy_process_to_product(
       type='PhaseOperation'
     ))
 
-    phase_bom_cursor = tx.collection('requires').find(
-      dict(
-        _from=f'Phase/{phase.key}',
-        type='BomLine'
-      )
-    )
-    phase_bom = [
-      dict(
-        jsonable_encoder(line, exclude={'_id', '_key', '_rev'}),
-        _from=new_phase['_id']
-      )
-      for line in phase_bom_cursor
-    ]
-    if phase_bom:
-      tx.collection('requires').insert_many(phase_bom, silent=True)
+
+    # HANDLE BOM LINES
+    # Existing bom lines are linked to the old product phases and must be updated
+    # It's not sensible to require explicit association to new phases, so we'll link to the last phase by default
+    if is_last_phase:
+
+      # Fetch existing bom lines
+      bom_lines = list(tx.aql.execute(
+        """
+        FOR component, edge IN 2..2 OUTBOUND @product_id requires
+        PRUNE edge.trashed
+        FILTER edge.type == 'BomLine' and not edge.trashed
+        RETURN edge
+        """,
+        bind_vars=dict(product_id=f'Product/{product_key}')
+      ))
+
+      # Create new bom lines with the new phase id
+      new_bom_lines = [BomLineWriteOut(
+        component_id=line['_to'],
+        phase_id=new_phase['_id'],
+        type='BomLine',
+        qt=line['qt'],
+        traceability_level=line.get('traceability_level'),
+        consumption_options=line.get('consumption_options'),
+        extra=line.get('extra')
+      ).model_dump(by_alias=True) for line in bom_lines]
+
+      tx.collection('requires').insert_many(new_bom_lines, silent=True)
 
     # TODO: Copy phase print templates (when implemented)
 
     phase_sequence.append(new_phase['_key'])
 
   return phase_sequence
-
-
-
-
-
-

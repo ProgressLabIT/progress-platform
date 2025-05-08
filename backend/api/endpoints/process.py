@@ -374,7 +374,6 @@ async def copy_process_to_products(
       raise HTTPError(400, "The source product cannot be in the list of target products")
 
     tx = db.begin_transaction(write={'Product', *copy_process_to_product_writes})
-    current_time = dt.timestamp()
 
     process_data = tx.aql.execute(
       Queries.GET_PRODUCTION_PROCESS,
@@ -386,22 +385,11 @@ async def copy_process_to_products(
       product_update_result = tx.collection('Product').update(
         dict(
           _key=target_product_key,
+          # This function also deletes the old phases
           process_phases=copy_process_to_product(tx, process, target_product_key)
         ),
         return_old=True
       )
-
-      # The process has been completely replaced, so all the old phases need to be trashed
-      old_phase_sequence = product_update_result['old']['process_phases']
-      for phase_to_remove in old_phase_sequence:
-        # Flag phase document
-        tx.collection('Phase').update(dict(_key=phase_to_remove, trashed=current_time))
-
-        # Flag phase relationships
-        tx.aql.execute(
-          Queries.TRASH_FLAG_PHASE_RELATIONSHIP,
-          bind_vars=dict(phase_key=phase_to_remove, timestamp=current_time)
-        )
 
     tx.commit_transaction()
 
