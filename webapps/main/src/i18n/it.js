@@ -1083,4 +1083,5 @@ export default {
     output_position: 'Posizione di versamento',
   },
   release_date: 'data rilascio',
+  phase_delete_has_components: 'La fase ha componenti, non può essere eliminata',
 };

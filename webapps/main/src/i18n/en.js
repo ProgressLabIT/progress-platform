@@ -535,6 +535,7 @@ export default {
       instruction: 'instructions',
     },
   },
+  phase_delete_has_components: 'Phase has components, can\'t be deleted',
   preferences: {
     theme: {
       light: 'Light',

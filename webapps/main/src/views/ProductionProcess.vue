@@ -78,10 +78,10 @@
                   @icon-click="update_alias_at_index = index"
                 />
                 <BaseTooltipIcon
-                  icon="mdi-delete"
-                  :tooltip="$t('delete')"
-                  :color="$theme.red"
-                  @icon-click="confirming_delete = index"
+                  :icon="phase.has_components ? 'mdi-delete-off-outline' : 'mdi-delete'"
+                  :tooltip="$t(phase.has_components ? 'phase_delete_has_components' : 'delete')"
+                  :color="phase.has_components ? 'theme-grey' : $theme.red"
+                  @icon-click="deleteClick(index)"
                 />
               </div>
             </q-item-section>
@@ -339,7 +339,13 @@ export default {
 
     process: {
       get() {
-        return this.$store.state.process.temp;
+        const bom = this.$store.state.bom.saved
+        return this.$store.state.process.temp.map(p => {
+          return {
+            ...p,
+            has_components: bom.some(b => b.phase_key === p._key),
+          }
+        });
       },
 
       set(value) {
@@ -468,6 +474,13 @@ export default {
         print_templates: [],
       });
       this.current_phase = this.process.length - 1;
+    },
+
+    deleteClick(index) {
+      if (this.process[index].has_components) {
+        return;
+      }
+      this.confirming_delete = index;
     },
 
     deletePhase(phase_index) {
