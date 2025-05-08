@@ -610,6 +610,21 @@ async def update_process(product_key, process: List[PhaseData]):
     removed_phases = [p for p in old_phase_sequence if p not in new_phase_sequence]
 
     for p in removed_phases:
+      # Check if phase has components
+      has_bom_lines = tx.aql.execute(
+        """
+        RETURN COUNT(
+          FOR component, line IN 1..1 OUTBOUND @phase_id requires
+          FILTER line.type == 'BomLine'
+          RETURN 1
+        )
+        """,
+        bind_vars=dict(phase_id=f'Phase/{p}')
+      ).next()
+
+      if has_bom_lines:
+        return HTTPException(status_code=409, detail="Phase has components, cannot be deleted")
+
       delete_phase(tx, p)
 
 
