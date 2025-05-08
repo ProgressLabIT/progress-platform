@@ -6,8 +6,77 @@ from fastapi.encoders import jsonable_encoder
 
 from utils.db import db
 from utils.file import FileHandler
+from utils.dt import timestamp
+from models.bom import BomLineWriteOut
 from models.process import PhaseData
 from models.form import FormFieldDefinition
+
+
+
+class Queries:
+  GET_PRODUCTION_PROCESS = """
+    LET phases = DOCUMENT(Product, @product_key).process_phases
+
+    FOR phase_key in phases
+      LET phase = DOCUMENT(Phase, phase_key)
+
+      LET steps = (
+        FOR step_key IN phase.step_sequence
+        RETURN UNSET(DOCUMENT(Step, step_key), '_id', '_rev')
+      )
+
+      LET print_templates = (
+        FOR t IN 1..1 OUTBOUND CONCAT('Phase/', phase_key) can_use_print_template
+        RETURN KEEP(t, '_key', 'name', 'description')
+      )
+
+      LET phase_data = MERGE(
+        phase,
+        {
+          steps,
+          print_templates
+        }
+      )
+      RETURN phase_data
+  """
+
+  TRASH_FLAG_PHASE_RELATIONSHIP = """
+    FOR r IN requires
+    LET phase_id = CONCAT('Phase/', @phase_key)
+    FILTER r._to == phase_id || r._from == phase_id
+    UPDATE r WITH { trashed: @timestamp } IN requires
+    RETURN OLD
+  """
+
+  GET_PHASE_PROCEDURE = """
+    LET step_sequence = FIRST(
+      FOR p IN Phase
+      FILTER p._key == @phase_key
+      RETURN p.step_sequence
+    )
+
+    FOR s in step_sequence
+    RETURN s
+  """
+
+
+
+def delete_phase(tx: TransactionDatabase, phase_key: str):
+  current_time = timestamp()
+
+  # Flag phase document
+  tx.collection('Phase').update(dict(_key=phase_key, trashed=current_time))
+
+  # Flag phase relationships
+  trashed = list(tx.aql.execute(
+    Queries.TRASH_FLAG_PHASE_RELATIONSHIP,
+    bind_vars=dict(phase_key=phase_key, timestamp=current_time)
+  ))
+
+  return trashed
+
+
+
 def search_step_media(step_key: str):
 
   step_media = FileHandler.step_media(step_key)
@@ -137,47 +206,7 @@ def copy_process_to_product(
   return phase_sequence
 
 
-class Queries:
-  GET_PRODUCTION_PROCESS = """
-    LET phases = DOCUMENT(Product, @product_key).process_phases
 
-    FOR phase_key in phases
-      LET phase = DOCUMENT(Phase, phase_key)
 
-      LET steps = (
-        FOR step_key IN phase.step_sequence
-        RETURN UNSET(DOCUMENT(Step, step_key), '_id', '_rev')
-      )
 
-      LET print_templates = (
-        FOR t IN 1..1 OUTBOUND CONCAT('Phase/', phase_key) can_use_print_template
-        RETURN KEEP(t, '_key', 'name', 'description')
-      )
 
-      LET phase_data = MERGE(
-        phase,
-        {
-          steps,
-          print_templates
-        }
-      )
-      RETURN phase_data
-  """
-
-  TRASH_FLAG_PHASE_RELATIONSHIP = """
-    FOR r IN requires
-    LET phase_id = CONCAT('Phase', @phase_key)
-    FILTER r._to == phase_id || r._from == phase_id
-    UPDATE r WITH { trashed: @timestamp } IN requires
-  """
-
-  GET_PHASE_PROCEDURE = """
-    LET step_sequence = FIRST(
-      FOR p IN Phase
-      FILTER p._key == @phase_key
-      RETURN p.step_sequence
-    )
-
-    FOR s in step_sequence
-    RETURN s
-  """

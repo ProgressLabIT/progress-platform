@@ -105,6 +105,9 @@ async def create_operation(new_op_data: Operation):
     raise HTTPException(status_code=status_code, detail=response)
 
 
+# ===========================================================================
+
+
 @router.patch('/operation/{operation_key}',
     dependencies=[Depends(auth.verify_token)])
 async def update_operation(operation_key: str, operation_update: dict):
@@ -216,6 +219,9 @@ async def update_operation(operation_key: str, operation_update: dict):
     raise HTTPException(status_code=status_code, detail=response)
 
 
+# ===========================================================================
+
+
 @router.delete('/operation/{op_key}',
     dependencies=[Depends(auth.verify_token)])
 async def delete_operation(op_key: str):
@@ -245,6 +251,10 @@ async def delete_operation(op_key: str):
   else:
     removed_op = db.collection('Operation').delete(dict(_key=op_key), return_old=True)['old']
     return APIResponse(message="Operation successfully deleted", detail=removed_op)
+
+
+# ===========================================================================
+
 
 
 # TODO: Instead of copying it to all phases, selectively copy it to phases using a list of connected products
@@ -350,6 +360,9 @@ async def copy_operation_to_phases(
     raise HTTPError(500, "Could not update Operation in the db. Please contact the administrator.")
 
 
+# ===========================================================================
+
+
 @router.post('/product/{product_key}/process/copy',
     dependencies=[Depends(auth.verify_token)])
 async def copy_process_to_products(
@@ -401,6 +414,9 @@ async def copy_process_to_products(
       raise exception
     raise HTTPError(500, "Could not copy process to products. Please contact the administrator.")
 
+
+# ===========================================================================
+
 @router.post('/product/{product_key}/counter/copy',
     dependencies=[Depends(auth.verify_token)])
 async def copy_process_to_products(
@@ -430,11 +446,16 @@ async def copy_process_to_products(
     raise HTTPError(500, "Could not copy counter to products. Please contact the administrator.")
 
 
+# ===========================================================================
+
+
 @router.get("/step/{step_key}/media",
     dependencies=[Depends(auth.verify_token)])
 async def get_step_media(step_key: str):
   return search_step_media(step_key)
 
+
+# ===========================================================================
 
 
 @router.get("/product/{product_key}/process",
@@ -481,6 +502,7 @@ async def get_production_process(product_key):
   return results
 
 
+# ===========================================================================
 
 @router.get("/phase",
     dependencies=[Depends(auth.verify_token)])
@@ -496,6 +518,7 @@ async def get_phase_data(phase_key: List[str] = Query(...)):
   return [PhaseRecord(**p) for p in phase_db_data]
 
 
+# ===========================================================================
 
 @router.put(
   "/product/{product_key}/process",
@@ -587,14 +610,8 @@ async def update_process(product_key, process: List[PhaseData]):
     removed_phases = [p for p in old_phase_sequence if p not in new_phase_sequence]
 
     for p in removed_phases:
-      # Flag phase document
-      tx.collection('Phase').update(dict(_key=p, trashed=timestamp))
+      delete_phase(tx, p)
 
-      # Flag phase relationships
-      tx.aql.execute(
-        Queries.TRASH_FLAG_PHASE_RELATIONSHIP,
-        bind_vars=dict(phase_key=p, timestamp=timestamp)
-      )
 
     # Commit transaction
     tx.commit_transaction()
