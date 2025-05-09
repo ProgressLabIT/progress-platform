@@ -1,4 +1,4 @@
-import { cloneDeep } from 'lodash';
+// import { cloneDeep } from 'lodash';
 import { DateTime as DT } from 'luxon';
 import { Notify } from 'quasar';
 import { api } from '@/boot/axios';
@@ -25,98 +25,6 @@ function createEmptyBatch(state, job) {
 
   return new_batch;
 }
-
-async function getFormData(state, rootGetters, batchStep) {
-  const formData = cloneDeep(batchStep.form_data);
-
-  // TODO: Unify file handling logic with IssueForm
-  /**
-   * @type {{ type: string; form_fields: import('@/types/form').FormField[] } | undefined}
-   */
-  const stepDefinition = state.working_job_data.step_sequence.find(
-    ({ _key }) => _key === batchStep._key,
-  );
-  if (stepDefinition.type === 'form') {
-    const fields = stepDefinition.form_fields.map((field) => ({
-      ...field,
-      type: rootGetters.getCustomFieldByKey(field.custom_field_key)?.type,
-      value: formData.find(
-        ({ form_field_key }) => form_field_key === field._key,
-      )?.value,
-    }));
-
-    const promises = fields
-      .filter(({ type }) => type === 'files')
-      .map(async (field) => {
-        if (field.value === undefined) {
-          return;
-        }
-
-        const to_delete = [];
-        const to_add = [];
-
-        field.value.forEach((file) => {
-          if (file.temp) {
-            to_add.push(file.content);
-          } else if (file.delete) {
-            to_delete.push(file.name);
-          }
-        });
-
-        // update formData to only contain the file metadata
-        const formDataEntry = formData.find(
-          ({ form_field_key }) => form_field_key === field._key,
-        );
-        formDataEntry.value = field.value
-          .filter((file) => !file.delete)
-          .map((file) => ({
-            size: file.size,
-            name: file.name,
-          }));
-
-        const batch = state.current_batch_data;
-        const target = {
-          bucket: 'traceability',
-          object_key: batch.work_order_key,
-          subfolder: `${batch._key}/${batchStep._key}/${field.custom_field_key}/${field._key}`,
-        };
-
-        // Upload new files
-        if (to_add.length) {
-          // Populate form data
-          const add_body = new FormData();
-          Object.entries(target).forEach(([k, v]) => add_body.append(k, v));
-          to_add.forEach((file) => add_body.append('contents', file));
-          // Post files
-          try {
-            await api.post('/files', add_body);
-          } catch (error) {
-            console.error(error);
-            window.alert(error);
-          }
-        }
-
-        // Delete files
-        if (to_delete.length) {
-          try {
-            await api.delete('/files', {
-              data: {
-                ...target,
-                filenames: to_delete,
-              },
-            });
-          } catch (error) {
-            console.error(error);
-            window.alert(error);
-          }
-        }
-      });
-    await Promise.all(promises);
-  }
-
-  return formData;
-}
-
 
 function getCurrentWorkSession(state) {
   const ws_count = state.work_session_list.length;
@@ -482,19 +390,20 @@ const traceability = {
       }
     },
 
-    async editStepData({ commit, state, rootGetters }, { stepKey }) {
+    async editStepData(
+      { commit, state },
+      { stepKey }
+    ) {
       const batchStep = state.current_batch_data.step_data.find(
         ({ _key }) => _key === stepKey,
       );
 
       try {
-        const formData = await getFormData(state, rootGetters, batchStep);
-
         const { data } = await sendEvent({
           event_type: 'STEP_EDITED',
           event_data: {
             execution_record_key: batchStep.execution_record_key,
-            form_data: formData,
+            form_data: batchStep.form_data,
           },
         });
         const { job_data, batch_data } = data.detail;
@@ -552,7 +461,7 @@ const traceability = {
     },
 
     async completeStep(
-      { commit, state, rootGetters },
+      { commit, state },
       { stepKey },
     ) {
       const batchStep = state.current_batch_data.step_data.find(
@@ -560,14 +469,12 @@ const traceability = {
       );
 
       try {
-        const formData = await getFormData(state, rootGetters, batchStep);
-
         const { data } = await sendEvent({
           event_type: 'STEP_COMPLETED',
           event_data: {
             batch_key: state.current_batch_data._key,
             step_key: batchStep._key,
-            form_data: formData,
+            form_data: batchStep.form_data,
           },
         });
         const { job_data, batch_data } = data.detail;
@@ -582,11 +489,10 @@ const traceability = {
       }
     },
 
-    declareBatch({ commit, state }) {
+    async declareBatch({ commit, state }) {
       return new Promise((resolve, reject) => {
         const step_data = state.current_batch_data.step_data?.map(
           (batchStep) => {
-            console.log(batchStep)
             return {
               execution_record_key: batchStep.execution_record_key,
               step_key: batchStep._key,
@@ -594,8 +500,6 @@ const traceability = {
             }
           },
         );
-        // TODO: handle files
-
         sendEvent({
           event_type: 'BATCH_COMPLETED',
           event_data: {

@@ -28,6 +28,7 @@
         <FormField
           :field="field"
           :disable="(!isJobActive || batchStep?.done) && !stepEditMode"
+          :sync="true"
           :root-path="`/media/traceability/${work_order_key}/${batch_key}/${step._key}/${field.custom_field_key}/${field._key}`"
           @update="(value) => updateField(field, value)"
         />

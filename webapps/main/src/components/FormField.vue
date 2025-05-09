@@ -256,6 +256,7 @@ import { useStore } from 'vuex';
 import { api } from '@/boot/axios';
 import { capitalize } from '@/boot/filters';
 import FilesList from '@/components/FilesList.vue';
+import { Notify } from 'quasar';
 
 const props = defineProps({
   field: {
@@ -280,7 +281,33 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  sync: {
+    // This serves to save/delete the files in the backend immediately
+    // instead of waiting for the user to save the form
+    type: Boolean,
+    default: false,
+  },
 });
+
+/* ==================================================================
+ * FILE SYNC MANAGEMENT
+ * The following computed properties are used to determine the bucket,
+ * object key and subfolder for the file sync endpoint.
+ * =================================================================  */
+
+const fileBucket = computed(() => {
+  return props.rootPath.split('/')[2];
+});
+
+const fileObjectKey = computed(() => {
+  return props.rootPath.split('/')[3];
+});
+
+const fileSubfolder = computed(() => {
+  return props.rootPath.split('/').slice(4).join('/');
+});
+
+/* =============================================================== */
 
 const emit = defineEmits(['update']);
 
@@ -331,7 +358,7 @@ if (fieldType.value === 'choice') {
   });
 }
 
-function addFiles(fileList) {
+async function addFiles(fileList) {
   const existingFiles = fieldValue.value ?? [];
   for (const newFile of fileList) {
     const existingIndex = existingFiles.findIndex(
@@ -350,30 +377,92 @@ function addFiles(fileList) {
       existingFiles.splice(existingIndex, 1);
     }
 
-    existingFiles.push({
+    const fileData = {
       content: newFile,
       name: newFile.name,
       temp: true,
       delete: false,
-      // TODO: Revoke the object URL when needed
       path: URL.createObjectURL(newFile),
       size: newFile.size,
-    });
+    };
+
+    if (props.sync) {
+      try {
+        const formData = new FormData();
+        formData.append('bucket', fileBucket.value);
+        formData.append('object_key', fileObjectKey.value);
+        formData.append('subfolder', fileSubfolder.value);
+        formData.append('contents', newFile);
+
+        await api.post('/files', formData);
+        fileData.temp = false;
+      } catch (error) {
+        console.error('Error uploading file:', error);
+        // Don't add the file to the list if sync fails
+        // Instead, show an error notification and skip this file
+        const errorMessage = `Failed to upload file: ${newFile.name}`;
+        Notify.create({
+          type: 'negative',
+          message: errorMessage,
+          position: 'top',
+          color: 'theme-red',
+          timeout: 3000
+        });
+        continue; // Skip adding this file to existingFiles
+      }
+    }
+
+    existingFiles.push(fileData);
   }
   fieldValue.value = existingFiles;
 }
 
-function deleteFile(index) {
+async function deleteFile(index) {
   const file = fieldValue.value[index];
-  if (file.temp) {
-    fieldValue.value.splice(index, 1);
-  } else {
+
+  if (!file.temp && !props.sync) {
     file.delete = true;
+    return
   }
+
+  if (props.sync) {
+    try {
+      await api.delete('/files', {
+        data: {
+          bucket: fileBucket.value,
+          object_key: fileObjectKey.value,
+          subfolder: fileSubfolder.value,
+          filenames: [file.name],
+        },
+      });
+    } catch (error) {
+      console.error('Error deleting file:', error);
+      // Still mark the file as deleted even if sync fails
+      // The user can retry syncing when saving the form
+    }
+  }
+  // If file is temporary or sync is enabled, delete the file from the list
+  fieldValue.value.splice(index, 1);
 }
 
-function restoreFile(index) {
-  fieldValue.value[index].delete = false;
+async function restoreFile(index) {
+  const file = fieldValue.value[index];
+  if (props.sync) {
+    try {
+      const formData = new FormData();
+      formData.append('bucket', fileBucket.value);
+      formData.append('object_key', fileObjectKey.value);
+      formData.append('subfolder', fileSubfolder.value);
+      formData.append('contents', file.content);
+
+      await api.post('/files', formData);
+    } catch (error) {
+      console.error('Error restoring file:', error);
+      // Still restore the file in the UI even if sync fails
+      // The user can retry syncing when saving the form
+    }
+  }
+  file.delete = false;
 }
 
 function blur() {
