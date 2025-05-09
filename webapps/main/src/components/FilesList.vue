@@ -56,7 +56,7 @@
             size="sm"
             style="margin-right: -6px"
             :icon="file.delete ? 'mdi-delete-restore' : 'mdi-close'"
-            @click.stop="$emit(file.delete ? 'restoreFile' : 'deleteFile', index)"
+            @click.stop="deleteFile(index)"
           >
           </q-btn>
         </q-item-section>
@@ -69,7 +69,7 @@
       type="file"
       style="display: none"
       accept="*"
-      @change="$emit('addFiles', $event.target.files)"
+      @change="addFiles($event.target.files)"
     />
 
     <MediaViewer
@@ -135,6 +135,19 @@ const media_name = computed(() => {
 
 const showMedia = (value) => {
   show_media.value = value;
+};
+
+const addFiles = (files) => {
+  emit('addFiles', files);
+  // Reset the file input value so the same file can be selected again
+  if (upload_files.value) {
+    upload_files.value.value = '';
+  }
+}
+
+const deleteFile = (index) => {
+  const file = props.files[index]
+  emit(file.delete ? 'restoreFile' : 'deleteFile', index)
 };
 
 const ensureFileDataAvailable = async () => {
