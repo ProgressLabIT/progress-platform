@@ -1,4 +1,6 @@
+import shutil
 from functools import cached_property
+from pathlib import Path
 
 from events.inventory.movement_completed import MovementCompletedEvent
 from events.production.base_production import BaseProductionEvent
@@ -344,6 +346,9 @@ class BatchCompletedEvent(BaseProductionEvent):
           serial_code = self._handle_serial_code(serial_key),
         ))
 
+        # Copy batch media to serials
+      self._copy_batch_media_to_serials()
+
     if self.job.last_phase:
       # Release serials
       for serial_key in self.info.batch_serial_keys:
@@ -466,3 +471,20 @@ class BatchCompletedEvent(BaseProductionEvent):
             movement_type = InventoryMovementType.CONSUMPTION,
             references = self.movement_references,
           ))
+
+
+  # =================================================================
+
+  def _copy_batch_media_to_serials(self):
+    # Files are in step_key/custom_field_key/form_field_key directories (3 levels down)
+    # Find all level3 directories using glob pattern
+    batch_dir = Path(f"/media/traceability/{self.info.work_order_key}/{self.info.active_batch_key}")
+    form_fields_dirs = list(batch_dir.glob('*/*/*/'))
+
+    # Copy each form field directory to destination
+    for serial_key in self.info.batch_serial_keys:
+      dest_dir = Path(f"/media/serial/{serial_key}")
+      dest_dir.mkdir(parents=True, exist_ok=True)
+
+      for src_dir in form_fields_dirs:
+        shutil.copytree(src_dir, dest_dir / src_dir.name)

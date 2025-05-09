@@ -92,8 +92,8 @@ class FileHandler:
   def copy_media(self, copy_key):
     copy_path = os.path.join(media_root_path, self.bucket, copy_key)
     shutil.copytree(
-      self.folder_path,
-      copy_path,
+      src=self.folder_path,
+      dst=copy_path,
       dirs_exist_ok=True
     )
 

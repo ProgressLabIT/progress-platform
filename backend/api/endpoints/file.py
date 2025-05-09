@@ -15,7 +15,7 @@ collection_map = {
   FileBucket.PRODUCT: 'Product',
   FileBucket.TRACEABILITY: 'WorkOrder',
   FileBucket.USER: 'User',
-  FileBucket.SERIALS: 'Serial'
+  FileBucket.SERIAL: 'Serial'
 }
 
 
@@ -69,7 +69,7 @@ def verify_target_data(
               status_code = 404,
               detail = f'FormField with key {form_field_key} does not correspond to CustomField with key {custom_field_key}'
             )
-    elif bucket == FileBucket.SERIALS:
+    elif bucket == FileBucket.SERIAL:
       serial = db.collection('Serial').get(object_key)
       if not serial:
         raise HTTPException(

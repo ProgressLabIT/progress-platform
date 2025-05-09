@@ -13,7 +13,7 @@ class FileBucket(str, Enum):
   STEP = 'step'
   TRACEABILITY = 'traceability'
   USER = 'user'
-  SERIALS = 'serial'
+  SERIAL = 'serial'
 
 class FileTargetData(BaseModel):
   bucket: FileBucket
