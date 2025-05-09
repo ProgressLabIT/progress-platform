@@ -39,9 +39,13 @@ const serial = {
         return;
       }
 
+
       for (const serial of serials) {
-        if (!state.serials.some(s => s._key === serial._key)) {
+        const serialIndex = state.serials.findIndex(s => s._key === serial._key);
+        if (serialIndex === -1) {
           state.serials.push(serial);
+        } else {
+          state.serials[serialIndex] = serial;
         }
       }
     },

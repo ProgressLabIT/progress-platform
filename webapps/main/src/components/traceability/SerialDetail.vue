@@ -211,7 +211,7 @@ export default {
         if (
           type !== 'ternary' &&
           field.mandatory &&
-          (!field.value || field.value === null || field.value === '')
+          (!field.value || field.value === null || field.value === '' || field.value?.length === 0)
         ) {
           missing_mandatory_fields = true;
         }
@@ -239,7 +239,6 @@ export default {
           const target = {
             bucket: 'serial',
             object_key: serial_key,
-            // TODO: change to form_field_key
             subfolder: field.form_field_key,
           };
 
@@ -285,27 +284,13 @@ export default {
         let form_data = [];
         for (const field_data of this.serial.data) {
           form_data.push({
-            form_field_key: field_data._key,
+            form_field_key: field_data.form_field_key,
             custom_field_key: field_data.custom_field_key,
             value:
               this.getFieldType(field_data) === 'files'
                 ? field_data.value
                     ?.filter((file) => !file.delete)
-                    .map((file) => {
-                      if (file.bucket === 'traceability') {
-                        return {
-                          size: file.size,
-                          name: file.name,
-                          path: file.path,
-                          bucket: file.bucket,
-                        };
-                      } else {
-                        return {
-                          size: file.size,
-                          name: file.name,
-                        };
-                      }
-                    })
+                    .map(({ size, name }) => ({ size, name }))
                 : field_data.value,
           });
         }
@@ -333,8 +318,9 @@ export default {
         serial_data: serial_data.data
       };
 
-      await this.$api.post('event', event);
       await this.saveFiles(serial_data._key);
+      await this.$api.post('event', event);
+      this.refreshSerial();
 
       this.editMode = false;
       this.saving = false;
