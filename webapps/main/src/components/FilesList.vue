@@ -56,9 +56,7 @@
             size="sm"
             style="margin-right: -6px"
             :icon="file.delete ? 'mdi-delete-restore' : 'mdi-close'"
-            @click.stop="
-              $emit(file.delete ? 'restoreFile' : 'deleteFile', index)
-            "
+            @click.stop="$emit(file.delete ? 'restoreFile' : 'deleteFile', index)"
           >
           </q-btn>
         </q-item-section>
@@ -84,103 +82,85 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, computed, onMounted } from 'vue';
 import MediaViewer from '@/components/MediaViewer.vue';
 
-export default {
-  name: 'FilesList',
-
-  components: {
-    MediaViewer,
+const props = defineProps({
+  label: {
+    type: String,
+    default: 'Files',
   },
-
-  props: {
-    label: {
-      type: String,
-      default: 'Files',
-    },
-    files: {
-      type: Array,
-      default: () => [],
-    },
-    disable: {
-      type: Boolean,
-      default: true,
-    },
-    rootPath: {
-      type: String,
-      required: true,
-    },
-    mandatory: {
-      type: Boolean,
-      default: false,
-    },
+  files: {
+    type: Array,
+    default: () => [],
   },
-
-  emits: ['addFiles', 'deleteFile', 'restoreFile'],
-
-  data() {
-    return {
-      show_media: -1,
-    };
+  disable: {
+    type: Boolean,
+    default: true,
   },
-
-  computed: {
-    shown_files() {
-      return this.disable ? this.files.filter((f) => !f.temp) : this.files;
-    },
-
-    media_src() {
-      return (
-        this.files[this.show_media]?.path ||
-        this.rootPath + '/' + this.media_name
-      );
-    },
-
-    media_name() {
-      if (this.show_media == -1) {
-        return '';
-      } else {
-        return this.files[this.show_media].name;
-      }
-    },
+  rootPath: {
+    type: String,
+    required: true,
   },
-
-  methods: {
-    getFileName(path) {
-      return path.split('/').pop();
-    },
-
-    showMedia(value) {
-      this.show_media = value;
-    },
-
-    async ensureFileDataAvailable() {
-      // Check if temporary files stored in blob URLs are available
-      // This can happen if the page is reloaded, when file is not available, but metadata is still there.
-
-      if (!this.files) {
-        return;
-      }
-
-      for (const [index, file] of this.files.entries()) {
-        if (file.temp && file.path?.startsWith('blob:')) {
-          try {
-            const response = await fetch(file.path);
-            if (!response.ok || !(await response.blob())) {
-              this.$emit('deleteFile', index);
-            }
-          } catch (error) {
-            console.warn(`File ${file.name} is not accessible:`, error);
-            this.$emit('deleteFile', index);
-          }
-        }
-      }
-    },
+  mandatory: {
+    type: Boolean,
+    default: false,
   },
+});
 
-  mounted() {
-    this.ensureFileDataAvailable();
-  },
+const emit = defineEmits(['addFiles', 'deleteFile', 'restoreFile']);
+
+const show_media = ref(-1);
+const upload_files = ref(null);
+
+const shown_files = computed(() => {
+  return props.disable ? props.files.filter((f) => !f.temp) : props.files;
+});
+
+const media_src = computed(() => {
+  return (
+    props.files[show_media.value]?.path ||
+    props.rootPath + '/' + media_name.value
+  );
+});
+
+const media_name = computed(() => {
+  if (show_media.value == -1) {
+    return '';
+  } else {
+    return props.files[show_media.value].name;
+  }
+});
+
+const showMedia = (value) => {
+  show_media.value = value;
 };
+
+const ensureFileDataAvailable = async () => {
+  // Check if temporary files stored in blob URLs are available
+  // This can happen if the page is reloaded, when file is not available, but metadata is still there.
+
+  if (!props.files) {
+    return;
+  }
+
+  for (const [index, file] of props.files.entries()) {
+    if (file.temp && file.path?.startsWith('blob:')) {
+      try {
+        const response = await fetch(file.path);
+        if (!response.ok || !(await response.blob())) {
+          emit('deleteFile', index);
+        }
+      } catch (error) {
+        console.warn(`File ${file.name} is not accessible:`, error);
+        emit('deleteFile', index);
+      }
+    }
+  }
+};
+
+onMounted(() => {
+  ensureFileDataAvailable();
+});
 </script>
