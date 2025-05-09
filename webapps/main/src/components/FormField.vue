@@ -382,7 +382,7 @@ async function addFiles(fileList) {
       name: newFile.name,
       temp: true,
       delete: false,
-      path: URL.createObjectURL(newFile),
+      path: props.sync ? undefined : URL.createObjectURL(newFile),
       size: newFile.size,
     };
 
@@ -437,32 +437,28 @@ async function deleteFile(index) {
       });
     } catch (error) {
       console.error('Error deleting file:', error);
-      // Still mark the file as deleted even if sync fails
-      // The user can retry syncing when saving the form
+      const errorMessage = `Failed to delete file: ${file.name}`;
+      Notify.create({
+        type: 'negative',
+        message: errorMessage,
+        position: 'top',
+        color: 'theme-red',
+        timeout: 3000
+      });
+      return
     }
   }
   // If file is temporary or sync is enabled, delete the file from the list
-  fieldValue.value.splice(index, 1);
+  fieldValue.value = fieldValue.value.filter((_, i) => i !== index);
 }
 
 async function restoreFile(index) {
-  const file = fieldValue.value[index];
-  if (props.sync) {
-    try {
-      const formData = new FormData();
-      formData.append('bucket', fileBucket.value);
-      formData.append('object_key', fileObjectKey.value);
-      formData.append('subfolder', fileSubfolder.value);
-      formData.append('contents', file.content);
-
-      await api.post('/files', formData);
-    } catch (error) {
-      console.error('Error restoring file:', error);
-      // Still restore the file in the UI even if sync fails
-      // The user can retry syncing when saving the form
+  fieldValue.value = fieldValue.value.map((file, i) => {
+    if (i === index) {
+      file.delete = false;
     }
-  }
-  file.delete = false;
+    return file;
+  });
 }
 
 function blur() {
