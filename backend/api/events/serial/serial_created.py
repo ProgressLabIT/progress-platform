@@ -18,7 +18,7 @@ class SerialCreatedEvent(BaseSerialEvent):
     code: str | None = None
     wo_key: str | None = None
     product_key: str | None = None
-    counter_key: str | None = Field(None, exclude=True)
+    counter_key: str | None = None
     released: datetime | None = Field(default_factory=timestamp)
 
 
@@ -44,10 +44,10 @@ class SerialCreatedEvent(BaseSerialEvent):
       raise ValueError(f"Cannot create serial for product {product['code']}. Traceability is not enabled.")
 
     needs_code = self.info.released or product.get('serial_code_on_creation', False)
+    self.info.counter_key = product.get('counter_key', None)
 
     if needs_code:
       if self.info.code is None:
-        self.info.counter_key = product.get('counter_key', None)
         if self.info.counter_key is None:
           raise ValueError('Cannot create/release serial. No code or counter provided.')
 

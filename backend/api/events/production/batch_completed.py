@@ -17,6 +17,7 @@ from models.form import FormFieldValue, SerialFormFieldValue
 from models.inventory import InventoryMovementReferences, InventoryMovementType
 from models.production import Job
 from models.traceability import *
+from utils.counter import _generate_counter
 from utils.production import Queries as ProductionQueries
 from utils.traceability import Queries as TraceabilityQueries
 from utils.serial import Queries as SerialQueries
@@ -301,6 +302,18 @@ class BatchCompletedEvent(BaseProductionEvent):
 
   # =================================================================
 
+  def _handle_serial_code(self, serial_key):
+    if self.job.first_phase:
+      serial = self.tx.collection('Serial').get(serial_key)
+      if not serial.get('code', None):
+        if not serial.get('counter_key', None):
+          raise ValueError("Cannot generate serial code. No code or counter provided.")
+        return _generate_counter(self.tx, serial['counter_key'])
+
+    return None
+
+  # =================================================================
+
   def _handle_batch_serials(self):
     # Fetch batch serial keys
     self.info.batch_serial_keys = [s['_key'] for s in self.tx.aql.execute(
@@ -328,6 +341,7 @@ class BatchCompletedEvent(BaseProductionEvent):
         SerialUpdatedEvent.create_as_child(self, dict(
           serial_key = serial_key,
           serial_data = serial_data,
+          serial_code = self._handle_serial_code(serial_key),
         ))
 
     if self.job.last_phase:
