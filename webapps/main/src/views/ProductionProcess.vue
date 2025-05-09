@@ -462,7 +462,7 @@ export default {
         })) ?? [],
       );
 
-      this.process.push({
+      this.process = [...this.process, {
         // Add temp _key so that sorting works with new phases too
         _key: Date.now(),
         alias: new_operation.name,
@@ -472,7 +472,7 @@ export default {
         production_notes: new_operation.default_phase_notes,
         steps,
         print_templates: [],
-      });
+      }];
       this.current_phase = this.process.length - 1;
     },
 
