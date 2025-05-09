@@ -1,5 +1,5 @@
 <template>
-  <BaseDialog :show="show" maximized @close="$emit('close')">
+  <BaseDialog :show="show" maximized @close.stop="$emit('close')">
     <!-- FILE NAME -->
     <div class="fixed-top-left medium highlight q-ma-md" style="z-index: 99">
       <div v-if="info === 'name'" class="q-pa-md row" :style="darkGlassStyle">
