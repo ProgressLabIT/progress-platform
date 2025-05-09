@@ -360,7 +360,10 @@ if (fieldType.value === 'choice') {
 
 async function addFiles(fileList) {
   const existingFiles = fieldValue.value ?? [];
-  for (const newFile of fileList) {
+  // Convert FileList to Array to ensure proper iteration
+  const filesToAdd = Array.from(fileList);
+
+  for (const newFile of filesToAdd) {
     const existingIndex = existingFiles.findIndex(
       ({ name }) => name === newFile.name,
     );
