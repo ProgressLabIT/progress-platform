@@ -484,7 +484,5 @@ class BatchCompletedEvent(BaseProductionEvent):
     # Copy each form field directory to destination
     for serial_key in self.info.batch_serial_keys:
       dest_dir = Path(f"/media/serial/{serial_key}")
-      dest_dir.mkdir(parents=True, exist_ok=True)
-
       for src_dir in form_fields_dirs:
-        shutil.copytree(src_dir, dest_dir / src_dir.name)
+        shutil.copytree(src_dir, dest_dir / src_dir.name, dirs_exist_ok=True)
