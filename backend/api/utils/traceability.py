@@ -186,7 +186,7 @@ class Queries:
 
   UPDATE_JOB_PROGRESS = """
     LET j = DOCUMENT(Job, @job_key)
-    LET should_count_step_progress = j.parameters.step_check && TO_BOOL(j.current_batch)
+    LET should_count_step_progress = j.parameters.step_check && TO_BOOL(j.active_batch_key)
 
     LET step_progress = !should_count_step_progress ? 0 : FIRST(
       LET default_batch = j.parameters.production_batch_qt
@@ -197,7 +197,7 @@ class Queries:
       LET step_done_count = SUM(
         FOR s IN StepExecutionData
         FILTER
-          s.batch_key == j.current_batch
+          s.batch_key == j.active_batch_key
           && s.status == 'done'
           && s.canceled == null
         RETURN 1
