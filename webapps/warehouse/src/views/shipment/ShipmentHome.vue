@@ -5,23 +5,33 @@
     </div>
 
     <q-scroll-area v-if="lists.headers.length" class="col">
-      <template v-for="([customer, customerLists]) in lists.byPartner" :key="customer">
-        <!-- Customer Header -->
-        <div class="text-h4 full-width row justify-between items-baseline q-mt-lg">
-          <div class="col highlight">
-            {{  customerLists[0].references.partner_name }}
-          </div>
-          <div class="col-auto smaller text-disabled">
-            Righe controllate / totali
+      <template v-for="([date, partnerLists]) in lists.byDateAndPartner" :key="date">
+        <!-- Date Header -->
+        <div class="row items-center q-gutter-x-md q-mt-lg">
+          <q-separator class="col" />
+          <div class="col-auto text-h5 low-text weight-bold" :class="{ 'text-white': date <= today }">
+            {{ date }}
           </div>
         </div>
 
-        <!-- Customer Lists -->
+        <!-- Customer Header -->
+        <template v-for="([customer, customerLists]) in partnerLists" :key="customer">
+          <div class="text-h4 full-width row justify-between items-baseline q-mt-md">
+            <div class="col highlight">
+              {{  customerLists[0].references.partner_name }} ({{ customerLists[0].references.partner_code }})
+            </div>
+            <div class="col-auto smaller text-disabled">
+              Righe controllate / totali
+            </div>
+          </div>
+
+          <!-- Customer Lists -->
           <q-card
             v-for="list in customerLists"
             :key="list._key"
             v-ripple
             class="row text-body1 surface1 justify-between q-pa-md q-mt-xs"
+            :class="{ due: list.due_by === today, overdue: list.due_by < today }"
             @click="$router.push({ name: 'ShipmentList', params: { listKey: list._key }})">
             <div>
               {{ list.code  }}
@@ -30,6 +40,7 @@
               {{ getListCounts(list._key).completed }} / {{ getListCounts(list._key).total }}
             </div>
           </q-card>
+        </template>
       </template>
     </q-scroll-area>
 
@@ -48,6 +59,7 @@
 <script setup>
 import { useListsStore } from '@/stores/lists'
 const lists = useListsStore();
+const today = new Date().toISOString().slice(0,10);
 
 function getListCounts(listKey) {
   const listItems = lists.movementsByListAndItem[listKey]
@@ -57,3 +69,13 @@ function getListCounts(listKey) {
   }
 }
 </script>
+
+<style scoped lang="sass">
+.overdue
+  font-weight: bold
+  background-color: #e79110 !important
+
+.due
+  font-weight: bold
+  background-color: var(--theme-blue) !important
+</style>

@@ -363,7 +363,7 @@ class MovementList(ArangoDocument):
   # keep code mandatory until completion of list counter setup
   code: Annotated[str, StringConstraints(to_upper=True)]
   notes: str | None = None
-  due_by: date | None = None
+  due_by: date | None = Field(default_factory=date.today)
   created: datetime | None = Field(default_factory=timestamp)
   start: datetime | None = None
   end: datetime | None = None

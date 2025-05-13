@@ -15,12 +15,41 @@ export const useListsStore = defineStore('lists', {
     productTraceabilityMap: {}
   }),
   getters: {
-    byPartner: (state) => {
-      const map = state.headers.reduce((result, list) => {
-        (result[list.references.partner_code] = result[list.references.partner_code] || []).push(list);
+    byDateAndPartner: (state) => {
+      // First group by date, then by partner
+      const dateMap = state.headers.reduce((result, list) => {
+        const date = list.due_by;
+        if (!result[date]) {
+          result[date] = {};
+        }
+
+        const partnerCode = list.references.partner_code;
+        if (!result[date][partnerCode]) {
+          result[date][partnerCode] = [];
+        }
+
+        result[date][partnerCode].push(list);
         return result;
-      }, {})
-      return Object.entries(map)
+      }, {});
+
+      // Sort lists within each partner by code
+      Object.values(dateMap).forEach(partners => {
+        Object.values(partners).forEach(lists => {
+          lists.sort((a, b) => a.code.localeCompare(b.code));
+        });
+      });
+
+      // Convert to array of [date, partnersMap] entries, sorted by date
+      return Object.entries(dateMap)
+        .sort(([dateA], [dateB]) => dateA.localeCompare(dateB))
+        .map(([date, partners]) => {
+          // Sort partners by partner_name
+          const sortedPartners = Object.entries(partners)
+            .sort(([, listsA], [, listsB]) =>
+              listsA[0].references.partner_name.localeCompare(listsB[0].references.partner_name)
+            );
+          return [date, sortedPartners];
+        });
     },
     movementsByListAndItem: (state) => {
       return state.headers.reduce((result, list) => {
