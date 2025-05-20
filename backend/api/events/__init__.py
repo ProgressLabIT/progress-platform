@@ -20,6 +20,7 @@ from events.collaboration.message_updated import MessageUpdatedEvent
 #INVENTORY EVENTS
 from events.inventory.base_inventory import BaseInventoryEvent
 from events.inventory.inventory_changed import InventoryChangedEvent
+from events.inventory.movement_planned import MovementPlannedEvent
 from events.inventory.movement_completed import MovementCompletedEvent
 from events.inventory.movement_created import MovementCreatedEvent
 from events.inventory.movement_deleted import MovementDeleted

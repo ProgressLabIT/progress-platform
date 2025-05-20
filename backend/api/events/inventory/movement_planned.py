@@ -50,23 +50,24 @@ class MovementPlannedEvent(BaseInventoryEvent):
     # In case of receipt by code, create serial if it doesn't exist or raise an error if it's already in inventory
     # In other types of movements, accept the movement regardless of whether it is in inventory or not,
     # but raise an error if it doesn't exist.
-    try:
-      serial = serial_collection.find(dict(
-        code=self.info.serial_code,
-        product_key=self.info.product_key,
-        deleted=False
-      )).next()
-      self.info.serial_key = serial['_key']
-    except StopIteration: # Serial does not exist
-      # If the movement is a receipt, create a new serial
-      if self.info.movement_type == InventoryMovementType.RECEIPT:
-        self.info.serial_key = SerialCreatedEvent.create_as_child(self, dict(
+    else:
+      try:
+        serial = serial_collection.find(dict(
           code=self.info.serial_code,
           product_key=self.info.product_key,
-          released=self.info.timestamp
-        ))['serial_key']
-      else: # In other types of movements, raise an error if the serial does not exist
-        raise InventoryMovementException(f"Serial {self.info.serial_code} for product {self.product['code']} does not exist")
+          deleted=False
+        )).next()
+        self.info.serial_key = serial['_key']
+      except StopIteration: # Serial does not exist
+        # If the movement is a receipt, create a new serial
+        if self.info.movement_type == InventoryMovementType.RECEIPT:
+          self.info.serial_key = SerialCreatedEvent.create_as_child(self, dict(
+            code=self.info.serial_code,
+            product_key=self.info.product_key,
+            released=self.info.timestamp
+          ))['serial_key']
+        else: # In other types of movements, raise an error if the serial does not exist
+          raise InventoryMovementException(f"Serial {self.info.serial_code} for product {self.product['code']} does not exist")
 
     # Check inventory
     try:
