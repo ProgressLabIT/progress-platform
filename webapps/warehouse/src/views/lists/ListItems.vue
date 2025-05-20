@@ -114,23 +114,27 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue';
-import { useListsStore } from 'stores/lists';
-import { useI18n } from 'vue-i18n';
 import { Dialog, Notify } from 'quasar';
+import { computed, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router';
+import SearchOrScan from 'app/src/components/SearchOrScan.vue';
 import { sendEvent } from 'app/src/composables/event';
 import { useNavStore } from 'app/src/stores/navigation';
-import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router';
 import IncomingItem from 'app/src/views/incoming/IncomingItem.vue';
 import ShipmentItem from 'app/src/views/shipment/ShipmentItem.vue';
-import SearchOrScan from 'app/src/components/SearchOrScan.vue';
+import { useListsStore } from 'stores/lists';
 const lists = useListsStore();
 const { t: $t } = useI18n();
 const nav = useNavStore();
 const $router = useRouter();
 const $route = useRoute();
+
 const props = defineProps({
-  listKey: String
+  listKey: {
+    type: String,
+    required: true
+  }
 });
 
 const showItemReferences = ref(false)
