@@ -1,7 +1,8 @@
 from events.inventory.base_inventory import BaseInventoryEvent
 from events.inventory.inventory_changed import InventoryChangedEvent
+from events.inventory.movement_planned import MovementPlannedEvent
 from models.event import EventType, EventInfoModel
-from models.inventory import InventoryMovement, InventoryMovementReferences, InventoryMovementNew, InventoryMovementType
+from models.inventory import InventoryMovement, InventoryMovementReferences, InventoryMovementNew, InventoryMovementType, MovementStatus
 from utils.exceptions import InventoryMovementException
 
 class MovementReversedEvent(BaseInventoryEvent):
@@ -36,6 +37,10 @@ class MovementReversedEvent(BaseInventoryEvent):
     movement_to_revert = InventoryMovement(**self.tx.collection('movement').get(self.info.original_movement_key))
     self._validate_movement(movement_to_revert)
 
+    # Handle movement list: to be done first to more easily calculate list item quantities
+    # distinguishing between movements already reversed and the one being reverted
+    self._handle_movement_list(movement_to_revert)
+
     # Calculate movement quantity
     movement_qt = self._calculate_movement_quantity(movement_to_revert)
 
@@ -45,8 +50,6 @@ class MovementReversedEvent(BaseInventoryEvent):
 
     # Adjust inventory levels
     self._adjust_inventory(movement_to_revert, movement_qt)
-
-
 
     self.response = dict(
       message=f'Movement {self.info.original_movement_key} has been reverted',
@@ -203,8 +206,58 @@ class MovementReversedEvent(BaseInventoryEvent):
 
   # =====================================================================
 
-  def _handle_movement_list(self):
+  def _handle_movement_list(self, movement_to_revert: InventoryMovement):
     """
-    Reopens reverted movement list item if necessary
+    Restore the original movement planned quantity in case of partial movement reversal or create a new one in case of fully completed movement.
     """
-    pass
+    if movement_to_revert.movement_list_key is None:
+      return
+
+    # Get movement list item - only those that haven't been reversed yet and are not reversals themselves
+    list_item_movements_query = """
+      FOR m IN movement
+      FILTER
+        m.movement_list_key == @movement_list_key
+        AND m.movement_list_item == @movement_list_item
+        AND m.type != 'reversal'
+        AND m.inverse_movement_key == null
+      RETURN m
+    """
+    list_item_movements = [
+      InventoryMovement(**m)
+      for m in self.tx.aql.execute(
+        list_item_movements_query,
+        bind_vars=dict(
+          movement_list_key=movement_to_revert.movement_list_key,
+          movement_list_item=movement_to_revert.movement_list_item
+        )
+      )
+    ]
+
+    # Calculate planned/completed quantity: (original movement hasn't been reversed yet)
+    list_item_planned_quantity = sum(m.qt_planned for m in list_item_movements)
+    list_item_completed_quantity = sum(m.qt_confirmed for m in list_item_movements)
+
+    remaining_partial = next((m for m in list_item_movements if m.qt_confirmed == 0), None)
+
+    if remaining_partial is not None and movement_to_revert.serial_key is None:
+      self.tx.collection('movement').update(dict(
+        _key=remaining_partial.key,
+        qt_planned=remaining_partial.qt_planned + movement_to_revert.qt_confirmed
+      ))
+
+    else:
+      # Create new movement
+      MovementPlannedEvent.create_as_child(self, dict(
+        position_from=movement_to_revert.position_from,
+        position_to=movement_to_revert.position_to,
+        product_key=movement_to_revert.product_key,
+        movement_list_key=movement_to_revert.movement_list_key,
+        movement_list_item=movement_to_revert.movement_list_item,
+        serial_key=movement_to_revert.serial_key,
+        qt_planned=movement_to_revert.qt_planned,
+        movement_type=movement_to_revert.type,
+        status=MovementStatus.PLANNED,
+        references=movement_to_revert.references,
+        reason=f"Movement {movement_to_revert.key} has been reverted"
+      ))
