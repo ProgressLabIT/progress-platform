@@ -7,16 +7,16 @@
     <q-scroll-area v-if="lists.headers.length" class="col">
       <template v-for="([date, partnerLists]) in lists.byDateAndPartner" :key="date">
         <!-- Date Header -->
-        <div class="row items-center">
+        <div class="row items-center q-gutter-x-md q-mt-xl">
           <q-separator class="col" />
-          <div class="col-auto text-h5 low-text weight-bold q-ml-md" :class="{ 'text-white': date <= today }">
+          <div class="col-auto text-h5 low-text weight-bold" :class="{ 'text-white': date <= today }">
             {{ date }}
           </div>
         </div>
 
         <!-- Supplier Lists -->
         <template v-for="([supplier, supplierLists]) in partnerLists" :key="supplier">
-          <div class="text-h4 full-width row justify-between items-baseline q-mt-lg">
+          <div class="text-h4 full-width row justify-between items-baseline q-mt-md">
             <div class="col">
               <span class="highlight">
                 {{ supplierLists[0].references.partner_name }}

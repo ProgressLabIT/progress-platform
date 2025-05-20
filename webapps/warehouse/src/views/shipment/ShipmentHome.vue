@@ -7,7 +7,7 @@
     <q-scroll-area v-if="lists.headers.length" class="col">
       <template v-for="([date, partnerLists]) in lists.byDateAndPartner" :key="date">
         <!-- Date Header -->
-        <div class="row items-center q-gutter-x-md q-mt-lg">
+        <div class="row items-center q-gutter-x-md q-mt-xl">
           <q-separator class="col" />
           <div class="col-auto text-h5 low-text weight-bold" :class="{ 'text-white': date <= today }">
             {{ date }}
@@ -17,10 +17,15 @@
         <!-- Customer Header -->
         <template v-for="([customer, customerLists]) in partnerLists" :key="customer">
           <div class="text-h4 full-width row justify-between items-baseline q-mt-md">
-            <div class="col highlight">
-              {{  customerLists[0].references.partner_name }} ({{ customerLists[0].references.partner_code }})
+            <div class="col ">
+              <span class="highlight">
+                {{  customerLists[0].references.partner_name }}
+              </span>
+              <span class="text-body2 q-ml-sm smaller text-low">
+                {{ customerLists[0].references.partner_code }}
+              </span>
             </div>
-            <div class="col-auto smaller text-disabled">
+            <div class="col-auto smaller text-low">
               Righe controllate / totali
             </div>
           </div>
