@@ -261,19 +261,25 @@ class Queries:
     FILTER @contains ? count(children)>0 : true
     FILTER @is_contained_in ? count(parents)>0 : true
 
+    LET wo = FIRST(
+      FOR wo IN WorkOrder
+      FILTER wo._key == s.wo_key
+      RETURN wo
+    )
 
+    FILTER
+      (@work_order_search ? CONTAINS(LOWER(wo.wo_code), LOWER(@work_order_search)) : true)
+      && (@project_search ? CONTAINS(LOWER(wo.project_code), LOWER(@project_search)) : true)
 
     // RETURN RESULTS, WITH LINKS IF REQUESTED
     LET base_result = MERGE(s, {
       product,
       grid_data,
-      wo_code: DOCUMENT(WorkOrder, s.wo_key).wo_code
+      wo_code: wo.wo_code,
+      project_code: wo.project_code
     })
 
-    FILTER
-      (@work_order_search ? CONTAINS(LOWER(base_result.wo_code), LOWER(@work_order_search)) : true)
-
-     // LIMIT FILTERED RECORDS
+    // LIMIT FILTERED RECORDS
     SORT base_result.@sort_by @sorting_order
 
     LIMIT @offset, @limit || null

@@ -118,7 +118,7 @@
         autocomplete="off"
         name="search"
         debounce="1000"
-        :label="$t('serial')"
+        :label="$capitalize($t('serial'))"
         class="q-mb-md"
       >
         <template #append>
@@ -190,6 +190,24 @@
         debounce="1000"
         class="q-mb-md"
         :label="$t('work_order.long')"
+      >
+        <template #append>
+          <q-icon name="mdi-magnify" />
+        </template>
+      </q-input>
+
+      <!-- PROJECT -->
+      <q-input
+        v-model="project_search"
+        clearable
+        dense
+        filled
+        hide-bottom-space
+        autocomplete="off"
+        name="product"
+        debounce="1000"
+        class="q-mb-md"
+        :label="$capitalize($t('project'))"
       >
         <template #append>
           <q-icon name="mdi-magnify" />
@@ -420,6 +438,7 @@ export default {
       filter_list: [
         'serial_key_search',
         'work_order_search',
+        'project_search',
         'serial_search',
         'is_contained_in',
         'contains',
@@ -462,6 +481,7 @@ export default {
     contains: queryModel(String, 'contains', null),
     product_code_search: queryModel(String, 'product_code_search', null),
     work_order_search: queryModel(String, 'work_order_search', null),
+    project_search: queryModel(String, 'project_search', null),
     created_by: queryModel(String, 'opened_by', null),
     time_created_from: queryModel(String, 'created_min', null),
     time_created_to: queryModel(String, 'created_max', null),

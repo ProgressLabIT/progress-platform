@@ -80,6 +80,14 @@ export function useSerialColumns() {
       style: 'max-width: 10vw',
     },
     {
+      name: 'project_code',
+      field: 'project_code',
+      sortable: true,
+      align: 'left',
+      label: t('project').toUpperCase(),
+      style: 'max-width: 10vw',
+    },
+    {
       name: 'created',
       field: 'created',
       sortable: true,
