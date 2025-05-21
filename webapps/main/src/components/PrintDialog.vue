@@ -72,12 +72,12 @@
         <template v-else>
           <BaseAutocompleteSerial
             v-if="context.type === 'step' && hasSerialLink"
-            v-model="serialModel"
-            :initial_values="serialModelInitalValue"
+            :value="context.serial"
+            :batch_key="context.step.batch_key"
             :can_search="serialModelInitalValue.length <= 0"
             :label="$capitalize($t('serial'))"
+            :include_unreleased="true"
             :disable="serialModelInitalValue.length === 1"
-            :batch_key="context.step.batch_key"
             @select="selectSerial"
           >
           </BaseAutocompleteSerial>
@@ -185,7 +185,6 @@
 import { generate } from '@pdfme/generator';
 import { useDialogPluginComponent } from 'quasar';
 import { nextTick, onMounted, ref, reactive } from 'vue';
-import { useI18n } from 'vue-i18n';
 import VuePdfEmbed from 'vue-pdf-embed';
 import { api } from '@/boot/axios';
 import BaseDialog from '@/components/BaseDialog.vue';
@@ -193,7 +192,6 @@ import LoadingSignal from '@/components/LoadingSignal.vue';
 import PrintTemplateCard from '@/components/PrintTemplateCard.vue';
 import BaseAutocompleteSerial from './BaseAutocompleteSerial.vue';
 
-const { t } = useI18n();
 const props = defineProps({
   context: {
     type: Object,
@@ -219,7 +217,7 @@ const allowSelectTemplate = ref(true);
 const selectedTemplate = ref();
 const isLoadingTemplate = ref(false);
 let formModel = undefined;
-const serialModel = ref();
+// const serialModel = ref();
 const serialModelInitalValue = ref([]);
 const hasSerialLink = ref(false);
 
@@ -259,28 +257,28 @@ async function loadWorkOrder(wo_key) {
   }
 }
 
-async function loadBatchSerial(batch_key) {
-  const { data: batch_serials } = await api.get('serial-batch', {
-    params: {
-      batch_key: batch_key,
-    },
-  });
-  for (const serial of batch_serials) {
-    serialModelInitalValue.value.push({
-      value: serial._key,
-      _key: serial._key,
-      label:
-        serial.code ||
-        '(' + t('serial_code_to_be_assigned') + ' - ID ' + serial._key + ')',
-      wo_key: serial.wo_key,
-      product_key: serial.product_key,
-    });
-  }
-  if (serialModelInitalValue.value.length === 1) {
-    serialModel.value = serialModelInitalValue.value[0];
-    await loadSerial(serialModelInitalValue.value[0]._key);
-  }
-}
+// async function loadBatchSerial(batch_key) {
+//   const { data: batch_serials } = await api.get('serial-batch', {
+//     params: {
+//       batch_key: batch_key,
+//     },
+//   });
+//   for (const serial of batch_serials) {
+//     serialModelInitalValue.value.push({
+//       value: serial._key,
+//       _key: serial._key,
+//       label:
+//         serial.code ||
+//         '(' + t('serial_code_to_be_assigned') + ' - ID ' + serial._key + ')',
+//       wo_key: serial.wo_key,
+//       product_key: serial.product_key,
+//     });
+//   }
+//   if (serialModelInitalValue.value.length === 1) {
+//     serialModel.value = serialModelInitalValue.value[0];
+//     await loadSerial(serialModelInitalValue.value[0]._key);
+//   }
+// }
 
 async function selectSerial(serial) {
   let serial_key = serial?._key;
@@ -299,9 +297,9 @@ onMounted(() => {
     allowSelectTemplate.value = false;
   }
 
-  if (props.context?.batch?._key) {
-    loadBatchSerial(props.context.batch._key);
-  }
+  // if (props.context?.batch?._key) {
+  //   loadBatchSerial(props.context.batch._key);
+  // }
 
   if (props.context?.step?.product_key) {
     loadProduct(props.context.step.product_key);

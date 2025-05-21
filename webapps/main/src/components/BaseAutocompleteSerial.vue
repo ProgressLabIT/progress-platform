@@ -193,6 +193,11 @@ const props = defineProps({
     default: undefined,
   },
 
+  include_unreleased: {
+    type: Boolean,
+    default: false,
+  },
+
   initial_values: {
     type: Object,
     default: null,
@@ -214,8 +219,6 @@ const props = defineProps({
   },
 });
 
-
-console.log(props.value);
 
 const emit = defineEmits(['select', 'remove']);
 const selectRef = ref(null);
@@ -252,6 +255,7 @@ function loadOptions(search_value) {
     free_only: props.filter_used,
     inventory_only: props.inventory_only,
     inventory_in_position_key: props.inventory_in_position_key,
+    include_unreleased: props.include_unreleased,
     search: search_value,
     limit: 100,
   };
