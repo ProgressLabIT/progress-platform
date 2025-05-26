@@ -173,7 +173,7 @@ export default {
     },
 
     can_edit() {
-      return !this.serial.deleted && this.serial.released;
+      return !this.serial.deleted;
     },
   },
 
