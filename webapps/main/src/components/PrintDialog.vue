@@ -333,10 +333,21 @@ async function selectTemplate(template) {
     const { data } = await api.get(`print-template/${template._key}`);
     selectedTemplate.value = data;
 
+    // Validate template data structure
+    if (!data.template || !data.template.columns || !Array.isArray(data.template.columns)) {
+      throw new Error('Invalid template data: missing or invalid columns');
+    }
+
     formModel = reactive(
       Object.fromEntries(
         data.template.columns.map((fieldName) => {
-          const link = data.links[fieldName];
+          // Ensure fieldName is a string
+          if (!fieldName || typeof fieldName !== 'string') {
+            console.warn('Invalid field name found:', fieldName);
+            return ['unknown_field', ''];
+          }
+
+          const link = data.links && data.links[fieldName];
           if (!link) {
             return [fieldName, ''];
           }
@@ -346,15 +357,17 @@ async function selectTemplate(template) {
           }
 
           if (link.type === 'preset') {
+            const presetValue = props.context.getPresetValue(link.value);
             return [
               fieldName,
-              String(props.context.getPresetValue(link.value) ?? ''),
+              String(presetValue ?? ''),
             ];
           }
 
+          const customValue = props.context.getCustomFieldValue(link.value);
           return [
             fieldName,
-            props.context.getCustomFieldValue(link.value) ?? '',
+            String(customValue ?? ''),
           ];
         }),
       ),
@@ -368,41 +381,91 @@ async function selectTemplate(template) {
 }
 
 async function loadImage(url) {
-  const response = await fetch(url);
-  const blob = await response.blob();
-  return new Promise((onSuccess) => {
-    const reader = new FileReader();
-    reader.onload = function () {
-      onSuccess(this.result);
-    };
-    reader.readAsDataURL(blob);
-  });
+  if (!url || typeof url !== 'string') {
+    throw new Error('Invalid image URL provided');
+  }
+
+  try {
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch image: ${response.status} ${response.statusText}`);
+    }
+
+    const blob = await response.blob();
+
+    if (!blob || blob.size === 0) {
+      throw new Error('Empty or invalid image data received');
+    }
+
+    // Check if it's actually an image
+    if (!blob.type.startsWith('image/')) {
+      throw new Error(`Invalid file type: ${blob.type}. Expected an image.`);
+    }
+
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = function () {
+        resolve(this.result);
+      };
+      reader.onerror = function () {
+        reject(new Error('Failed to read image file'));
+      };
+      reader.readAsDataURL(blob);
+    });
+  } catch (error) {
+    throw new Error(`Image loading failed for URL "${url}": ${error.message}`);
+  }
 }
 
 async function prepareInputs() {
   // Needed to parse input type to load images as base64
   const inputs = [];
+
+  if (!selectedTemplate.value?.template?.schemas) {
+    throw new Error('Template schemas are not available');
+  }
+
   for (const schema of selectedTemplate.value.template.schemas) {
     let schemaFields = [];
+
+    if (!schema || typeof schema !== 'object') {
+      console.warn('Invalid schema found, skipping:', schema);
+      continue;
+    }
+
     for (const [fieldName, fieldProps] of Object.entries(schema)) {
+      if (!fieldProps || typeof fieldProps !== 'object') {
+        console.warn(`Invalid field properties for ${fieldName}:`, fieldProps);
+        schemaFields.push([fieldName, '']);
+        continue;
+      }
+
       if (fieldProps.type === 'image') {
         try {
-          const base64 = formModel[fieldName] // Image URL
-            ? await loadImage(formModel[fieldName])
-            : ''; // empty string will not render any image. Background, if present, will be visibile.
+          const imageUrl = formModel[fieldName];
+          const base64 = imageUrl && typeof imageUrl === 'string' && imageUrl.trim() !== ''
+            ? await loadImage(imageUrl)
+            : ''; // empty string will not render any image. Background, if present, will be visible.
           schemaFields.push([fieldName, base64]);
         } catch (err) {
+          console.error(`Error loading image for field ${fieldName}:`, err);
           window.alert(
-            'Error while generating the image. Please contact the system administrator.',
+            `Error while loading image for field "${fieldName}". Please check the image URL and try again.`,
           );
-          console.log(err);
+          // Use empty string as fallback
+          schemaFields.push([fieldName, '']);
         }
       } else {
-        schemaFields.push([fieldName, formModel[fieldName]]);
+        // Ensure we always have a string value, never null or undefined
+        const fieldValue = formModel[fieldName];
+        const safeValue = fieldValue != null ? String(fieldValue) : '';
+        schemaFields.push([fieldName, safeValue]);
       }
     }
     inputs.push(Object.fromEntries(schemaFields));
   }
+
   return inputs;
 }
 
@@ -412,12 +475,39 @@ async function goToPreview() {
   activeStep.value = 2;
   await nextTick();
 
-  const { template } = selectedTemplate.value;
-  const inputs = await prepareInputs();
-  previewSrc.value = await generate({
-    template,
-    inputs,
-  });
+  try {
+    const { template } = selectedTemplate.value;
+
+    // Validate template structure
+    if (!template) {
+      throw new Error('Template is undefined');
+    }
+
+    if (!template.schemas || !Array.isArray(template.schemas)) {
+      throw new Error('Template schemas are missing or invalid');
+    }
+
+    const inputs = await prepareInputs();
+
+    // Validate inputs structure
+    if (!inputs || !Array.isArray(inputs)) {
+      throw new Error('Inputs are missing or invalid');
+    }
+
+    // Log for debugging
+    console.log('Template:', template);
+    console.log('Inputs:', inputs);
+
+    previewSrc.value = await generate({
+      template,
+      inputs,
+    });
+  } catch (error) {
+    console.error('Error generating PDF preview:', error);
+    window.alert(`PDF generation failed: ${error.message}\nPlease check the template configuration and try again.`);
+    // Go back to the previous step
+    activeStep.value = 1;
+  }
 }
 
 const dialogWidth = 615;
