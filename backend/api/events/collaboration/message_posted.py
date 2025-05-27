@@ -10,10 +10,10 @@ from utils.dt import timestamp
 class MessagePostedEvent(BaseCollaboration):
 
   class InfoModel(EventInfoModel):
-    sender: str = Field(..., serialization_alias='_from')
-    recipient: str = Field(..., serialization_alias='_to')
-    created: datetime | None = Field(default_factory=timestamp)
+    sender: str
+    recipient: str
     content: str
+    message_key: str | None = None
 
   @classmethod
   def get_event_type(cls) -> EventType:
@@ -22,9 +22,11 @@ class MessagePostedEvent(BaseCollaboration):
   def apply(self):
     issue_key = self.info.recipient.split('/')[1]
     self.info.issue_data = dict(_key=issue_key)
-    self.message_data = self.tx.collection('message').insert(self.info.model_dump(by_alias=True), return_new=True)['new']
+    message_data = Message(**self.info.model_dump(), created=self.info.timestamp)
+    new_message = self.tx.collection('message').insert(message_data, return_new=True)['new']
+    self.info.message_key = new_message['_key']
     self.response = dict(
-      message=f"Message posted correctly to issue {issue_key}",
-      message_key=self.message_data['_key']
+      message=f"Message posted correctly",
+      message_key=self.info.message_key
     )
 

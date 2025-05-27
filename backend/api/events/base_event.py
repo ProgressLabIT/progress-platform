@@ -156,7 +156,7 @@ class BaseEvent(ABC):
   # ================================
   def store_event(self):
     """
-    Store the event in the database.
+    Store the event in the database. If the event has been stored before, it will be overwritten with the new data.
     """
     record = self.info.model_dump(exclude_extra=True, by_alias=True)
     # update with data modified through the apply method
