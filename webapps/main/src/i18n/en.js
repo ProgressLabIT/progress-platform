@@ -154,6 +154,7 @@ export default {
   },
   export: 'Export',
   ext_key: 'External key',
+  extra_attribute: 'Extra Attribute Path (optional)',
   api_token_add: 'Add API Token',
   api_token_add_text:
     'The token will be created. Write it down because it cannot be displayed anymore after the creation.',

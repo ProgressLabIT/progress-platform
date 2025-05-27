@@ -163,6 +163,9 @@ export class TemplateContext {
   }
 
   getPresetValue(presetName) {
+    if (presetName.includes('extra')) {
+      return this.getExtraValue(presetName);
+    }
     try {
       switch (presetName) {
         // General presets
@@ -215,8 +218,6 @@ export class TemplateContext {
           return extractTime(this.job?.end);
         case 'job.notes':
           return this.job?.notes;
-        case 'job.extra':
-          return this.job?.extra;
 
         // Work Order presets
         case 'work_order.code':
@@ -227,8 +228,6 @@ export class TemplateContext {
           return this.workOrder?.qt_completed;
         case 'work_order.notes':
           return this.workOrder?.notes;
-        case 'work_order.extra':
-          return this.workOrder?.extra;
         case 'work_order.start_date':
           return extractDate(this.workOrder?.start);
         case 'work_order.start_time':
@@ -267,6 +266,42 @@ export class TemplateContext {
     } catch (e) {
       return undefined;
     }
+  }
+
+  getExtraValue(presetName) {
+    const parts = presetName.split('.').map(String);
+    const base = parts[0];
+    const propertyPath = parts.slice(1); // Everything after the base (e.g., ['extra', 'one', 'two', 'three'])
+
+    const baseObjectMap = {
+      serial: this.serial,
+      job: this.job,
+      work_order: this.workOrder,
+      product: this.product,
+      issue: this.issue
+    };
+
+    if (baseObjectMap[base]) {
+      const baseObject = baseObjectMap[base];
+      return this.getNestedValue(baseObject, propertyPath);
+    }
+    return undefined;
+  }
+
+  getNestedValue(obj, path) {
+    if (!obj || !path.length) {
+      return obj;
+    }
+
+    let current = obj;
+    for (const key of path) {
+      if (current == null || typeof current !== 'object') {
+        return undefined;
+      }
+      current = current[key];
+    }
+
+    return current;
   }
 
   searchValueInContexts(valueContexts, customField) {

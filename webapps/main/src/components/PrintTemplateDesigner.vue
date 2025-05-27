@@ -70,6 +70,14 @@
               key-only
               class="shadow-3"
             />
+            <q-input
+              v-if="workingTemplate.links[column].value?.includes('.extra')"
+              :label="$t('extra_attribute')"
+              :model-value="workingTemplate.links[column].value.split('.').slice(2).join('.')"
+              @update:model-value="(attributeName) => updateExtraAttribute(column, attributeName)"
+              filled
+              class="shadow-3 q-mt-sm"
+            />
           </fieldset>
 
           <q-space />
@@ -199,6 +207,7 @@ const templateDataOptions = [
   'serial.create_time',
   'serial.release_date',
   'serial.release_time',
+  'serial.extra'
 ];
 
 const { t, locale } = useI18n();
@@ -274,6 +283,15 @@ function initTemplate() {
   } else {
     mode.value = 'new';
     workingTemplate.value = emptyTemplate.value;
+  }
+}
+
+function updateExtraAttribute(column, attributeName) {
+  const baseValue = workingTemplate.value.links[column].value.split('.').slice(0,2).join('.');
+  if (['', null, undefined].includes(attributeName)) {
+    workingTemplate.value.links[column].value = baseValue;
+  } else {
+    workingTemplate.value.links[column].value = `${baseValue}.${attributeName}`;
   }
 }
 

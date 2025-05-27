@@ -158,6 +158,7 @@ export default {
   },
   export: 'Esporta',
   ext_key: 'Chiave esterna',
+  extra_attribute: 'Percorso attributo extra (opzionale)',
   api_token_add: 'Aggiungi Token per API',
   api_token_delete: 'Rimuovi Token per API',
   api_token_add_text:
