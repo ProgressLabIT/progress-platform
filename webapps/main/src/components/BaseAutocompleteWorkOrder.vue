@@ -106,7 +106,6 @@ export default {
   data() {
     return {
       loading: false,
-      origin_list: [],
       options: [],
       last_research: undefined,
     };
@@ -119,16 +118,10 @@ export default {
   },
 
   created() {
-    this.initialize();
+    this.loadWorkOrders();
   },
 
   methods: {
-    initialize() {
-      if (this.loadData) {
-        this.loadWorkOrders();
-      }
-    },
-
     loadWorkOrders(search_value) {
       this.loading = true;
       let params = {};
@@ -150,11 +143,8 @@ export default {
         });
     },
 
-    filter(value, update, abort) {
-      if (value.length < 3) {
-        abort();
-        return;
-      } else if (this.last_research === value) {
+    filter(value, update) {
+      if (this.last_research === value) {
         update();
       } else {
         update(() => {
