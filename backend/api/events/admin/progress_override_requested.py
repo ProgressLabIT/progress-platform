@@ -11,9 +11,7 @@ from utils.exceptions import (
   JobHasNoAssigneeError,
   JobIsActiveError,
   JobHasActiveBatchError,
-  QuantityIncreaseWithTraceabilityNotAllowed,
   WipNotAvailableError,
-  MissingSerialKeysError
 )
 from collections import deque
 
@@ -27,19 +25,15 @@ class ProgressOverrideRequestedEvent(BaseAdmin):
     new_job_qt_completed: float
     should_adjust_duration: bool | None = True
     quantity_change: int | None = None
-    serial_keys_to_remove: list[str] | None = None # only used for traceability
 
 
   @classmethod
   def get_tx_collections(self):
     return [
       'Batch',
-      'batch_serial',
-      'contains',
       'is_in_position',
       'Job',
       'movement',
-      'Serial',
       'wip',
       'WorkOrder',
       'WorkSession'
@@ -117,6 +111,8 @@ class ProgressOverrideRequestedEvent(BaseAdmin):
       bind_vars=dict(product_keys=product_keys)
     ).next()
 
+    ## Check for mandatory form fields
+    self.has_mandatory_form_fields = any(field.mandatory for step in self.job.step_sequence for field in step.form_fields)
 
 
 
@@ -141,18 +137,15 @@ class ProgressOverrideRequestedEvent(BaseAdmin):
     if self.job.active_batch_qt:
         raise JobHasActiveBatchError("You can't override progress if the job has an active batch. Cancel the current batch first.")
 
-    # Check traceability constraints for quantity increases
-    if self.job.traceability_level:
-      if self.info.new_job_qt_completed > self.job.qt_completed:
-        raise QuantityIncreaseWithTraceabilityNotAllowed("You can't increase progress with traceability enabled.")
-      if not self.info.serial_keys_to_remove:
-        raise MissingSerialKeysError("You must provide the serial keys to remove to override progress with traceability enabled.")
     # Validate quantity change
     if self.info.quantity_change == 0:
         raise ValueError('No quantity change')
     if self.info.new_job_qt_completed > self.job.qt_planned:
         raise ValueError('Quantity is higher than the total planned')
 
+    # Check traceability constraints in product, components and form fields
+    if self.job.traceability_level or len(self.traceability_components) > 0 or self.has_mandatory_form_fields:
+        raise NotImplementedError('Quantity override not allowed with traceability enabled for the job output or in any of its components, or if the job has mandatory form fields.')
 
     # Validate wip availability
 
@@ -797,28 +790,3 @@ class ProgressOverrideRequestedEvent(BaseAdmin):
     return outstanding_duration
 
   # =================================================================================================
-
-  def _get_component_serials(self, batch_key):
-    """
-    Gets the component serials for a batch
-    Almost identical to BatchCompletedEvent._get_component_serials
-    TODO: refactor to avoid code duplication
-    """
-    query = """
-    // if product has no traceability, batch_serials will be empty, so use batch as source
-    LET source = LENGTH(@batch_serial_keys)
-      ? @batch_serial_keys[* RETURN CONCAT('Serial/', CURRENT)]
-      : [CONCAT('Batch/', @batch_key)]
-    RETURN MERGE(
-      FOR s IN source
-        FOR c, e IN 1..1 OUTBOUND s contains
-        FILTER !e.replaced
-        LET serial_key = c._ke
-        COLLECT component_key = c.product_key INTO component_serials
-        RETURN { [component_key]: component_serials[*].c._key }
-      )
-    """
-    return self.tx.aql.execute(query, bind_vars=dict(
-      batch_serial_keys=self.info.serial_keys_to_remove,
-      batch_key=batch_key
-    )).next()
