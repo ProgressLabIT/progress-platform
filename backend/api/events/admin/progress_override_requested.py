@@ -229,7 +229,7 @@ class ProgressOverrideRequestedEvent(BaseAdmin):
     # Revert batch movements
     # revert full movements for all batches except the last one if it's partial
     if self.handle_inventory:
-      self._revert_inventory_movements()
+      self._reverse_inventory_movements(canceled_batches_keys, remaining_qt, new_batch_key)
 
 
   # =================================================================================================
@@ -328,8 +328,7 @@ class ProgressOverrideRequestedEvent(BaseAdmin):
   # =================================================================================================
 
 
-
-  def _create_inventory_movements_for_forced_batch(self, batch_key):
+  def _create_inventory_movements_for_forced_batch(self, batch_key, batch_qt):
     """
     Creates inventory movements for a forced batch
     - Production movement
@@ -345,122 +344,63 @@ class ProgressOverrideRequestedEvent(BaseAdmin):
       batch_key = batch_key
     )
 
-    batch_qt = self.info.quantity_change
+    reason = f'Progress override requested by user {self.info.user_key} on {self.info.timestamp.strftime("%Y-%m-%d %H:%M:%S")}'
 
     # Generate production movement
-    if self.job_inventory_config.get(self.job.product_key, False) and self.job.last_phase:
-      production_position_key = self._get_output_position_key()
+    if self.job.last_phase and self.job_inventory_config.get(self.job.product_key, False):
+      production_position_key = getattr(self.wo, 'output_position_key', 'IN')
 
-      base_production_data = dict(
+      MovementCompletedEvent.create_as_child(self, dict(
         position_to = production_position_key,
         product_key = self.job.product_key,
         movement_type = InventoryMovementType.PRODUCTION,
-        references = references
-      )
-
-      # Not handling traceability for now
-      # if self.info.batch_serial_keys:
-      #   for serial_key in self.info.batch_serial_keys:
-      #     MovementCompletedEvent.create_as_child(self, dict(
-      #       **base_production_data,
-      #       qt_confirmed = 1,
-      #       qt_planned = 1,
-      #       serial_key = serial_key,
-      #     ))
-
-      # else:
-
-      MovementCompletedEvent.create_as_child(self, dict(
-        **base_production_data,
         qt_confirmed = batch_qt,
         qt_planned = batch_qt,
+        references = references,
+        reason = reason
       ))
 
     # Generate consumption movements
-    component_serials_map = self._get_component_serials(batch_key)
-
     for line in self.job_bom:
       # Ensure warehouse management is enabled for component
       if self.job_inventory_config.get(line.component_key, False):
-
         consumption_qt = line.qt * batch_qt
-
-        # If traceability is enabled, generate movements for each serial
-        if line.traceability_level is not None:
-          line_serials = component_serials_map.get(line.component_key, [])
-          if len(line_serials) != consumption_qt:
-            raise ValueError("The number of serials provided does not match the batch quantity.")
-
-          for serial_key in line_serials:
-            MovementCompletedEvent.create_as_child(self, dict(
-              position_from = line.consumption_options.consumption_position_key,
-              product_key = line.component_key,
-              qt_confirmed = 1,
-              qt_planned = 1,
-              movement_type = InventoryMovementType.CONSUMPTION,
-              references = references,
-              serial_key = serial_key,
-              reason = f'Progress override requested by user {self.info.user_key},',
-            ))
-
-        # If traceability is not enabled, generate movement for the batch
-        else:
-          MovementCompletedEvent.create_as_child(self, dict(
-            position_from = line.consumption_options.consumption_position_key,
-            product_key = line.component_key,
-            qt_confirmed = line.qt * batch_qt,
-            qt_planned = line.qt * batch_qt,
-            movement_type = InventoryMovementType.CONSUMPTION,
-            references = references,
-            reason = f'Progress override requested by user {self.info.user_key},',
-          ))
-
-
-  # =================================================================================================
-
-  def _revert_inventory_movements(self):
-    """
-    Reverses inventory effects of canceled batches.
-    We can't revert specific movements themselves because if overrides have been made, the reference system will not allow us to do so.
-    Instead, we revert the effects by creating new movements with the opposite direction.
-    """
-
-    if self.job_inventory_config.get(self.job.product_key, False) and self.job.last_phase:
-      production_position_key = self._get_output_position_key()
-      # revert production movement
-      MovementCompletedEvent.create_as_child(self, dict(
-        position_from = production_position_key,
-        position_to = 'NULL',
-        product_key = self.job.product_key,
-        movement_type = InventoryMovementType.REVERSAL,
-        qt_confirmed = abs(self.info.quantity_change),
-        qt_planned = 0,
-        reason = f'Progress override requested by user {self.info.user_key},',
-        references = InventoryMovementReferences(
-          work_order_key = self.job.wo_key,
-          job_key = self.info.job_key,
-        )
-      ))
-
-    # revert consumption movements
-    for line in self.job_bom:
-      if self.job_inventory_config.get(line.component_key, False):
         MovementCompletedEvent.create_as_child(self, dict(
-          position_from = 'NULL',
-          position_to = line.consumption_options.consumption_position_key,
+          position_from = line.consumption_options.consumption_position_key,
           product_key = line.component_key,
-          movement_type = InventoryMovementType.REVERSAL,
-          qt_confirmed = abs(self.info.quantity_change) * line.qt,
-          qt_planned = 0,
-          reason = f'Progress override requested by user {self.info.user_key},',
-          references = InventoryMovementReferences(
-            work_order_key = self.job.wo_key,
-            job_key = self.info.job_key,
-          )
+          qt_confirmed = consumption_qt,
+          qt_planned = consumption_qt,
+          movement_type = InventoryMovementType.CONSUMPTION,
+          references = references,
+          reason = reason,
         ))
 
+
   # =================================================================================================
 
+  def _reverse_inventory_movements(self, canceled_batches_keys, remaining_qt, new_batch_key):
+    """
+    Reverses inventory effects of canceled batches.
+    """
+
+    movements_to_reverse = self.tx.aql.execute(
+      """
+      FOR m IN movement
+      FILTER m.references.batch_key IN @batch_keys
+      RETURN m
+      """,
+      bind_vars=dict(batch_keys=canceled_batches_keys)
+    )
+    for movement in movements_to_reverse:
+      MovementReversedEvent.create_as_child(self, dict(
+        original_movement_key=movement['_key'],
+        reason=f'Progress override requested by user {self.info.user_key},'
+      ))
+
+    if remaining_qt < 0 and new_batch_key:
+      self._create_inventory_movements_for_forced_batch(batch_key=new_batch_key, batch_qt=abs(remaining_qt))
+
+  # =================================================================================================
 
   def _remove_upstream_wip_for_quantity_increase(self):
     """Removes WIP from previous phase for quantity increases"""
