@@ -50,7 +50,12 @@ class ProgressOverrideRequestedEvent(BaseAdmin):
     return EventType.PROGRESS_OVERRIDE_REQUESTED
 
   # =================================================================================================
-  # MAIN APPLY LOGIC
+  # MAIN LOGIC
+  # =================================================================================================
+
+
+
+
   # =================================================================================================
 
   def apply(self):
@@ -58,6 +63,7 @@ class ProgressOverrideRequestedEvent(BaseAdmin):
     Handles progress override requests, including traceability records and WIP management.
     """
     # Validate job state and calculate total duration
+    self._init_instance_variables()
     self._validate_job_state()
     self._calculate_and_store_total_duration()
 
@@ -71,9 +77,48 @@ class ProgressOverrideRequestedEvent(BaseAdmin):
     self._handle_job_status()
     self._update_batch_available_states()
 
+
   # =================================================================================================
   # LOGIC SECTIONS
   # =================================================================================================
+
+  def _init_instance_variables(self):
+    """
+    Initializes instance variables for the event
+    """
+    # Set job, work order and quantity change
+    self.job = Job(**self.tx.collection('Job').get(self.info.job_key))
+    self.wo = WorkOrderFull(**self.tx.collection('WorkOrder').get(self.job.wo_key))
+    self.info.quantity_change = self.info.new_job_qt_completed - self.job.qt_completed
+
+    # Set job bom and traceability components
+    self.job_bom = [line for line in self.wo.wo_bom if line.phase_key == self.job.phase_key]
+    self.traceability_components = [line for line in self.job_bom if line.traceability_level]
+
+    # Set wip
+    self.wip = self.tx.aql.execute(
+        TraceabilityQueries.GET_AVAILABLE_WIP_UPSTREAM_AND_DOWNSTREAM_OF_JOB,
+        bind_vars=dict(job_key=self.info.job_key)
+    ).next()
+
+    self.free_wip_qt_upstream = sum(w['quantity'] for w in self.wip['upstream_free_wip'])
+    self.free_wip_qt_downstream = sum(w['quantity'] for w in self.wip['downstream_free_wip'])
+
+    ## Global inventory config
+    warehouse_enabled = self.tx.collection('Config').get('enable_inventory_management')
+    # if config is not set, we assume warehouse is not enabled
+    self.handle_inventory = warehouse_enabled is not None and warehouse_enabled.get('value', False)
+
+    ## Product and components inventory config
+    product_keys = [self.job.product_key] + [line.component_key for line in self.job_bom]
+
+    self.job_inventory_config = self.tx.aql.execute(
+      InventoryQueries.PRODUCTS_INVENTORY_CONFIG,
+      bind_vars=dict(product_keys=product_keys)
+    ).next()
+
+
+
 
   def _validate_job_state(self):
     """
@@ -83,16 +128,7 @@ class ProgressOverrideRequestedEvent(BaseAdmin):
     2. Job is not active
     3. Job has no active batches
     4. Traceability constraints for quantity increases
-
-    Raises:
-        JobHasNoAssigneeError: If job has no assigned user
-        JobIsActiveError: If job is currently active
-        JobHasActiveBatchError: If job has an active batch
-        QuantityOverrideForSerialsNotAllowed: If trying to increase progress with traceability enabled
     """
-    # Get and store job and
-    self.job = Job(**self.tx.collection('Job').get(self.info.job_key))
-
     # Check job assignment
     if self.job.assigned_to is None:
         raise JobHasNoAssigneeError("You can't declare progress without associating it to a user. Assign the job first.")
@@ -111,22 +147,14 @@ class ProgressOverrideRequestedEvent(BaseAdmin):
         raise QuantityIncreaseWithTraceabilityNotAllowed("You can't increase progress with traceability enabled.")
       if not self.info.serial_keys_to_remove:
         raise MissingSerialKeysError("You must provide the serial keys to remove to override progress with traceability enabled.")
-
-    # Validate quantity changes
-    self.info.quantity_change = self.info.new_job_qt_completed - self.job.qt_completed
-    if not self.info.quantity_change:
+    # Validate quantity change
+    if self.info.quantity_change == 0:
         raise ValueError('No quantity change')
-    elif self.info.new_job_qt_completed > self.job.qt_planned:
+    if self.info.new_job_qt_completed > self.job.qt_planned:
         raise ValueError('Quantity is higher than the total planned')
 
-    # Validate wip availability
-    self.wip = self.tx.aql.execute(
-        TraceabilityQueries.GET_AVAILABLE_WIP_UPSTREAM_AND_DOWNSTREAM_OF_JOB,
-        bind_vars=dict(job_key=self.info.job_key)
-    ).next()
 
-    self.free_wip_qt_upstream = sum(w['quantity'] for w in self.wip['upstream_free_wip'])
-    self.free_wip_qt_downstream = sum(w['quantity'] for w in self.wip['downstream_free_wip'])
+    # Validate wip availability
 
     if self.info.quantity_change > self.free_wip_qt_upstream and not self.job.first_phase:
         raise WipNotAvailableError("The previous phase has not made enough progress to make this change")
@@ -134,13 +162,6 @@ class ProgressOverrideRequestedEvent(BaseAdmin):
     if self.info.quantity_change < 0 and abs(self.info.quantity_change) > self.free_wip_qt_downstream and not self.job.last_phase:
         raise WipNotAvailableError("You can't reduce the released quantity of this phase below that already completed/started/booked from the following phase")
 
-    warehouse_enabled = self.tx.collection('Config').get('enable_inventory_management')
-    if warehouse_enabled is None or not warehouse_enabled.get('value', False):
-      self.handle_inventory = False
-    else:
-      wo = WorkOrderFull(**self.tx.collection('WorkOrder').get(self.job.wo_key))
-      self.job_bom = [line for line in wo.wo_bom if line.phase_key == self.job.phase_key]
-      self.handle_inventory = True
 
 
   # =================================================================================================
@@ -313,34 +334,7 @@ class ProgressOverrideRequestedEvent(BaseAdmin):
   # HELPER METHODS
   # =================================================================================================
 
-  @property
-  def job_inventory_config(self):
 
-    if not hasattr(self, '_job_inventory_config'):
-      # Init list with output product
-      product_keys = [self.job.product_key]
-
-      # Add components to list
-      for line in self.job_bom:
-        product_keys.append(line.component_key)
-
-      # Get inventory config for all relevant products
-      self._job_inventory_config = self.tx.aql.execute(
-        InventoryQueries.PRODUCTS_INVENTORY_CONFIG,
-        bind_vars=dict(product_keys=product_keys)
-      ).next()
-
-    return self._job_inventory_config
-
-  # =================================================================================================
-
-  def _get_output_position_key(self):
-    """
-    Returns the output position key for the job
-    """
-    return self.tx.collection('WorkOrder').get(self.job.wo_key).get('output_position_key', 'IN')
-
-  # =================================================================================================
 
   def _create_inventory_movements_for_forced_batch(self, batch_key):
     """
