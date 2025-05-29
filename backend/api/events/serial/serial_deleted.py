@@ -61,7 +61,7 @@ class SerialDeletedEvent(BaseSerialEvent):
 
   def do_delete(self, serial_key):
     if self.info.soft:
-       self.tx.collection('Serial').update(dict(_key=serial_key, deleted=self.info.event_key))
+       self.tx.collection('Serial').update(dict(_key=serial_key, deleted=self.event_key))
     else:
        self.tx.collection('Serial').delete(serial_key)
     self.tx.collection('contains').delete_match(filters=dict(_from=f'Serial/{serial_key}'))

@@ -193,13 +193,12 @@ class Queries:
     // FILTER BY DOCUMENT PROPERTIES
     FILTER
       // When filtering by document key, parameters will be arrays
-      s.deleted == false
-      && (@serial_key ? POSITION(@serial_key, s._key) : true)
+      (@serial_key ? POSITION(@serial_key, s._key) : true)
       && (@serial_search ? CONTAINS(LOWER(s.code), LOWER(@serial_search)) : true)
       && (@created_by ? POSITION(@created_by[* RETURN CONCAT('User/', CURRENT)], s.created_by) : true)
       && (@time_created_from ? s.created >= @time_created_from : true)
       && (@time_created_to ? s.created <= @time_created_to : true)
-      && (@deleted ? true : s.deleted == false)
+      && (@include_deleted ? true : !s.deleted)
       && (@filter_unreleased ? s.released != null : true)
       && (@time_released_from ? s.released >= @time_released_from : true)
       && (@time_released_to ? s.released <= @time_released_to : true)

@@ -360,7 +360,7 @@ export default {
     deleteSerial() {
       this.$q
         .dialog({
-   cancel: true,
+          cancel: true,
           title: this.$t('serial_delete_confirm_title'),
           message: this.$t('serial_delete_confirm_question'),
           options: {
@@ -375,7 +375,7 @@ export default {
             ],
           },
         })
-        .onOk((delete_children) => {
+        .onOk(async (delete_children) => {
           const user = this.session_data.user._key;
           const event = {
             event_type: 'SERIAL_DELETED',
@@ -386,8 +386,8 @@ export default {
             serial_key: this.serial._key,
           };
 
-          this.$api.post('event', event);
-          this.$store.dispatch('loadSerials');
+          await this.$api.post('event', event);
+          await this.$store.dispatch('loadSerials');
           this.$q.notify({
             message: this.$t(`Seriale ${this.serial.code} eliminato`),
             color: 'theme-orange',
