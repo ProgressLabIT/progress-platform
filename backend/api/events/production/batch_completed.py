@@ -114,6 +114,33 @@ class BatchCompletedEvent(BaseProductionEvent):
       )
     )
 
+    # ===================================================================
+    # HANDLE WIP AND NOTIFY RELEASED PIECES
+    # ===================================================================
+
+    if not self.job.first_phase:
+      WIPRemovedEvent.create_as_child(self, dict(
+        job_key=self.info.job_key,
+        quantity=self.info.completed_batch_qt,
+      ))
+
+    if not self.job.last_phase:
+      # If next_phase, generate a WIP record and update job input availability state
+      WIPDeclaredEvent.create_as_child(self, dict(
+        job_key=self.info.job_key,
+        quantity=self.info.completed_batch_qt,
+        serial_keys=self.info.batch_serial_keys
+      ))
+
+    else:
+      BatchReleasedEvent.create_as_child(self, dict(
+        batch_key=self.info.active_batch_key,
+        product_key=self.info.product_key,
+        work_order_key=self.info.work_order_key,
+        qt_released=self.info.completed_batch_qt,
+        serial_keys=self.info.batch_serial_keys,
+      ))
+
 
     # ===================================================================
     # NO REMAINING QUANTITY TO DO (LAST BATCH) -> CLOSE JOB
@@ -196,35 +223,6 @@ class BatchCompletedEvent(BaseProductionEvent):
         new_job_data = self.tx.aql.execute(ProductionQueries.GET_WORKING_JOB_DATA, bind_vars=dict(job_key = self.info.job_key)).next()
         if ('wo_bom' in new_job_data):
           setattr(self.job, 'wo_bom', new_job_data['wo_bom'])
-
-
-    # ===================================================================
-    # HANDLE WIP AND NOTIFY RELEASED PIECES
-    # ===================================================================
-
-    if not self.job.first_phase:
-      WIPRemovedEvent.create_as_child(self, dict(
-        job_key=self.info.job_key,
-        quantity=self.info.completed_batch_qt,
-      ))
-
-    if self.job.last_phase:
-      BatchReleasedEvent.create_as_child(self, dict(
-        batch_key=self.info.active_batch_key,
-        product_key=self.info.product_key,
-        work_order_key=self.info.work_order_key,
-        qt_released=self.info.completed_batch_qt,
-        serial_keys=self.info.batch_serial_keys,
-      ))
-
-    # If next_phase, generate a WIP record and update job input availability state
-    else:
-      WIPDeclaredEvent.create_as_child(self, dict(
-        job_key=self.info.job_key,
-        quantity=self.info.completed_batch_qt,
-        serial_keys=self.info.batch_serial_keys
-      ))
-
 
 
   # =================================================================
