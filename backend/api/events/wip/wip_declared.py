@@ -9,11 +9,8 @@ from utils.traceability import Queries as TraceabilityQueries
 class WIPDeclaredEvent(BaseProductionEvent):
   class InfoModel(EventInfoModel):
     job_key: str
-    batch_key: str
     quantity: int
-    work_order_key: str
-    phase_key: str
-    product_key: str
+    serial_keys: list[str] | None = None
 
   @classmethod
   def get_event_type(cls):
@@ -25,31 +22,36 @@ class WIPDeclaredEvent(BaseProductionEvent):
 
     self.next_phase_key = self.tx.aql.execute(
       TraceabilityQueries.GET_NEXT_PHASE_IN_WORK_ORDER,
-      bind_vars=dict(wo_key=self.info.work_order_key, phase_key=self.info.phase_key)
+      bind_vars=dict(wo_key=self.job.wo_key, phase_key=self.job.phase_key)
     ).next()
 
     # Prepare new wip data and make a single call to the database with insert_many
     # Insert many requires passing dicts (does not use default db serializer)
     if getattr(self.job, 'traceability_level', None):
-      bind_vars = dict(batch_key = self.info.batch_key)
-      serial_to_declare_cursor = self.tx.aql.execute(SerialQueries.GET_BATCH_SERIALS, bind_vars=bind_vars)
-      serial_to_declare = [Serial(**serial) for serial in serial_to_declare_cursor]
+
+      if not self.info.serial_keys or len(self.info.serial_keys) == 0:
+        raise ValueError('Serial keys are required to declare wip when traceability is enabled')
+      if self.info.serial_keys != list(set(self.info.serial_keys)):
+        raise ValueError('Serial keys must be unique')
+      if len(self.info.serial_keys) != self.info.quantity:
+        raise ValueError('Serial keys must match quantity')
 
       new_wip_data = [dict(
-        _from = f'Phase/{self.info.phase_key}',
+        _from = f'Phase/{self.job.phase_key}',
         _to = f'Phase/{self.next_phase_key}',
-        wo_key = self.info.work_order_key,
-        product_key = self.info.product_key,
+        wo_key = self.job.wo_key,
+        product_key = self.job.product_key,
         quantity = 1,
-        serial_key = s.key
-      ) for s in serial_to_declare]
+        serial_key = s,
+        active = False
+      ) for s in self.info.serial_keys]
 
     else:
       new_wip_data = [dict(
-        _from=f'Phase/{self.info.phase_key}',
+        _from=f'Phase/{self.job.phase_key}',
         _to=f'Phase/{self.next_phase_key}',
-        wo_key=self.info.work_order_key,
-        product_key=self.info.product_key,
+        wo_key=self.job.wo_key,
+        product_key=self.job.product_key,
         quantity=self.info.quantity,
         active=False
       )]
