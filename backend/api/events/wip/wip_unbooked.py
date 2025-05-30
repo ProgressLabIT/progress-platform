@@ -24,15 +24,15 @@ class WIPUnbookedEvent(BaseProductionEvent):
     booked_wips_cursor = self.tx.collection('wip').find(dict(
       _to=f'Job/{self.info.job_key}',
     ))
-    booked_wips = [WIP(**wip) for wip in booked_wips_cursor]
-    booked_wips = sorted(booked_wips, key=lambda wip: wip.quantity)
+    booked_wips = sorted([WIP(**wip) for wip in booked_wips_cursor], key=lambda wip: wip.quantity)
 
     for wip in booked_wips:
       if self.info.quantity >= wip.quantity:
         # Unbook entire batch for job
         self.tx.collection('wip').update(dict(
           _key = wip.key,
-          _to = f'Phase/{self.info.phase_key}'
+          _to = f'Phase/{self.info.phase_key}',
+          active = False
         ))
         self.info.quantity -= wip.quantity
         if self.info.quantity == 0:
@@ -51,11 +51,10 @@ class WIPUnbookedEvent(BaseProductionEvent):
           from_doc=wip.from_doc,
           to_doc=f'Phase/{self.info.phase_key}',
           wo_key=wip.wo_key,
-          batch_key=wip.batch_key,
           product_key=wip.product_key,
           quantity=self.info.quantity,
           value=wip.quantity * unbooking_percentage,
-          active=True
+          active=False
         )
         self.tx.collection('wip').insert(new_wip)
         self.info.quantity = 0

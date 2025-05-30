@@ -16,7 +16,7 @@ class WIPRemovedEvent(BaseProductionEvent):
 
   def apply(self):
     """
-    Remove upstream wip records related to the completed batch
+    Remove the given quantity of wip records booked by the job (upstream)
     """
     booked_wips_cursor = self.tx.collection('wip').find(dict(
       _to=f'Job/{self.info.job_key}',

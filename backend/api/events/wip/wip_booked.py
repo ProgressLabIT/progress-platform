@@ -68,7 +68,6 @@ class WIPBookedEvent(BaseProductionEvent):
             from_doc=wip.from_doc,
             to_doc=f'Job/{self.info.job_key}',
             wo_key=wip.wo_key,
-            batch_key=wip.batch_key,
             product_key=wip.product_key,
             quantity=self.info.quantity,
             value=wip.quantity * booking_percentage,

@@ -276,7 +276,6 @@ collections = [
   Collection(name='UserSession'),
   Collection(name='wip', indexes=[
     DBIndex(fields=['wo_key'], name='wip-wo'),
-    DBIndex(fields=['batch_key'], name='wip-batch'),
     DBIndex(fields=['serial_key'], name='wip-serial'),
     DBIndex(fields=['_to, wo_key, active, serial_key'], name='wip-target'),
   ]),
