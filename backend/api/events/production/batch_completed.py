@@ -221,11 +221,8 @@ class BatchCompletedEvent(BaseProductionEvent):
     else:
       WIPDeclaredEvent.create_as_child(self, dict(
         job_key=self.info.job_key,
-        batch_key=self.info.active_batch_key,
         quantity=self.info.completed_batch_qt,
-        work_order_key=self.info.work_order_key,
-        phase_key=self.info.phase_key,
-        product_key=self.info.product_key,
+        serial_keys=self.info.batch_serial_keys
       ))
 
 
