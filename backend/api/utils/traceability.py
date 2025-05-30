@@ -319,7 +319,6 @@ class Queries:
     FILTER
       w._to == CONCAT('Phase/', @phase_key)
       && w.wo_key == @wo_key
-    SORT w.batch_key
     RETURN w
   """
 
@@ -353,7 +352,6 @@ class Queries:
       FILTER
         w._from == previous_phase_id
         && w._to == current_phase_id
-      SORT w.batch_key
       RETURN w
     )
 
@@ -362,7 +360,6 @@ class Queries:
       FILTER
         w._from == current_phase_id
         && w._to == next_phase_id
-      SORT w.batch_key
       RETURN w
     )
 
