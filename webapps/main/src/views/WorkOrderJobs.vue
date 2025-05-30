@@ -931,6 +931,8 @@ export default {
       }
 
       try {
+        delete this.jobs_temp_data.max_progress_qt;
+        delete this.jobs_temp_data.min_progress_qt;
         await this.sendEvent({
           event_type: 'PROGRESS_OVERRIDE_REQUESTED',
           event_data: this.jobs_temp_data,
