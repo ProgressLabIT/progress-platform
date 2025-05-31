@@ -1,7 +1,6 @@
 from events.admin.base_admin import BaseAdmin, Queries
 from events.inventory.movement_reversed import MovementReversedEvent
 from events.inventory.movement_completed import MovementCompletedEvent
-from utils.dt import timestamp
 from utils.inventory import Queries as InventoryQueries
 from models.inventory import InventoryMovementType, InventoryMovementReferences
 from models.event import EventInfoModel, EventType
@@ -54,7 +53,9 @@ class ProgressOverrideRequestedEvent(BaseAdmin):
 
   def apply(self):
     """
-    Handles progress override requests, including traceability records and WIP management.
+    Handles progress override requests, managing Batch, WorkSession and WIP records.
+    Requires the job to have no active batch and have no traceability elements
+    (output, components, mandatory form fields)
     """
     # Validate job state and calculate total duration
     self._init_instance_variables()
@@ -114,7 +115,7 @@ class ProgressOverrideRequestedEvent(BaseAdmin):
     ## Check for mandatory form fields
     self.has_mandatory_form_fields = any(field.mandatory for step in self.job.step_sequence for field in step.form_fields)
 
-
+  # =================================================================================================
 
   def _validate_job_state(self):
     """
@@ -178,20 +179,34 @@ class ProgressOverrideRequestedEvent(BaseAdmin):
     # Calculate duration if needed
     new_work_session_duration = None
     if not self.info.should_adjust_duration:
-        new_work_session_duration = self._handle_time_redistribution()
+      new_work_session_duration = self._handle_time_redistribution()
 
     # Create forced traceability records
-    batch_key, batch_value = self._create_forced_traceability_records(
-        quantity=self.info.quantity_change,
-        duration=new_work_session_duration
+    batch_key, batch_value = self._create_forced_batch_and_work_session(
+      quantity=self.info.quantity_change,
+      duration=new_work_session_duration
     )
 
-    # Handle upstream WIP
+    # Create downstream WIP
+    if not self.job.last_phase:
+      new_wip = WIP(
+        _from = f"Phase/{self.job.phase_key}",
+        _to = f"Phase/{self.wip['next_phase_key']}",
+        wo_key = self.job.wo_key,
+        product_key = self.job.product_key,
+        quantity = self.info.quantity_change,
+        value = batch_value,
+        active = False,
+      )
+
+      self.tx.collection('wip').insert(new_wip)
+
+    # Reduce upstream WIP
     if not self.job.first_phase:
-        self._remove_upstream_wip_for_quantity_increase()
+      self._reduce_wip(self.wip['upstream_free_wip'], self.info.quantity_change)
 
     if self.handle_inventory:
-      self._create_inventory_movements_for_forced_batch(batch_key=batch_key)
+      self._create_inventory_movements_for_forced_batch(batch_key=batch_key, batch_qt=self.info.quantity_change)
 
   # =================================================================================================
 
@@ -204,33 +219,43 @@ class ProgressOverrideRequestedEvent(BaseAdmin):
     # Handle work sessions based on duration adjustment preference
     new_session_duration = self._handle_work_sessions_for_decrease(canceled_batches_keys)
 
-    # Handle downstream WIP
-    if not self.job.last_phase:
-        self._remove_downstream_wip_for_canceled_batches(canceled_batches_keys)
+    new_batch_key = None
 
     # Create compensating batch if needed
     if remaining_qt < 0:
         # Create compensating batch with appropriate duration
-        new_batch_key, batch_value = self._create_forced_traceability_records(
-            quantity=abs(remaining_qt),
-            duration=new_session_duration,
-            unit_processing_time=avg_processing_time
-        )
+      new_batch_key, new_batch_value = self._create_forced_batch_and_work_session(
+        quantity=abs(remaining_qt),
+        duration=new_session_duration,
+        unit_processing_time=avg_processing_time
+      )
 
-        # Update booked WIP references
-        self._update_booked_wip_references(canceled_batches_keys, new_batch_key)
+      # Update booked WIP references
+      self._update_booked_wip_references(canceled_batches_keys, new_batch_key)
+
+     # Handle downstream WIP
+    if not self.job.last_phase:
+      self._reduce_wip(self.wip['downstream_free_wip'], abs(self.info.quantity_change))
 
     # Handle upstream WIP for quantity decrease
     if not self.job.first_phase:
-        self._add_upstream_wip_for_quantity_decrease()
+      new_wip = WIP(
+        _from = f"Phase/{self.wip['previous_phase_key']}",
+        _to = f"Phase/{self.job.phase_key}",
+        wo_key = self.job.wo_key,
+        product_key = self.job.product_key,
+        quantity = abs(self.info.quantity_change),
+        active = False
+      )
+      self.tx.collection('wip').insert(new_wip)
 
-    # TODO: Add serial deletion
-
-    # Revert batch movements
-    # revert full movements for all batches except the last one if it's partial
     if self.handle_inventory:
-      self._reverse_inventory_movements(canceled_batches_keys, remaining_qt, new_batch_key)
+      # Revert batch movements
+      self._reverse_inventory_movements(canceled_batches_keys)
 
+      # Create inventory movements for compensating batch
+      if remaining_qt < 0 and new_batch_key:
+        self._create_inventory_movements_for_forced_batch(batch_key=new_batch_key, batch_qt=abs(remaining_qt))
 
   # =================================================================================================
 
@@ -378,7 +403,7 @@ class ProgressOverrideRequestedEvent(BaseAdmin):
 
   # =================================================================================================
 
-  def _reverse_inventory_movements(self, canceled_batches_keys, remaining_qt, new_batch_key):
+  def _reverse_inventory_movements(self, canceled_batches_keys):
     """
     Reverses inventory effects of canceled batches.
     """
@@ -397,31 +422,6 @@ class ProgressOverrideRequestedEvent(BaseAdmin):
         reason=f'Progress override requested by user {self.info.user_key},'
       ))
 
-    if remaining_qt < 0 and new_batch_key:
-      self._create_inventory_movements_for_forced_batch(batch_key=new_batch_key, batch_qt=abs(remaining_qt))
-
-  # =================================================================================================
-
-  def _remove_upstream_wip_for_quantity_increase(self):
-    """Removes WIP from previous phase for quantity increases"""
-    remaining_wip_to_remove = abs(self.info.quantity_change)
-    wip_records = deque(self.wip['upstream_free_wip'])
-    records_to_delete = deque()
-
-    while remaining_wip_to_remove:
-        current_wip = wip_records.popleft()
-
-        if current_wip['quantity'] <= remaining_wip_to_remove:
-            records_to_delete.append(current_wip)
-            remaining_wip_to_remove -= current_wip['quantity']
-        else:
-            leftover_wip = current_wip['quantity'] - remaining_wip_to_remove
-            wip_update = dict(_key=current_wip['_key'], quantity=leftover_wip)
-            self.tx.collection('wip').update(wip_update)
-            remaining_wip_to_remove = 0
-
-    self.tx.collection('wip').delete_many(records_to_delete)
-
   # =================================================================================================
 
   def _cancel_batches_for_quantity_decrease(self):
@@ -432,15 +432,15 @@ class ProgressOverrideRequestedEvent(BaseAdmin):
     - Returns data needed for downstream operations
 
     Returns:
-        tuple: (canceled_batch_keys, remaining_quantity, avg_processing_time)
-            - canceled_batch_keys: List of keys for canceled batches
-            - remaining_quantity: Negative if we canceled more than needed, 0 or positive otherwise
-            - avg_processing_time: Average unit processing time (if all batches were canceled)
+      tuple: (canceled_batch_keys, remaining_quantity, avg_processing_time)
+        - canceled_batch_keys: List of keys for canceled batches
+        - remaining_quantity: it will be either zero or negative if we canceled more than needed
+        - avg_processing_time: Average unit processing time (if all batches were canceled)
     """
     # Get non-canceled batches ordered by recency
     job_batches = deque(Batch(**b) for b in self.tx.aql.execute(
-        Queries.NON_CANCELED_BATCHES_BY_JOB,
-        bind_vars=dict(job_key=self.job.key)
+      Queries.NON_CANCELED_BATCHES_BY_JOB,
+      bind_vars=dict(job_key=self.job.key)
     ))
 
     remaining_qt_to_remove = abs(self.info.quantity_change)
@@ -448,15 +448,16 @@ class ProgressOverrideRequestedEvent(BaseAdmin):
 
     # Cancel batches until we reach or exceed the target quantity
     while remaining_qt_to_remove > 0:
-        current_batch = job_batches.popleft()
-        current_batch.canceled = self.event_key
-        batches_to_cancel.append(current_batch)
-        remaining_qt_to_remove -= current_batch.qt_pass
+      current_batch = job_batches.popleft()
+      current_batch.canceled = self.event_key
+      batches_to_cancel.append(current_batch)
+      remaining_qt_to_remove -= current_batch.qt_pass
 
     # Calculate average processing time if all batches were canceled
+    # This is necessary because there will be no batches left to calculate the average
     avg_unit_processing_time = None
     if not job_batches:
-        avg_unit_processing_time = self._calculate_avg_unit_processing_time()
+      avg_unit_processing_time = self._calculate_avg_unit_processing_time()
 
     # Update batches in database
     batch_updates = [b.model_dump(by_alias=True) for b in batches_to_cancel]
@@ -491,18 +492,27 @@ class ProgressOverrideRequestedEvent(BaseAdmin):
 
   # =================================================================================================
 
-  def _remove_downstream_wip_for_canceled_batches(self, canceled_batches_keys):
-    """Removes downstream WIP for canceled batches"""
-    self.tx.aql.execute(
-        """
-        FOR w IN wip
-        FILTER
-            w.batch_key IN @canceled_batches_keys
-            && PARSE_IDENTIFIER(w._to).collection == 'Phase'
-        REMOVE w IN wip
-        """,
-        bind_vars = dict(canceled_batches_keys=canceled_batches_keys)
-    )
+  def _reduce_wip(self, wip_records, quantity):
+    remaining_wip_to_remove = quantity
+    wip_records = deque(wip_records)
+    records_to_delete = deque()
+
+    while remaining_wip_to_remove:
+      current_wip = wip_records.popleft()
+
+      if current_wip['quantity'] <= remaining_wip_to_remove:
+        records_to_delete.append(current_wip)
+        remaining_wip_to_remove -= current_wip['quantity']
+      else:
+        leftover_wip = current_wip['quantity'] - remaining_wip_to_remove
+        new_value = round(current_wip['value'] * leftover_wip / current_wip['quantity'], 4)
+        wip_update = dict(_key=current_wip['_key'], quantity=leftover_wip, value=new_value)
+        self.tx.collection('wip').update(wip_update)
+        remaining_wip_to_remove = 0
+
+    self.tx.collection('wip').delete_many(records_to_delete)
+
+
 
   # =================================================================================================
 
@@ -524,44 +534,6 @@ class ProgressOverrideRequestedEvent(BaseAdmin):
 
   # =================================================================================================
 
-  def _add_upstream_wip_for_quantity_decrease(self):
-    """Adds WIP from previous phase for quantity decreases"""
-    batches_from_previous_phase = deque(Batch(**b) for b in self.tx.aql.execute(
-        """
-        FOR b IN Batch
-        FILTER
-            b.work_order_key == @work_order_key
-            && b.phase_key == @phase_key
-            && b.canceled == null
-        SORT b.end DESC
-        RETURN b
-        """,
-        bind_vars = dict(
-            work_order_key = self.job.wo_key,
-            phase_key = self.wip['previous_phase_key']
-        )
-    ))
-    wip_to_add = abs(self.info.quantity_change)
-
-    while wip_to_add:
-        wip_batch = batches_from_previous_phase.popleft()
-        # Wip quantity can be less than batch quantity
-        wip_quantity = min([wip_to_add, wip_batch.qt_pass])
-
-        new_wip = WIP(
-            _from = f"Phase/{self.wip['previous_phase_key']}",
-            _to = f"Phase/{self.job.phase_key}",
-            batch_key = wip_batch.key,
-            wo_key = self.job.wo_key,
-            product_key = self.job.product_key,
-            quantity = wip_quantity,
-            value = wip_batch.value * wip_quantity / wip_batch.qt_pass,
-            active = False,
-        )
-        self.tx.collection('wip').insert(new_wip)
-        wip_to_add -= wip_quantity
-
-  # =================================================================================================
 
   def _calculate_avg_unit_processing_time(self):
     avg_unit_processing_time = self.tx.aql.execute(
@@ -586,7 +558,7 @@ class ProgressOverrideRequestedEvent(BaseAdmin):
 
   # =================================================================================================
 
-  def _create_forced_traceability_records(self, quantity, duration=None, unit_processing_time=None):
+  def _create_forced_batch_and_work_session(self, quantity, duration=None, unit_processing_time=None):
     """
     1. Create new batch with:
     - qt_pass/qt_total: provided quantity
@@ -628,7 +600,6 @@ class ProgressOverrideRequestedEvent(BaseAdmin):
       end = self.info.timestamp,
       qt_pass = quantity,
       qt_total = quantity,
-      value = batch_value,
       forced = self.event_key
     )
 
@@ -646,20 +617,6 @@ class ProgressOverrideRequestedEvent(BaseAdmin):
     )
 
     self.tx.collection('WorkSession').insert(new_work_sessions_data)
-
-    if not self.job.last_phase:
-      new_wip = WIP(
-        _from = f"Phase/{self.job.phase_key}",
-        _to = f"Phase/{self.wip['next_phase_key']}",
-        batch_key = new_batch_key,
-        wo_key = self.job.wo_key,
-        product_key = self.job.product_key,
-        quantity = quantity,
-        value = batch_value,
-        active = False,
-      )
-
-      self.tx.collection('wip').insert(new_wip)
 
     return new_batch_key, batch_value
 
