@@ -463,6 +463,19 @@ class ProgressOverrideRequestedEvent(BaseAdmin):
     batch_updates = [b.model_dump(by_alias=True) for b in batches_to_cancel]
     canceled_batches = [Batch(**b['new']) for b in self.tx.collection('Batch').update_many(batch_updates, return_new=True)]
 
+    # Cancel step execution data
+    self.tx.aql.execute(
+      """
+      FOR x IN StepExecutionData
+      FILTER x.batch_key IN @batch_keys
+      UPDATE x WITH { canceled: @event_key } in StepExecutionData
+      """,
+      bind_vars=dict(
+        batch_keys=[b.key for b in canceled_batches],
+        event_key=self.event_key
+      )
+    )
+
     return canceled_batches, remaining_qt_to_remove, avg_unit_processing_time
 
   # =================================================================================================
