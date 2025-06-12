@@ -269,6 +269,14 @@ export class TemplateContext {
   }
 
   getExtraValue(presetName) {
+    /**
+     * Gets a value from a nested object path specified by a preset name string.
+     * The preset name is expected to be in dot notation format (e.g. 'serial.extra.one.two').
+     * The first part specifies the base object (serial, job, work_order, product, issue)
+     * and subsequent parts specify the nested property path to traverse.
+     * @param {string} presetName - Dot-notation path to the desired value
+     * @returns {*} The value at the specified path, or undefined if path is invalid
+     */
     const parts = presetName.split('.').map(String);
     const base = parts[0];
     const propertyPath = parts.slice(1); // Everything after the base (e.g., ['extra', 'one', 'two', 'three'])
@@ -289,6 +297,12 @@ export class TemplateContext {
   }
 
   getNestedValue(obj, path) {
+    /**
+     * Recursively traverses an object to get a nested value based on a path array
+     * @param {Object} obj - The object to traverse
+     * @param {Array} path - Array of keys representing the path to the desired value
+     * @returns {*} The value at the specified path, or undefined if path is invalid
+     */
     if (!obj || !path.length) {
       return obj;
     }
