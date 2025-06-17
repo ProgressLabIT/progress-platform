@@ -20,6 +20,8 @@ class JobResetEvent(BaseAdmin):
   - Deletes downstream wip
   - Reverses movements
   - Updates job as created
+
+  Event key is stored as source for various updates. The `event_first` property is set as True in the base admin event.
   """
 
   class InfoModel(EventInfoModel):
@@ -42,22 +44,22 @@ class JobResetEvent(BaseAdmin):
 
     free_wip_qt_downstream = sum(w['quantity'] for w in self.available_wip['downstream_free_wip'])
 
-    if not self.job.last_phase:
-      if free_wip_qt_downstream < self.job.qt_completed:
-        raise WipNotAvailableError("You can't reset the job because its output is being worked on in following phases. Reset those jobs first.")
-
-      # Delete downstream wip
-      self._reduce_wip(self.available_wip['downstream_free_wip'], self.job.qt_completed)
-
     # Cancel Batches and store their keys
     self._cancel_batches()
 
-    if self.job.traceability_level:
-      self._handle_traceability()
+    if not self.job.traceability_level:
+      if not self.job.last_phase:
+        if free_wip_qt_downstream < self.job.qt_completed:
+          raise WipNotAvailableError("You can't reset the job because its output is being worked on in following phases. Reset those jobs first.")
+        # Delete downstream wip
+        self._reduce_wip(self.available_wip['downstream_free_wip'], self.job.qt_completed)
+
+      if not self.job.first_phase:
+        # Add upstream wip
+        self._add_upstream_wip()
 
     else:
-      # Add upstream wip
-      self._add_upstream_wip()
+      self._handle_serials()
 
     # Remove serial linkes whether traceability is enabled or not for the output
     self._unlink_components()
@@ -88,7 +90,7 @@ class JobResetEvent(BaseAdmin):
 
   # =================================================================================================
 
-  def _handle_traceability(self):
+  def _handle_serials(self):
     # Delete batch_serial records returning the serial keys
     self.job_serial_keys = list(self.tx.aql.execute("""
         FOR b IN @batch_keys
@@ -100,24 +102,26 @@ class JobResetEvent(BaseAdmin):
       bind_vars=dict(batch_keys=self.job_batch_keys)
     ))
 
-    # Ensure job serials are available in the phase buffer downstream
-    wip_serials_count = self.tx.aql.execute("""
-      FOR w IN wip
-      FILTER
-        w.serial_key IN @job_serial_keys
-        AND w._from == CONCAT('Phase/', @phase_key)
-        AND PARSE_IDENTIFIER(w._to).collection == 'Phase'
-      RETURN 1
-      """,
-      bind_vars = dict(
-        job_serial_keys = self.job_serial_keys,
-        phase_key = self.job.phase_key
-      ),
-      count=True
-    ).count()
+    # Ensure serial wip records are available in the phase buffer downstream and delete them
+    if not self.job.last_phase:
+      wip_serials_count = self.tx.aql.execute("""
+        FOR w IN wip
+        FILTER
+          w.serial_key IN @job_serial_keys
+          AND w._from == CONCAT('Phase/', @phase_key)
+          AND PARSE_IDENTIFIER(w._to).collection == 'Phase'
+          REMOVE w IN wip
+        RETURN 1
+        """,
+        bind_vars = dict(
+          job_serial_keys = self.job_serial_keys,
+          phase_key = self.job.phase_key
+        ),
+        count=True
+      ).count()
 
-    if wip_serials_count < len(self.job_serial_keys):
-      raise WipNotAvailableError("You can't reset the job because its output is being worked on in following phases. Reset those jobs first.")
+      if wip_serials_count < len(self.job_serial_keys):
+        raise WipNotAvailableError("You can't reset the job because its output is being worked on in following phases. Reset those jobs first.")
 
     # Cancel Serials (if first phase)
     if self.job.first_phase:
@@ -126,20 +130,21 @@ class JobResetEvent(BaseAdmin):
 
     else:
       # Delete data from serials
-      self._remove_phase_data_from_serials()
+      self._update_serial_data()
 
       # Make serials available as wip from previous phase
       self._add_upstream_serial_wip()
 
 
-
   # =================================================================================================
 
-  def _remove_phase_data_from_serials(self):
+  def _update_serial_data(self):
+    """Remove phase data from serials and unrelease them if last phase"""
     for s in self.job_serial_keys:
       SerialUpdatedEvent.create_as_child(self, dict(
         serial_key = s,
-        remove_data_from_phases = [self.job.phase_key]
+        remove_data_from_phases = [self.job.phase_key],
+        unrelease = self.job.last_phase
       ))
 
   # =================================================================================================

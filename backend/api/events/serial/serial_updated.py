@@ -15,6 +15,7 @@ class SerialUpdatedEvent(BaseSerialEvent):
     serial_code: str | None = None # Set code if provided
     serial_data: list[SerialFormFieldValue] | None = None # Set data if provided
     remove_data_from_phases: list[str] | None = None # Set phase keys to remove data from if provided
+    unrelease: bool | None = False # Set to True to unrelease the serial
 
   @classmethod
   def get_event_type(cls):
@@ -63,6 +64,10 @@ class SerialUpdatedEvent(BaseSerialEvent):
     # Update data if provided
     if self.info.serial_data:
       serial_update['data'] = self._merge_serial_data()
+
+    # Unrelease serial if provided
+    if self.info.unrelease:
+      serial_update['released'] = None
 
 
     # ===================================================================

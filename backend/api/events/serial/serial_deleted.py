@@ -25,7 +25,9 @@ class SerialDeletedEvent(BaseSerialEvent):
   def apply(self):
     serial_key = self.info.serial_key
     allow_serial_delete = self.tx.collection('Config').get('allow_serial_delete')
-    if (allow_serial_delete == None or allow_serial_delete['value'] == False):
+    # Do not allow user to directly delete serials if not allowed by configuration
+    # Serials can still be deleted as a consequence of other events, such as job reset
+    if (allow_serial_delete == None or allow_serial_delete['value'] == False) and self.info.primary:
        self.notify_results(dict(
           serial_key = serial_key,
           notification = SerialNotificationType.ERROR,
