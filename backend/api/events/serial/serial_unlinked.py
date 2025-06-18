@@ -47,7 +47,7 @@ class SerialUnlinkedEvent(BaseSerialEvent, BaseInventoryEvent):
       _from = f'Serial/{self.info.parent_serial_key}'
 
     try:
-      match = dict(_from=_from, _to=f'Serial/{self.info.child_serial_key}')
+      match = dict(_from=_from, _to=f'Serial/{self.info.child_serial_key}', replaced=False)
       update = dict(replaced=True, reason=self.info.reason)
       updates_count = self.tx.collection('contains').update_match(match, update)
       if updates_count == 0:
