@@ -527,18 +527,19 @@ export default {
             send_step_data: !this.job.parameters.step_check,
           });
 
+          if (current_batch_was_last ||
+            (!this.job.next_batch_available && !this.job.active_batch_qt)
+            ) {
+            this.$router.push({ name: 'userJobs' });
+            return;
+          }
+
           if (this.traceability_enabled && !this.job.first_phase) {
             // Select new serials and start new batch
             const selected_serials = await this.selectSerialBatch();
             await this.$store.dispatch('resumeJob', {
               batch_serials: selected_serials,
             });
-          }
-
-          if (current_batch_was_last ||
-            (!this.job.next_batch_available && !this.job.active_batch_qt)
-            ) {
-            this.$router.push({ name: 'userJobs' });
           }
         } catch (error) {
           console.error('Error declaring batch:', error);
