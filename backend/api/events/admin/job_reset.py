@@ -5,6 +5,7 @@ from events.serial.serial_updated import SerialUpdatedEvent
 from events.serial.serial_unlinked import SerialUnlinkedEvent
 from models.event import EventInfoModel, EventType
 from utils.serial import Queries as SerialQueries
+from utils.production import update_target_queue
 from utils.traceability import Queries as TraceabilityQueries
 from utils.exceptions import WipNotAvailableError
 
@@ -70,8 +71,9 @@ class JobResetEvent(BaseAdmin):
     # Reverse movements
     self._reverse_movements()
 
-    # Update job as created
-    self._update_job_as_created()
+    # Update jobs state
+    self._update_jobs_state()
+
 
 
   # =================================================================================================
@@ -231,7 +233,9 @@ class JobResetEvent(BaseAdmin):
 
   # =================================================================================================
 
-  def _update_job_as_created(self):
+  def _update_jobs_state(self):
+
+    # Update job as created
     job_update = dict(
       _key = self.job.key,
       qt_completed = 0,
@@ -242,3 +246,15 @@ class JobResetEvent(BaseAdmin):
       progress = 0
     )
     self.tx.collection('Job').update(job_update)
+
+    # If original was closed, put it back into the queue
+    if self.job.stage == 'closed':
+      update_target_queue(
+        job_key=self.job.key,
+        target_key=self.job.assigned_to,
+        action='add',
+        tx=self.tx
+      )
+
+    # Update batch available states
+    self._update_batch_available_states()

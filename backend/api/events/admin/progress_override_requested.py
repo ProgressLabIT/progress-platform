@@ -47,10 +47,6 @@ class ProgressOverrideRequestedEvent(BaseAdmin):
   # =================================================================================================
 
 
-
-
-  # =================================================================================================
-
   def apply(self):
     """
     Handles progress override requests, managing Batch, WorkSession and WIP records.
@@ -91,13 +87,13 @@ class ProgressOverrideRequestedEvent(BaseAdmin):
     self.traceability_components = [line for line in self.job_bom if line.traceability_level]
 
     # Set wip
-    self.wip = self.tx.aql.execute(
+    self.available_wip = self.tx.aql.execute(
         TraceabilityQueries.GET_AVAILABLE_WIP_UPSTREAM_AND_DOWNSTREAM_OF_JOB,
         bind_vars=dict(job_key=self.info.job_key)
     ).next()
 
-    self.free_wip_qt_upstream = sum(w['quantity'] for w in self.wip['upstream_free_wip'])
-    self.free_wip_qt_downstream = sum(w['quantity'] for w in self.wip['downstream_free_wip'])
+    self.free_wip_qt_upstream = sum(w['quantity'] for w in self.available_wip['upstream_free_wip'])
+    self.free_wip_qt_downstream = sum(w['quantity'] for w in self.available_wip['downstream_free_wip'])
 
     ## Global inventory config
     warehouse_enabled = self.tx.collection('Config').get('enable_inventory_management')
@@ -191,7 +187,7 @@ class ProgressOverrideRequestedEvent(BaseAdmin):
     if not self.job.last_phase:
       new_wip = WIP(
         _from = f"Phase/{self.job.phase_key}",
-        _to = f"Phase/{self.wip['next_phase_key']}",
+        _to = f"Phase/{self.available_wip['next_phase_key']}",
         wo_key = self.job.wo_key,
         product_key = self.job.product_key,
         quantity = self.info.quantity_change,
@@ -204,7 +200,7 @@ class ProgressOverrideRequestedEvent(BaseAdmin):
     # Reduce upstream WIP
     if not self.job.first_phase:
       # _reduce_wip is inherited from BaseAdmin
-      self._reduce_wip(self.wip['upstream_free_wip'], self.info.quantity_change)
+      self._reduce_wip(self.available_wip['upstream_free_wip'], self.info.quantity_change)
 
     if self.handle_inventory:
       self._create_inventory_movements_for_forced_batch(batch_key=batch_key, batch_qt=self.info.quantity_change)
@@ -236,12 +232,12 @@ class ProgressOverrideRequestedEvent(BaseAdmin):
 
      # Handle downstream WIP
     if not self.job.last_phase:
-      self._reduce_wip(self.wip['downstream_free_wip'], abs(self.info.quantity_change))
+      self._reduce_wip(self.available_wip['downstream_free_wip'], abs(self.info.quantity_change))
 
     # Handle upstream WIP for quantity decrease
     if not self.job.first_phase:
       new_wip = WIP(
-        _from = f"Phase/{self.wip['previous_phase_key']}",
+        _from = f"Phase/{self.available_wip['previous_phase_key']}",
         _to = f"Phase/{self.job.phase_key}",
         wo_key = self.job.wo_key,
         product_key = self.job.product_key,
@@ -330,23 +326,6 @@ class ProgressOverrideRequestedEvent(BaseAdmin):
 
     # Update job status
     self.tx.collection('Job').update(self.job_update)
-
-  # =================================================================================================
-
-  def _update_batch_available_states(self):
-    """Updates batch available states for current and next phases"""
-    wip_phases = [self.job.phase_key]
-
-    if not self.job.last_phase:
-        wip_phases.append(self.wip['next_phase_key'])
-
-    self.tx.aql.execute(
-        TraceabilityQueries.UPDATE_NEXT_BATCH_AVAILABLE_STATE_FOR_JOBS_IN_PHASES,
-        bind_vars=dict(
-            wo_key = self.job.wo_key,
-            phase_keys = wip_phases
-        )
-    )
 
 
   # =================================================================================================

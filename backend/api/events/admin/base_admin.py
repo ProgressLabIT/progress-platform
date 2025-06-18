@@ -36,10 +36,13 @@ class BaseAdmin(BaseProductionEvent):
     self.update_work_order()
     self.flag_job_as_forced()
 
+  # =================================================================================================
+
   def flag_job_as_forced(self):
     job_update = dict(_key=self.info.job_key, forced=self.event_key)
     self.tx.collection('Job').update(job_update)
 
+  # =================================================================================================
 
   def _reduce_wip(self, wip_records, quantity):
     remaining_wip_to_remove = quantity
@@ -60,3 +63,21 @@ class BaseAdmin(BaseProductionEvent):
         remaining_wip_to_remove = 0
 
     self.tx.collection('wip').delete_many(records_to_delete)
+
+
+  # =================================================================================================
+
+  def _update_batch_available_states(self):
+    """Updates batch available states for current and next phases"""
+    wip_phases = [self.job.phase_key]
+
+    if not self.job.last_phase:
+        wip_phases.append(self.available_wip['next_phase_key'])
+
+    self.tx.aql.execute(
+        TraceabilityQueries.UPDATE_NEXT_BATCH_AVAILABLE_STATE_FOR_JOBS_IN_PHASES,
+        bind_vars=dict(
+            wo_key = self.job.wo_key,
+            phase_keys = wip_phases
+        )
+    )
