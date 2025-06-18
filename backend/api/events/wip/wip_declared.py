@@ -31,7 +31,7 @@ class WIPDeclaredEvent(BaseProductionEvent):
 
       if not self.info.serial_keys or len(self.info.serial_keys) == 0:
         raise ValueError('Serial keys are required to declare wip when traceability is enabled')
-      if self.info.serial_keys != list(set(self.info.serial_keys)):
+      if len(self.info.serial_keys) != len(set(self.info.serial_keys)):
         raise ValueError('Serial keys must be unique')
       if len(self.info.serial_keys) != self.info.quantity:
         raise ValueError('Serial keys must match quantity')
