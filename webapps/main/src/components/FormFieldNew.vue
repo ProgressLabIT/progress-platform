@@ -88,6 +88,7 @@ export default {
         default_hint: this.new_field.hint,
       };
       this.$api.post('field', data).then(() => {
+        this.$store.dispatch('getCustomFields');
         this.$emit('created');
         this.$emit('close');
       });
