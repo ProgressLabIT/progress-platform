@@ -289,25 +289,4 @@ async def search_serials(
       )
     )
 
-@router.get('/wo-serials',
-    dependencies=[Depends(auth.verify_token)])
-async def search_wo_serials(
-  work_order_key: str | None = None,
-  ):
-  bind_vars = dict(
-    work_order_key = work_order_key
-  )
-  try:
-    work_order_data = db.collection('WorkOrder').get(work_order_key)
-    if (work_order_data['traceability_level'] != None):
-      return [i for i in db.aql.execute(Queries.FIND_WO_SERIALS, bind_vars=bind_vars)]
-    else:
-      return [i for i in db.aql.execute(Queries.FIND_WO_BATCH, bind_vars=bind_vars)]
-  except Exception:
-    raise HTTPException(
-      status_code=500,
-      detail=dict(
-        message="There was an error fetching serials from the db.",
-        error=traceback.format_exc()
-      )
-    )
+

@@ -54,9 +54,6 @@
         </q-tr>
       </template>
     </q-table>
-
-    <!-- SERIAL DETAIL -->
-    <router-view />
   </div>
 </template>
 

@@ -2,12 +2,12 @@
   <div class="q-pa-md">
     <!-- FILTERS -->
     <div class="text-h5 text-uppercase low-text">
-      {{  $t('filter', 2) }}
+      {{  t('filter', 2) }}
     </div>
 
     <div class="row q-col-gutter-sm q-mt-sm">
        <!-- BY SERIAL -->
-      <div class="col">
+      <!-- <div class="col">
         <q-select
           v-if="wo_data.traceability_level"
           ref="serial_filter"
@@ -21,13 +21,13 @@
           option-value="_key"
           emit-value
           map-options
-          :label="$capitalize($t('serial', 1))"
+          :label="$capitalize(t('serial', 1))"
           class="q-mb-md"
           popup-content-class="surface1"
           @filter="serialSerial"
         >
         </q-select>
-      </div>
+      </div> -->
 
       <!-- BY PHASE -->
       <div class="col">
@@ -43,7 +43,7 @@
           option-value="_key"
           emit-value
           map-options
-          :label="$capitalize($t('phase.phase', 1))"
+          :label="$capitalize(t('phase.phase', 1))"
           class="q-mb-md"
           popup-content-class="surface1"
           @filter="filterPhase"
@@ -65,7 +65,7 @@
           option-value="_key"
           emit-value
           map-options
-          :label="$capitalize($t('job.label', 1))"
+          :label="$capitalize(t('job.label', 1))"
           class="q-mb-md"
           popup-content-class="surface1"
           @filter="filterJob"
@@ -76,12 +76,13 @@
       <!-- BY OPERATOR -->
       <div class="col">
         <BaseAutocompleteUser
-          :placeholder="$capitalize($t('operator'))"
+          :placeholder="$capitalize(t('operator'))"
           dense
           :show-avatar="false"
           class="q-mb-md"
           key-only
           :value="operator_selected"
+          :user-keys="operator_keys"
           @select="(selection) => (operator_selected = selection)"
         >
         </BaseAutocompleteUser>
@@ -97,15 +98,28 @@
           use-input
           clearable
           :options="field_list"
-          option-label="name"
           option-value="_key"
           emit-value
           map-options
-          :label="$capitalize($t('field', 1))"
+          :label="$capitalize(t('field', 1))"
           class="q-mb-md"
           popup-content-class="surface1"
           @filter="filterField"
         >
+          <template #option="scope">
+            <q-item v-bind="scope.itemProps">
+              <q-item-section>
+                <q-item-label>
+                  {{ scope.opt.label }}
+                </q-item-label>
+              </q-item-section>
+              <q-item-section side>
+                <q-item-label caption>
+                  {{ scope.opt.phase }}
+                </q-item-label>
+              </q-item-section>
+            </q-item>
+          </template>
         </q-select>
       </div>
     </div>
@@ -124,294 +138,136 @@
     </div>
 </template>
 
-<script>
+<script setup>
+import { ref, computed } from 'vue';
 import BaseAutocompleteUser from '@/components/BaseAutocompleteUser.vue';
 import NoDataAlert from '@/components/NoDataAlert.vue';
 import WorkOrderTraceabilityData from '@/components/workorderscreen/WorkOrderTraceabilityData.vue';
-import multiMatch from '@/lib/MultiFieldSearch.js';
-import queryModel from '@/lib/queryModelFactory.js';
+import { useI18n } from 'vue-i18n';
+import { api } from '@/boot/axios';
+import { useStore } from 'vuex';
 
-const header_plus_footer_height = 80;
+const { t } = useI18n();
 
-export default {
-  name: 'WorkOrderTraceability',
+const store = useStore();
 
-  components: {
-    BaseAutocompleteUser,
-    NoDataAlert,
-    WorkOrderTraceabilityData,
+// Props
+const props = defineProps({
+  wo_data: {
+    type: Object,
+    required: true,
   },
+});
 
-  props: {
-    wo_data: {
-      type: Object,
-      required: true,
-    },
-  },
+// Refs
+const phase_search_text = ref(undefined);
+// const serial_search_text = ref(undefined);
+const job_search_text = ref(undefined);
+const field_search_text = ref(undefined);
+const wo_field_data = ref([]);
+const field_list = ref(undefined);
+const phase_list = ref(undefined);
+const serial_list = ref(undefined);
+const job_list = ref(undefined);
+const operator_keys = ref(undefined);
 
-  data() {
-    return {
-      phase_search_text: undefined,
-      serial_search_text: undefined,
-      job_search_text: undefined,
-      field_search_text: undefined,
-      operator_search_text: undefined,
-      editing: false,
-      saving: false,
-      showFilterDrawer: false,
-      wo_field_data: undefined,
-      field_list: undefined,
-      phase_list: undefined,
-      serial_list: undefined,
-      job_list: undefined,
-    };
-  },
+// Query models
+const operator_selected = ref(undefined);
+const phase_selected = ref(undefined);
+// const serial_selected = ref(String, 'serial', undefined);
+const job_selected = ref(undefined);
+const field_selected = ref(undefined);
 
-  computed: {
-    // Filters
+// Computed
+const filters = computed(() => ({
+  phase_alias: phase_selected.value,
+  // serial: serial_selected.value,
+  operator_key: operator_selected.value,
+  job_selected: job_selected.value,
+  field_selected: field_selected.value,
+}));
 
-    operator_selected: queryModel(String, 'operator', undefined),
-    phase_selected: queryModel(String, 'phase_alias', undefined),
-    serial_selected: queryModel(String, 'serial', undefined),
-    job_selected: queryModel(String, 'job', undefined),
-    field_selected: queryModel(String, 'field', undefined),
+const traceabilityEnabled = store.state.workorder.traceability_level
 
-    _this() {
-      return this;
-    },
-
-    filters() {
-      return {
-        phase_alias: this.phase_selected,
-        serial: this.serial_selected,
-        operator_key: this.operator_selected,
-        job_selected: this.job_selected,
-        field_selected: this.field_selected,
-      };
-    },
-
-    filters_active() {
-      return Object.entries(this.filters).filter(([, value]) => {
-        return !!value;
-      }).length;
-    },
-
-    operator_list() {
-      return this.$store.getters.operator_list();
-    },
-
-    filtered_operators() {
-      return this.operator_list.filter((o) =>
-        multiMatch(this.operator_search_text, o, ['name', 'surname']),
-      );
-    },
-
-    filtered_phases() {
-      return this.phase_search_text
-        ? this.phase_list.filter((d) =>
-            d.name.toLowerCase().includes(this.phase_search_text),
-          )
-        : this.phase_list;
-    },
-
-    filtered_serial() {
-      return this.serial_search_text
-        ? this.serial_list.filter((d) =>
-            d.name.toLowerCase().includes(this.serial_search_text),
-          )
-        : this.serial_list;
-    },
-
-    filtered_job() {
-      return this.job_search_text
-        ? this.job_list.filter((d) =>
-            d.name.toLowerCase().includes(this.job_search_text),
-          )
-        : this.job_list;
-    },
-
-    filtered_field() {
-      return this.field_search_text
-        ? this.field_list.filter((d) =>
-            d.name.toLowerCase().includes(this.field_search_text),
-          )
-        : this.field_list;
-    },
-  },
-
-  created() {
-    this.$api
-      .get('wo-serials', {
-        params: {
-          work_order_key: this.wo_data._key,
-        },
-      })
-      .then((resp) => {
-        let wo_field_data = [];
-        let phases = new Map([]);
-        let serials = new Map([]);
-        let jobs = new Map([]);
-        let fields = new Map([]);
-        if (resp.data) {
-          for (const serial of resp.data) {
-            for (const data of serial.data) {
-              let wo_value = this.getFieldValue(data, data.wo_value);
-              let serial_value = this.getFieldValue(data, data.value);
-              wo_field_data.push({
-                serial_key: serial._key,
-                serial_code: serial.code,
-                created: this.formatSerialDateTime(serial?.created),
-                created_by: serial.created_by,
-                product_code: serial.product_code,
-                product_key: serial.product_key,
-                wo_code: serial.wo_code,
-                custom_field_key: data.custom_field_key,
-                field_label: data.custom_field_name,
-                field_type: data.custom_field_type,
-                custom_field_value: wo_value,
-                serial_field_value: serial_value,
-                value_changed: wo_value !== serial_value,
-                batch_key: serial.batch_key,
-                job_key: serial.job_key,
-                phase_key: data.phase_key,
-                phase_alias: data.phase_alias,
-                phase_description: data.phase_description,
-                step_key: data.step_key,
-                step_title: data.step_title,
-                step_description: data.step_description,
-                user: `${serial.user_name} ${serial.user_surname}`,
-              });
-
-              if (!phases.has(data.phase_key)) {
-                phases.set(data.phase_key, {
-                  name: data.phase_alias,
-                  _key: data.phase_key,
-                });
-              }
-
-              if (!serials.has(serial._key)) {
-                serials.set(serial._key, {
-                  name: serial.code,
-                  _key: serial._key,
-                });
-              }
-
-              if (!jobs.has(data.job_key)) {
-                jobs.set(data.job_key, {
-                  name: serial.job_key,
-                  _key: serial.job_key,
-                });
-              }
-
-              if (!fields.has(data.custom_field_key)) {
-                fields.set(data.custom_field_key, {
-                  name: data.custom_field_name,
-                  _key: data.custom_field_key,
-                });
-              }
-            }
-          }
-        }
-
-        this.wo_field_data = wo_field_data;
-        this.phase_list = Array.from(phases.values());
-        this.serial_list = Array.from(serials.values());
-        this.job_list = Array.from(jobs.values());
-        this.field_list = Array.from(fields.values());
-      });
-  },
-
-  methods: {
-    updateHeight() {
-      this.content_height =
-        document.documentElement.clientHeight - header_plus_footer_height;
-    },
-
-    setSearch(text) {
-      this.search_string = text;
-    },
-
-    resetFilters() {
-      this.$router.replace({ query: null });
-    },
-
-    formatSerialDateTime(datetime) {
-      const config = {
-        year: '2-digit',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      };
-      return this.$capitalize(
-        this.$formatDateTime(datetime, this.$i18n.locale, config),
-      );
-    },
-
-    getFieldValue(data, raw_value) {
-      if (!data || !data.custom_field_type) {
-        return '';
+function getTraceabilityData() {
+  api.get(`work-order/${props.wo_data._key}/traceability`).then((resp) => {
+    let phases = new Map([]);
+    let jobs = new Map([]);
+    let fields = new Map([]);
+    let serials = new Map([]);
+    let operators = new Set();
+    resp.data.detail.forEach((data) => {
+      if (!phases.has(data.phase_key)) {
+        phases.set(data.phase_key, {
+          name: data.phase_alias,
+          _key: data.phase_key,
+        });
       }
-      switch (data.custom_field_type) {
-        case 'text':
-        case 'number':
-        case 'boolean':
-        case 'ternary':
-          return raw_value;
 
-        case 'choice':
-          return raw_value?.value;
-        case 'date':
-          return raw_value;
-        case 'time':
-          return raw_value;
-        case 'files': {
-          if (!raw_value) {
-            return '';
-          }
-          return Array.prototype.join.call(
-            raw_value?.map((file) => {
-              return file.name;
-            }),
-            '.',
-          );
-        }
-
-        default:
-          break;
+      if (!jobs.has(data.job_key)) {
+        jobs.set(data.job_key, {
+          name: data.job_key,
+          _key: data.job_key,
+        });
       }
-      return raw_value;
-    },
 
-    async filterPhase(val, update) {
-      update(() => {
-        this.phase_search_text = val.toLowerCase();
-      });
-    },
+      if (!fields.has(data.form_field_key)) {
+        fields.set(data.form_field_key, {
+          label: data.field_label,
+          phase: data.phase_alias,
+          _key: data.custom_field_key,
+        });
+      }
 
-    async filterSerial(val, update) {
-      update(() => {
-        this.serial_search_text = val.toLowerCase();
-      });
-    },
+      if (traceabilityEnabled && !serials.has(data.serial_key)) {
+        serials.set(data.serial_key, {
+          name: data.serial_code,
+          _key: data.serial_key,
+        });
+      }
 
-    async filterJob(val, update) {
-      update(() => {
-        this.job_search_text = val.toLowerCase();
-      });
-    },
+      if (!operators.has(data.operator_key)) {
+        operators.add(data.operator_key);
+      }
 
-    async filterField(val, update) {
-      update(() => {
-        this.field_search_text = val.toLowerCase();
-      });
-    },
+      wo_field_data.value.push(data)
+    });
 
-    async filterOperator(val, update) {
-      update(() => {
-        this.operator_search_text = val.toLowerCase();
-      });
-    },
-  },
+    phase_list.value = Array.from(phases.values());
+    job_list.value = Array.from(jobs.values());
+    field_list.value = Array.from(fields.values());
+    operator_keys.value = Array.from(operators);
+    if (traceabilityEnabled) {
+      serial_list.value = Array.from(serials.values());
+    }
+  });
+}
+
+getTraceabilityData();
+
+
+const filterPhase = async (val, update) => {
+  update(() => {
+    phase_search_text.value = val.toLowerCase();
+  });
 };
+
+// const serialSerial = async (val, update) => {
+//   update(() => {
+//     serial_search_text.value = val.toLowerCase();
+//   });
+// };
+
+const filterJob = async (val, update) => {
+  update(() => {
+    job_search_text.value = val.toLowerCase();
+  });
+};
+
+const filterField = async (val, update) => {
+  update(() => {
+    field_search_text.value = val.toLowerCase();
+  });
+};
+
 </script>

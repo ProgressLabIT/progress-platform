@@ -420,7 +420,7 @@ export class SerialContext extends TemplateContext {
   constructor(serial_key, store = useStore()) {
     super(store);
     this.serial = store.getters.getSerialData(serial_key);
-    this.product = this.serial.product;
+    this.product = this.serial?.product;
   }
 
   getTemplateContextKey() {

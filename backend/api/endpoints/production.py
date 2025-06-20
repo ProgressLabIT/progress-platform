@@ -343,6 +343,26 @@ async def get_wo_data(wo_key: str):
 
 # ----------------------------------------------------------------------
 
+@router.get('/work-order/{wo_key}/traceability', dependencies=[Depends(auth.verify_token)])
+async def get_wo_traceability_data(wo_key: str):
+  try:
+    wo_traceability_data = list(db.aql.execute(
+      Queries.GET_WORK_ORDER_TRACEABILITY_DATA,
+      bind_vars=dict(wo_key=wo_key)
+    ))
+    return APIResponse(detail=wo_traceability_data)
+  except Exception:
+    raise HTTPException(
+      status_code=500,
+      detail=dict(
+        message="There was an error fetching serials from the db.",
+        error=traceback.format_exc()
+      )
+    )
+
+
+# ----------------------------------------------------------------------
+
 @router.delete('/work-order/{wo_key}',
     dependencies=[Depends(auth.verify_token)])
 async def delete_work_order(wo_key: str):

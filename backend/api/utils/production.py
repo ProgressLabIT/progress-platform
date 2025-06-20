@@ -73,6 +73,46 @@ class Queries:
       RETURN MERGE(wo, { jobs, processing_time, processing_cost, total_cost, wo_bom })
   """
 
+  GET_WORK_ORDER_TRACEABILITY_DATA = """
+    LET wo = DOCUMENT(WorkOrder, @wo_key)
+    LET execution_data = (
+        FOR phase IN wo.phase_sequence[* RETURN DOCUMENT(Phase, CURRENT)]
+        FOR j IN Job
+        FILTER j.wo_key == wo._key && j.phase_key == phase._key
+        FOR b IN Batch
+        FILTER b.job_key == j._key
+        LET serials = (FOR s IN 1..1 OUTBOUND b batch_serial RETURN s)
+        LET has_serials = LENGTH(serials) > 0
+        LET serial_loop = has_serials ? serials : [{ code: null, _key: null }]
+        FOR s IN j.step_sequence
+        FOR x IN StepExecutionData
+        FILTER x.step_key == s._key && x.batch_key == b._key
+        FOR d IN NOT_NULL(x.form_data, [])
+        FOR serial IN serial_loop
+        LET serial_field_value = FIRST(FOR f IN NOT_NULL(serial.data, []) FILTER f.step_key == s._key && f.form_field_key == d.form_field_key RETURN f.value)
+        RETURN MERGE(d, {
+          serial_code: serial.code,
+          serial_key: serial._key,
+          step_key: s._key,
+          step_title: s.title,
+          batch_key: x.batch_key,
+          batch_qt: b.qt_pass,
+          job_key: j._key,
+          phase_key: j.phase_key,
+          phase_alias: j.phase_alias, // Use alias from job to avoid showing modified names
+          field_type: FIRST(FOR c IN CustomField FILTER c._key == d.custom_field_key RETURN c.type),
+          field_label: FIRST(FOR f IN NOT_NULL(s.form_fields, []) FILTER f._key == d.form_field_key RETURN f.label),
+          operator_key: x.user_key,
+          timestamp: x.completed,
+          serial_field_value
+        })
+    )
+    LET operators = UNIQUE(execution_data[*].operator_key)
+    LET usernames = MERGE(FOR u IN User FILTER u._key IN operators RETURN { [u._key]: u.username })
+    FOR d IN execution_data
+    RETURN MERGE(d, { operator_username: usernames[d.operator_key] })
+  """
+
 
   GET_WORK_ORDER_SEARCH_OPTIONS = """
     LET phases = (FOR j IN Job

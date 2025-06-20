@@ -94,6 +94,11 @@ export default {
       type: Boolean,
       default: true,
     },
+
+    userKeys: {
+      type: Array,
+      default: undefined,
+    },
   },
 
   emits: ['select'],
@@ -108,9 +113,13 @@ export default {
 
   computed: {
     origin_list() {
-      return this.operatorOnly
+      const baseList = this.operatorOnly
         ? this.$store.getters.operator_list()
         : this.$store.state.user?.user_list;
+
+      return this.userKeys
+        ? baseList.filter((user) => this.userKeys.includes(user._key))
+        : baseList;
     },
 
     placeholder_computed() {
