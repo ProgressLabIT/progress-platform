@@ -125,11 +125,16 @@ setTimeout(() => {
   }
 }, 500)
 
-watch(selected, (serial_key) => {
-  if (!serial_key) {
+watch(selected, (newSerial, oldSerial) => {
+  if (!newSerial) {
     selected.value = nodes.value[0]._key
+    return
   }
-  emit('select', selected.value)
+
+  // Only emit if this isn't the initial selection (oldSerial was null)
+  if (oldSerial !== null && oldSerial !== newSerial) {
+    emit('select', selected.value)
+  }
 })
 
 async function lazyLoad(node, done) {
