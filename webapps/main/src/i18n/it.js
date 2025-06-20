@@ -192,6 +192,7 @@ export default {
   filter: 'filtro | filtri',
   filters_reset: 'rimuovi filtri',
   first_x_shown: 'Primi {x} record visualizzati',
+  form: 'modulo | moduli',
   form_title: 'campi modulo',
   form_missing_fields_alert: 'compilare tutti i campi',
   from: 'da',
@@ -423,7 +424,7 @@ export default {
   personnel: 'personale',
   phase: {
     phase: 'fase',
-    step: 'passo',
+    step: 'passo | passi',
     add: 'aggiungi fase',
     add_field: 'aggiungi campo',
     add_media: 'aggiungi media',

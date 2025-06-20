@@ -188,6 +188,7 @@ export default {
   filter: 'filter',
   filters_reset: 'Reset filters',
   first_x_shown: 'First {x} records shown',
+  form: 'form | forms',
   form_title: 'form fields',
   form_missing_fields_alert: 'please fill in all fields',
   from: 'from',

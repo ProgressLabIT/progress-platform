@@ -2,7 +2,7 @@
     <q-table
       id="wo_field_data"
       :columns="columns"
-      :rows="filtered_serials_list"
+      :rows="filtered_data"
       row-key="_key"
       virtual-scroll
       hide-bottom
@@ -45,7 +45,7 @@
                       v-for="file in props.row.value"
                       :key="file.name"
                       class="link"
-                      :class="{'text-strike text-italic text-low': !props.row.serial_field_value.some((f) => f.name === file.name)}"
+                      :class="{'text-strike text-italic text-low': traceability_level ? false : !props.row.serial_field_value?.some((f) => f.name === file.name)}"
                       @click="showMedia(props.row, file.name)"
                     >
                       {{ file.name }}
@@ -124,7 +124,7 @@
 
                 <!-- Other fields -->
                 <template v-else>
-                  {{ $capitalizeAll(props.row[column.name] || '') }}
+                  {{ capitalizeAll(props.row[column.name] || '') }}
                 </template>
               </q-tooltip>
 
@@ -142,245 +142,283 @@
     />
 </template>
 
-<script>
+<script setup>
+import { ref, computed } from 'vue';
 import { formatDateTime } from '@/lib/TimeHandling';
-import { mapState } from 'vuex';
+import { useStore } from 'vuex';
+import { useI18n } from 'vue-i18n';
+import { useRouter } from 'vue-router';
 import MediaViewer from '@/components/MediaViewer.vue';
 
-export default {
-  name: 'WorkOrderTraceabilityData',
-
-  components: {
-    MediaViewer,
-  },
-
-  props: {
-    filters: {
-      type: Object,
-      required: true,
-      default: () => {
-        return {
-          phase_alias: '',
-          serial: '',
-          operator_key: '',
-          job_selected: '',
-          field_selected: '',
-        };
-      },
-    },
-    wo_field_data: {
-      type: Object,
-      required: true,
+// Props
+const props = defineProps({
+  filters: {
+    type: Object,
+    required: true,
+    default: () => {
+      return {
+        selectedPhase: '',
+        selectedSerial: '',
+        selectedOperator: '',
+        selectedJob: '',
+        selectedField: '',
+      };
     },
   },
-
-  data() {
-    return {
-      show_media: undefined,
-      table_height: '80vh',
-      table_header_style: {
-        borderBottom: '3px solid green',
-        fontWeight: 'bold',
-        borderCollapse: 'separate',
-      },
-      search_fields: [],
-      temp_date: null,
-      change_sequence_for_wo: null,
-      now: new Date(),
-    };
+  wo_traceability_data: {
+    type: Object,
+    required: true,
   },
-
-  computed: {
-    ...mapState({
-      wo_key: (state) => state.workorder.wo_data._key,
-      traceability_level: (state) => state.workorder.wo_data.traceability_level,
-    }),
-
-    columns() {
-      const baseColumns = [
-        {
-          field: 'job_key',
-          name: 'job_key',
-          sortable: true,
-          label: this.$t('job').toUpperCase(),
-          align: 'left',
-        },
-        {
-          field: 'user',
-          name: 'operator_username',
-          sortable: true,
-          label: this.$t('operator').toUpperCase(),
-          align: 'left',
-          style: 'max-width: 10vw',
-        },
-        {
-          field: 'phase_alias',
-          name: 'phase_alias',
-          sortable: true,
-          label: this.$t('phase').toUpperCase(),
-          style: 'max-width: 10vw',
-          align: 'left',
-        },
-        {
-          field: 'field_label',
-          name: 'field_label',
-          sortable: true,
-          label: this.$t('field').toUpperCase(),
-          align: 'left',
-        },
-        {
-          field: 'step_field_value',
-          name: 'value',
-          sortable: true,
-          label: this.$t('value').toUpperCase(),
-          align: 'left',
-        },
-        {
-          field: 'timestamp',
-          sortable: true,
-          name: 'timestamp',
-          align: 'right',
-          label: this.$t('timestamp').toUpperCase(),
-        },
-      ];
-
-      return this.traceability_level
-        ? [{
-          field: 'serial_code',
-          name: 'serial_code',
-          sortable: true,
-          label: this.$t('serial').toUpperCase(),
-          style: 'max-width: 10vw',
-          align: 'left',
-        }, ...baseColumns]
-        : [{
-          field: 'batch_key',
-          name: 'batch_key',
-          sortable: true,
-          label: this.$t('batch').toUpperCase(),
-          align: 'left',
-          style: 'max-width: 10vw',
-        }, ...baseColumns];
-    },
-
-    filtered_serials_list() {
-      return this.wo_field_data.filter((serial) => {
-        /*
-        Initialize filter results.
-        If any false will be found in this array the filter function will return false
-        */
-        let filter_match_map = [];
-        this.search_fields = [];
-
-        for (const [filter, value] of Object.entries(this.filters)) {
-          // by default show wo in the list
-          let match = true;
-
-          switch (filter) {
-            case 'phase_alias':
-              if (value && serial.phase_key !== value) {
-                match = false;
-              }
-              break;
-
-            case 'serial':
-              if (value && serial.serial_key !== value) {
-                match = false;
-              }
-              break;
-
-            case 'operator_key':
-              if (value && serial.created_by !== value) {
-                match = false;
-              }
-              break;
-
-            case 'job_selected':
-              if (value && serial.job_key !== value) {
-                match = false;
-              }
-              break;
-
-            case 'field_selected':
-              if (value && serial.custom_field_key !== value) {
-                match = false;
-              }
-              break;
-          }
-
-          // add result of the specific filter to the map
-          filter_match_map.push(match);
-        }
-
-        // Return false and exclude wo from list if any filter returned false
-        return filter_match_map.every((i) => i === true);
-      });
-    },
+  view: {
+    type: String,
+    required: true,
   },
+});
 
-  methods: {
-    goToSerial(serial_key) {
-      this.$router.push({
-        name: 'serialDetail',
-        params: {
-          serialKey: serial_key,
-        }
-      });
+// Composables
+const store = useStore();
+const { t, locale } = useI18n();
+const router = useRouter();
+
+// Data
+const show_media = ref(undefined);
+const search_fields = ref([]);
+
+// Store state
+const wo_key = computed(() => store.state.workorder.wo_data._key);
+const traceability_level = computed(() => store.state.workorder.wo_data.traceability_level);
+
+// Computed
+const operatorColumn = computed(() => ({
+  field: 'user',
+  name: 'operator_username',
+  sortable: true,
+  label: t('operator').toUpperCase(),
+  align: 'right',
+  style: 'max-width: 10vw',
+}));
+
+const timestampColumn = computed(() => ({
+  field: 'timestamp',
+  sortable: true,
+  name: 'timestamp',
+  align: 'left',
+  label: t('timestamp').toUpperCase(),
+}));
+
+const stepColumns = computed(() => {
+  const baseColumns = [
+    {
+      field: 'job_key',
+      name: 'job_key',
+      sortable: true,
+      label: t('job').toUpperCase(),
+      align: 'left',
     },
-
-    formatTimestamp(timestamp) {
-      return formatDateTime(timestamp, this.$i18n.locale, {
-        year: '2-digit',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      });
+    {
+      field: 'phase_alias',
+      name: 'phase_alias',
+      sortable: true,
+      label: t('phase.phase').toUpperCase(),
+      style: 'max-width: 10vw',
+      align: 'left',
     },
-
-    getFieldValue(field_type, value) {
-      if (!field_type) {
-        return '';
-      }
-      if (['text', 'number', 'boolean', 'ternary', 'date', 'time'].includes(field_type)) {
-        return value;
-      }
-      if (field_type === 'choice') {
-        return value?.value;
-      }
-      if (field_type === 'files') {
-        if (!value) {
-          return '';
-        }
-        return Array.prototype.join.call(
-          value?.map((file) => {
-            return file.name;
-          }),
-          '\n',
-        );
-      }
-      return '';
+    {
+      field: 'step_title',
+      name: 'step_title',
+      sortable: true,
+      label: t('phase.step').toUpperCase(),
+      align: 'left',
     },
+  ];
 
-    showMedia(field_data, file_name) {
-      this.show_media = `/media/traceability/${this.wo_key}/${field_data.batch_key}/${field_data.step_key}/${field_data.custom_field_key}/${field_data.form_field_key}/${file_name}`
-    },
-
-    isOverridden(row) {
-      return row.field_type === 'choice' ? row.serial_field_value.value !== row.value.value : row.serial_field_value !== row.value;
-    },
-
-    fieldFiles(row) {
-      const total_files = new Set([...row.value.map((f) => f.name), ...row.serial_field_value.map((f) => f.name)]);
-      return Array.from(total_files).map((filename) => {
-        return {
-          name: filename,
-          new: !row.value.some((f) => f.name === filename),
-          overridden: !row.serial_field_value.some((f) => f.name === filename),
-        };
-      });
+  const traceabilityColumn = traceability_level.value
+    ? {
+      field: 'serial_code',
+      name: 'serial_code',
+      sortable: true,
+      label: t('serial').toUpperCase(),
+      style: 'max-width: 10vw',
+      align: 'left',
     }
+    : {
+      field: 'batch_key',
+      name: 'batch_key',
+      sortable: true,
+      label: t('batch').toUpperCase(),
+      align: 'left',
+      style: 'max-width: 10vw',
+    };
+
+  return  [
+    ...baseColumns,
+    traceabilityColumn,
+  ]
+});
+
+const fieldColumns = computed(() => [
+  {
+    field: 'field_label',
+    name: 'field_label',
+    sortable: true,
+    label: t('field').toUpperCase(),
+    align: 'left',
   },
+  {
+    field: 'step_field_value',
+    name: 'value',
+    sortable: true,
+    label: t('value').toUpperCase(),
+    align: 'left',
+  },
+]);
+
+const columns = computed(() => {
+  if (props.view === 'step') {
+    return [
+      timestampColumn.value,
+      ...stepColumns.value,
+      operatorColumn.value,
+    ];
+  }
+  if (props.view === 'form') {
+    return [
+      timestampColumn.value,
+      ...stepColumns.value,
+      ...fieldColumns.value,
+      operatorColumn.value,
+    ];
+  }
+  return [];
+});
+
+
+
+const filtered_data = computed(() => {
+  return props.wo_traceability_data.filter((field) => {
+    /*
+    Initialize filter results.
+    If any false will be found in this array the filter function will return false
+    */
+    let filter_match_map = [];
+    search_fields.value = [];
+
+    for (const [filter, value] of Object.entries(props.filters)) {
+      // by default show wo in the list
+      let match = true;
+
+      switch (filter) {
+        case 'selectedPhase':
+          if (value && field.phase_key !== value) {
+            match = false;
+          }
+          break;
+
+        case 'selectedSerial':
+          if (value && field.serial_key !== value) {
+            match = false;
+          }
+          break;
+
+        case 'selectedOperator':
+          if (value && field.operator_key !== value) {
+            match = false;
+          }
+          break;
+
+        case 'selectedJob':
+          if (value && field.job_key !== value) {
+            match = false;
+          }
+          break;
+
+        case 'selectedField':
+          if (value && field.form_field_key !== value) {
+            match = false;
+          }
+          break;
+      }
+
+      // add result of the specific filter to the map
+      filter_match_map.push(match);
+    }
+
+    // Return false and exclude wo from list if any filter returned false
+    return filter_match_map.every((i) => i === true);
+  });
+});
+
+// Methods
+const goToSerial = (serial_key) => {
+  router.push({
+    name: 'serialDetail',
+    params: {
+      serialKey: serial_key,
+    }
+  });
+};
+
+const formatTimestamp = (timestamp) => {
+  return formatDateTime(timestamp, locale.value, {
+    year: '2-digit',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+};
+
+const getFieldValue = (field_type, value) => {
+  if (!field_type) {
+    return '';
+  }
+  if (['text', 'number', 'boolean', 'ternary', 'date', 'time'].includes(field_type)) {
+    return value;
+  }
+  if (field_type === 'choice') {
+    return value?.value;
+  }
+  if (field_type === 'files') {
+    if (!value) {
+      return '';
+    }
+    return Array.prototype.join.call(
+      value?.map((file) => {
+        return file.name;
+      }),
+      '\n',
+    );
+  }
+  return '';
+};
+
+const showMedia = (field_data, file_name) => {
+  show_media.value = `/media/traceability/${wo_key.value}/${field_data.batch_key}/${field_data.step_key}/${field_data.custom_field_key}/${field_data.form_field_key}/${file_name}`;
+};
+
+const isOverridden = (row) => {
+  if (!traceability_level.value) {
+    return false;
+  }
+  return row.field_type === 'choice' ? row.serial_field_value.value !== row.value.value : row.serial_field_value !== row.value;
+};
+
+const fieldFiles = (row) => {
+  const total_files = new Set([...row.value.map((f) => f.name), ...row.serial_field_value.map((f) => f.name)]);
+  return Array.from(total_files).map((filename) => {
+    return {
+      name: filename,
+      new: !row.value.some((f) => f.name === filename),
+      overridden: !row.serial_field_value.some((f) => f.name === filename),
+    };
+  });
+};
+
+// Helper function for capitalizing text (replacing $capitalizeAll)
+const capitalizeAll = (text) => {
+  return text.split(' ').map(word =>
+    word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+  ).join(' ');
 };
 </script>
 

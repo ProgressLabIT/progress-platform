@@ -1,22 +1,38 @@
 <template>
   <div class="q-pa-md">
-    <!-- FILTERS -->
+
+    <!-- OPTIONS -->
+    <div class="row justify-center">
+      <q-btn-toggle
+        v-model="view"
+        spread
+        size="sm"
+        :options="[
+          {label: t('phase.step', 2), value: 'step'},
+          {label: t('form', 2), value: 'form'}
+        ]"
+      />
+    </div>
+
+
+  <!-- FILTERS -->
+
     <div class="text-h5 text-uppercase low-text">
       {{  t('filter', 2) }}
     </div>
 
     <div class="row q-col-gutter-sm q-mt-sm">
-       <!-- BY SERIAL -->
-      <!-- <div class="col">
+
+      <!-- BY SERIAL -->
+      <div v-if="traceabilityEnabled" class="col">
         <q-select
-          v-if="wo_data.traceability_level"
           ref="serial_filter"
-          v-model="serial_selected"
+          v-model="selectedSerial"
           filled
           dense
           use-input
           clearable
-          :options="serial_list"
+          :options="serials.options"
           option-label="name"
           option-value="_key"
           emit-value
@@ -24,21 +40,21 @@
           :label="$capitalize(t('serial', 1))"
           class="q-mb-md"
           popup-content-class="surface1"
-          @filter="serialSerial"
+          @filter="filterSerial"
         >
         </q-select>
-      </div> -->
+      </div>
 
       <!-- BY PHASE -->
       <div class="col">
         <q-select
           ref="phase_filter"
-          v-model="phase_selected"
+          v-model="selectedPhase"
           filled
           dense
           use-input
           clearable
-          :options="phase_list"
+          :options="phases.options"
           option-label="name"
           option-value="_key"
           emit-value
@@ -55,12 +71,12 @@
       <div class="col">
         <q-select
           ref="job_filter"
-          v-model="job_selected"
+          v-model="selectedJob"
           filled
           dense
           use-input
           clearable
-          :options="job_list"
+          :options="jobs.options"
           option-label="name"
           option-value="_key"
           emit-value
@@ -81,23 +97,23 @@
           :show-avatar="false"
           class="q-mb-md"
           key-only
-          :value="operator_selected"
+          :value="selectedOperator"
           :user-keys="operator_keys"
-          @select="(selection) => (operator_selected = selection)"
+          @select="(selection) => (selectedOperator = selection)"
         >
         </BaseAutocompleteUser>
       </div>
 
       <!-- BY FIELD -->
-      <div class="col">
+      <div class="col" v-if="view === 'form'">
         <q-select
           ref="field_filter"
-          v-model="field_selected"
+          v-model="selectedField"
           filled
           dense
           use-input
           clearable
-          :options="field_list"
+          :options="fields.options"
           option-value="_key"
           emit-value
           map-options
@@ -124,11 +140,14 @@
       </div>
     </div>
 
+    <q-separator class="q-my-md" />
+
     <div class="column col full-height">
       <!-- MAIN CONTENT -->
         <WorkOrderTraceabilityData
-          v-if="wo_field_data"
-          :wo_field_data="wo_field_data"
+          v-if="wo_traceability_data.length"
+          :wo_traceability_data="wo_traceability_data"
+          :view="view"
           :filters="filters"
         >
         </WorkOrderTraceabilityData>
@@ -139,7 +158,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { computed, ref, reactive } from 'vue';
 import BaseAutocompleteUser from '@/components/BaseAutocompleteUser.vue';
 import NoDataAlert from '@/components/NoDataAlert.vue';
 import WorkOrderTraceabilityData from '@/components/workorderscreen/WorkOrderTraceabilityData.vue';
@@ -160,114 +179,146 @@ const props = defineProps({
 });
 
 // Refs
-const phase_search_text = ref(undefined);
-// const serial_search_text = ref(undefined);
-const job_search_text = ref(undefined);
-const field_search_text = ref(undefined);
+const view = ref('step');
+
+const execution_data = ref([]);
 const wo_field_data = ref([]);
-const field_list = ref(undefined);
-const phase_list = ref(undefined);
-const serial_list = ref(undefined);
-const job_list = ref(undefined);
+
+const fields = reactive({
+  list: [],
+  options: [],
+});
+
+const phases = reactive({
+  list: [],
+  options: [],
+});
+
+const serials = reactive({
+  list: [],
+  options: [],
+});
+
+const jobs = reactive({
+  list: [],
+  options: [],
+});
+
 const operator_keys = ref(undefined);
 
+
 // Query models
-const operator_selected = ref(undefined);
-const phase_selected = ref(undefined);
-// const serial_selected = ref(String, 'serial', undefined);
-const job_selected = ref(undefined);
-const field_selected = ref(undefined);
+const selectedOperator = ref(undefined);
+const selectedPhase = ref(undefined);
+const selectedSerial = ref(undefined);
+const selectedJob = ref(undefined);
+const selectedField = ref(undefined);
 
 // Computed
 const filters = computed(() => ({
-  phase_alias: phase_selected.value,
-  // serial: serial_selected.value,
-  operator_key: operator_selected.value,
-  job_selected: job_selected.value,
-  field_selected: field_selected.value,
+  selectedPhase: selectedPhase.value,
+  selectedSerial: selectedSerial.value,
+  selectedOperator: selectedOperator.value,
+  selectedJob: selectedJob.value,
+  selectedField: selectedField.value,
 }));
 
-const traceabilityEnabled = store.state.workorder.traceability_level
+const traceabilityEnabled = store.state.workorder.wo_data.traceability_level
 
-function getTraceabilityData() {
-  api.get(`work-order/${props.wo_data._key}/traceability`).then((resp) => {
-    let phases = new Map([]);
-    let jobs = new Map([]);
-    let fields = new Map([]);
-    let serials = new Map([]);
-    let operators = new Set();
-    resp.data.detail.forEach((data) => {
-      if (!phases.has(data.phase_key)) {
-        phases.set(data.phase_key, {
-          name: data.phase_alias,
-          _key: data.phase_key,
-        });
-      }
-
-      if (!jobs.has(data.job_key)) {
-        jobs.set(data.job_key, {
-          name: data.job_key,
-          _key: data.job_key,
-        });
-      }
-
-      if (!fields.has(data.form_field_key)) {
-        fields.set(data.form_field_key, {
-          label: data.field_label,
-          phase: data.phase_alias,
-          _key: data.custom_field_key,
-        });
-      }
-
-      if (traceabilityEnabled && !serials.has(data.serial_key)) {
-        serials.set(data.serial_key, {
-          name: data.serial_code,
-          _key: data.serial_key,
-        });
-      }
-
-      if (!operators.has(data.operator_key)) {
-        operators.add(data.operator_key);
-      }
-
-      wo_field_data.value.push(data)
-    });
-
-    phase_list.value = Array.from(phases.values());
-    job_list.value = Array.from(jobs.values());
-    field_list.value = Array.from(fields.values());
-    operator_keys.value = Array.from(operators);
-    if (traceabilityEnabled) {
-      serial_list.value = Array.from(serials.values());
+function getItemSet(data, key, name) {
+  return data.reduce((acc, item) => {
+    if (!acc.some(i => i._key === item[key])) {
+      acc.push({
+        _key: item[key],
+        name: item[name ?? key],
+      });
     }
-  });
+    return acc;
+  }, []);
+}
+
+async function getTraceabilityData() {
+  const resp = await api.get(`work-order/${props.wo_data._key}/traceability`);
+  execution_data.value = resp.data.detail;
+
+  phases.list = getItemSet(execution_data.value, 'phase_key', 'phase_alias');
+  phases.options = phases.list;
+
+  jobs.list = getItemSet(execution_data.value, 'job_key', 'job_key');
+  jobs.options = jobs.list;
+
+  operator_keys.value = getItemSet(execution_data.value, 'operator_key').map(o => o._key);
+
+  fields.list = execution_data.value.reduce((acc, data) => {
+    data.form_fields.forEach((field) => {
+      if (!acc.some(f => f._key === field.form_field_key)) {
+        acc.push({
+          label: field.field_label,
+          phase: data.phase_alias,
+          _key: field.form_field_key,
+          name: field.field_label + ' ' + data.phase_alias,
+        })
+      }
+    });
+    return acc;
+  }, []);
+  fields.options = fields.list;
+
+  if (traceabilityEnabled) {
+    serials.list = getItemSet(execution_data.value, 'serial_key', 'serial_code');
+    serials.options = serials.list;
+  }
+
+  wo_field_data.value = execution_data.value.flatMap(
+    (data) => data.form_fields.map((field) => ({
+      ...field,
+      operator_key: data.operator_key,
+      operator_username: data.operator_username,
+      timestamp: data.timestamp,
+      phase_key: data.phase_key,
+      phase_alias: data.phase_alias,
+      job_key: data.job_key,
+      step_key: data.step_key,
+      step_title: data.step_title,
+      batch_key: data.batch_key,
+      batch_qt: data.batch_qt,
+      serial_code: data.serial_code,
+      serial_key: data.serial_key
+    })
+  ));
 }
 
 getTraceabilityData();
 
+const wo_traceability_data = computed(() => {
+  if (view.value === 'step') {
+    return execution_data.value;
+  }
+  return wo_field_data.value;
+});
 
-const filterPhase = async (val, update) => {
+
+function filterOptions(value, update, field) {
+  if (value === '') {
+    update(() => {
+      field.options = field.list;
+    });
+  }
+
   update(() => {
-    phase_search_text.value = val.toLowerCase();
+    const needle = value.toLowerCase();
+    field.options = field.list.filter((option) =>
+      option.name.toLowerCase().includes(needle)
+    );
   });
-};
+}
 
-// const serialSerial = async (val, update) => {
-//   update(() => {
-//     serial_search_text.value = val.toLowerCase();
-//   });
-// };
+const filterPhase = (value, update) => filterOptions(value, update, phases);
+const filterJob = (value, update) => filterOptions(value, update, jobs);
+const filterField = (value, update) => filterOptions(value, update, fields);
+const filterSerial = (value, update) => filterOptions(value, update, serials);
 
-const filterJob = async (val, update) => {
-  update(() => {
-    job_search_text.value = val.toLowerCase();
-  });
-};
 
-const filterField = async (val, update) => {
-  update(() => {
-    field_search_text.value = val.toLowerCase();
-  });
-};
+
 
 </script>
