@@ -70,14 +70,17 @@
       >
         <LoadingSignal v-if="isLoadingTemplate" />
         <template v-else>
+          <!-- serialSource sets either wo_key for WorkOrderContext or batch_key for StepContext -->
           <BaseAutocompleteSerial
-            v-if="context.type === 'step' && hasSerialLink"
+            v-if="hasSerialLink"
             :value="context.serial"
-            :batch_key="context.step.batch_key"
+            v-bind="props.context.serialSource"
             :can_search="serialModelInitalValue.length <= 0"
             :label="$capitalize($t('serial'))"
             :include_unreleased="true"
             :disable="serialModelInitalValue.length === 1"
+            :show-link-status="false"
+            :show-inventory-status="false"
             @select="selectSerial"
           >
           </BaseAutocompleteSerial>
@@ -374,11 +377,11 @@ async function selectTemplate(template) {
             return [fieldName, ''];
           }
 
-          if (serialTemplateLinks.includes(link.value)) {
+          if (link?.value.includes('serial')) {
             hasSerialLink.value = true;
           }
 
-          if (link.type === 'preset') {
+          if (link?.type === 'preset') {
             const presetValue = props.context.getPresetValue(link.value);
             return [
               fieldName,

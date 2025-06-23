@@ -413,7 +413,7 @@ export class PrintTemplateContext extends TemplateContext {
 }
 
 export class SerialContext extends TemplateContext {
-  type = 'product';
+  type = 'product'; // Fetch product templates
   product;
   serial;
 
@@ -443,11 +443,12 @@ export class SerialContext extends TemplateContext {
 
 
 export class WorkOrderContext extends TemplateContext {
-  type = 'product';
+  type = 'product'; // Fetch product templates
 
   constructor(store = useStore()) {
     super(store)
     this.workOrder = store.state.workorder.wo_data
+    this.serialSource = { work_order_key: this.workOrder?._key }
   }
 
   getTemplateContextKey() {
@@ -484,6 +485,7 @@ export class StepContext extends TemplateContext {
     this.batch = store.state.traceability.current_batch_data;
     this.job = store.state.traceability.working_job_data;
     this.workOrder = store.state.workorder.wo_data;
+    this.serialSource = { batch_key: this.batch._key }
   }
 
   getTemplateContextKey() {
