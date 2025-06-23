@@ -203,6 +203,7 @@ export default {
   history: 'History',
   icon: 'icon',
   image: 'image',
+  image_not_available_at_path: 'Image not available at path',
   inactive: 'inactive',
   increase: 'increase',
   independentOrdering: {

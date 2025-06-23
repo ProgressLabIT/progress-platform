@@ -104,8 +104,18 @@
                   <q-img
                     :src="formModel[fieldName]"
                     fit="contain"
-                    style="width: 200px"
-                  />
+                    style="width: 300px"
+                  >
+                    <template v-slot:error>
+                      <div class="bg-grey-2 text-grey-6" style="word-break: break-word;">
+                        <div class="text-center">
+                          <q-icon name="mdi-image-off-outline" size="md" />
+                          <div class="smaller q-mt-xs">{{  $t('image_not_available_at_path') }}</div>
+                          <div class="smaller q-mt-xs">{{ formModel[fieldName] }}</div>
+                        </div>
+                      </div>
+                    </template>
+                  </q-img>
                 </template>
                 <q-input
                   v-else
@@ -385,6 +395,11 @@ async function loadImage(url) {
     throw new Error('Invalid image URL provided');
   }
 
+  if (url.trim() === '' || [undefined, null].includes(url)) {
+    console.warn('No image path provided for field', url);
+    return '';
+  }
+
   try {
     const response = await fetch(url);
 
@@ -444,16 +459,11 @@ async function prepareInputs() {
       if (fieldProps.type === 'image') {
         try {
           const imageUrl = formModel[fieldName];
-          const base64 = imageUrl && typeof imageUrl === 'string' && imageUrl.trim() !== ''
-            ? await loadImage(imageUrl)
-            : ''; // empty string will not render any image. Background, if present, will be visible.
+          const base64 = await loadImage(imageUrl); // If imageUrl is empty, empty string will not render any image. Background, if present, will be visible.
           schemaFields.push([fieldName, base64]);
         } catch (err) {
           console.error(`Error loading image for field ${fieldName}:`, err);
-          window.alert(
-            `Error while loading image for field "${fieldName}". Please check the image URL and try again.`,
-          );
-          // Use empty string as fallback
+          // Use empty string as fallback - error was already shown in the form UI
           schemaFields.push([fieldName, '']);
         }
       } else {

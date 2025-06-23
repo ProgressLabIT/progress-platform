@@ -208,6 +208,7 @@ export default {
   history: 'Storico',
   icon: 'icona',
   image: 'immagine | immagini',
+  image_not_available_at_path: 'Immagine non disponibile al percorso',
   inactive: 'disattivato',
   increase: 'aumenta',
   independentOrdering: {
