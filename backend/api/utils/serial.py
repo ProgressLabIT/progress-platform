@@ -141,6 +141,7 @@ class Queries:
     FILTER @free_only ? !used : true
     FILTER @inventory_only ? available : true
 
+    SORT s.code
     LIMIT @limit
     RETURN merge(s, { used, available })
   """
