@@ -45,8 +45,8 @@
         </q-item-section>
         <q-item-section side v-if="!props.inventory_only">
           <div class="row items-center q-gutter-x-sm">
-            <q-icon v-if="scope.opt.used" size="xs" name="mdi-link-variant" />
-            <q-icon v-if="!scope.opt.available" size="xs" name="mdi-package-variant-closed-remove" />
+            <q-icon v-if="scope.opt.used && showLinkStatus" size="xs" name="mdi-link-variant" />
+            <q-icon v-if="!scope.opt.available && showInventoryStatus" size="xs" name="mdi-package-variant-closed-remove" />
           </div>
         </q-item-section>
       </q-item>
@@ -217,6 +217,16 @@ const props = defineProps({
     type: Number,
     default: 0,
   },
+
+  showLinkStatus: {
+    type: Boolean,
+    default: true,
+  },
+
+  showInventoryStatus: {
+    type: Boolean,
+    default: true,
+  },
 });
 
 
@@ -294,31 +304,6 @@ function loadOptions(search_value) {
     });
   }
 };
-
-// function loadInventory(search_value) {
-//   api.get('inventory', { params: {
-//     product_key: props.product_key,
-//     root_position_key: props.inventory_in_position_key,
-//     serial_search: search_value,
-//     limit: 100,
-//   }}).then((resp) => {
-//     options.value = resp.data.map((item) => ({
-//       _key: item.serial_key,
-//       code: item.serial_code || item.code,
-//       free: true,
-//       available: true,
-//     }));
-//   });
-// }
-
-
-// function loadOptions(search_value) {
-//   if (props.inventory_only !== false) {
-//     loadInventory(search_value);
-//   } else {
-//     loadSerials(search_value);
-//   }
-// }
 
 
 function closeCreateForm() {
