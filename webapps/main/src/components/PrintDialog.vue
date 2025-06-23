@@ -194,7 +194,7 @@
 <script setup>
 import { generate } from '@pdfme/generator';
 import { useDialogPluginComponent } from 'quasar';
-import { nextTick, onMounted, ref, reactive } from 'vue';
+import { nextTick, ref, reactive } from 'vue';
 import VuePdfEmbed from 'vue-pdf-embed';
 import { api } from '@/boot/axios';
 import BaseDialog from '@/components/BaseDialog.vue';
@@ -229,17 +229,47 @@ const isLoadingTemplate = ref(false);
 let formModel = undefined;
 // const serialModel = ref();
 const serialModelInitalValue = ref([]);
-const hasSerialLink = ref(false);
 
 const selectedTemplateBK = ref();
+const hasSerialLink = ref(false);
 
-const serialTemplateLinks = [
-  'serial.code',
-  'serial.qt',
-  'serial.create_date',
-  'serial.create_time',
-];
+function initialize() {
+  if (props.context.type === 'issue' && props.context.links) {
+    loadSerial(props.context.link);
+  }
 
+  if (props.context.type === 'template') {
+    selectTemplate(props.templates[0]);
+    allowSelectTemplate.value = false;
+  }
+
+  if (props.context?.step?.product_key) {
+    loadProduct(props.context.step.product_key);
+  }
+
+  if (props.context?.serial?.product_key) {
+    loadProduct(props.context.serial.product_key);
+  }
+
+  if (props.context?.workOrder?.product_key) {
+    loadProduct(props.context.workOrder.product_key)
+  }
+
+  if (props.context?.serial?.wo_key) {
+    loadWorkOrder(props.context?.serial?.wo_key);
+  }
+
+  if (props.context?.serial?._key) {
+    loadSerial(props.context.serial._key);
+  }
+}
+
+initialize();
+
+/**
+ * Loads serial data from the API and sets it in the context
+ * @param {string} serial_key - The key/ID of the serial to load
+ */
 async function loadSerial(serial_key) {
   if (serial_key) {
     const { data } = await api.get(`serial/${serial_key}`);
@@ -249,6 +279,10 @@ async function loadSerial(serial_key) {
   }
 }
 
+/**
+ * Loads product data from the API and sets it in the context
+ * @param {string} product_key - The key/ID of the product to load
+ */
 async function loadProduct(product_key) {
   if (product_key) {
     const { data } = await api.get(`product/${product_key}`);
@@ -258,6 +292,10 @@ async function loadProduct(product_key) {
   }
 }
 
+/**
+ * Loads work order data from the API and sets it in the context
+ * @param {string} wo_key - The key/ID of the work order to load
+ */
 async function loadWorkOrder(wo_key) {
   if (wo_key) {
     const { data } = await api.get(`work-order/${wo_key}`);
@@ -290,48 +328,22 @@ async function loadWorkOrder(wo_key) {
 //   }
 // }
 
+/**
+ * Handles serial selection - loads the selected serial and re-selects the template
+ * @param {Object} serial - The serial object containing _key property
+ */
 async function selectSerial(serial) {
   let serial_key = serial?._key;
   await loadSerial(serial_key);
   selectTemplate(selectedTemplateBK.value);
 }
 
-onMounted(() => {
-  //TODO: va verificato
-  if (props.context.type === 'issue' && props.context.links) {
-    loadSerial(props.context.link);
-  }
 
-  if (props.context.type === 'template') {
-    selectTemplate(props.templates[0]);
-    allowSelectTemplate.value = false;
-  }
-
-  // if (props.context?.batch?._key) {
-  //   loadBatchSerial(props.context.batch._key);
-  // }
-
-  if (props.context?.step?.product_key) {
-    loadProduct(props.context.step.product_key);
-  }
-
-  if (props.context?.serial?.product_key) {
-    loadProduct(props.context.serial.product_key);
-  }
-
-  if (props.context?.workOrder?.product_key) {
-    loadProduct(props.context.workOrder.product_key)
-  }
-
-  if (props.context?.serial?.wo_key) {
-    loadWorkOrder(props.context?.serial?.wo_key);
-  }
-
-  if (props.context?.serial?._key) {
-    loadSerial(props.context.serial._key);
-  }
-});
-
+/**
+ * Selects a print template and initializes the form model with field values
+ * Fetches template data from API and maps field values from context (preset/custom values)
+ * @param {Object} template - The template object containing _key property
+ */
 async function selectTemplate(template) {
   hasSerialLink.value = false;
   selectedTemplateBK.value = template;
@@ -382,6 +394,8 @@ async function selectTemplate(template) {
         }),
       ),
     );
+
+
   } catch (error) {
     console.error(error);
     window.alert(error.message);
@@ -390,8 +404,15 @@ async function selectTemplate(template) {
   }
 }
 
+/**
+ * Loads an image from a URL and converts it to base64 format
+ * Validates the URL, fetches the image, and converts to base64 data URL
+ * @param {string} url - The URL of the image to load
+ * @returns {Promise<string>} Promise that resolves to base64 data URL of the image
+ * @throws {Error} If URL is invalid, fetch fails, or file is not an image
+ */
 async function loadImage(url) {
-  if (!url || typeof url !== 'string') {
+  if (typeof url !== 'string') {
     throw new Error('Invalid image URL provided');
   }
 
@@ -433,6 +454,12 @@ async function loadImage(url) {
   }
 }
 
+/**
+ * Prepares input data for PDF generation by processing form fields
+ * Converts image URLs to base64 and ensures all field values are properly formatted
+ * @returns {Promise<Array<Object>>} Array of input objects for each page/schema in the template
+ * @throws {Error} If template schemas are not available
+ */
 async function prepareInputs() {
   // Needed to parse input type to load images as base64
   const inputs = [];
@@ -480,6 +507,11 @@ async function prepareInputs() {
 }
 
 const previewSrc = ref();
+/**
+ * Generates a PDF preview using the selected template and form data
+ * Validates template structure, prepares inputs, and generates PDF using @pdfme/generator
+ * Sets the preview source for display and advances to the preview step
+ */
 async function goToPreview() {
   previewSrc.value = undefined;
   activeStep.value = 2;
