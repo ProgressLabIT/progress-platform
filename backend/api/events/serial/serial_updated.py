@@ -5,14 +5,14 @@ from pydantic import Field
 from events.serial.base_serial import BaseSerialEvent, BaseSerialModel
 from models.event import EventModel, EventType
 from models.form import SerialFormFieldValue
-from models.serial import  SerialNotificationType, SerialNotificationErrorCode
+from models.serial import ProcessedSerialCode, SerialNotificationType, SerialNotificationErrorCode
 from utils.serial import Queries as SerialQueries
 from utils.exceptions import (SerialNotUpdatedError)
 
 class SerialUpdatedEvent(BaseSerialEvent):
   class InfoModel(BaseSerialModel):
     serial_key: str
-    serial_code: str | None = None # Set code if provided
+    serial_code: ProcessedSerialCode | None = None # Set code if provided
     serial_data: list[SerialFormFieldValue] | None = None # Set data if provided
     remove_data_from_phases: list[str] | None = None # Set phase keys to remove data from if provided
     unrelease: bool | None = False # Set to True to unrelease the serial

@@ -5,7 +5,7 @@ from pydantic import Field
 from events.serial.base_serial import BaseSerialEvent, BaseSerialModel
 from models.event import EventType
 from models.form import SerialFormFieldValue
-from models.serial import Serial, SerialNotificationErrorCode, SerialNotificationType
+from models.serial import Serial, ProcessedSerialCode, SerialNotificationErrorCode, SerialNotificationType
 from utils.counter import _generate_counter
 from utils.dt import timestamp
 from utils.exceptions import SerialCodeAlreadyPresent, SerialNotCreatedError
@@ -15,7 +15,7 @@ class SerialCreatedEvent(BaseSerialEvent):
 
   class InfoModel(BaseSerialModel):
     data: list[SerialFormFieldValue] | None = None
-    code: str | None = None
+    code: ProcessedSerialCode | None = None
     wo_key: str | None = None
     product_key: str | None = None
     counter_key: str | None = None

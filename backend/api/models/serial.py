@@ -4,12 +4,26 @@ from typing import Annotated
 
 from models.base_models import ArangoDocument, FlexModel
 from models.form import SerialFormFieldValue
-from pydantic import BaseModel, Field, StringConstraints, field_serializer, field_validator
+from pydantic import BaseModel, Field, StringConstraints, field_serializer, field_validator, BeforeValidator
 from utils.dt import timestamp
 
 
+def process_serial_code(code: str | None) -> str | None:
+  if code is None:
+    return None
+  if not isinstance(code, str):
+    raise ValueError('Serial code must be a string')
+  code = code.upper().strip()
+  if len(code) < 1:
+    raise ValueError('Serial code must be at least 1 character long')
+  return code
+
+
+ProcessedSerialCode = Annotated[str, BeforeValidator(process_serial_code)]
+
+
 class Serial(ArangoDocument):
-  code: Annotated[str, StringConstraints(to_upper=True)] | None = None
+  code: Annotated[str, StringConstraints(to_upper=True, strip_whitespace=True, min_length=1)] | None = None
   created_by: str | None = None
   product_key: str | None = None
   wo_key: str | None = None
