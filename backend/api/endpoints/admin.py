@@ -167,6 +167,21 @@ async def force_delete_work_order_data(work_order_key: str):
     )
     tx.aql.execute(query, bind_vars=bind_vars)
 
+    # Cleanup batch_serial/contains records pointing to deleted batches
+    # TODO: Use named graphs to have this done automatically when deleting batches
+    tx.aql.execute("""
+      FOR b in batch_serial
+      FILTER DOCUMENT(s._from) == null
+      REMOVE b IN batch_serial
+    """)
+
+    tx.aql.execute("""
+      FOR c in contains
+      FILTER DOCUMENT(c._from) == null
+      REMOVE c IN contains
+    """)
+
+
     # 9. Commit and return
     tx.commit_transaction()
     return f"All data related to WorkOrder {work_order_key} has been deleted."
