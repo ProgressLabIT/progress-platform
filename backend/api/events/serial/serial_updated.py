@@ -21,6 +21,9 @@ class SerialUpdatedEvent(BaseSerialEvent):
   def get_event_type(cls):
     return EventType.SERIAL_UPDATED
 
+  @property
+  def event_first(self):
+    return True
 
   def _merge_serial_data(self):
     # Merge data from the original serial with the new data
@@ -28,8 +31,9 @@ class SerialUpdatedEvent(BaseSerialEvent):
     for existing_field in self.original['data']:
       new_field = existing_field
       for field in self.info.serial_data:
-        if field.form_field_key == existing_field['form_field_key']:
+        if field.form_field_key == existing_field['form_field_key'] and field.value != existing_field['value']:
           new_field['value'] = field.value
+          new_field['last_updated'] = self.event_key
           break
       merged_data.append(new_field)
     return merged_data

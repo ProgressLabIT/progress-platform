@@ -87,3 +87,4 @@ class SerialFormFieldValue(BaseModel):
   batch_key: str | None = None
   step_key: str | None = None
   phase_key: str | None = None
+  last_updated: str | None = None

@@ -309,6 +309,7 @@ export default {
   },
   label: 'Label',
   language: 'language',
+  last_update: 'Last updated',
   late: 'late',
   link: 'Link | Links',
   list: 'List',

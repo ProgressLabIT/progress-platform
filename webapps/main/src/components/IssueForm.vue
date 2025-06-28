@@ -138,6 +138,7 @@
                 :key="field._key"
                 :field="field"
                 :root-path="`/media/issue/${issue?._key}/${field._key}`"
+                class="q-mb-lg"
                 @update="field.value = $event"
               />
             </template>

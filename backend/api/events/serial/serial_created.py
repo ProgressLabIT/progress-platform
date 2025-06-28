@@ -26,6 +26,10 @@ class SerialCreatedEvent(BaseSerialEvent):
   def get_event_type(cls) -> EventType:
     return EventType.SERIAL_CREATED
 
+  @property
+  def event_first(self):
+    return True
+
   def apply(self):
     # Ensure serial code is available if provided
     if self.info.code != None and not self.verify_serial_code_free(None, self.info.product_key, self.info.code):
@@ -54,6 +58,10 @@ class SerialCreatedEvent(BaseSerialEvent):
         self.info.code = _generate_counter(self.tx, self.info.counter_key)
 
     try:
+      if self.info.data:
+        for d in self.info.data:
+          d.last_updated = self.event_key
+
       new_serial = Serial(**self.info.model_dump())
       self.info.serial_key = self.tx.collection('Serial').insert(new_serial.model_dump(by_alias=True))['_key']
 

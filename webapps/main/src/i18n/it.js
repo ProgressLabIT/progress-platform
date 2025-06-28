@@ -318,6 +318,7 @@ export default {
   },
   label: 'Etichetta',
   language: 'lingua',
+  last_update: 'Ultimo aggiornamento',
   late: 'in ritardo',
   link: 'Collegamento | Collegamenti',
   list: 'Lista',

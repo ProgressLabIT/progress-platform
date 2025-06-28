@@ -96,21 +96,49 @@
         <!-- SERIAL FORM DATA -->
         <q-tab-panel name="form">
           <template v-if="serial?.data?.length > 0">
-            <div class="column col scroll q-pt-sm">
-              <FormField
+            <div class="column col scroll q-pt-sm q-gutter-y-md">
+              <div class="row q-col-gutter-x-md items-center"
                 v-for="field in serial?.data"
                 :key="field?.form_field_key"
-                :field="field"
-                :root-path="`/media/serial/${serial_key}/${field?.form_field_key}`"
-                :disable="!(edit_mode && can_edit)"
-                @update="field.value = $event"
-              />
+              >
+                <FormField
+                  :field="field"
+                  :root-path="`/media/serial/${serial_key}/${field?.form_field_key}`"
+                  :disable="!(edit_mode && can_edit)"
+                  class="col"
+                  @update="field.value = $event"
+                />
+                <q-icon
+                  v-if="field.last_updated"
+                  class="col-auto"
+                  name="mdi-information-outline"
+                  color="theme-grey"
+                  size="24px"
+                >
+                  <q-tooltip
+                    anchor="center left"
+                    self="center right"
+                    delay="200"
+                    class="bg-theme-blue">
+                    <div class="column q-gutter-y-xs text-right q-pa-sm" >
+                      <div class="text-h5">
+                        {{ $t('last_update') }}
+                      </div>
+                      <BaseUserAvatar
+                      :user="getFieldUser(field)"
+                      size="24px"
+                      />
+                      <div class="text-h6 text-low">{{ getFieldTimestamp(field) }}</div>
+                    </div>
+                  </q-tooltip>
+                </q-icon>
+              </div>
             </div>
           </template>
           <div v-else class="col-auto text-italic">No data</div>
         </q-tab-panel>
 
-        <!-- ISSUE EVENTS -->
+        <!-- EVENTS -->
         <q-tab-panel name="history">
           <q-list class="q-pl-xl col scroll q-pb-lg">
             <q-item
@@ -296,6 +324,22 @@ const goToProductPage = () => {
     params: {
       product_key: serial.value.product_key,
     },
+  });
+};
+
+const getFieldUser = (field) => {
+  const userKey = history.value.find((e) => e._key === field.last_updated)?.user_key;
+  return store.getters.user_data(userKey);
+};
+
+const getFieldTimestamp = (field) => {
+  const timestamp = history.value.find((e) => e._key === field.last_updated)?.timestamp;
+  return getHumanDate(timestamp, {
+    year: '2-digit',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
   });
 };
 
