@@ -56,7 +56,7 @@ class SerialLink(FlexModel):
 
   @field_serializer('parent_serial_key', 'child_serial_key')
   def generate_serial_id(self, serial_key, _info):
-    return f'Serial/{serial_key}'
+    return f'Serial/{serial_key}' if '/' not in serial_key else serial_key
 
   @field_validator('parent_serial_key', 'child_serial_key', mode="after")
   def parse_serial_key(cls, v):
