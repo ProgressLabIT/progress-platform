@@ -84,6 +84,7 @@
             :key="field._key"
             :field="field"
             :root-path="`/media/serial/${serial?._key}/${field._key}`"
+            class="q-mb-lg"
             @update="field.value = $event"
           />
         </q-card-section>

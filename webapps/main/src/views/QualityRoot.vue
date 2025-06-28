@@ -422,11 +422,9 @@
             v-model="filter.value"
             :label="$t('has_attachments')"
           />
-          <!-- We override q-mb-lg of FormField with style -->
           <FormField
             v-else
             :field="filter"
-            style="margin-bottom: 0"
             dense
             @update="
               filter.value = filter.type === 'choice' ? $event?.value : $event

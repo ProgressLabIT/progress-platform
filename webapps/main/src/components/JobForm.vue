@@ -30,6 +30,7 @@
           :disable="(!isJobActive || batchStep?.done) && !stepEditMode"
           :sync="true"
           :root-path="`/media/traceability/${work_order_key}/${batch_key}/${step._key}/${field.custom_field_key}/${field._key}`"
+          class="q-mb-lg"
           @update="(value) => updateField(field, value)"
         />
       </div>

@@ -1,5 +1,5 @@
 <template>
-  <div class="q-mb-lg">
+  <div>
     <!-- TEXT -->
     <q-input
       v-if="fieldType === 'text'"

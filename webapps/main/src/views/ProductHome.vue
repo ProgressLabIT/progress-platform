@@ -461,7 +461,7 @@
                 :root-path="`/media/product/${product_key}/meta/${field.custom_field_key}`"
                 dense
                 :disable="!editMode"
-                class="col"
+                class="col q-mb-lg"
                 @update="
                   (value) => updateMetadataField(field.custom_field_key, value)
                 "
