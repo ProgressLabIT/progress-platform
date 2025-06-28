@@ -284,7 +284,7 @@ def create_temporary_link(batch_key: str, links: list[SerialLink]):
   connect_to_batch = set(link.parent_serial_key for link in links) in [set(['components']), set([None])]
 
   # Check if all links are valid
-  serial_keys = set(link.parent_serial_key for link in links) | set(link.child_serial_key for link in links) - set([None, 'components'])
+  serial_keys = (set(link.parent_serial_key for link in links) | set(link.child_serial_key for link in links)) - set([None, 'components'])
   for serial_key in serial_keys:
     if not db.collection('Serial').has(serial_key):
       raise HTTPException(
