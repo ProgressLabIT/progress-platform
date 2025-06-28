@@ -372,6 +372,9 @@ export default {
         step_key: step_key,
         form_field_key: field._key,
         custom_field_key: field.custom_field_key,
+        label: field.label,
+        hint: field.hint,
+        mandatory: field.mandatory,
         value:
           this.getFieldType(field) === 'files'
             ? field.value
@@ -496,13 +499,11 @@ export default {
         this.phase_data.forEach((phase) => {
           if (phase.steps) {
             phase.steps.forEach((step) => {
-              data = data.concat(
-                this.getFormFieldValue(
-                  phase.phase_key,
-                  step._key,
-                  step.form_fields ? step.form_fields : [],
-                ),
-              );
+              data.push(...this.getFormFieldValue(
+                phase.phase_key,
+                step._key,
+                step.form_fields ? step.form_fields : [],
+              ));
             });
           }
         });
