@@ -82,8 +82,7 @@ class BatchCompletedEvent(BaseProductionEvent):
     # ===================================================================
     # HANDLE TRACEABILITY
     # ===================================================================
-    if self.job.traceability_level is not None:
-      self._handle_batch_serials()
+    self._handle_batch_serials()
 
 
     # ===================================================================
@@ -313,41 +312,45 @@ class BatchCompletedEvent(BaseProductionEvent):
 
   def _handle_batch_serials(self):
     # Fetch batch serial keys
-    self.info.batch_serial_keys = [s['_key'] for s in self.tx.aql.execute(
-      SerialQueries.GET_BATCH_SERIALS,
-      bind_vars=dict(batch_key=self.info.active_batch_key)
-    )]
+    if self.job.traceability_level is not None:
+      self.info.batch_serial_keys = [s['_key'] for s in self.tx.aql.execute(
+        SerialQueries.GET_BATCH_SERIALS,
+        bind_vars=dict(batch_key=self.info.active_batch_key)
+      )]
 
-    # Link components if present
+      # Save step data into batch serials if needed
+      serial_data = self._prepare_serial_data()
+      if len(serial_data) > 0:
+        for serial_key in self.info.batch_serial_keys:
+          SerialUpdatedEvent.create_as_child(self, dict(
+            serial_key = serial_key,
+            serial_data = serial_data,
+            serial_code = self._handle_serial_code(serial_key),
+          ))
+
+          # Copy batch media to serials
+        self._copy_batch_media_to_serials()
+
+      if self.job.last_phase:
+        # Release serials
+        for serial_key in self.info.batch_serial_keys:
+          SerialReleasedEvent.create_as_child(self, dict(serial_key = serial_key))
+
+    # Link component serials if any. Works in jobs with traceability enabled and disabled.
+    # If traceability is disabled for the job, component serials are linked to the batch.
     for component_key, component_serials in self.batch_component_serials_map.items():
       for component_serial in component_serials:
         SerialLinkedEvent.create_as_child(self, dict(
-          parent_serial_key = component_serial['parent_serial_key'],
+          parent_serial_key = component_serial['parent_serial_key'] if self.job.traceability_level is not None else None,
           child_serial_key = component_serial['child_serial_key'],
           batch_key = self.info.active_batch_key,
           wo_key = self.info.work_order_key,
           job_key = self.info.job_key,
           phase_key = self.info.phase_key,
-          process_inventory = False,
+          process_inventory = False, # inventory is handled in _process_inventory_changes()
         ))
 
-    # Save step data into batch serials if needed
-    serial_data = self._prepare_serial_data()
-    if len(serial_data) > 0:
-      for serial_key in self.info.batch_serial_keys:
-        SerialUpdatedEvent.create_as_child(self, dict(
-          serial_key = serial_key,
-          serial_data = serial_data,
-          serial_code = self._handle_serial_code(serial_key),
-        ))
 
-        # Copy batch media to serials
-      self._copy_batch_media_to_serials()
-
-    if self.job.last_phase:
-      # Release serials
-      for serial_key in self.info.batch_serial_keys:
-        SerialReleasedEvent.create_as_child(self, dict(serial_key = serial_key))
 
   # =================================================================
 
