@@ -98,7 +98,7 @@ export default {
   created_min: 'Creato (min)',
   released_max: 'Rilasciato (max)',
   released_min: 'Rilasciato (min)',
-  creation_date: 'data creazione',
+  creation_date: 'creato',
   critical: 'critico',
   date_format: 'AAAA/MM/GG',
   deactivate: 'disattiva',

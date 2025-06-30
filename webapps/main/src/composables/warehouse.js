@@ -169,6 +169,12 @@ export function useMovementColumns() {
       style: 'max-width: 5vw',
       format: (val) => (val ? shortDateString(val) : '-'),
     },
+    {
+      name: 'user',
+      field: 'user_key',
+      sortable: true,
+      label: t('user.label').toUpperCase(),
+    }
   ];
 }
 

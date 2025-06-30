@@ -116,6 +116,13 @@
                 {{ props.row.qt_confirmed }} / {{ props.row.qt_planned }}
               </template>
 
+              <template v-else-if="column.name === 'user'">
+                <BaseUserAvatar
+                  dense
+                  name_first
+                  :user="getUser(props.row.user_key)" size="24px"/>
+              </template>
+
               <template v-else>
                 {{ $capitalizeAll(props.row[column.field] || '-') }}
               </template>
@@ -142,6 +149,7 @@ import queryModel from '@/lib/queryModelFactory.js';
 import { useMovementColumns } from 'app/src/composables/warehouse';
 import eventMixin from '@/mixins/event.js';
 import BasePrompt from '@/components/BasePrompt.vue';
+import BaseUserAvatar from '@/components/BaseUserAvatar.vue';
 
 export default {
   name: 'MovementsRoot',
@@ -149,7 +157,8 @@ export default {
   mixins: [eventMixin],
 
   components: {
-    BasePrompt
+    BasePrompt,
+    BaseUserAvatar
   },
 
   setup() {
@@ -354,6 +363,10 @@ export default {
 
     getMovements() {
       this.reloadMovements({ pagination: this.pagination });
+    },
+
+    getUser(userKey) {
+      return this.$store.getters.user_data(userKey);
     },
 
     showMovementDetails(movementKey) {
