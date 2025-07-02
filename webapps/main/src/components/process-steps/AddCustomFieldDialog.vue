@@ -6,7 +6,7 @@
     :no-backdrop-dismiss="false"
     @close="onDialogHide"
   >
-    <FormFieldSearch @select="onDialogOK" :excludeKeys="excludeKeys" />
+    <FormFieldSearch :exclude-keys="excludeKeys" @select="onDialogOK" />
   </BaseDialog>
 </template>
 

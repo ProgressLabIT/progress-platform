@@ -105,7 +105,7 @@
       </div>
 
       <!-- BY FIELD -->
-      <div class="col" v-if="view === 'form'">
+      <div v-if="view === 'form'" class="col">
         <q-select
           ref="field_filter"
           v-model="selectedField"
@@ -159,12 +159,12 @@
 
 <script setup>
 import { computed, ref, reactive } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { useStore } from 'vuex';
+import { api } from '@/boot/axios';
 import BaseAutocompleteUser from '@/components/BaseAutocompleteUser.vue';
 import NoDataAlert from '@/components/NoDataAlert.vue';
 import WorkOrderTraceabilityData from '@/components/workorderscreen/WorkOrderTraceabilityData.vue';
-import { useI18n } from 'vue-i18n';
-import { api } from '@/boot/axios';
-import { useStore } from 'vuex';
 
 const { t } = useI18n();
 

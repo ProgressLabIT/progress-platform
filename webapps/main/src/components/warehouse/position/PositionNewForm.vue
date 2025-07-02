@@ -35,9 +35,9 @@
           </div>
 
           <div
-            class="col-auto q-gutter-sm"
-            :key="field_name"
             v-for="field_name in ['owned', 'available', 'disposable', 'fixed']"
+            :key="field_name"
+            class="col-auto q-gutter-sm"
           >
             <q-checkbox
               :model-value="new_positions[index][field_name]"
@@ -69,9 +69,9 @@
 </template>
 
 <script>
+import BaseAutocompletePosition from '@/components/BaseAutocompletePosition.vue';
 import BaseModalForm from '@/components/BaseModalForm.vue';
 import BaseTooltipIcon from '@/components/BaseTooltipIcon.vue';
-import BaseAutocompletePosition from '@/components/BaseAutocompletePosition.vue';
 
 export default {
   name: 'PositionNewForm',

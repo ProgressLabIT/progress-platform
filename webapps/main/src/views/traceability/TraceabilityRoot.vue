@@ -345,13 +345,13 @@ import { ref, watch } from 'vue';
 import { useStore } from 'vuex';
 import AddAdvancedFilterDialog from '@/components/AddAdvancedFilterDialog.vue';
 import BaseAutocompleteUser from '@/components/BaseAutocompleteUser.vue';
+import BaseDatePicker from '@/components/BaseDatePicker.vue';
 import FilterDrawer from '@/components/FilterDrawer.vue';
 import FormField from '@/components/FormField.vue';
 import queryModel, { useQueryModel } from '@/lib/queryModelFactory.js';
 import { XLSXDownload, XLSXGetData } from '@/lib/xlsxDownload';
 import SerialForm from 'app/src/components/traceability/SerialForm.vue';
 import { useSerialColumns } from 'app/src/composables/traceability';
-import BaseDatePicker from '@/components/BaseDatePicker.vue';
 
 export default {
   name: 'TraceabilityRoot',

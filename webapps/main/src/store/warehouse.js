@@ -1,6 +1,6 @@
 import { cloneDeep as _cloneDeep } from 'lodash';
-import { api } from '@/boot/axios.js';
 import { Notify } from 'quasar';
+import { api } from '@/boot/axios.js';
 
 const warehouse = {
   state: {

@@ -1,7 +1,7 @@
+import { Notify } from 'quasar';
 import { timestamp } from '@/lib/TimeHandling.js';
 import store from '@/store';
 import { api } from '../boot/axios';
-import { Notify } from 'quasar';
 
 export function sendEvent({ event_type, event_data }) {
   return new Promise((resolve, reject) => {

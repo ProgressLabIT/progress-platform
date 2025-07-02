@@ -74,9 +74,9 @@
               v-if="workingTemplate.links[column].value?.includes('.extra')"
               :label="$t('extra_attribute')"
               :model-value="workingTemplate.links[column].value.split('.').slice(2).join('.')"
-              @update:model-value="(attributeName) => updateExtraAttribute(column, attributeName)"
               filled
               class="shadow-3 q-mt-sm"
+              @update:model-value="(attributeName) => updateExtraAttribute(column, attributeName)"
             />
           </fieldset>
 

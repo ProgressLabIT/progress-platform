@@ -64,11 +64,11 @@
 </template>
 
 <script setup>
+import { watch } from 'vue';
+import { useRouter } from 'vue-router';
 import BaseAutocompletePosition from '@/components/BaseAutocompletePosition.vue';
 import FilterDrawer from '@/components/FilterDrawer.vue';
 import { useInventoryFilters } from 'app/src/composables/warehouse';
-import { useRouter } from 'vue-router';
-import { watch } from 'vue';
 const $router = useRouter();
 
 const showFilterDrawer = defineModel('showFilterDrawer', {

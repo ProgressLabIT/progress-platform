@@ -144,11 +144,11 @@
 
 <script setup>
 import { ref, computed } from 'vue';
-import { formatDateTime } from '@/lib/TimeHandling';
-import { useStore } from 'vuex';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
+import { useStore } from 'vuex';
 import MediaViewer from '@/components/MediaViewer.vue';
+import { formatDateTime } from '@/lib/TimeHandling';
 
 // Props
 const props = defineProps({

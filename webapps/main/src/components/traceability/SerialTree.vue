@@ -44,7 +44,7 @@
           </q-badge>
 
           <!-- NODE CONTEXT MENU -->
-          <q-menu context-menu auto-close v-if="canEditComponentLink(prop.node)">
+          <q-menu v-if="canEditComponentLink(prop.node)" context-menu auto-close>
             <q-list>
               <q-item
                 clickable
@@ -85,12 +85,12 @@
 </template>
 
 <script setup>
+import { Dialog } from 'quasar'
 import { ref, computed, watch } from 'vue'
 import { useStore } from 'vuex'
-import { Dialog } from 'quasar'
+import { api } from '@/boot/axios'
 import SerialComponentLinkEditDialog from '@/components/traceability/SerialComponentLinkEditDialog.vue'
 import { sendEvent } from '@/composables/event'
-import { api } from '@/boot/axios'
 
 const props = defineProps({
   mini_state: {

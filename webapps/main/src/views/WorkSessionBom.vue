@@ -116,7 +116,7 @@
         >
         </q-radio>
       </div>
-      <div class="col-auto" v-if="requiresComponentSerials">
+      <div v-if="requiresComponentSerials" class="col-auto">
         <q-btn
           size="md"
           padding="lg xl"

@@ -183,7 +183,7 @@
 
 <script setup>
 import { cloneDeep, findLast } from 'lodash';
-import { Notify } from 'quasar';
+import { Notify , useQuasar } from 'quasar';
 import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
@@ -192,7 +192,6 @@ import { capitalize, capitalizeAll } from '@/boot/filters.js';
 import { useDrawer } from '@/composables/drawer';
 import { useTheme } from '@/composables/theme';
 import { useConfigStore } from '@/stores/config';
-import { useQuasar } from 'quasar';
 
 const store = useStore();
 const { drawerModel } = useDrawer();

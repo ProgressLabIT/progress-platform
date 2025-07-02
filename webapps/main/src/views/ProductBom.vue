@@ -291,11 +291,11 @@ import { cloneDeep } from 'lodash';
 import { mapState } from 'vuex';
 
 import { api } from '@/boot/axios.js';
+import BaseAutocompletePosition from '@/components/BaseAutocompletePosition.vue';
+import BaseAutocompleteProduct from '@/components/BaseAutocompleteProduct.vue';
 import BaseDialog from '@/components/BaseDialog.vue';
 import multiMatch from '@/lib/MultiFieldSearch.js';
 import { useConfigStore } from '@/stores/config';
-import BaseAutocompletePosition from '@/components/BaseAutocompletePosition.vue';
-import BaseAutocompleteProduct from '@/components/BaseAutocompleteProduct.vue';
 // import { throttle as _throttle } from 'lodash';
 
 export default {

@@ -250,13 +250,13 @@
 </template>
 
 <script setup>
+import { Notify } from 'quasar';
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useStore } from 'vuex';
 import { api } from '@/boot/axios';
 import { capitalize } from '@/boot/filters';
 import FilesList from '@/components/FilesList.vue';
-import { Notify } from 'quasar';
 
 const props = defineProps({
   field: {

@@ -1,6 +1,6 @@
 import axios from 'axios';
-import { boot } from 'quasar/wrappers';
 import { Notify } from 'quasar';
+import { boot } from 'quasar/wrappers';
 import { i18n } from '@/boot/i18n';
 
 // Default configuration

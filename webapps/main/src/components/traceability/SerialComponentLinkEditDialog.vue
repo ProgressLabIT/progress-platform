@@ -1,5 +1,5 @@
 <template>
-  <q-dialog ref="dialogRef" no-backdrop-dismiss no-shake @hide="onDialogHide" backdrop-filter="brightness(0.3)">
+  <q-dialog ref="dialogRef" no-backdrop-dismiss no-shake backdrop-filter="brightness(0.3)" @hide="onDialogHide">
     <q-card class="dialog-card q-pa-lg surface2">
       <q-card-section class="q-mb-md">
         <div
@@ -36,7 +36,7 @@
             :label="$t('serial_link_process_inventory.new_link')"
           />
         </div>
-        <div class="col-6" v-if="node?._key">
+        <div v-if="node?._key" class="col-6">
           <q-checkbox
             v-model="processInventory.oldLink"
             :label="$t('serial_link_process_inventory.old_link')"
@@ -104,8 +104,8 @@
 import { useDialogPluginComponent } from 'quasar';
 import { ref, reactive, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
-import BaseAutocompleteSerial from '../BaseAutocompleteSerial.vue';
 import { useConfigStore } from '@/stores/config'
+import BaseAutocompleteSerial from '../BaseAutocompleteSerial.vue';
 
 const { t: $t } = useI18n({ useScope: 'global' });
 const { config } = useConfigStore()

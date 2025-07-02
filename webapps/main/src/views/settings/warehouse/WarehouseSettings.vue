@@ -2,9 +2,9 @@
   <LoadingSignal v-if="isLoading" />
   <SettingsSection
     v-else
-    title="Warehouse Settings"
     v-slot="{ editMode }"
-    :saveFn="save"
+    title="Warehouse Settings"
+    :save-fn="save"
     @cancel="cancel"
   >
     <div class="column q-gutter-y-md">
@@ -61,10 +61,10 @@
 <script setup>
 import { cloneDeep } from 'lodash';
 import { ref } from 'vue';
-import LoadingSignal from '@/components/LoadingSignal.vue';
-import { useConfigStore } from '@/stores/config';
-import SettingsSection from '@/components/SettingsSection.vue';
 import BaseAutocompletePosition from '@/components/BaseAutocompletePosition.vue';
+import LoadingSignal from '@/components/LoadingSignal.vue';
+import SettingsSection from '@/components/SettingsSection.vue';
+import { useConfigStore } from '@/stores/config';
 
 const { isLoading, config, updateAppConfig } = useConfigStore();
 

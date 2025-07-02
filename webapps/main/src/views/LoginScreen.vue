@@ -20,7 +20,7 @@
         </q-img>
       </div>
 
-      <q-separator vertical class="q-mx-xl" v-if="$q.screen.gt.sm"/>
+      <q-separator v-if="$q.screen.gt.sm" vertical class="q-mx-xl"/>
       <div v-else class="q-my-lg" />
 
       <q-card

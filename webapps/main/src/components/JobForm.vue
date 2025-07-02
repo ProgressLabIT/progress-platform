@@ -39,12 +39,12 @@
 </template>
 
 <script setup>
+import { debounce } from 'lodash';
 import { computed } from 'vue';
 import { useStore } from 'vuex';
+import { api } from '@/boot/axios';
 import FormField from '@/components/FormField.vue';
 import { usePrintDialog } from '@/lib/print';
-import { api } from '@/boot/axios';
-import { debounce } from 'lodash';
 
 /**
  * @typedef {{

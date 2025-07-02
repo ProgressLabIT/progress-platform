@@ -43,7 +43,7 @@
             {{ 'ID ' + scope.opt._key }}
           </q-item-label>
         </q-item-section>
-        <q-item-section side v-if="!props.inventory_only">
+        <q-item-section v-if="!props.inventory_only" side>
           <div class="row items-center q-gutter-x-sm">
             <q-icon v-if="scope.opt.used && showLinkStatus" size="xs" name="mdi-link-variant" />
             <q-icon v-if="!scope.opt.available && showInventoryStatus" size="xs" name="mdi-package-variant-closed-remove" />

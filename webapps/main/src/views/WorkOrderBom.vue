@@ -12,7 +12,7 @@
         />
       </div>
 
-      <div class="col-3" v-if="config.enableInventoryManagement">
+      <div v-if="config.enableInventoryManagement" class="col-3">
         <BaseAutocompletePosition
           :value="outputPositionData"
           :label="$t('warehouse.output_position')"
@@ -188,16 +188,16 @@
 </template>
 
 <script setup>
+import { cloneDeep } from 'lodash';
 import { ref, computed, watch, reactive } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { capitalize } from '@/boot/filters';
 import { api } from '@/boot/axios.js';
+import { capitalize } from '@/boot/filters';
+import BaseAutocompletePosition from '@/components/BaseAutocompletePosition.vue';
+import BaseAutocompleteProduct from '@/components/BaseAutocompleteProduct.vue';
 import BaseDialog from '@/components/BaseDialog.vue';
 import multiMatch from '@/lib/MultiFieldSearch.js';
 import { useConfigStore } from '@/stores/config';
-import BaseAutocompletePosition from '@/components/BaseAutocompletePosition.vue';
-import BaseAutocompleteProduct from '@/components/BaseAutocompleteProduct.vue';
-import { cloneDeep } from 'lodash';
 // Setup store and route
 const { t } = useI18n();
 const { config } = useConfigStore();

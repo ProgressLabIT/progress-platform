@@ -28,7 +28,7 @@
                 (v) => (serial.serial_code = v.toUpperCase())
               "
             >
-              <template v-slot:append>
+              <template #append>
                 <span class="text-low text-italic text-body2">
                   ID: {{ serial.serial_key }}
                 </span>

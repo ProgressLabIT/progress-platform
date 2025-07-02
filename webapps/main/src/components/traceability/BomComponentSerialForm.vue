@@ -80,9 +80,9 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useStore } from 'vuex';
 import { api } from '@/boot/axios';
-import { useI18n } from 'vue-i18n';
 import BaseAutocompleteSerial from '@/components/BaseAutocompleteSerial.vue';
 import BaseDialog from '@/components/BaseDialog.vue';
 import NoDataAlert from '@/components/NoDataAlert.vue';

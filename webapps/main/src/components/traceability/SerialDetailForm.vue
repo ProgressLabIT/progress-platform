@@ -97,9 +97,10 @@
         <q-tab-panel name="form">
           <template v-if="serial?.data?.length > 0">
             <div class="column col scroll q-pt-sm q-gutter-y-md">
-              <div class="row q-col-gutter-x-md items-center"
+              <div
                 v-for="field in serial?.data"
                 :key="field?.form_field_key"
+                class="row q-col-gutter-x-md items-center"
               >
                 <FormField
                   :field="field"
@@ -188,18 +189,18 @@
 </template>
 
 <script setup>
-import { ref, computed, onBeforeUnmount, onMounted, watch } from 'vue';
 import { storeToRefs } from 'pinia';
-import { useRouter, useRoute } from 'vue-router';
+import { ref, computed, onBeforeUnmount, onMounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import BaseUserAvatar from '@/components/BaseUserAvatar.vue';
-import FormField from '@/components/FormField.vue';
-import { usePrintDialog } from '@/lib/print';
-import { useConfigStore } from '@/stores/config';
+import { useRouter, useRoute } from 'vue-router';
 import { useStore } from 'vuex';
 import { api as $api } from '@/boot/axios';
 import { capitalize } from '@/boot/filters';
+import BaseUserAvatar from '@/components/BaseUserAvatar.vue';
+import FormField from '@/components/FormField.vue';
 import { formatDateTime } from '@/lib/TimeHandling';
+import { usePrintDialog } from '@/lib/print';
+import { useConfigStore } from '@/stores/config';
 
 const props = defineProps({
   // from router

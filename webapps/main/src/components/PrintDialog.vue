@@ -109,7 +109,7 @@
                     fit="contain"
                     style="width: 300px"
                   >
-                    <template v-slot:error>
+                    <template #error>
                       <div class="bg-grey-2 text-grey-6" style="word-break: break-word;">
                         <div class="text-center">
                           <q-icon name="mdi-image-off-outline" size="md" />

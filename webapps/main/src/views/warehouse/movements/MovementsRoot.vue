@@ -46,7 +46,7 @@
 
             <q-list dense>
               <template v-if="isReversible(props.row)">
-                <q-item clickable @click="handleContextMenuClick(props.row)" class="text-theme-blue">
+                <q-item clickable class="text-theme-blue" @click="handleContextMenuClick(props.row)">
                   <q-item-section side >
                     <q-item-label>
                       <q-icon name="mdi-undo-variant" size="xs" :color="props.row.inverse_movement_key ? 'text-high' : 'theme-blue'"/>
@@ -136,7 +136,7 @@
       :show="revert_movement_key !== null"
       width="40%"
       :prompt="$t('revert_movement', { key: revert_movement_key })"
-      :helpText="$t('movement_revert_reason_help')"
+      :help-text="$t('movement_revert_reason_help')"
       @update="(reason) => revertMovement(reason)"
       @close="revert_movement_key = null"
     />
@@ -145,21 +145,21 @@
 
 <script>
 import { ref } from 'vue';
-import queryModel from '@/lib/queryModelFactory.js';
-import { useMovementColumns } from 'app/src/composables/warehouse';
-import eventMixin from '@/mixins/event.js';
 import BasePrompt from '@/components/BasePrompt.vue';
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue';
+import queryModel from '@/lib/queryModelFactory.js';
+import eventMixin from '@/mixins/event.js';
+import { useMovementColumns } from 'app/src/composables/warehouse';
 
 export default {
   name: 'MovementsRoot',
-
-  mixins: [eventMixin],
 
   components: {
     BasePrompt,
     BaseUserAvatar
   },
+
+  mixins: [eventMixin],
 
   setup() {
     const pagination = ref({
