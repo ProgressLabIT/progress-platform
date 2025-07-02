@@ -33,6 +33,8 @@ class ProgressOverrideRequestedEvent(BaseAdmin):
       'is_in_position',
       'Job',
       'movement',
+      'Queue',
+      'StepExecutionData',
       'wip',
       'WorkOrder',
       'WorkSession'

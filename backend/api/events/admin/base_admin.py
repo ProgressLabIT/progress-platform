@@ -57,7 +57,7 @@ class BaseAdmin(BaseProductionEvent):
         remaining_wip_to_remove -= current_wip['quantity']
       else:
         leftover_wip = current_wip['quantity'] - remaining_wip_to_remove
-        new_value = round(current_wip['value'] * leftover_wip / current_wip['quantity'], 4)
+        new_value = round(current_wip.get('value', 0) * leftover_wip / current_wip['quantity'], 4)
         wip_update = dict(_key=current_wip['_key'], quantity=leftover_wip, value=new_value)
         self.tx.collection('wip').update(wip_update)
         remaining_wip_to_remove = 0
