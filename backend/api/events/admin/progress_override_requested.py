@@ -24,6 +24,7 @@ class ProgressOverrideRequestedEvent(BaseAdmin):
     new_job_qt_completed: float
     should_adjust_duration: bool | None = True
     quantity_change: int | None = None
+    work_order_key: str | None = None
 
 
   @classmethod
