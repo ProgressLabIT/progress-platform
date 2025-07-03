@@ -37,6 +37,7 @@ from events.production.batch_released import BatchReleasedEvent
 from events.production.job_back_online import JobBackOnlineEvent
 from events.production.job_closed import JobClosedEvent
 from events.production.job_paused import JobPausedEvent
+from events.production.job_pause_forced import JobPauseForcedEvent
 from events.production.job_paused_offline import JobPausedOfflineEvent
 from events.production.job_resumed import JobResumedEvent
 from events.production.job_started import JobStartedEvent
