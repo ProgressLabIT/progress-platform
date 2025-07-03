@@ -191,10 +191,12 @@ class JobResetEvent(BaseAdmin):
 
     for link in job_component_links:
       if link['confirmed']:
+        parent_type, parent_key = link['_from'].split('/')
         SerialUnlinkedEvent.create_as_child(self, dict(
           child_serial_key = link['_to'].split('/')[-1],
-          parent_serial_key = link['_from'].split('/')[-1],
-          reason = f'Job reset by user {self.user_key} at {self.timestamp}'
+          parent_serial_key = parent_key if parent_type == 'Serial' else None,
+          batch_key = parent_key if parent_type == 'Batch' else None,
+          reason = f'Job reset by user {self.info.user_key} at {self.info.timestamp}'
         ))
       else:
         temp_links.append(link)
