@@ -290,6 +290,12 @@ export default {
         });
         await this.$store.dispatch('loadWorkOrderData', this.wo_key);
         this.saving = false;
+        this.$q.notify({
+          message: this.$capitalize(this.$t('quantity.update_success')),
+          color: 'theme-green',
+          timeout: 1500,
+          position: 'top',
+        });
         this.$emit('close');
       } catch (error) {
         console.error(error);

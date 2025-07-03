@@ -1,77 +1,71 @@
 <template>
-  <!-- TODO: Migrate to Quasar if the component will end up being used -->
-  <v-dialog
-    :value="show"
-    :overlay-color="$theme.background"
-    width="unset"
-    :max-width="max_width"
-    overlay-opacity=".5"
-    @keydown.esc="$emit('close')"
-    @input="$emit('close')"
-  >
-    <v-card>
-      <v-card-title>
+  <q-dialog
+    v-model="localShow"
+    backdrop-filter="brightness(0.3)"
+    @hide="emit('close')">
+    <q-card square class="surface1 q-pa-md">
+      <q-card-section class="text-h3 highlight">
         <slot></slot>
-      </v-card-title>
-      <v-card-actions>
-        <v-slot name="actions" style="width: 100%">
-          <v-container>
-            <v-row class="mx-0" justify="space-between">
-              <v-btn
-                :color="confirm_color || $theme.blue"
-                @click="confirm_action()"
-              >
-                {{ confirm_prompt || $t('confirm') }}
-              </v-btn>
-              <v-btn
-                :color="cancel_color || $theme.grey"
-                @click="$emit('close')"
-              >
-                {{ cancel_prompt || $t('cancel') }}
-              </v-btn>
-            </v-row>
-          </v-container>
-        </v-slot>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
+      </q-card-section>
+
+      <q-card-section>
+        <div class="row justify-between q-gutter-xl">
+          <q-btn
+            :color="cancel_color || 'theme-grey'"
+            :label="cancel_prompt || $t('cancel')"
+            @click="emit('close')"
+          >
+          </q-btn>
+          <q-btn
+            :color="confirm_color || 'theme-blue'"
+            :label="confirm_prompt || $t('confirm')"
+            @click="emit('confirm')"
+          >
+          </q-btn>
+        </div>
+      </q-card-section>
+    </q-card>
+  </q-dialog>
 </template>
 
-<script>
-export default {
-  name: 'BaseConfirmationDialog',
+<script setup>
+import { ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 
-  props: {
-    show: {
-      type: Boolean,
-      required: true,
-    },
-    confirm_color: {
-      type: String,
-      default: undefined,
-    },
-    confirm_prompt: {
-      type: String,
-      default: undefined,
-    },
-    confirm_action: {
-      type: Function,
-      required: true,
-    },
-    cancel_color: {
-      type: String,
-      default: undefined,
-    },
-    cancel_prompt: {
-      type: String,
-      default: undefined,
-    },
-    max_width: {
-      type: String,
-      default: '60%',
-    },
+const { t: $t } = useI18n()
+
+// Props
+const props = defineProps({
+  show: {
+    type: Boolean,
+    required: true,
   },
+  confirm_color: {
+    type: String,
+    default: undefined,
+  },
+  confirm_prompt: {
+    type: String,
+    default: undefined,
+  },
+  cancel_color: {
+    type: String,
+    default: undefined,
+  },
+  cancel_prompt: {
+    type: String,
+    default: undefined,
+  }
+})
 
-  emits: ['close'],
-};
+// Events
+const emit = defineEmits(['close', 'confirm'])
+
+// Local reactive data
+const localShow = ref(props.show)
+
+// Watch for prop changes
+watch(() => props.show, (newVal) => {
+  localShow.value = newVal
+})
 </script>

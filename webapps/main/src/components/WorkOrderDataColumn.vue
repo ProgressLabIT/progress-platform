@@ -144,209 +144,29 @@
       :loading="saving"
       :label="$t('update')"
     >
-      <q-menu fit :style="`background-color: ${$theme.surface2}`">
-        <q-list class="text-uppercase capitalize text-body2">
-          <q-item
-            v-if="!wo_data.active"
-            v-close-popup
-            clickable
-            @click="edit_project = true"
-          >
-            <q-item-section>
-              {{ $t('project_update') }}
-            </q-item-section>
-          </q-item>
-          <q-item v-close-popup clickable @click="edit_qt = true">
-            <q-item-section>
-              {{ $t('quantity.update') }}
-            </q-item-section>
-          </q-item>
-          <q-item v-close-popup clickable @click="editDate('start_from')">
-            <q-item-section>
-              {{ $t('work_order.update_from_date') }}
-            </q-item-section>
-          </q-item>
-          <q-item v-close-popup clickable @click="editDate('due_by')">
-            <q-item-section>
-              {{ $t('work_order.update_due_date') }}
-            </q-item-section>
-          </q-item>
-          <q-item
-            v-if="wo_data.status === 'created'"
-            v-close-popup
-            clickable
-            class="text-theme-red"
-            @click="delete_stage = 'confirm'"
-          >
-            <q-item-section>
-              {{ $t('work_order.delete_action') }}
-            </q-item-section>
-          </q-item>
-        </q-list>
-      </q-menu>
+      <ProductionAdminMenu :wo="wo_data" show-work-order-actions/>
     </q-btn>
 
-    <!-- EDIT PROJECT DIALOG -->
-    <BaseDialog :show="edit_project" @close="closeEditDialogs">
-      <q-card class="surface2 q-pa-md" style="width: 500px">
-        <q-card-section>
-          <div class="text-h4 display highlight text-uppercase">
-            {{ $t('project') }}
-          </div>
-          <q-input
-            v-model="temp_project_code"
-            autofocus
-            class="q-mt-md"
-            input-class="text-body1 text-uppercase"
-            hide-bottom-space
-          >
-          </q-input>
-        </q-card-section>
-        <q-card-actions align="between">
-          <q-btn size="12px" flat color="theme-grey" @click="closeEditDialogs">
-            {{ $t('cancel') }}
-          </q-btn>
-          <q-btn
-            v-if="temp_project_code !== wo_data.project_code"
-            size="12px"
-            flat
-            color="theme-blue"
-            @click="saveWorkOrderUpdate"
-          >
-            {{ $t('save') }}
-          </q-btn>
-        </q-card-actions>
-      </q-card>
-    </BaseDialog>
-
-    <!-- EDIT QUANTITY DIALOG -->
-    <BaseDialog :show="edit_qt" @close="closeEditDialogs">
-      <q-card class="surface2 q-pa-md" style="width: 300px">
-        <q-card-section>
-          <div class="text-h4 display highlight text-uppercase">
-            {{ $t('work_order.new_quantity') }}
-          </div>
-          <q-input
-            v-model.number="new_qt"
-            autofocus
-            class="q-mt-md"
-            input-class="text-body1"
-            hide-bottom-space
-            type="number"
-            :min="min_allowable_wo_qt"
-          >
-          </q-input>
-        </q-card-section>
-        <q-card-actions align="between">
-          <q-btn size="12px" flat color="theme-grey" @click="closeEditDialogs">
-            {{ $t('cancel') }}
-          </q-btn>
-          <q-btn
-            v-if="new_qt !== wo_data.qt_planned"
-            size="12px"
-            flat
-            color="theme-blue"
-            @click="show_job_qt_rebalance = true"
-          >
-            {{ $t('save') }}
-          </q-btn>
-        </q-card-actions>
-      </q-card>
-    </BaseDialog>
-
-    <WorkOrderJobQtRebalance
-      v-if="show_job_qt_rebalance"
-      :new_wo_qt="new_qt"
-      :phase_data="phase_data"
-      :wo_key="wo_data._key"
-      @close="closeEditDialogs"
-    >
-    </WorkOrderJobQtRebalance>
-
-    <!-- EDIT DATES DIALOG -->
-    <BaseDialog :show="edit_date !== null" @close="closeEditDialogs">
-      <q-card class="surface2">
-        <q-date v-model="temp_date" minimal mask="YYYY-MM-DD"> </q-date>
-        <div class="row justify-between q-pa-sm">
-          <q-btn flat size="12px" color="theme-grey" @click="closeEditDialogs">
-            {{ $t('cancel') }}
-          </q-btn>
-          <q-btn
-            flat
-            size="12px"
-            color="theme-blue"
-            @click="saveWorkOrderUpdate"
-          >
-            {{ $t('save') }}
-          </q-btn>
-        </div>
-      </q-card>
-    </BaseDialog>
-
-    <BaseDialog :show="!!delete_stage" @close="closeEditDialogs">
-      <q-card class="surface2 q-pa-md" style="width: 300px">
-        <transition name="slide-fade" mode="out-in">
-          <q-card-section
-            v-if="delete_stage === 'confirm'"
-            key="confirm"
-            align="between"
-          >
-            <div class="text-h4 q-mb-lg">
-              {{ $t('work_order.delete_question') }}
-            </div>
-            <div class="row justify-between">
-              <q-btn
-                color="theme-red"
-                :label="$t('delete')"
-                @click="deleteWorkOrder"
-              >
-              </q-btn>
-              <q-btn
-                color="theme-grey"
-                :label="$t('cancel')"
-                @click="closeEditDialogs"
-              >
-              </q-btn>
-            </div>
-          </q-card-section>
-
-          <q-card-section v-else-if="delete_stage === 'success'" key="success">
-            <div class="text-h4 q-mb-md">
-              {{ $t('work_order.delete_success') }}
-            </div>
-            <q-btn
-              class="full-width"
-              color="theme-grey"
-              :label="$t('close')"
-              @click="$router.back()"
-            >
-            </q-btn>
-          </q-card-section>
-        </transition>
-      </q-card>
-    </BaseDialog>
   </div>
 </template>
 
 <script>
 import { DateTime as DT } from 'luxon';
-import BaseDialog from '@/components/BaseDialog.vue';
 import BaseProgressBar from '@/components/BaseProgressBar.vue';
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue';
-import WorkOrderJobQtRebalance from '@/components/WorkOrderJobQtRebalance.vue';
 import { durationFromMillisec } from '@/lib/duration.js';
 import { getPicPath } from '@/lib/media.js';
 import { formatDateTime } from '../lib/TimeHandling';
 import { usePrintDialog } from '@/lib/print';
+import ProductionAdminMenu from '@/components/ProductionAdminMenu.vue';
 
 export default {
   name: 'WorkOrderDataColumn',
 
   components: {
-    BaseDialog,
     BaseProgressBar,
     BaseUserAvatar,
-    WorkOrderJobQtRebalance, // Balance wo quantity changes among jobs
+    ProductionAdminMenu,
   },
 
   props: {
@@ -497,52 +317,6 @@ export default {
         this.wo_data.jobs.map((j) => j.qt_completed + j.active_batch_qt),
       );
     },
-
-    phase_data() {
-      return this.wo_data.phase_sequence.map((phase_key) => {
-        const jobs = this.wo_data.jobs.filter((j) => j.phase_key === phase_key);
-        const params = jobs[0].parameters;
-        const phase_alias = jobs[0].phase_alias;
-        const total_completed = jobs.reduce(
-          (sum, job) => sum + job.qt_completed,
-          0,
-        );
-        const total_active = jobs.reduce(
-          (sum, job) => sum + job.active_batch_qt,
-          0,
-        );
-        // const total_released = jobs.reduce( (sum, job) => sum + job.qt_released, 0 )
-        const total_remaining = jobs.reduce((sum, job) => {
-          return sum + job.qt_planned - job.qt_completed - job.active_batch_qt;
-        }, 0);
-        const total_progress = Math.floor(
-          jobs.reduce((sum, job) => sum + job.progress * job.qt_planned, 0) /
-            this.wo_data.qt_planned,
-        );
-        const active = jobs.reduce((count, job) => count + job.active, 0);
-
-        // const assignments = jobs.map( job => job.assigned_to )
-
-        return {
-          jobs,
-          phase_key,
-          phase_alias,
-          active,
-          ...params,
-          // qt_released: total_released,
-          qt_completed: total_completed,
-          qt_remaining: total_remaining,
-          active_batch_qt: total_active,
-          progress: total_progress,
-        };
-      });
-    },
-  },
-
-  created() {
-    this.temp_project_code = this.wo_data.project_code;
-    this.temp_due_date = this.wo_data.due_by;
-    this.new_qt = this.wo_data.qt_planned;
   },
 
   methods: {
@@ -653,54 +427,6 @@ export default {
     panelHeight() {
       let height = document.body.clientHeight - 360;
       return height + 'px';
-    },
-
-    editDate(date_field) {
-      this.edit_date = date_field;
-      this.temp_date = this.wo_data[date_field];
-    },
-
-    closeEditDialogs() {
-      this.edit_date = null;
-      this.edit_qt = false;
-      this.temp_date = null;
-      this.new_qt = this.wo_data.qt_planned;
-      this.temp_project_code = this.wo_data.project_code;
-      this.edit_project = false;
-      this.show_job_qt_rebalance = false;
-      this.delete_stage = null;
-    },
-
-    async saveWorkOrderUpdate() {
-      this.saving = true;
-
-      const wo_update = {
-        wo_key: this.wo_data._key,
-        new_qt: this.new_qt,
-        new_project_code: this.temp_project_code,
-      };
-
-      switch (this.edit_date) {
-        case 'due_by':
-          wo_update.new_due_date = this.temp_date;
-          break;
-        case 'start_from':
-          wo_update.new_from_date = this.temp_date;
-          break;
-      }
-
-      await this.$store.dispatch('updateWorkOrder', wo_update);
-      await this.$store.dispatch('loadWorkOrderData', wo_update.wo_key);
-      this.closeEditDialogs();
-      this.saving = false;
-    },
-
-    deleteWorkOrder() {
-      this.loading = true;
-      this.$api.delete(`work-order/${this.wo_data._key}`).then(() => {
-        this.$store.dispatch('loadWorkOrders');
-        this.delete_stage = 'success';
-      });
     },
 
     goToProductPage() {
