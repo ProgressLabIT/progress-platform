@@ -960,6 +960,7 @@ export default {
     },
     update_due_date: 'modifica data scadenza',
     update_from_date: 'modifica data rilascio',
+    update_success: 'Ordine di produzione modificato con successo',
     wo_code: 'codice',
   },
   work_order_autocomplete_hint:

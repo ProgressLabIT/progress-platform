@@ -947,6 +947,7 @@ export default {
     },
     update_due_date: 'change due date',
     update_from_date: 'change release date',
+    update_success: 'Work order updated successfully',
     wo_code: 'code',
   },
   work_order_autocomplete_hint:

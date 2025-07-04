@@ -1,29 +1,105 @@
 <template>
   <q-popup-proxy fit max-width="450px" :context-menu="contextMenu">
-    <q-list>
-      <q-item
-        v-for="item in menuItems"
-        v-show="item.show"
-        :key="item.label"
-        v-ripple
-        v-close-popup
-        :disable="item.disable"
-        :clickable="!item.disable"
-        :class="item.color ? `text-${item.color}` : null"
-        @click="item.action()"
-      >
-        <q-item-section avatar>
-          <q-icon :name="item.icon" />
-        </q-item-section>
-        <q-item-section>
-          <q-item-label>
-            {{ capitalize(t(item.label)) }}
-          </q-item-label>
-          <q-item-label caption v-if="item.caption">
-            {{ t(item.caption) }}
-          </q-item-label>
-        </q-item-section>
-      </q-item>
+    <q-list :dense="props.showHeaders">
+
+      <!-- HEADER -->
+
+      <!-- WORK ORDER ACTIONS -->
+      <template v-if="props.showWorkOrderActions">
+        <template v-if="props.showHeaders">
+          <q-item>
+            <q-item-section side class="text-h5 text-low uppercase">
+              {{ $t('work_order.short') }}
+            </q-item-section>
+            <q-item-section>
+              <q-item-label class="highlight">
+                {{ woData.wo_code }}
+              </q-item-label>
+            </q-item-section>
+          </q-item>
+          <q-separator />
+        </template>
+        <q-item
+          v-for="item in workOrderItems"
+          v-show="item.show"
+          :key="item.label"
+          v-ripple
+          v-close-popup
+          :disable="item.disable"
+          :clickable="!item.disable"
+          :class="item.color ? `text-${item.color}` : null"
+          @click="item.action()"
+        >
+          <q-item-section avatar>
+            <q-icon :name="item.icon" :size="props.showHeaders ? '18px' : null"/>
+          </q-item-section>
+          <q-item-section>
+            <q-item-label>
+              {{ capitalize(t(item.label)) }}
+              <q-tooltip
+                v-if="item.caption"
+                :delay="200"
+                style="max-width: 450px;"
+                class="smaller"
+                anchor="bottom middle"
+                self="top middle"
+              >
+                {{ t(item.caption) }}
+              </q-tooltip>
+            </q-item-label>
+          </q-item-section>
+        </q-item>
+      </template>
+
+
+      <!-- JOB ACTIONS -->
+      <template v-if="props.showJobActions">
+        <q-separator v-if="props.showWorkOrderActions" />
+        <template v-if="props.showHeaders">
+          <q-item>
+            <q-item-section side class="text-h5 text-low uppercase">
+              {{ $t('job.label') }}
+            </q-item-section>
+            <q-item-section class="highlight">
+              {{  job.phase_alias }} ({{ job._key }})
+            </q-item-section>
+          </q-item>
+          <q-separator />
+        </template>
+
+        <q-item
+          v-for="item in jobItems"
+          v-show="item.show"
+          :key="item.label"
+          v-ripple
+          v-close-popup
+          :disable="item.disable"
+          :clickable="!item.disable"
+          :class="item.color ? `text-${item.color}` : null"
+          @click="item.action()"
+        >
+          <q-item-section avatar>
+            <q-icon :name="item.icon" :size="props.showHeaders ? '18px' : null"/>
+          </q-item-section>
+          <q-item-section>
+            <q-item-label>
+              {{ capitalize(t(item.label)) }}
+              <q-tooltip
+                v-if="item.caption"
+                :delay="200"
+                anchor="top middle"
+                self="bottom middle"
+              >
+                <div
+                  style="max-width: 300px;"
+                  class="smaller">
+                  {{ t(item.caption) }}
+                </div>
+              </q-tooltip>
+            </q-item-label>
+          </q-item-section>
+        </q-item>
+      </template>
     </q-list>
   </q-popup-proxy>
 
@@ -34,7 +110,17 @@
     @close="resetEditing"
     @confirm="action"
   >
-    {{ t(confirmMessage) }}
+    <div v-if="props.showHeaders" class="text-h5 uppercase highlight q-mb-md">
+      <span>
+        {{ t('work_order.short') }} {{ woData.wo_code }}
+      </span>
+      <span v-if="props.showJobActions">
+        - {{  job.phase_alias }} -  {{ t('job.label') }} {{ job._key }}
+      </span>
+    </div>
+    <div>
+      {{ t(confirmMessage) }}
+    </div>
   </BaseConfirmationDialog>
 
 
@@ -161,111 +247,119 @@
   <!-- WORK ORDER ACTIONS DIALOGS -->
   <!-- ================================================ -->
 
-  <!-- EDIT PROJECT DIALOG -->
-  <BaseDialog :show="dialog === 'update_project'" @close="resetEditing">
-    <q-card class="surface2 q-pa-md" style="width: 500px">
-      <q-card-section>
-        <div class="text-h4 display highlight text-uppercase">
-          {{ $t('project') }}
-        </div>
-        <q-input
-          v-model="tempData.projectCode"
-          autofocus
-          class="q-mt-md"
-          input-class="text-body1 text-uppercase"
-          hide-bottom-space
-        >
-        </q-input>
+  <BaseDialog :show="dialog !== undefined" @close="resetEditing">
+    <q-card square class="surface1 q-pa-md" style="min-width: 400px;">
+
+      <q-card-section v-if="props.showHeaders" class="text-h5 uppercase highlight q-mb-md">
+        <span>
+          {{ t('work_order.short') }} {{ woData.wo_code }}
+        </span>
+        <span v-if="props.showJobActions">
+          - {{  job.phase_alias }} -  {{ t('job.label') }} {{ job._key }}
+        </span>
       </q-card-section>
-      <q-card-actions align="between">
-        <q-btn size="12px" flat color="theme-grey" @click="resetEditing">
-          {{ $t('cancel') }}
-        </q-btn>
-        <q-btn
-          v-if="tempData.projectCode !== props.wo?.project_code"
-          size="12px"
-          flat
-          color="theme-blue"
-          @click="saveWorkOrderUpdate"
-        >
-          {{ $t('save') }}
-        </q-btn>
-      </q-card-actions>
-    </q-card>
-  </BaseDialog>
 
-  <!-- EDIT QUANTITY DIALOG -->
-  <BaseDialog :show="['update_quantity', 'assign_quantity'].includes(dialog)" @close="resetEditing">
-    <q-card class="surface2 q-pa-md" v-if="dialog === 'update_quantity'">
-      <q-card-section>
-        <div class="text-h4 display highlight text-uppercase">
-          {{ $t('work_order.new_quantity') }}
-        </div>
-        <q-input
-          v-model.number="tempData.newQt"
-          autofocus
-          class="q-mt-md"
-          input-class="text-body1"
-          hide-bottom-space
-          type="number"
-          :min="tempData.minAllowableWoQt"
-        >
-        </q-input>
-      </q-card-section>
-      <q-card-actions align="between">
-        <q-btn size="12px" flat color="theme-grey" @click="resetEditing">
-          {{ $t('cancel') }}
-        </q-btn>
-        <q-btn
-          v-if="tempData.newQt !== props.wo?.qt_planned"
-          size="12px"
-          flat
-          color="theme-blue"
-          @click="() => dialog = 'assign_quantity'"
-        >
-          {{ $t('save') }}
-        </q-btn>
-      </q-card-actions>
-    </q-card>
-  </BaseDialog>
+      <!-- EDIT PROJECT DIALOG -->
+      <template v-if="dialog === 'update_project'">
+        <q-card-section>
+          <div class="text-h4 display highlight text-uppercase">
+            {{ $t('project') }}
+          </div>
+          <q-input
+            v-model="tempData.projectCode"
+            autofocus
+            class="q-mt-md"
+            input-class="text-body1 text-uppercase"
+            hide-bottom-space
+          >
+          </q-input>
+        </q-card-section>
+        <q-card-actions align="between">
+          <q-btn size="12px" flat color="theme-grey" @click="resetEditing">
+            {{ $t('cancel') }}
+          </q-btn>
+          <q-btn
+            v-if="tempData.projectCode !== woData.project_code"
+            size="12px"
+            flat
+            color="theme-blue"
+            @click="saveWorkOrderUpdate"
+          >
+            {{ $t('save') }}
+          </q-btn>
+        </q-card-actions>
+      </template>
 
-  <WorkOrderJobQtRebalance
-    v-if="dialog === 'assign_quantity'"
-    :new_wo_qt="tempData.newQt"
-    :phase_data="phaseData"
-    :wo_key="props.wo._key"
-    @close="resetEditing"
-  />
+      <template v-else-if="dialog === 'update_quantity'">
+        <q-card-section>
+          <div class="text-h4 display highlight text-uppercase">
+            {{ $t('work_order.new_quantity') }}
+          </div>
+          <q-input
+            v-model.number="tempData.newQt"
+            autofocus
+            class="q-mt-md"
+            input-class="text-body1"
+            hide-bottom-space
+            type="number"
+            :min="tempData.minAllowableWoQt"
+          >
+          </q-input>
+        </q-card-section>
+        <q-card-actions align="between">
+          <q-btn size="12px" flat color="theme-grey" @click="resetEditing">
+            {{ $t('cancel') }}
+          </q-btn>
+          <q-btn
+            v-if="tempData.newQt !== woData.qt_planned"
+            size="12px"
+            flat
+            color="theme-blue"
+            @click="dialog = 'assign_quantity'"
+          >
+            {{ $t('save') }}
+          </q-btn>
+        </q-card-actions>
+      </template>
 
 
-  <!-- EDIT DATES DIALOG -->
-  <BaseDialog :show="['update_from_date', 'update_due_date'].includes(dialog)" @close="resetEditing">
-    <q-card class="surface2 q-pa-md">
-      <q-date
-        v-model="tempData[dialog === 'update_from_date' ? 'fromDate' : 'dueDate']"
-        minimal
-        mask="YYYY-MM-DD"
+      <WorkOrderJobQtRebalance
+        v-else-if="dialog === 'assign_quantity'"
+        :new_wo_qt="tempData.newQt"
+        :phase_data="phaseData"
+        :wo_key="woData._key"
+        @close="resetEditing"
       />
-      <div class="row justify-between q-pa-sm">
-        <q-btn flat size="12px" color="theme-grey" @click="resetEditing">
-          {{ $t('cancel') }}
-        </q-btn>
-        <q-btn
-          flat
-          size="12px"
-          color="theme-blue"
-          @click="saveWorkOrderUpdate"
-        >
-          {{ $t('save') }}
-        </q-btn>
-      </div>
+
+      <!-- UPDATE DATES DIALOG -->
+      <template v-else-if="['update_from_date', 'update_due_date'].includes(dialog)">
+        <q-date
+          v-model="tempData[dialog === 'update_from_date' ? 'fromDate' : 'dueDate']"
+          minimal
+          mask="YYYY-MM-DD"
+        />
+        <div class="row justify-between q-pa-sm">
+          <q-btn flat size="12px" color="theme-grey" @click="resetEditing">
+            {{ $t('cancel') }}
+          </q-btn>
+          <q-btn
+            flat
+            size="12px"
+            color="theme-blue"
+            @click="saveWorkOrderUpdate"
+          >
+            {{ $t('save') }}
+          </q-btn>
+        </div>
+      </template>
+
     </q-card>
   </BaseDialog>
 
 </template>
 
 <script setup>
-import { reactive, ref, computed } from 'vue'
+import { reactive, ref, computed, watch } from 'vue'
 import BaseDialog from '@/components/BaseDialog.vue'
 import BaseConfirmationDialog from '@/components/BaseConfirmationDialog.vue'
 import { sendEvent } from '@/composables/event'
@@ -286,6 +380,8 @@ const action = ref(undefined)
 const confirmMessage = ref(undefined)
 const confirmColor = ref('theme-blue')
 const dialog = ref(undefined)
+
+const emit = defineEmits(['ok'])
 
 const props = defineProps({
   job: {
@@ -312,12 +408,33 @@ const props = defineProps({
     type: Boolean,
     default: false,
     required: false,
-  }
+  },
+  showHeaders: {
+    type: Boolean,
+    default: false,
+    required: false,
+  },
 })
 
+let woData = reactive({})
+const tempData = reactive({})
 
-function initTempData() {
-  return {
+
+async function getWoData() {
+  if (props.wo === undefined) {
+    const resp = await api.get(`work-order/${props.job.wo_key}`)
+    Object.assign(woData, resp.data.detail)
+  }
+  else {
+    Object.assign(woData, props.wo)
+  }
+}
+
+
+async function initTempData() {
+  await getWoData()
+
+  Object.assign(tempData, {
     hours: 0,
     minutes: 0,
     seconds: 0,
@@ -325,16 +442,29 @@ function initTempData() {
     shouldAdjustDuration: false,
     minProgressQt: null,
     maxProgressQt: null,
-    projectCode: props.wo?.project_code,
-    dueDate: props.wo?.due_by,
-    fromDate: props.wo?.start_from,
-    newQt: props.wo?.qt_planned,
-  }
+    minAllowableWoQt: 1, // Minimum allowed work order quantity
+    projectCode: woData.project_code,
+    dueDate: woData.due_by,
+    fromDate: woData.start_from,
+    newQt: woData.qt_planned,
+  })
 }
 
-const tempData = reactive(initTempData())
+// Initialize data on setup
+initTempData()
 
+// Watch for changes in props and refresh data
+watch(() => props.job, async () => {
+  if (props.job) {
+    await initTempData()
+  }
+}, { immediate: false })
 
+watch(() => props.wo, async () => {
+  if (props.wo) {
+    await initTempData()
+  }
+}, { immediate: false })
 
 // Figure out if we can force progress. Prevented in case of:
 // - Job has mandatory form fields
@@ -351,33 +481,27 @@ async function checkMandatoryFields() {
 checkMandatoryFields()
 
 async function checkComponentsWithTraceability() {
-  if (props.job === undefined) {
-    hasComponentsWithTraceability.value = false
-    return
-  }
-  let wo = props.wo
-  if (wo === undefined) {
-    const resp = await api.get(`work-order/${props.job.wo_key}`)
-    wo = resp.data.detail
-  }
-  hasComponentsWithTraceability.value = wo.wo_bom.some(component => component.traceability_level && component.phase_key === props.job.phase_key)
+  hasComponentsWithTraceability.value = woData.wo_bom?.some(component => component.traceability_level && component.phase_key === props.job?.phase_key)
 }
 
 checkComponentsWithTraceability()
 
 const canForceProgress = computed(() => !(
   !!props.job?.traceability_level ||
-  !!props.wo?.traceability_level ||
+  !!woData.traceability_level ||
   hasMandatoryFields.value ||
   hasComponentsWithTraceability.value
 ))
 
 // Phase data for job quantity rebalance
 const phaseData = computed(() => {
-  return props.wo.phase_sequence.map((phase_key) => {
-    const jobs = props.wo.jobs.filter((j) => j.phase_key === phase_key);
-    const params = jobs[0].parameters;
-    const phase_alias = jobs[0].phase_alias;
+  if (!woData.phase_sequence) {
+    return []
+  }
+  return woData.phase_sequence.map((phase_key) => {
+    const jobs = woData.jobs?.filter((j) => j.phase_key === phase_key) || [];
+    const params = jobs[0]?.parameters;
+    const phase_alias = jobs[0]?.phase_alias;
     const total_completed = jobs.reduce(
       (sum, job) => sum + job.qt_completed,
       0,
@@ -392,7 +516,7 @@ const phaseData = computed(() => {
     }, 0);
     const total_progress = Math.floor(
       jobs.reduce((sum, job) => sum + job.progress * job.qt_planned, 0) /
-        props.wo.qt_planned,
+        woData.qt_planned,
     );
     const active = jobs.reduce((count, job) => count + job.active, 0);
 
@@ -432,7 +556,7 @@ async function pauseJob() {
   store
     .dispatch('forcePauseJob', { job: props.job })
     .then(async () => {
-      await store.dispatch('loadWorkOrderData', props.wo._key);
+      await store.dispatch('loadWorkOrderData', woData._key);
       Notify.create({
         message: t('pause_job_success'),
         color: 'theme-green',
@@ -443,6 +567,7 @@ async function pauseJob() {
     .catch((err) => {
       window.alert(err);
     });
+    emit('ok')
 }
 
 
@@ -471,6 +596,7 @@ async function forceProcessingTime() {
       timeout: 1500,
       position: 'top',
     });
+    emit('ok')
   } catch (err) {
     window.alert(err);
   }
@@ -521,6 +647,7 @@ async function forceProgress() {
       timeout: 1500,
       position: 'top',
     });
+    emit('ok')
   } catch (error) {
     window.alert(error);
   }
@@ -545,6 +672,8 @@ async function editJobProgress() {
   tempData.maxProgressQt = maxProgressQt
   tempData.shouldAdjustDuration = true
   action.value = forceProgress
+  await store.dispatch('loadWorkOrderData', props.job.wo_key);
+  emit('ok')
 }
 
 
@@ -564,6 +693,7 @@ async function cancelBatch() {
         timeout: 1500,
         position: 'top',
     });
+    emit('ok')
   } catch (err) {
     window.alert(err);
   }
@@ -585,6 +715,7 @@ async function resetJob() {
       timeout: 1500,
       position: 'top',
     });
+    emit('ok')
   } catch (err) {
     window.alert(err);
   }
@@ -593,7 +724,7 @@ async function resetJob() {
 async function saveWorkOrderUpdate() {
 
   const wo_update = {
-    wo_key: props.wo?._key,
+    wo_key: woData._key,
     new_qt: tempData.newQt,
     new_project_code: tempData.projectCode,
     new_due_date: tempData.dueDate,
@@ -603,20 +734,28 @@ async function saveWorkOrderUpdate() {
   await store.dispatch('updateWorkOrder', wo_update);
   await store.dispatch('loadWorkOrderData', wo_update.wo_key);
   resetEditing();
+  Notify.create({
+    message: t('work_order.update_success'),
+    color: 'theme-green',
+    timeout: 1500,
+    position: 'top',
+  });
+  emit('ok')
 }
 
 
 async function deleteWorkOrder() {
-  await api.delete(`work-order/${props.wo._key}`)
+  await api.delete(`work-order/${woData._key}`)
   await store.dispatch('loadWorkOrders')
   resetEditing()
-  router.back()
   Notify.create({
     message: t('work_order.delete_success'),
     color: 'theme-green',
     timeout: 1500,
     position: 'top',
   });
+  emit('ok')
+  router.back()
 }
 
 
@@ -624,7 +763,6 @@ function resetEditing() {
   confirmMessage.value = undefined
   action.value = undefined
   dialog.value = undefined
-  Object.assign(tempData, initTempData())
 }
 
 
@@ -683,8 +821,9 @@ const workOrderItems = computed(() => [
   {
     label: 'project_update',
     icon: 'mdi-folder-edit-outline',
-    show: !props.wo?.active,
-    action: () => {
+    show: !woData.active,
+    action: async () => {
+      await initTempData();
       action.value = saveWorkOrderUpdate;
       dialog.value = 'update_project'
     },
@@ -692,8 +831,9 @@ const workOrderItems = computed(() => [
   {
     label: 'quantity.update',
     icon: 'mdi-plus-minus-variant',
-    show: !props.wo?.active,
-    action: () => {
+    show: !woData.active,
+    action: async () => {
+      await initTempData();
       action.value = saveWorkOrderUpdate;
       dialog.value = 'update_quantity'
     },
@@ -701,8 +841,9 @@ const workOrderItems = computed(() => [
   {
     label: 'work_order.update_from_date',
     icon: 'mdi-calendar-start',
-    show: !props.wo?.active,
-    action: () => {
+    show: !woData.active,
+    action: async () => {
+      await initTempData();
       action.value = saveWorkOrderUpdate;
       dialog.value = 'update_from_date'
     },
@@ -710,8 +851,9 @@ const workOrderItems = computed(() => [
   {
     label: 'work_order.update_due_date',
     icon: 'mdi-calendar-end',
-    show: !props.wo?.active,
-    action: () => {
+    show: !woData.active,
+    action: async () => {
+      await initTempData();
       action.value = saveWorkOrderUpdate;
       dialog.value = 'update_due_date'
     },
@@ -719,7 +861,7 @@ const workOrderItems = computed(() => [
   {
     label: 'work_order.delete_action',
     icon: 'mdi-delete-outline',
-    show: !props.wo?.active && props.wo?.status === 'created',
+    show: !woData.active && woData.status === 'created',
     color: 'theme-red',
     action: () => {
       action.value = deleteWorkOrder
@@ -728,17 +870,6 @@ const workOrderItems = computed(() => [
     },
   },
 ])
-
-const menuItems = computed(() => {
-  let items = []
-  if (props.showJobActions) {
-    items.push(...jobItems.value)
-  }
-  if (props.showWorkOrderActions) {
-    items.push(...workOrderItems.value)
-  }
-  return items
-})
 
 
 </script>

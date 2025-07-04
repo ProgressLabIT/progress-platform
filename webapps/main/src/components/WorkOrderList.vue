@@ -30,6 +30,7 @@
           :key="props.row._key"
           :props="props"
           @dblclick="showWorkOrderScreen(props.row._key)"
+          @contextmenu.prevent="showProductionAdminMenu($event, props.row)"
         >
 
           <template v-for="column in columns" :key="column.name">
@@ -177,6 +178,17 @@
       @update="updateSequence"
     />
 
+    <ProductionAdminMenu
+      v-if="show_production_admin_menu"
+      :wo="show_production_admin_menu"
+      show-work-order-actions
+      show-headers
+      context-menu
+      @ok="() => {
+        store.dispatch('updateWorkOrderList')
+      }"
+    />
+
     <router-view />
   </div>
 </template>
@@ -193,6 +205,7 @@ import BaseDialog from '@/components/BaseDialog.vue';
 import BaseProgressBar from '@/components/BaseProgressBar.vue';
 import BasePrompt from '@/components/BasePrompt.vue';
 import multiMatch from '@/lib/MultiFieldSearch.js';
+import ProductionAdminMenu from '@/components/ProductionAdminMenu.vue';
 
 // Props
 const props = defineProps({
@@ -241,6 +254,7 @@ const search_fields = ref([
 const temp_date = ref(null);
 const change_sequence_for_wo = ref(null);
 const now = ref(new Date());
+const show_production_admin_menu = ref(null);
 
 // Computed properties
 const columns = computed(() => [
@@ -526,6 +540,10 @@ const updateWorkOrder = async (new_date_value) => {
 
 const isLate = (due_by_date) => {
   return DT.fromISO(due_by_date).toMillis() < now.value;
+};
+
+const showProductionAdminMenu = (event, wo) => {
+  show_production_admin_menu.value = wo;
 };
 
 // Lifecycle

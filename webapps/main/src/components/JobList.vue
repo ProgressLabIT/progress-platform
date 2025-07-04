@@ -249,21 +249,23 @@
                 })
               "
               @dblclick="showWorkOrderScreen(props.row.wo_key)"
+              @contextmenu.prevent="showContextMenu($event, props.row)"
             >
+
+              <!-- SELECTION CHECKBOX -->
               <q-td v-if="edit_mode">
                 <q-checkbox
                   v-show="!props.row.active"
                   dense
                   :model-value="selected_jobs.has(props.row._key)"
-                  @update:model-value="
-                    (value) =>
-                      toggleJobs({
-                        added: value,
-                        keys: [props.row._key],
-                      })
-                  "
+                  @update:model-value="(value) => toggleJobs({
+                    added: value,
+                    keys: [props.row._key],
+                  })"
                 />
               </q-td>
+
+              <!-- ROW DATA -->
               <template v-for="field in job_data" :key="field.name">
                 <q-td
                   :props="props"
@@ -357,6 +359,7 @@
                   </template>
                 </q-td>
               </template>
+
             </q-tr>
           </template>
         </q-table>
@@ -412,6 +415,19 @@
         />
       </div>
     </div>
+    <!-- PRODUCTION ADMIN MENU -->
+    <ProductionAdminMenu
+      v-if="show_production_admin_menu"
+      :job="show_production_admin_menu"
+      show-job-actions
+      show-headers
+      show-work-order-actions
+      context-menu
+      @ok="() => {
+        $store.dispatch('loadJobAssignments')
+        $store.dispatch('loadWorkOrderList')
+      }"
+    />
     <div class="q-my-xl"></div>
   </div>
 </template>
@@ -428,6 +444,7 @@ import NoDataAlert from '@/components/NoDataAlert.vue';
 import multiMatch from '@/lib/MultiFieldSearch.js';
 import { useConfigStore } from '../stores/config';
 import OperatorJobsReorderDialog from './OperatorJobsReorderDialog.vue';
+import ProductionAdminMenu from './ProductionAdminMenu.vue';
 
 export default {
   name: 'JobList',
@@ -437,6 +454,7 @@ export default {
     BaseProgressBar,
     BaseUserAvatar,
     NoDataAlert,
+    ProductionAdminMenu,
   },
 
   props: {
@@ -552,6 +570,7 @@ export default {
       now: new Date(),
       saving: false,
       edit_mode: false,
+      show_production_admin_menu: null,
     };
   },
 
@@ -1060,6 +1079,14 @@ export default {
         qt_planned: this.$t('quantity.planned.long'),
       };
       return map[col_name];
+    },
+
+    showContextMenu(event, job) {
+      // Set the job for the context menu
+      this.show_production_admin_menu = job;
+
+      // Optional: Position the menu at cursor location
+      // The q-popup-proxy with context-menu will handle positioning automatically
     },
   },
 };
