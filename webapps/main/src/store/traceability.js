@@ -301,7 +301,7 @@ const traceability = {
 
     async forcePauseJob(ctx, { job }) {
       try {
-        await sendEvent({event_type: 'JOB_PAUSED', event_data: {job_key: job._key}});
+        await sendEvent({event_type: 'JOB_PAUSE_FORCED', event_data: {job_key: job._key}});
       } catch (error) {
         console.error('Error force pausing job:', error);
       }
