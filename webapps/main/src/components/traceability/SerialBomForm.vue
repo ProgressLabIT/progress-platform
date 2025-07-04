@@ -53,7 +53,6 @@
                   :filter_used="true"
                   :inventory_only="line.manage_inventory"
                   :inventory_in_position_key="line.consumption_options?.consumption_position_key"
-                  :used-serials="usedSerialsKeys"
                   @select="(selection) => onSelect(selection, line)"
                 >
                 </BaseAutocompleteSerial>
