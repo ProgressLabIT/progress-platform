@@ -1,5 +1,6 @@
 import os
 import time
+from datetime import datetime
 
 from arango import ArangoClient
 from pydantic import BaseModel, Field
@@ -159,7 +160,7 @@ collections = [
       next_tick = 1,
       template = ['%y', '#6'],
       frequency = "year",
-      reset_date = ""
+      reset_date = datetime.today().replace(year=datetime.today().year + 1, month=1, day=1, hour=0, minute=0, second=0, microsecond=0).isoformat() # Midnight of Jan 1st of the next year
     )
   ]),
   Collection(name='CustomField'),
