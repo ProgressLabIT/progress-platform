@@ -20,7 +20,8 @@ class Settings(BaseSettings):
 
   model_config = SettingsConfigDict(
     env_prefix = "progress_",
-    secrets_dir = "/run/secrets"
+    secrets_dir = "/run/secrets",
+    env_file = ".env"
   )
   """
   Provided as docker secrets:
