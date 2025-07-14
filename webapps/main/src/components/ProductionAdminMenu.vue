@@ -654,6 +654,7 @@ async function forceProgress() {
 }
 
 async function editJobProgress() {
+  console.log('editJobProgress', props.job)
   const resp = await api.get('wip', {
     params: { job_key: props.job._key },
   });
@@ -672,8 +673,6 @@ async function editJobProgress() {
   tempData.maxProgressQt = maxProgressQt
   tempData.shouldAdjustDuration = true
   action.value = forceProgress
-  await store.dispatch('loadWorkOrderData', props.job.wo_key);
-  emit('ok')
 }
 
 
