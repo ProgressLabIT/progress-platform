@@ -107,6 +107,7 @@
                   :root-path="`/media/serial/${serial_key}/${field?.form_field_key}`"
                   :disable="!(edit_mode && can_edit)"
                   class="col"
+                  dense
                   @update="field.value = $event"
                 />
                 <q-icon

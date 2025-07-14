@@ -36,7 +36,7 @@
           <q-tab-panels v-model="tab" class="transparent">
             <!-- FORM DATA -->
             <q-tab-panel name="form">
-              <template v-if="issue.data.length > 0">
+              <div v-if="issue.data.length > 0" class="column q-gutter-md">
                 <div
                   v-for="field in issue.data"
                   :key="field._key"
@@ -49,7 +49,7 @@
                     disable
                   />
                 </div>
-              </template>
+              </div>
               <div v-else class="col-auto text-italic">
                 No data
               </div>

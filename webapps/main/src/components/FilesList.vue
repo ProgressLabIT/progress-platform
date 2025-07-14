@@ -5,7 +5,7 @@
       ($q.dark.isActive ? 'rgba(255, 255, 255, 0.07)' : 'rgba(0, 0, 0, 0.05)')
     "
   >
-    <div class="row justify-between items-center q-pl-sm q-py-sm">
+    <div class="row justify-between items-center q-pl-sm" :class="dense ? 'q-py-xs' : 'q-py-sm'">
       <div class="q-ml-xs text-low">
         {{ label }}
         <span v-if="mandatory" class="text-theme-red"> * </span>
@@ -98,6 +98,10 @@ const props = defineProps({
   disable: {
     type: Boolean,
     default: true,
+  },
+  dense: {
+    type: Boolean,
+    default: false,
   },
   rootPath: {
     type: String,

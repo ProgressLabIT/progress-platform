@@ -58,8 +58,8 @@
       v-if="fieldType === 'ternary'"
       square
       style="background: rgba(255, 255, 255, 0.07)"
-      class="no-shadow"
-      :class="dense ? 'q-py-sm' : 'q-px-md q-py-sm'"
+      class="no-shadow q-px-md"
+      :class="dense ? 'q-py-sm' : 'q-py-sm'"
     >
       <div class="row items-center q-col-gutter-md">
         <!-- <div class="col-auto flex-center">
@@ -179,6 +179,7 @@
       v-model="fieldValue"
       :disable="disable"
       :readonly="readonly"
+      :dense="dense"
       label-slot
       filled
       stack-label
@@ -207,6 +208,7 @@
       v-model="fieldValue"
       :disable="disable"
       :readonly="readonly"
+      :dense="dense"
       label-slot
       stack-label
       filled
@@ -237,6 +239,7 @@
         :label="field.label ?? field.default_label"
         :disable="disable || readonly"
         :mandatory="field.mandatory"
+        :dense="dense"
         @add-files="addFiles"
         @delete-file="deleteFile"
         @restore-file="restoreFile"
