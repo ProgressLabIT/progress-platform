@@ -1,0 +1,20 @@
+volumes:
+  files:
+    external: True
+
+# networks:
+#   progress:
+#     external: True
+
+services:
+  files:
+    image: minio/minio:latest
+    entrypoint: ["minio", "server", "--address", "0.0.0.0:9000", "--console-address", "0.0.0.0:9001", "/data"]
+    volumes:
+      - "files:/data"
+    ports:
+      - 9500:9000
+      - 9501:9001
+    # networks:
+    #   - progress
+
