@@ -83,6 +83,8 @@ const process = {
     },
 
     async updateOperation({ dispatch }, { key, update }) {
+      // TODO: OBJECT STORAGE MIGRATION - Update operation media handling for object storage
+      // Replace media upload logic with object storage operations
       const newMediaByStepIndex = new Map();
       // TODO: use Promise.allSettled and offer retry or abandon for failed requests
       await Promise.all(
@@ -165,6 +167,9 @@ const process = {
     },
 
     async saveTempProcess({ dispatch }, data) {
+      // TODO: OBJECT STORAGE MIGRATION - Update process save media operations for object storage
+      // Replace file upload/delete operations with object storage equivalents
+
       const { data: updatedProcess } = await api.put(
         `product/${data.product_key}/process`,
         data.new_process,
@@ -177,10 +182,9 @@ const process = {
         });
       });
 
+      const templateUpdates = [];
       const newMedia = [];
       const deletedMedia = [];
-
-      const templateUpdates = [];
 
       data.new_process.forEach((phase) => {
         phase.steps.forEach((step) => {

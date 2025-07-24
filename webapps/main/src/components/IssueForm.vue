@@ -509,6 +509,8 @@ export default {
     },
 
     async saveFiles(issue_key) {
+      // TODO: OBJECT STORAGE MIGRATION - Update issue file operations for object storage
+      // Replace file upload/delete API calls with object storage operations
       const promises = this.form_fields
         .filter((field) => this.getFieldType(field) === 'files')
         .map(async (field) => {

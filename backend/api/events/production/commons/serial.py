@@ -41,6 +41,8 @@ class BaseSerialEvent:
       for sub_key in field_value:
         if 'size' in sub_key:
           sub_key['bucket'] = 'traceability'
+          # TODO: OBJECT STORAGE MIGRATION - Replace file path with object storage URL
+          # Generate signed URL or public URL for the object in object storage
           sub_key['path'] = "/media/traceability/"+work_order_key+"/"+batch_key+"/"+step_key+"/"+field['custom_field_key']+"/"+field['form_field_key']+"/"+sub_key['name']
     except TypeError: # field_value not a dict (type 'files' or 'choice')
       pass

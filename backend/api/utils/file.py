@@ -7,6 +7,14 @@ from fastapi import UploadFile
 from utils.config import get_config
 from models.form import FileBucket
 
+# TODO: OBJECT STORAGE MIGRATION - This entire file needs to be rewritten to use object storage
+# instead of local filesystem operations. Key changes needed:
+# 1. Replace all os.path operations with object storage key generation
+# 2. Replace file I/O operations with object storage SDK calls
+# 3. Update bucket_path, object_path, folder_path concepts for object storage
+# 4. Replace os.makedirs, open(), os.remove, shutil operations
+# 5. Add support for signed URLs and streaming uploads/downloads
+
 media_root_path = get_config().media_path
 
 class FileHandler:
@@ -18,6 +26,7 @@ class FileHandler:
     file: UploadFile | BufferedReader | None = None,
     name: str | None = None
   ):
+    # TODO: OBJECT STORAGE MIGRATION - Update path building logic for object storage keys
     self.bucket = bucket # media type
     self.object_key = object_key # media item key
     self.subfolder = subfolder
@@ -67,6 +76,8 @@ class FileHandler:
 
 
   async def write_file(self, file: UploadFile | BufferedReader | None = None, custom_name: str | None = None):
+    # TODO: OBJECT STORAGE MIGRATION - Replace file writing with object storage upload
+    # Use object storage SDK to upload file to bucket with appropriate key
     if file:
       self.file = file
       if not custom_name:
@@ -90,6 +101,7 @@ class FileHandler:
   # TODO: Check and do nothing if folder_path does not exist
   # TODO: Clean the contents of copy_path before copying
   def copy_media(self, copy_key):
+    # TODO: OBJECT STORAGE MIGRATION - Replace shutil.copytree with object storage copy operation
     copy_path = os.path.join(media_root_path, self.bucket, copy_key)
     shutil.copytree(
       src=self.folder_path,
@@ -98,6 +110,7 @@ class FileHandler:
     )
 
   def delete_file(self, name=None):
+    # TODO: OBJECT STORAGE MIGRATION - Replace file deletion with object storage delete operation
     if name:
       self.name = name
 
@@ -111,6 +124,7 @@ class FileHandler:
         os.rmdir(self.object_path)
 
   def get_folder_contents(self, object_key=None, name_only=True):
+    # TODO: OBJECT STORAGE MIGRATION - Replace os.scandir with object storage list operation
     if object_key:
       self.folder_path = os.path.join(self.folder_path, object_key)
 
@@ -123,10 +137,12 @@ class FileHandler:
 
 
   def clean_dir(self):
+    # TODO: OBJECT STORAGE MIGRATION - Replace directory cleaning with object storage bulk delete
     if os.path.isdir(self.folder_path):
       for filename in os.listdir(self.folder_path):
         os.remove(os.path.join(self.folder_path, filename))
 
   def remove_dir(self):
+    # TODO: OBJECT STORAGE MIGRATION - Replace directory removal with object storage prefix delete
     if os.path.isdir(self.folder_path):
       shutil.rmtree(self.folder_path)

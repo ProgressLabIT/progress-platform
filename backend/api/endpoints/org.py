@@ -180,6 +180,7 @@ async def update_user_image(
   user_key: str,
   new_image: UploadFile = File(...)
 ):
+  # TODO: OBJECT STORAGE MIGRATION - Upload user image to object storage
   try:
     user = User(**db.collection('User').get(user_key))
     img = FileHandler.user_image(file=new_image)

@@ -1,3 +1,9 @@
+# TODO: OBJECT STORAGE MIGRATION - Update all media endpoints for object storage
+# 1. Replace local file operations with object storage SDK
+# 2. Update get_media() to return signed URLs or stream from object storage
+# 3. Replace FileResponse with redirect to object storage URLs
+# 4. Update create_media() and update_media() for object storage upload
+
 from fastapi import APIRouter, HTTPException, UploadFile, Depends
 from utils import auth
 from fastapi.responses import FileResponse
@@ -31,6 +37,7 @@ def make_media(file: UploadFile, key: str = None):
     )
 
 def write_media_file(file: UploadFile, media_key: str):
+  # TODO: OBJECT STORAGE MIGRATION - Replace with object storage upload
   try:
     filepath = path.join(media_root_path, media_key)
     with open(filepath, 'wb') as buffer:
@@ -42,6 +49,7 @@ def write_media_file(file: UploadFile, media_key: str):
 @router.post('/media/create',
     dependencies=[Depends(auth.verify_token)])
 def create_media(file: UploadFile):
+  # TODO: OBJECT STORAGE MIGRATION - Upload directly to object storage
   media = make_media(file)
   write_media_file(file, media.key)
 
@@ -56,6 +64,7 @@ def create_media(file: UploadFile):
 @router.patch('/media/{media_key}',
     dependencies=[Depends(auth.verify_token)])
 def update_media(media_key: str, file: UploadFile):
+  # TODO: OBJECT STORAGE MIGRATION - Update object storage file
   media = db.collection('Media').get(media_key)
   if not media:
     raise HTTPError(404, 'Media not found')
@@ -104,6 +113,8 @@ def delete_media(media_key: str):
 @router.get('/media/{media_key}',
     dependencies=[Depends(auth.verify_token)])
 def get_media(media_key: str):
+  # TODO: OBJECT STORAGE MIGRATION - Replace FileResponse with object storage URL redirect
+  # Return signed URL or stream directly from object storage
   media = db.collection('Media').get(media_key)
   if not media:
     raise HTTPException(

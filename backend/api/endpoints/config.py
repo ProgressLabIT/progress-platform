@@ -97,6 +97,8 @@ def update_config(config: dict):
 @router.put('/config/{key}/file',
     dependencies=[Depends(auth.verify_token)])
 def update_config_file(key: str, file: UploadFile | None = None):
+  # TODO: OBJECT STORAGE MIGRATION - Update config file handling for object storage
+  # Replace local file operations with object storage upload/delete
   try:
     config = db.collection('Config').get(key)
     if not config:

@@ -99,6 +99,8 @@ export async function sendZplToPrinter(zpl) {
 }
 
 export async function sendPdfToPrinter(pdfData) {
+  // TODO: OBJECT STORAGE MIGRATION - Update PDF printing for object storage
+  // Handle PDF data from object storage URLs instead of blob creation
   const device = await getPrinter()
 
   const blob = new Blob([pdfData], { type: 'application/pdf'}) // try this one too

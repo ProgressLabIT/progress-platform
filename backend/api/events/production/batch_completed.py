@@ -474,6 +474,8 @@ class BatchCompletedEvent(BaseProductionEvent):
   # =================================================================
 
   def _copy_batch_media_to_serials(self):
+    # TODO: OBJECT STORAGE MIGRATION - Replace file system copy with object storage copy operations
+    # Use object storage SDK to copy objects from traceability/ prefix to serial/ prefix
     # Files are in step_key/custom_field_key/form_field_key directories (3 levels down)
     # Find all level3 directories using glob pattern
     batch_dir = Path(f"/media/traceability/{self.info.work_order_key}/{self.info.active_batch_key}")

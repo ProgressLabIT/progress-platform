@@ -268,6 +268,8 @@ function closeDesigner() {
   emit('close');
 }
 async function uploadPdf(file) {
+  // TODO: OBJECT STORAGE MIGRATION - Update PDF upload for object storage
+  // Replace blob URL creation with object storage upload and URL generation
   const reader = new FileReader();
   reader.readAsDataURL(file);
   reader.onload = () => {

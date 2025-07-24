@@ -2,11 +2,13 @@ from functools import lru_cache
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+# TODO: OBJECT STORAGE MIGRATION - Add object storage configuration settings
+# Need to add: object_storage_provider, bucket_name, access_key, secret_key, endpoint_url, region
 
 class Settings(BaseSettings):
   arango_url: str = "http://localhost:8529" # use default when running standalone containers
   api_root_path: str = "/api"
-  media_path: str = "/media"
+  media_path: str = "/media"  # TODO: OBJECT STORAGE MIGRATION - Replace with object storage bucket configuration
   db_name: str = "PROGRESS_TEST"
   webapp_url: str = "http://localhost:9000"
   api_db_username: str = "root" # use default when running standalone containers

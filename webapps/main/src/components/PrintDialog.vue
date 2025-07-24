@@ -415,6 +415,8 @@ async function selectTemplate(template) {
  * @throws {Error} If URL is invalid, fetch fails, or file is not an image
  */
 async function loadImage(url) {
+  // TODO: OBJECT STORAGE MIGRATION - Update image loading for object storage URLs
+  // Handle signed URL authentication and expiration for object storage
   if (typeof url !== 'string') {
     throw new Error('Invalid image URL provided');
   }

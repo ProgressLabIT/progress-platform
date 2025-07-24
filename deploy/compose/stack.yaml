@@ -96,7 +96,7 @@ services:
     image: registry.gitlab.com/progresslab/progress-platform/app:${VERSION}
     volumes:
       - /opt/progress/config/appConfig.js:/usr/share/nginx/html/config.js
-      - media:/usr/share/nginx/html/media
+      - media:/usr/share/nginx/html/media  # TODO: OBJECT STORAGE MIGRATION - Remove this media volume mount
     depends_on:
       - api
     ports:

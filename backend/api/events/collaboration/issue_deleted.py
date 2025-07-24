@@ -19,6 +19,8 @@ class IssueDeletedEvent(BaseCollaboration):
     self.tx.collection('issue_rel').delete_match(filters=dict(_from=f'Issue/{issue_key}'))
     self.tx.collection('message').delete_match(filters=dict(_to=f'Issue/{issue_key}'))
 
+    # TODO: OBJECT STORAGE MIGRATION - Replace FileHandler.remove_dir() with object storage delete
+    # Use object storage SDK to delete all files with prefix for this issue
     FileHandler(bucket=FileBucket.ISSUE, object_key=issue_key).remove_dir()
 
     self._update_production_status(f'Issue/{issue_key}')

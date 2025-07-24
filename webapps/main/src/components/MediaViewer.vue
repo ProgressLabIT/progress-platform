@@ -1,4 +1,8 @@
 <template>
+  <!-- TODO: OBJECT STORAGE MIGRATION - Update MediaViewer to handle object storage URLs
+       1. Update media_src prop handling for signed URLs
+       2. Add support for token-based authentication
+       3. Handle URL expiration and refresh logic -->
   <BaseDialog :show="show" maximized @close.stop="$emit('close')">
     <!-- FILE NAME -->
     <div class="fixed-top-left medium highlight q-ma-md" style="z-index: 99">

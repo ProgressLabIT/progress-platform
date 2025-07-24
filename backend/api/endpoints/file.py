@@ -1,3 +1,9 @@
+# TODO: OBJECT STORAGE MIGRATION - Update all file endpoints to use object storage
+# 1. Replace FileHandler usage with object storage operations
+# 2. Update upload_files() to upload directly to object storage
+# 3. Update delete_files() to delete from object storage
+# 4. Add signed URL generation for file access
+
 import os
 import traceback
 
@@ -107,6 +113,8 @@ async def upload_files(
   subfolder: str = Form(None),
   reset_folder: bool = Form(False),
 ):
+  # TODO: OBJECT STORAGE MIGRATION - Replace FileHandler with object storage upload
+  # Use object storage SDK to upload files directly to bucket
 
   target = verify_target_data(bucket, object_key, subfolder)
 
@@ -139,6 +147,8 @@ async def delete_files(
   object_key: str = Body(...),
   subfolder: str = Body(None),
 ):
+  # TODO: OBJECT STORAGE MIGRATION - Replace FileHandler with object storage delete
+  # Use object storage SDK to delete files directly from bucket
 
   target = verify_target_data(bucket, object_key, subfolder)
 

@@ -1,4 +1,8 @@
 <template>
+  <!-- TODO: OBJECT STORAGE MIGRATION - Update FilesList for object storage
+       1. Replace rootPath-based media_src with object storage URLs
+       2. Update ensureFileDataAvailable() for object storage access
+       3. Handle signed URL expiration and refresh -->
   <div
     :style="
       'background-color: ' +
@@ -123,6 +127,7 @@ const shown_files = computed(() => {
 });
 
 const media_src = computed(() => {
+  // TODO: OBJECT STORAGE MIGRATION - Replace path concatenation with object storage URL generation
   return (
     props.files[show_media.value]?.path ||
     props.rootPath + '/' + media_name.value
@@ -155,6 +160,7 @@ const deleteFile = (index) => {
 };
 
 const ensureFileDataAvailable = async () => {
+  // TODO: OBJECT STORAGE MIGRATION - Update for object storage URL validation
   // Check if temporary files stored in blob URLs are available
   // This can happen if the page is reloaded, when file is not available, but metadata is still there.
 

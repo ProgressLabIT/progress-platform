@@ -159,6 +159,8 @@ function showMedia(media) {
  * @param {FileList} fileList
  */
 function addMedia(fileList) {
+  // TODO: OBJECT STORAGE MIGRATION - Update media upload for object storage
+  // Replace blob URL creation with object storage upload and URL generation
   for (const file of fileList) {
     const objectUrl = URL.createObjectURL(file);
 

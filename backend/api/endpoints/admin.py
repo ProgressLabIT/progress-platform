@@ -1,3 +1,6 @@
+# TODO: OBJECT STORAGE MIGRATION - Update admin endpoints for object storage
+# Replace directory cleanup operations with object storage bulk delete operations
+
 import traceback
 import os
 import shutil
@@ -39,6 +42,7 @@ media_directories = [
 
 
 def clean_dir(path):
+ # TODO: OBJECT STORAGE MIGRATION - Replace directory cleaning with object storage bulk delete
  if os.path.isdir(path):
       shutil.rmtree(path)
 

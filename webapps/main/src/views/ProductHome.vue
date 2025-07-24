@@ -690,6 +690,7 @@ export default {
     },
 
     saved_img_path() {
+      // TODO: OBJECT STORAGE MIGRATION - Generate object storage URL for saved product image
       return `/media/product/${this.product_key}/image.jpg`;
     },
 
@@ -728,6 +729,7 @@ export default {
     },
 
     media_src() {
+      // TODO: OBJECT STORAGE MIGRATION - Update media source generation for object storage URLs
       if (this.show_media === 'img') {
         return this.img_src;
       } else if (this.show_media >= 0) {
@@ -737,6 +739,7 @@ export default {
         if (doc.temp) {
           path = window.URL.createObjectURL(doc.data);
         } else {
+          // TODO: OBJECT STORAGE MIGRATION - Replace path construction with object storage URL
           path = `/media/product/${this.product_key}/doc/${encodeURI(
             this.media_name,
           )}`;

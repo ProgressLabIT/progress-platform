@@ -1,6 +1,11 @@
+# TODO: OBJECT STORAGE MIGRATION - Update deployment configuration for object storage
+# 1. Remove/update media volume mounting dependencies
+# 2. Add object storage environment variables and secrets
+# 3. Update API service configuration for object storage
+
 volumes:
   media:
-    external: True
+    external: True  # TODO: OBJECT STORAGE MIGRATION - Remove this volume as files will be in object storage
   db_backup:
     external: True
   db_data:
@@ -22,12 +27,17 @@ services:
   api:
     environment:
       - PROGRESS_ARANGO_URL=http://db:8529
-      - PROGRESS_MEDIA_PATH=/media
+      - PROGRESS_MEDIA_PATH=/media  # TODO: OBJECT STORAGE MIGRATION - Replace with object storage configuration
       - PROGRESS_API_ROOT_PATH=/api
+      # TODO: OBJECT STORAGE MIGRATION - Add object storage environment variables:
+      # - PROGRESS_OBJECT_STORAGE_PROVIDER=s3|minio|gcs
+      # - PROGRESS_OBJECT_STORAGE_BUCKET=your-bucket-name
+      # - PROGRESS_OBJECT_STORAGE_ENDPOINT=https://s3.amazonaws.com
+      # - PROGRESS_OBJECT_STORAGE_REGION=us-east-1
     ports:
       - "8000"
     volumes:
-      - media:/media
+      - media:/media  # TODO: OBJECT STORAGE MIGRATION - Remove this volume mount
     depends_on:
       - db
       - broker

@@ -180,7 +180,7 @@ export default {
   data() {
     return {
       pdf_width: undefined,
-      media_root_path: '/media/step/',
+      media_root_path: '/media/step/',  // TODO: OBJECT STORAGE MIGRATION - Replace with object storage URL base
       show_details: true,
       image_extensions: ['png', 'jpeg', 'jpg'],
       show_full_screen: false,
@@ -226,10 +226,12 @@ export default {
     },
 
     media_base_path() {
+      // TODO: OBJECT STORAGE MIGRATION - Replace with object storage URL generation
       return this.media_root_path + this.step._key;
     },
 
     media_src() {
+      // TODO: OBJECT STORAGE MIGRATION - Generate object storage URL instead of path concatenation
       return this.media_base_path + '/' + this.media_name ?? null;
     },
 

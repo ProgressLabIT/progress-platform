@@ -3,7 +3,6 @@ from fastapi import FastAPI, APIRouter
 from starlette.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 
-import endpoints.inventory
 from utils.config import get_config
 from utils.kafka.kafka_producer import KafkaProducer
 from managers.kafka_consumer_manager import KafkaConsumerManager
@@ -22,41 +21,10 @@ import endpoints
 config = get_config()
 
 KafkaAdmin.getInstance().create_topic("notifications")
-#KafkaAdmin.getInstance().create_topic("serials")
 
-app = FastAPI(
-	# openapi_url=f"{config.root_path}/openapi.json",
-	root_path=config.api_root_path
-)
-# global_router = APIRouter()
+# instantiate FastAPI app with root path
+app = FastAPI(root_path=config.api_root_path)
 
-# origins = [
-#     "http://localhost",
-#     "http://localhost:9000",
-#     "http://localhost:9001",
-#     "http://0.0.0.0",
-#     "http://0.0.0.0:9000",
-#     "http://0.0.0.0:9001",
-#     "http://127.0.0.1",
-#     "http://127.0.0.1:9000",
-#     "http://127.0.0.1:9001",
-#     "http://192.168.1.3",
-#     "http://192.168.1.3:9000",
-#     "http://192.168.1.3:9001",
-#     "http://192.168.2.1:9000",
-#     "http://192.168.2.1:9001",
-#     "http://192.168.2.1",
-#     "http://192.168.64.1:9000",
-#     "http://192.168.64.1:9001",
-#     "http://192.168.64.1",
-#     "http://10.0.0.156:9000",
-#     "http://10.0.0.156:9001",
-#     "http://10.0.0.156",
-#     "http://10.0.0.70",
-#     "http://10.0.0.70:9000",
-#     "http://10.0.0.70:9001",
-#     "http://172.232.211.239:9000"
-# ]
 app.add_middleware(
   CORSMiddleware,
   allow_origins=config.cors_allowed_origins,
@@ -81,23 +49,23 @@ async def hello():
 
 @app.on_event("startup")
 async def startup_event():
-    KafkaProducer.getInstance()
-    notificationsConsumer = NotificationsKafkaConsumer()
-    KafkaConsumerManager.getInstance().registerConsumer(notificationsConsumer)
-    WebsocketManager.getInstance()
+  KafkaProducer.getInstance()
+  notificationsConsumer = NotificationsKafkaConsumer()
+  KafkaConsumerManager.getInstance().registerConsumer(notificationsConsumer)
+  WebsocketManager.getInstance()
 
 def broadcast_message(self, msg):
-      print("%% %s [%d] at offset %d with key %s:\n" %(msg.topic(), msg.partition(), msg.offset(),str(msg.key())))
-      WebsocketManager.getInstance().enqueue(msg.value().decode('utf-8'))
+  print("%% %s [%d] at offset %d with key %s:\n" %(msg.topic(), msg.partition(), msg.offset(),str(msg.key())))
+  WebsocketManager.getInstance().enqueue(msg.value().decode('utf-8'))
 
 @app.on_event("shutdown")
 def shutdown_event():
-   KafkaProducer.getInstance().close()
-   KafkaConsumerManager.getInstance().closeAllConsumers()
-   WebsocketManager.getInstance().close()
-   ExecutorManager.getInstance().close()
-   ServerEventManager.getInstance().close()
-   NotificationManager.getInstance().close()
+  KafkaProducer.getInstance().close()
+  KafkaConsumerManager.getInstance().closeAllConsumers()
+  WebsocketManager.getInstance().close()
+  ExecutorManager.getInstance().close()
+  ServerEventManager.getInstance().close()
+  NotificationManager.getInstance().close()
 
 app.include_router(endpoints.admin, tags=['Administration'])
 app.include_router(endpoints.auth, tags=['Security'])

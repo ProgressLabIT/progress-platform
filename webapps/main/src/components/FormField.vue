@@ -362,6 +362,10 @@ if (fieldType.value === 'choice') {
 }
 
 async function addFiles(fileList) {
+  // TODO: OBJECT STORAGE MIGRATION - Update file upload for object storage
+  // 1. Replace API endpoint calls with object storage upload
+  // 2. Update temp file handling with object storage URLs
+  // 3. Handle upload progress and error states for object storage
   const existingFiles = fieldValue.value ?? [];
   // Convert FileList to Array to ensure proper iteration
   const filesToAdd = Array.from(fileList);
@@ -424,6 +428,7 @@ async function addFiles(fileList) {
 }
 
 async function deleteFile(index) {
+  // TODO: OBJECT STORAGE MIGRATION - Update file deletion for object storage
   const file = fieldValue.value[index];
 
   if (!file.temp && !props.sync) {

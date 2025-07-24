@@ -234,6 +234,11 @@ const product = {
         tags,
       },
     ) {
+      // TODO: OBJECT STORAGE MIGRATION - Update product file operations for object storage
+      // 1. Replace file upload logic with object storage operations
+      // 2. Update metadata field file handling for object storage
+      // 3. Replace temp file blob URL handling
+
       /**
        * this action queues up as many api calls as needed
        * to add/delete product docs and finally to update

@@ -1,3 +1,8 @@
+# TODO: OBJECT STORAGE MIGRATION - Update process endpoints file handling
+# 1. Update save_step_media() to upload to object storage
+# 2. Update copy_operation_to_phases() media copying logic
+# 3. Replace get_media_path() calls with object storage operations
+
 import traceback
 from typing import Annotated, List
 import os
@@ -313,6 +318,7 @@ async def copy_operation_to_phases(
         )
         for media in media_cursor:
           try:
+            # TODO: OBJECT STORAGE MIGRATION - Replace get_media_path with object storage download
             media_path = get_media_path(media['_key'])
             with open(media_path, 'rb') as file:
               await step_media.write_file(file, media['name'])
@@ -658,6 +664,7 @@ async def save_step_media(
   step_key: str,
   media_file: UploadFile = File(...)
 ):
+  # TODO: OBJECT STORAGE MIGRATION - Upload step media directly to object storage
 
   new_media = FileHandler.step_media(
     object_key=step_key,

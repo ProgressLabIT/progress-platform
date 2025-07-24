@@ -220,6 +220,8 @@ export default {
     },
 
     async saveFiles(serial_key) {
+      // TODO: OBJECT STORAGE MIGRATION - Update serial file operations for object storage
+      // Replace file upload/delete API calls with object storage operations
       let form_fields = this.serial.data;
 
       const promises = form_fields

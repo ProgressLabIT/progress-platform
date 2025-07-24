@@ -431,6 +431,8 @@ export default {
     },
 
     async addPhase(new_operation) {
+      // TODO: OBJECT STORAGE MIGRATION - Update phase media loading for object storage
+      // Replace blob URL creation with object storage download and URL generation
       // Load media from default steps as temp files so that they can be uploaded as fresh
       // TODO: Migrate process to new media structure so that this is not needed and we don't end up with duplicate files
       const steps = await Promise.all(

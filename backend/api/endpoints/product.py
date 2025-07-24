@@ -1,3 +1,8 @@
+# TODO: OBJECT STORAGE MIGRATION - Update product endpoints file handling
+# 1. Update create_product() image upload to object storage
+# 2. Update save_doc() to upload documents to object storage
+# 3. Update replace_product_image() to use object storage
+
 import os
 import traceback
 
@@ -168,6 +173,7 @@ async def create_product(
 
     # Save image
     if image:
+      # TODO: OBJECT STORAGE MIGRATION - Upload product image to object storage
       product_image = FileHandler.product_media(
         object_key=db_response['_key'],
         file=image,
@@ -460,6 +466,7 @@ async def save_doc(
   product_key: str,
   new_doc: UploadFile =  File(...)
 ):
+  # TODO: OBJECT STORAGE MIGRATION - Upload product document to object storage
 
   doc = FileHandler.product_media(
     object_key=product_key,
@@ -512,6 +519,7 @@ async def replace_product_image(
   product_key: str,
   new_image: UploadFile = File(...)
 ):
+  # TODO: OBJECT STORAGE MIGRATION - Replace product image in object storage
   # extension = new_image.filename.split('.')[-1]
   img = FileHandler.product_media(object_key=product_key, file=new_image)
   filename = 'image.jpg'
