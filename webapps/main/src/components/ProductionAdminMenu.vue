@@ -421,13 +421,9 @@ const tempData = reactive({})
 
 
 async function getWoData() {
-  if (props.wo === undefined) {
-    const resp = await api.get(`work-order/${props.job.wo_key}`)
-    Object.assign(woData, resp.data.detail)
-  }
-  else {
-    Object.assign(woData, props.wo)
-  }
+  const wo_key = props.job?.wo_key || props.wo?._key
+  const resp = await api.get(`work-order/${wo_key}`)
+  Object.assign(woData, resp.data.detail)
 }
 
 
@@ -498,6 +494,7 @@ const phaseData = computed(() => {
   if (!woData.phase_sequence) {
     return []
   }
+
   return woData.phase_sequence.map((phase_key) => {
     const jobs = woData.jobs?.filter((j) => j.phase_key === phase_key) || [];
     const params = jobs[0]?.parameters;
@@ -868,11 +865,5 @@ const workOrderItems = computed(() => [
       confirmColor.value = 'theme-red'
     },
   },
-])
-
-
+]);
 </script>
-
-<style lang="scss" scoped>
-
-</style>
