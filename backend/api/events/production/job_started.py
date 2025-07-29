@@ -13,6 +13,7 @@ class JobStartedEvent(BaseProductionEvent):
 
   class InfoModel(EventInfoModel):
     job_key: str
+    batch_serials: list[str] | None = None
 
   @classmethod
   def get_event_type(cls) -> EventType:
@@ -42,7 +43,7 @@ class JobStartedEvent(BaseProductionEvent):
       phase_key = self.info.phase_key,
       work_order_key = self.info.work_order_key,
       product_key = self.info.product_key,
-      new_batch_serials = getattr(self.info, 'batch_serials', [])
+      new_batch_serials = self.info.batch_serials
     ))
 
     self.info.batch_key = self.batch.key
