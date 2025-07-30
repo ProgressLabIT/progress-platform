@@ -21,10 +21,6 @@ class SerialUpdatedEvent(BaseSerialEvent):
   def get_event_type(cls):
     return EventType.SERIAL_UPDATED
 
-  @property
-  def event_first(self):
-    return True
-
   def _merge_serial_data(self):
     # Merge data from the original serial with the new data
     merged_data = []

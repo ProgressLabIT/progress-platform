@@ -15,9 +15,6 @@ class StepEditedEvent(BaseProductionEvent):
   def get_event_type(cls):
     return EventType.STEP_EDITED
 
-  def is_event_first(self):
-    return True
-
   def apply(self):
     # Flag record as canceled
     update = dict(_key = self.info.execution_record_key, canceled = self.info.event_group)

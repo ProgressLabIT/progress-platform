@@ -22,7 +22,7 @@ class JobResetEvent(BaseAdmin):
   - Reverses movements
   - Updates job as created
 
-  Event key is stored as source for various updates. The `event_first` property is set as True in the base admin event.
+  Event key is stored as source for various updates.
   """
 
   class InfoModel(EventInfoModel):

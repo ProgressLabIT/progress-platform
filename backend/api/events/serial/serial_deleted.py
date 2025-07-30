@@ -18,10 +18,6 @@ class SerialDeletedEvent(BaseSerialEvent):
   def get_event_type(cls):
     return EventType.SERIAL_DELETED
 
-  @property
-  def event_first(self):
-    return True
-
   def apply(self):
     serial_key = self.info.serial_key
     allow_serial_delete = self.tx.collection('Config').get('allow_serial_delete')
