@@ -294,7 +294,8 @@ collections = [
     DBIndex(fields=['job_key, canceled'], name='ws-job-canceled'),
     DBIndex(fields=['user_key, active'], name='ws-user-active'),
     DBIndex(fields=['batch_key, canceled'], name='ws-batch-canceled'),
-  ])
+  ]),
+  Collection(name='event_source', edge=True),  # Edge collection for parent-child event relationships
 ]
 
 

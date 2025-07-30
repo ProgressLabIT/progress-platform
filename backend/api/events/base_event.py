@@ -47,14 +47,23 @@ class BaseEvent(ABC):
     return cls.InfoModel
 
   @classmethod
-  def create_as_child(cls, context: EventModel, new_event_data: 'cls.InfoModel') -> Self:
+  def create_as_child(cls, parent_event: EventModel, new_event_data: 'cls.InfoModel') -> Self:
     """
     Create a child event from an existing event, passing event group id, transaction, and user/session data.
     """
-    info = context.info.model_dump()
+    info = parent_event.info.model_dump()
     info['primary'] = False
     info.update(dict(**new_event_data, event_type = cls.get_event_type()))
-    new_event = cls(tx = context.tx, info = info)
+
+    # Create child event (gets UUID key immediately in __init__)
+    new_event = cls(tx = parent_event.tx, info = info)
+
+    # Create edge immediately since both events have keys
+    parent_event.tx.collection('event_source').insert(dict(
+      _from=f'Event/{parent_event.event_key}',
+      _to=f'Event/{new_event.event_key}'
+    ))
+
     new_event.save()
     return new_event.response
 
@@ -148,7 +157,7 @@ class BaseEvent(ABC):
     pass
 
   # ================================
-  # STORE EVENT METHOD
+  # STORE EVENT DATA
   # ================================
   def store_event(self):
     """
@@ -160,6 +169,16 @@ class BaseEvent(ABC):
     # Insert with specific key (no overwrite needed since key is unique)
     self.tx.collection('Event').insert(record)
 
+  def store_event_source(self, parent_event_key: str):
+    """
+    Store the event source relationship in the database.
+    Creates an edge from parent event to this child event.
+    """
+    self.tx.collection('event_source').insert(dict(
+      _from=f'Event/{parent_event_key}',
+      _to=f'Event/{self.event_key}'
+    ))
+
   # ================================
   # SAVE EVENT METHOD
   # ================================
@@ -167,7 +186,7 @@ class BaseEvent(ABC):
     """
     Save the event to the database and handle transaction.
     """
-    collections = self.get_tx_collections() + ['Event']
+    collections = self.get_tx_collections() + ['Event', 'event_source']
 
     try:
       if self.info.primary:

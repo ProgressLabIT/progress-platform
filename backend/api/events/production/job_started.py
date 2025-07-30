@@ -38,7 +38,7 @@ class JobStartedEvent(BaseProductionEvent):
         add_to_queue = True
 
     # Create new batch and store _key in Event.info
-    self.batch = BatchCreatedEvent.create_as_child(context=self, new_event_data=dict(
+    self.batch = BatchCreatedEvent.create_as_child(self, dict(
       job_key = self.info.job_key,
       phase_key = self.info.phase_key,
       work_order_key = self.info.work_order_key,
