@@ -132,25 +132,82 @@ export default {
     save_err: 'Could not save updates',
   },
   events: {
-    JOB_STARTED: 'Job started',
-    JOB_PAUSED: 'Job paused',
-    JOB_PAUSED_OFFLINE: 'Job paused (session offline)',
-    JOB_RESUMED: 'Job resumed',
-    JOB_BACK_ONLINE: 'Session back online',
+    // Production Events
+    ACTIVE_BATCH_CHANGED: 'Active batch changed',
+    BATCH_COMPLETED: 'Piece/Batch completed',
+    BATCH_RELEASED: 'Batch released',
     STEP_COMPLETED: 'Step completed',
     STEP_EDITED: 'Step edited',
-    BATCH_COMPLETED: 'Piece/Batch completed',
+    JOB_STARTED: 'Job started',
+    JOB_PAUSED: 'Job paused',
+    JOB_PAUSE_FORCED: 'Job paused (forced)',
+    JOB_RESUMED: 'Job resumed',
+    JOB_CLOSED: 'Job closed',
+
+    // Issue Events
     ISSUE_CREATED: 'Issue created',
     ISSUE_UPDATED: 'Issue updated',
     ISSUE_CLOSED: 'Issue closed',
     ISSUE_REOPENED: 'Issue reopened',
+    ISSUE_DELETED: 'Issue deleted',
     MESSAGE_POSTED: 'Message posted',
     MESSAGE_UPDATED: 'Message updated',
     MESSAGE_DELETED: 'Message deleted',
+
+    // Admin Events
+    BATCH_CREATED: 'Batch created',
+    BATCH_CANCELED: 'Batch canceled',
+    JOB_RESET: 'Job reset',
+    JOB_PAUSED_OFFLINE: 'Job paused (session offline)',
+    JOB_BACK_ONLINE: 'Session back online',
+    PROGRESS_OVERRIDE_REQUESTED: 'Progress override requested',
+    TIME_OVERRIDE_REQUESTED: 'Time override requested',
+
+    // Serial Events
+    SERIAL_BOOKED: 'Serial booked',
     SERIAL_CREATED: 'Serial created',
+    SERIAL_DELETED: 'Serial deleted',
+    SERIAL_LINKED: 'Serial linked',
+    SERIAL_UNLINKED: 'Serial unlinked',
     SERIAL_UPDATED: 'Serial updated',
-    SERIAL_FINALIZED: 'Serial finalized',
-    SERIAL_LINKED: 'Serial Linked',
+    SERIAL_BATCH_CONFIRMED: 'Serial batch confirmed',
+    SERIAL_RELEASED: 'Serial released',
+
+    // Inventory Events
+    MOVEMENT_COMPLETED: 'Movement completed',
+    MOVEMENT_DELETED: 'Movement deleted',
+    INVENTORY_PRODUCED: 'Inventory produced',
+    INVENTORY_CONSUMED: 'Inventory consumed',
+    MOVEMENT_CREATED: 'Movement created',
+    MOVEMENT_PLANNED: 'Movement planned',
+    MOVEMENT_UPDATED: 'Movement updated',
+    MOVEMENT_REVERSED: 'Movement reversed',
+    MOVEMENT_CANCELED: 'Movement canceled',
+    INVENTORY_CHANGED: 'Inventory changed',
+    WAREHOUSE_LIST_CLOSED: 'Warehouse list closed',
+    WAREHOUSE_LIST_CREATED: 'Warehouse list created',
+
+    // Work Order Events
+    WORK_ORDER_CREATED: 'Work order created',
+    WORK_ORDER_CLOSED: 'Work order closed',
+    WORK_ORDER_STARTED: 'Work order started',
+    WORK_ORDER_UPDATED: 'Work order updated',
+    WORK_ORDER_CANCELED: 'Work order canceled',
+
+    // Work Session Events
+    WORK_SESSION_STARTED: 'Work session started',
+    WORK_SESSION_CLOSED: 'Work session closed',
+    WORK_SESSION_CREATED: 'Work session created',
+    WORK_SESSION_CANCELED: 'Work session canceled',
+
+    // WIP Events
+    WIP_BOOKED: 'WIP booked',
+    WIP_UNBOOKED: 'WIP unbooked',
+    WIP_REMOVED: 'WIP removed',
+    WIP_DECLARED: 'WIP declared',
+
+    // Queue Events
+    QUEUE_UPDATED: 'Queue updated',
   },
   export: 'Export',
   ext_key: 'External key',

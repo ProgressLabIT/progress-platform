@@ -136,25 +136,82 @@ export default {
     save_err: 'Non è stato possibile salvare gli aggiornamenti',
   },
   events: {
-    JOB_STARTED: 'Lavoro iniziato',
-    JOB_PAUSED: 'Lavoro messo in pausa',
-    JOB_PAUSED_OFFLINE: 'Lavoro in pausa (sessione offline)',
-    JOB_RESUMED: 'Lavoro ripreso',
-    JOB_BACK_ONLINE: 'Sessione online',
+    // Eventi di Produzione
+    ACTIVE_BATCH_CHANGED: 'Lotto attivo modificato',
+    BATCH_COMPLETED: 'Pezzo/Lotto completato',
+    BATCH_RELEASED: 'Lotto rilasciato',
     STEP_COMPLETED: 'Passo completato',
     STEP_EDITED: 'Passo modificato',
-    BATCH_COMPLETED: 'Pezzo/Lotto completato',
+    JOB_STARTED: 'Lavoro iniziato',
+    JOB_PAUSED: 'Lavoro messo in pausa',
+    JOB_PAUSE_FORCED: 'Lavoro messo in pausa (forzato)',
+    JOB_RESUMED: 'Lavoro ripreso',
+    JOB_CLOSED: 'Lavoro chiuso',
+
+    // Eventi Segnalazioni
     ISSUE_CREATED: 'Segnalazione creata',
     ISSUE_UPDATED: 'Segnalazione modificata',
     ISSUE_CLOSED: 'Segnalazione chiusa',
     ISSUE_REOPENED: 'Segnalazione riaperta',
+    ISSUE_DELETED: 'Segnalazione eliminata',
     MESSAGE_POSTED: 'Messaggio pubblicato',
     MESSAGE_UPDATED: 'Messaggio modificato',
     MESSAGE_DELETED: 'Messaggio cancellato',
+
+    // Eventi Amministrativi
+    BATCH_CREATED: 'Lotto creato',
+    BATCH_CANCELED: 'Lotto annullato',
+    JOB_RESET: 'Lavoro resettato',
+    JOB_PAUSED_OFFLINE: 'Lavoro in pausa (sessione offline)',
+    JOB_BACK_ONLINE: 'Sessione online',
+    PROGRESS_OVERRIDE_REQUESTED: 'Richiesta modifica avanzamento',
+    TIME_OVERRIDE_REQUESTED: 'Richiesta modifica tempo',
+
+    // Eventi Seriali
+    SERIAL_BOOKED: 'Seriale prenotato',
     SERIAL_CREATED: 'Seriale creato',
-    SERIAL_UPDATED: 'Seriale aggiornato',
-    SERIAL_FINALIZED: 'Seriale finalizzato',
+    SERIAL_DELETED: 'Seriale eliminato',
     SERIAL_LINKED: 'Seriale collegato',
+    SERIAL_UNLINKED: 'Seriale scollegato',
+    SERIAL_UPDATED: 'Seriale aggiornato',
+    SERIAL_BATCH_CONFIRMED: 'Lotto seriali confermato',
+    SERIAL_RELEASED: 'Seriale rilasciato',
+
+    // Eventi Magazzino
+    MOVEMENT_COMPLETED: 'Movimento completato',
+    MOVEMENT_DELETED: 'Movimento eliminato',
+    INVENTORY_PRODUCED: 'Magazzino prodotto',
+    INVENTORY_CONSUMED: 'Magazzino consumato',
+    MOVEMENT_CREATED: 'Movimento creato',
+    MOVEMENT_PLANNED: 'Movimento pianificato',
+    MOVEMENT_UPDATED: 'Movimento aggiornato',
+    MOVEMENT_REVERSED: 'Movimento annullato',
+    MOVEMENT_CANCELED: 'Movimento cancellato',
+    INVENTORY_CHANGED: 'Magazzino modificato',
+    WAREHOUSE_LIST_CLOSED: 'Lista magazzino chiusa',
+    WAREHOUSE_LIST_CREATED: 'Lista magazzino creata',
+
+    // Eventi Ordini di Produzione
+    WORK_ORDER_CREATED: 'Ordine di produzione creato',
+    WORK_ORDER_CLOSED: 'Ordine di produzione chiuso',
+    WORK_ORDER_STARTED: 'Ordine di produzione iniziato',
+    WORK_ORDER_UPDATED: 'Ordine di produzione aggiornato',
+    WORK_ORDER_CANCELED: 'Ordine di produzione annullato',
+
+    // Eventi Sessioni di Lavoro
+    WORK_SESSION_STARTED: 'Sessione di lavoro iniziata',
+    WORK_SESSION_CLOSED: 'Sessione di lavoro chiusa',
+    WORK_SESSION_CREATED: 'Sessione di lavoro creata',
+    WORK_SESSION_CANCELED: 'Sessione di lavoro annullata',
+
+    // Eventi WIP
+    WIP_BOOKED: 'WIP prenotato',
+    WIP_UNBOOKED: 'WIP non prenotato',
+    WIP_REMOVED: 'WIP rimosso',
+    WIP_DECLARED: 'WIP dichiarato',
+
+    // Eventi Coda
+    QUEUE_UPDATED: 'Coda aggiornata',
   },
   export: 'Esporta',
   ext_key: 'Chiave esterna',
