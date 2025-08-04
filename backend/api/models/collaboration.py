@@ -136,25 +136,26 @@ class TaskType(ArangoDocument):
   icon: str | None = None
   created: datetime = Field(default_factory=datetime.now(tz=timezone.utc))
   form_fields: list[FormFieldDefinition] | None = []
-  allowed_linked_entities: list[str] | None = []
+  allowed_linked_entities: list[TaskLinkType] | None = []
 
 
 class TaskStatus(str, Enum):
   PENDING = "pending"
-  STARTED = "started"
   COMPLETED = "completed"
-  CANCELLED = "cancelled"
+  CANCELED = "canceled"
 
 
 class Task(ArangoDocument):
   type: str
+  code: str
   status: TaskStatus | None = TaskStatus.PENDING
-  assigned_to: str | None = None
-  created: datetime = Field(default_factory=datetime.now(tz=timezone.utc))
+  assigned_to: list[str] | None = []
   start_from: datetime | None = None
   due_by: datetime | None = None
-  start: datetime | None = None
-  end: datetime | None = None
+  created: datetime | None = None
+  created_by: str | None = None
+  closed: datetime | None = None
+  closed_by: str | None = None
   title: str | None = None
   description: str | None = None
   form_fields: list[TaskFormFieldValue] | None = []
