@@ -146,12 +146,11 @@ collections = [
     ),
     dict(
       _key = 'system_counters',
-      value = dict(
-        work_orders = 'default',
-        warehouse_missions = 'default',
-        positions = 'default'
-      )
-    ),
+      work_orders = 'default',
+      warehouse_missions = 'default',
+      positions = 'default',
+      tasks = 'default'
+    )
   ]),
   Collection(name='contains'),
   Collection(name='Counter', default_records=[
