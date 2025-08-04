@@ -122,6 +122,13 @@ class IssueFullData(IssueWithLinks):
 # TASKS
 # ==============================================================================
 
+class TaskLinkType(str, Enum):
+  ISSUE = 'issue'
+  WORK_ORDER = 'work_order'
+  PRODUCT = 'product'
+  EQUIPMENT = 'equipment'
+  SERIAL = 'serial'
+
 class TaskType(ArangoDocument):
   name: str
   description: str | None = None
@@ -129,6 +136,7 @@ class TaskType(ArangoDocument):
   icon: str | None = None
   created: datetime = Field(default_factory=datetime.now(tz=timezone.utc))
   form_fields: list[FormFieldDefinition] | None = []
+  allowed_linked_entities: list[str] | None = []
 
 
 class TaskStatus(str, Enum):
