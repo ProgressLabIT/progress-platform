@@ -77,6 +77,17 @@ class FormFieldValue(BaseModel):
   custom_field_key: str | None = None
   value: Any | None = None
 
+
+class TaskFormFieldValue(BaseModel):
+  form_field_key: str
+  custom_field_key: str | None = None
+  label: str | None = None
+  hint: str | None = None
+  mandatory: bool | None = None
+  value: Any | None = None
+  last_updated: str | None = None
+
+
 class SerialFormFieldValue(BaseModel):
   form_field_key: str | None = None
   custom_field_key: str | None = None

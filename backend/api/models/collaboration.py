@@ -1,16 +1,18 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Any
 
 from pydantic import BaseModel, Field, model_validator
 
-from models.form import FormFieldDefinition, FormFieldValue
+from models.form import FormFieldDefinition, FormFieldValue, TaskFormFieldValue
 from models.print import PrintTemplateRecord
-from models.base_models import ArangoDocument
+from models.base_models import ArangoDocument, ArangoEdge
 from utils.dt import timestamp
 
 
-# ISSUE TYPE
+# ==============================================================================
+# ISSUES
+# ==============================================================================
 class IssueType(ArangoDocument):
   name: str
   code: str | None = None
@@ -37,12 +39,6 @@ class IssueTypeFull(IssueType):
   print_templates: list[PrintTemplateRecord] | None = None
 
 
-class FieldValue(BaseModel):
-  field_key: str # Reference to CustomField record
-  value: Any | None = None
-
-
-# ISSUE
 class Issue(ArangoDocument):
   """
   Issues can be connected to some other entity, such as Product, Phase, WorkOrder, Job, Operation, etc. To effectively track issues these links must be explicitly recorded. THis connection is stored in an edge collection.
@@ -93,8 +89,9 @@ class IssueWithLinks(Issue):
   #   return value
 
 
-
-# MESSAGE
+# ==============================================================================
+# MESSAGES
+# ==============================================================================
 
 class MessageContext(str, Enum):
   issue = 'issue'
@@ -119,3 +116,41 @@ class MessageUpdate(ArangoDocument):
 class IssueFullData(IssueWithLinks):
   messages: list[Message]
   history: list[dict]
+
+
+# ==============================================================================
+# TASKS
+# ==============================================================================
+
+class TaskType(ArangoDocument):
+  name: str
+  description: str | None = None
+  active: bool | None = True
+  icon: str | None = None
+  created: datetime = Field(default_factory=datetime.now(tz=timezone.utc))
+  form_fields: list[FormFieldDefinition] | None = []
+
+
+class TaskStatus(str, Enum):
+  PENDING = "pending"
+  STARTED = "started"
+  COMPLETED = "completed"
+  CANCELLED = "cancelled"
+
+
+class Task(ArangoDocument):
+  type: str
+  status: TaskStatus | None = TaskStatus.PENDING
+  assigned_to: str | None = None
+  created: datetime = Field(default_factory=datetime.now(tz=timezone.utc))
+  start_from: datetime | None = None
+  due_by: datetime | None = None
+  start: datetime | None = None
+  end: datetime | None = None
+  title: str | None = None
+  description: str | None = None
+  form_fields: list[TaskFormFieldValue] | None = []
+
+class TaskLink(ArangoEdge):
+  created: datetime = Field(default_factory=datetime.now(tz=timezone.utc))
+  created_by: str | None = None
