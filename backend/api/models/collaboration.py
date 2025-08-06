@@ -1,5 +1,5 @@
 from base64 import b64decode
-from datetime import datetime, date, timezone
+from datetime import datetime, date
 from enum import Enum
 import json
 
@@ -135,7 +135,7 @@ class TaskType(ArangoDocument):
   description: str | None = None
   active: bool | None = True
   icon: str | None = None
-  created: datetime = Field(default_factory=datetime.now(tz=timezone.utc))
+  created: datetime = Field(default_factory=timestamp)
   form_fields: list[FormFieldDefinition] | None = []
   allowed_linked_entities: list[TaskLinkType] | None = []
 
@@ -162,7 +162,7 @@ class Task(ArangoDocument):
   form_fields: list[TaskFormFieldValue] | None = []
 
 class TaskLink(ArangoEdge):
-  created: datetime = Field(default_factory=datetime.now(tz=timezone.utc))
+  created: datetime = Field(default_factory=timestamp)
   created_by: str | None = None
 
 
