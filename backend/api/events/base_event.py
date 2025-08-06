@@ -59,10 +59,7 @@ class BaseEvent(ABC):
     new_event = cls(tx = parent_event.tx, info = info)
 
     # Create edge immediately since both events have keys
-    parent_event.tx.collection('event_source').insert(dict(
-      _from=f'Event/{parent_event.event_key}',
-      _to=f'Event/{new_event.event_key}'
-    ))
+    new_event.store_event_source(parent_event.event_key)
 
     new_event.save()
     return new_event.response
