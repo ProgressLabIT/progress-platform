@@ -90,6 +90,7 @@ export default {
         'userJobs',
         'qualityRoot',
         'traceabilityRoot',
+        'taskRoot',
         'warehouseRoot',
         'reportRoot',
       ],

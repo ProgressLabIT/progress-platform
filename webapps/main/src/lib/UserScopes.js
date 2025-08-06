@@ -9,6 +9,7 @@ const scopes = [
   { name: 'production', label: 'Produzione' },
   { name: 'quality', label: 'Qualità' },
   { name: 'traceability', label: 'Tracciabilità' },
+  { name: 'task', label: 'Compiti' },
   { name: 'reporting', label: 'Rapporti' },
   { name: 'warehouse', label: 'Magazzino' },
 ];
