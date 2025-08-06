@@ -1,6 +1,7 @@
-from datetime import datetime, date
+from datetime import date
 
 from events.base_event import BaseEvent, EventInfoModel
+from models.event import EventType
 from models.form import TaskFormFieldValue
 from models.collaboration import Task
 from utils.counter import _generate_counter
@@ -12,10 +13,20 @@ class TaskCreatedEvent(BaseEvent):
     task_type: str
     task_key: str | None = None
     code: str | None = None
+    title: str | None = None
+    description: str | None = None
     assigned_to: list[str]
     start_from: date | None = None
     due_by: date | None = None
     form_data: list[TaskFormFieldValue] | None = None
+
+  @classmethod
+  def get_tx_collections(self):
+    return ['Task']
+
+  @classmethod
+  def get_event_type(self):
+    return EventType.TASK_CREATED
 
 
   def apply(self):
@@ -27,10 +38,15 @@ class TaskCreatedEvent(BaseEvent):
       counter_key = self.tx.collection('Config').get('system_counters')['tasks']
       task_data.code = _generate_counter(self.tx, counter_key)
 
+    # set created and created_by
+    task_data.created = self.info.timestamp
+    task_data.created_by = self.info.user_key
+
     # insert task
     task_key = self.tx.collection('Task').insert(task_data.model_dump())['_key']
     self.info.task_key = task_key
 
+    # return response
     self.response = dict(
       message=f"Task {task_key} created successfully with code {task_data.code}",
       task_key=task_key

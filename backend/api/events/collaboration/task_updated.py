@@ -1,4 +1,9 @@
+from datetime import date
+
+from pydantic import Field
+
 from events.base_event import BaseEvent, EventInfoModel
+from models.event import EventType
 from models.form import TaskFormFieldValue
 
 class TaskUpdatedEvent(BaseEvent):
@@ -11,6 +16,14 @@ class TaskUpdatedEvent(BaseEvent):
     start_from: date | None = None
     due_by: date | None = None
     form_data: list[TaskFormFieldValue] | None = None
+
+  @classmethod
+  def get_tx_collections(self):
+    return ['Task']
+
+  @classmethod
+  def get_event_type(self):
+    return EventType.TASK_UPDATED
 
   def apply(self):
 
