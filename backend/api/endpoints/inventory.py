@@ -1,16 +1,14 @@
 import traceback
-import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, HTTPException, Query, Depends
 
-from events import BaseEvent
 from models.inventory import *
 from models.product import ProductBaseData
 from utils.api import APIResponse
 from utils.inventory import Queries
 from utils.counter import _generate_counter
-from utils.db import db, model_to_db_dict
+from utils.db import db
 from utils import auth
 from models.event import EventInfoModel
 from events.inventory.warehouse_list_created import WarehouseListCreatedEvent
