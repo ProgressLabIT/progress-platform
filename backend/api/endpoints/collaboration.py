@@ -248,3 +248,69 @@ async def get_task_data(task_key: str):
       status_code=500,
       detail=traceback.format_exc()
     )
+
+
+@router.get('/task-type', dependencies=[Depends(auth.verify_token)])
+async def get_task_types(
+    active_only: bool = True,
+    name: str | None = None
+):
+    """Get task types, optionally filtered by active status and name"""
+    try:
+        query = {}
+        if active_only:
+            query["active"] = True
+        if name:
+            query["name"] = name
+
+        cursor = db.collection('TaskType').find(query)
+        return [TaskType(**t) for t in cursor]
+    except Exception:
+        raise HTTPException(
+            status_code=500,
+            detail=traceback.format_exc()
+        )
+
+@router.post('/task-type', status_code=201, dependencies=[Depends(auth.verify_token)])
+async def create_task_type(task_type: TaskType):
+    """Create a new task type"""
+    try:
+        new_task_type = db.collection('TaskType').insert(
+            task_type.model_dump(by_alias=True),
+            return_new=True
+        )['new']
+        return TaskType(**new_task_type)
+    except Exception:
+        raise HTTPException(
+            status_code=500,
+            detail=traceback.format_exc()
+        )
+
+@router.put('/task-type/{type_key}', dependencies=[Depends(auth.verify_token)])
+async def update_task_type(type_key: str, task_type: TaskType):
+    """Update an existing task type"""
+    try:
+        task_type.key = type_key
+        updated_task_type = db.collection('TaskType').update(
+            # Use exclude_unset to avoid updating fields that are not provided
+            task_type.model_dump(by_alias=True, exclude_unset=True),
+            return_new=True,
+        )['new']
+        return APIResponse(message="Task type updated successfully", detail=updated_task_type)
+    except Exception:
+        raise HTTPException(
+            status_code=500,
+            detail=traceback.format_exc()
+        )
+
+@router.delete('/task-type/{type_key}', dependencies=[Depends(auth.verify_token)])
+async def delete_task_type(type_key: str):
+    """Delete a task type"""
+    try:
+        db.collection('TaskType').delete(type_key)
+        return APIResponse(message="Task type deleted successfully")
+    except Exception:
+        raise HTTPException(
+            status_code=500,
+            detail=traceback.format_exc()
+        )
