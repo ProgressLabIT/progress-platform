@@ -1,8 +1,9 @@
-from datetime import datetime, timezone
+from base64 import b64decode
+from datetime import datetime, date, timezone
 from enum import Enum
-from typing import Any
+import json
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from models.form import FormFieldDefinition, FormFieldValue, TaskFormFieldValue
 from models.print import PrintTemplateRecord
@@ -163,3 +164,23 @@ class Task(ArangoDocument):
 class TaskLink(ArangoEdge):
   created: datetime = Field(default_factory=datetime.now(tz=timezone.utc))
   created_by: str | None = None
+
+
+class TaskSearchParameters(BaseModel):
+  code_search: str | None = None
+  type: str | None = None
+  status: TaskStatus | None = None
+  assigned_to: str | None = None
+  start_from: date | None = None
+  due_by: date | None = None
+  created_from: date | None = None
+  created_to: date | None = None
+  closed_from: date | None = None
+  closed_to: date | None = None
+  advanced_filters: str | None = None
+  limit: int | None = 200
+  offset: int | None = 0
+
+  @field_validator('advanced_filters', mode='after')
+  def deserialize_advanced_filters(cls, value):
+    return json.loads(b64decode(value).decode('latin-1')) if value else None

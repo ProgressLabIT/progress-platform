@@ -182,3 +182,86 @@ class Queries:
     ))
     RETURN { _id: d, critical }
   """
+
+
+  FIND_TASKS = """
+    FOR t IN Task
+    FILTER
+      @code_search ? CONTAINS(LOWER(t.code), LOWER(@code_search)) : true
+      && (@type ? t.type == @type : true)
+      && (@status ? t.status == @status : true)
+      && (@assigned_to ? POSITION(@assigned_to, t.assigned_to) : true)
+      && (@start_from ? t.start_from >= @start_from : true)
+      && (@due_by ? t.due_by <= @due_by : true)
+      && (@created_from ? t.created >= @created_from : true)
+      && (@created_to ? t.created <= @created_to : true)
+      && (@closed_from ? t.closed >= @closed_from : true)
+      && (@closed_to ? t.closed <= @closed_to : true)
+      && (@advanced_filters
+        ? LENGTH(
+            // This subquery returns match true/false for each filter
+            FOR advanced_filter IN NOT_NULL(@advanced_filters.filters, [])
+            FOR f IN t.form_fields
+            FILTER f.custom_field_key == advanced_filter._key
+            LET type = DOCUMENT(CustomField, f.custom_field_key).type
+            FILTER (
+              type == "text" ? CONTAINS(LOWER(f.value), LOWER(advanced_filter.value))
+              : type == "choice" ? f.value._key == advanced_filter.value._key
+              : type == "boolean" ? !!f.value
+              : type == "files" ? !!LENGTH(f.value)
+              : d.value == advanced_filter.value
+            )
+            RETURN 1
+          ) >= (@advanced_filters.operator == "OR" ? 1 : LENGTH(@advanced_filters.filters))
+        : true
+      )
+    SORT t.due_by
+    LIMIT @offset, @limit || null
+    RETURN t
+  """
+
+  GET_TASK_DATA = """
+    FOR t IN Task
+    FILTER t._key == @task_key
+
+    LET work_sessions = (
+      FOR ws IN WorkSession
+      FILTER ws.task_key == t._key
+      RETURN ws
+    )
+
+    LET time_spent = (
+      LET now = DATE_NOW()
+      FOR user_key IN NOT_NULL(t.assigned_to, [])
+      LET active = work_sessions[? ANY FILTER CURRENT.active]
+      LET duration = SUM(
+        FOR ws IN work_sessions
+        FILTER ws.user_key == user_key
+        RETURN ws.active ? ws.duration : DATE_DIFF(ws.start, now, 'f')
+      )
+      RETURN { user_key, duration, active }
+    )
+
+    LET task_links = (
+      LET link_type = {
+        Issue: { type: 'issue', code: 'code' },
+        WorkOrder: { type: 'work_order', code: 'wo_code' },
+        Product: { type: 'product', code: 'code' },
+        Equipment: { type: 'equipment', code: 'code' },
+        Serial: { type: 'serial', code: 'code' },
+        Task: { type: 'task', code: 'code' }
+      }
+      FOR l IN 1..1 OUTBOUND t task_rel
+      LET meta = link_type[PARSE_IDENTIFIER(l._id).collection]
+      RETURN {
+        type: meta.type,
+        key: l._key,
+        code: l[meta.code]
+      }
+    )
+
+    RETURN MERGE(t, {
+      time_spent,
+      links: task_links
+    })
+  """
