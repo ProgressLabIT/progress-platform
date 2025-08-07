@@ -137,6 +137,14 @@
             src: compose/ # copy contents only
             dest: "{{ root_dir }}/config/"
 
+        - name: Copy api config files
+          ansible.builtin.copy:
+            src: "config/{{ item }}"
+            dest: "{{ root_dir }}/config/{{ item }}"
+          loop:
+            - apiConfig.js
+            - api.env
+
         - name: Generate DB root password
           ansible.builtin.shell:
             cmd: "openssl rand -hex 12"
