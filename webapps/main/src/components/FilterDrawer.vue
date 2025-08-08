@@ -5,7 +5,7 @@
     bordered
     :behavior="$q.screen.lt.lg ? 'mobile' : null"
     class="background"
-    :width="350"
+    :width="minWidth"
     show-if-above
     :overlay="$q.screen.lt.lg"
     persistent
@@ -67,6 +67,10 @@ const props = defineProps({
   hideable: {
     type: Boolean,
     default: true,
+  },
+  minWidth: {
+    type: Number,
+    default: 350,
   },
 });
 

@@ -147,7 +147,7 @@ class TaskTypeFull(TaskType):
 
 
 class TaskStatus(str, Enum):
-  PENDING = "pending"
+  OPEN = "open"
   COMPLETED = "completed"
   CANCELED = "canceled"
 
@@ -155,7 +155,7 @@ class TaskStatus(str, Enum):
 class Task(ArangoDocument):
   task_type_key: str
   code: Annotated[str, StringConstraints(to_upper=True, strip_whitespace=True, min_length=1)] | None = None
-  status: TaskStatus | None = TaskStatus.PENDING
+  status: TaskStatus | None = TaskStatus.OPEN
   assigned_to: list[str] | None = []
   start_from: datetime | None = None
   due_by: datetime | None = None
@@ -173,9 +173,11 @@ class TaskLink(ArangoEdge):
 
 
 class TaskSearchParameters(BaseModel):
-  code_search: str | None = None
-  type: str | None = None
-  status: TaskStatus | None = None
+  search: str | None = None
+  task_type_key: str | None = None
+  status_open: bool | None = None
+  status_completed: bool | None = None
+  status_canceled: bool | None = None
   assigned_to: str | None = None
   start_from: date | None = None
   due_by: date | None = None

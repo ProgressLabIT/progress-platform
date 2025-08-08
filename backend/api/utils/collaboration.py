@@ -213,10 +213,12 @@ class Queries:
   FIND_TASKS = """
     FOR t IN Task
     FILTER
-      @code_search ? CONTAINS(LOWER(t.code), LOWER(@code_search)) : true
-      && (@type ? t.type == @type : true)
-      && (@status ? t.status == @status : true)
-      && (@assigned_to ? POSITION(@assigned_to, t.assigned_to) : true)
+      @search ? CONTAINS(LOWER(CONCAT(t.code, ' ', t.title, ' ', t.description)), LOWER(@search)) : true
+      && (@task_type_key ? t.task_type_key == @task_type_key : true)
+      && (@status_open == false ? t.status != 'open' : true)
+      && (@status_completed == false ? t.status != 'completed' : true)
+      && (@status_canceled == false ? t.status != 'canceled' : true)
+      && (@assigned_to ? POSITION(t.assigned_to, @assigned_to) : true)
       && (@start_from ? t.start_from >= @start_from : true)
       && (@due_by ? t.due_by <= @due_by : true)
       && (@created_from ? t.created >= @created_from : true)
