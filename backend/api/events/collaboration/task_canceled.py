@@ -1,9 +1,8 @@
 from events.base_event import BaseEvent, EventInfoModel
-from events.collaboration.message_posted import MessagePostedEvent
 from models.collaboration import TaskStatus
 from models.event import EventType
 
-class TaskCancelledEvent(BaseEvent):
+class TaskCanceledEvent(BaseEvent):
 
   class InfoModel(EventInfoModel):
     task_key: str

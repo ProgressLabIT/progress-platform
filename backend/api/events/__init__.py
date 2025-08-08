@@ -16,6 +16,12 @@ from events.collaboration.issue_updated import IssueUpdatedEvent
 from events.collaboration.message_deleted import MessageDeletedEvent
 from events.collaboration.message_posted import MessagePostedEvent
 from events.collaboration.message_updated import MessageUpdatedEvent
+from events.collaboration.task_created import TaskCreatedEvent
+from events.collaboration.task_updated import TaskUpdatedEvent
+from events.collaboration.task_completed import TaskCompletedEvent
+from events.collaboration.task_canceled import TaskCanceledEvent
+from events.collaboration.task_linked import TaskLinkedEvent
+from events.collaboration.task_unlinked import TaskUnlinkedEvent
 
 #INVENTORY EVENTS
 from events.inventory.base_inventory import BaseInventoryEvent
