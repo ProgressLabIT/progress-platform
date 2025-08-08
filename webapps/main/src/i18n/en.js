@@ -825,6 +825,9 @@ export default {
       hint: 'Click or press {key} to create',
     },
   },
+  task_type: 'Task type | Task types',
+  task_type_delete_question: 'Are you sure you want to delete this task type?',
+  task_type_new: 'New task type',
   time: {
     hour: 'Hour',
     minute: 'Minute',
@@ -965,6 +968,7 @@ export default {
     printersLibrary: 'Printers',
     taskRoot: 'Tasks',
     taskOverview: 'Tasks',
+    taskTypeLibrary: 'Task types',
   },
   host: 'host',
   port: 'port',

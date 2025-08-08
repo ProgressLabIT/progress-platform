@@ -834,6 +834,9 @@ export default {
       hint: 'Clicca o premi {key} per creare',
     },
   },
+  task_type: 'tipo di compito | tipi di compito',
+  task_type_delete_question: 'Sei sicuro di voler eliminare questo tipo di compito?',
+  task_type_new: 'Nuovo tipo di compito',
   time: {
     hour: 'Ora | Ore',
     minute: 'Minuto | Minuti',
@@ -962,6 +965,7 @@ export default {
     warehouseSettings: 'Magazzino',
     taskRoot: 'Compiti',
     taskOverview: 'Compiti',
+    taskTypeLibrary: 'Tipi di compiti',
     qualityRoot: 'Qualità',
     traceabilityRoot: 'Tracciabilità',
     reportRoot: 'Rapporti',
