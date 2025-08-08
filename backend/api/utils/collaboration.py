@@ -163,6 +163,32 @@ class Queries:
     return result
   """
 
+  FETCH_TASK_TYPES = """
+    FOR t IN TaskType
+    FILTER
+      @active_only ? t.active == @active_only : true
+      && @name ? t.name == @name : true
+
+    LET form_fields = (
+      FOR f IN t.form_fields
+      LET field_definition = FIRST(
+        FOR fdef IN CustomField
+        FILTER fdef._key == f.custom_field_key
+        RETURN fdef
+      )
+      FILTER field_definition
+      RETURN MERGE(f, { type: field_definition.type })
+    )
+
+    LET print_templates = (
+      FOR v IN 1..1 OUTBOUND t can_use_print_template
+      RETURN v
+    )
+
+    SORT t.name
+    RETURN MERGE(t, { form_fields, print_templates })
+  """
+
   CHECK_PRODUCTION_CRITICAL_STATUS = """
     // Find WorkOrder and Job related to Issue
     LET docs = (

@@ -11,6 +11,7 @@ context_map = {
   TemplateAssignmentContext.STEP.value: 'Step',
   TemplateAssignmentContext.ISSUE_TYPE.value: 'IssueType',
   TemplateAssignmentContext.POSITION.value: 'Position',
+  TemplateAssignmentContext.TASK_TYPE.value: 'TaskType',
 }
 
 def build_template_assignment_record(update: TemplateAssignmentUpdate):

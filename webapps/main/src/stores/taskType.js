@@ -50,9 +50,30 @@ export const useTaskTypeStore = defineStore('taskType', {
 
     async updateTaskType(taskTypeData) {
       try {
-        const { data } = await api.put(`/task-type/${taskTypeData._key}`, taskTypeData)
+        /*
+         * taskTypeData includes `print_templates`, which is not part of the
+         * task type model in the backend and the property will be ignored.
+         * Templates must be updated separately.
+         */
+
+        const templateUpdates = (taskTypeData.print_templates || [])
+          .filter(({ temp, trash }) => temp || trash)
+          .map(({ _key, temp }) => ({
+            type: temp ? 'add' : 'remove',
+            context: 'task_type',
+            context_key: taskTypeData._key,
+            template_key: _key,
+          }))
+
+        const requests = [api.put(`/task-type/${taskTypeData._key}`, taskTypeData)]
+
+        if (templateUpdates.length > 0) {
+          requests.push(api.post('update-template-assignments', templateUpdates))
+        }
+
+        await Promise.all(requests)
+
         await this.fetchTaskTypes() // Refresh the list
-        return data
       } catch (error) {
         console.error('Error updating task type:', error)
         throw error

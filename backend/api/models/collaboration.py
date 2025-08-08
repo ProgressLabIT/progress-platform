@@ -130,6 +130,7 @@ class TaskLinkType(str, Enum):
   PRODUCT = 'product'
   EQUIPMENT = 'equipment'
   SERIAL = 'serial'
+  TASK = 'task'
 
 class TaskType(ArangoDocument):
   name: str
@@ -139,6 +140,10 @@ class TaskType(ArangoDocument):
   created: datetime = Field(default_factory=timestamp)
   form_fields: list[FormFieldDefinition] | None = []
   allowed_linked_entities: list[TaskLinkType] | None = []
+
+
+class TaskTypeFull(TaskType):
+  print_templates: list[PrintTemplateRecord] | None = None
 
 
 class TaskStatus(str, Enum):

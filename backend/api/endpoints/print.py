@@ -58,6 +58,7 @@ async def find_print_templates(
       phase='Phase',
       step='Step',
       issue_type='IssueType',
+      task_type='TaskType',
       position='Position'
     )
 

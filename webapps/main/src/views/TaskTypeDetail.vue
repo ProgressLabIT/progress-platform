@@ -119,6 +119,96 @@
           </BaseDialog>
         </div>
       </div>
+
+      <!-- FORM AND PRINT TEMPLATES -->
+      <q-tabs
+        v-model="tab"
+        align="left"
+        dense
+        indicator-color="theme-blue"
+        active-class="text-high weight-bold"
+        class="q-mt-lg text-low col-auto"
+      >
+        <q-tab
+          content-class="weight-bold"
+          name="form"
+          :label="$t('form_title')"
+        />
+        <q-tab name="linked_entities" :label="$t('linked_entities')" />
+        <q-tab name="prints" :label="$t('print_templates')" />
+      </q-tabs>
+
+      <q-card square class="col">
+        <q-tab-panels v-model="tab" class="fit">
+          <!-- TASK TYPE FORM -->
+          <q-tab-panel name="form" class="fit surface2 column">
+            <FormTemplateEditor
+              v-model="temp_metadata.form_fields"
+              :edit-mode="editMode"
+            />
+          </q-tab-panel>
+
+          <!-- LINKED ENTITIES -->
+          <q-tab-panel name="linked_entities" class="surface2 column q-pa-md">
+            <div class="text-h6 q-mb-md">
+              {{ $t('allowed_linked_entities_title') }}
+            </div>
+            <div class="text-body2 text-low q-mb-lg">
+              {{ $t('allowed_linked_entities_description') }}
+            </div>
+
+            <div class="row q-col-gutter-md">
+              <div
+                v-for="option in linkedEntityOptions"
+                :key="option.value"
+                class="col-12 col-md-6 col-lg-4"
+              >
+                <q-checkbox
+                  v-model="temp_metadata.allowed_linked_entities"
+                  :val="option.value"
+                  :disable="!editMode"
+                  :label="$capitalize($t(option.labelKey))"
+                  class="q-mb-sm"
+                />
+              </div>
+            </div>
+          </q-tab-panel>
+
+          <!-- PRINT TEMPLATES -->
+          <q-tab-panel name="prints" class="surface2 column">
+            <div
+              v-if="temp_metadata.print_templates.length === 0"
+              class="q-mt-md text-italic"
+            >
+              {{ $t('print_template_none') }}
+            </div>
+            <div v-else class="row col q-col-gutter-md scroll">
+              <div
+                v-for="(template, index) in temp_metadata.print_templates"
+                :key="template._key"
+                class="col-3"
+              >
+                <PrintTemplateCard
+                  :template="template"
+                  :allow-unlink="editMode"
+                  @unlink="deleteTemplate(index)"
+                  @restore="template.trash = false"
+                />
+              </div>
+            </div>
+
+            <div class="col-auto">
+              <BaseAutocompleteTemplate
+                v-if="editMode"
+                class="q-px-sm q-mt-md"
+                :label="$t('print_template_add')"
+                :selected="temp_metadata.print_templates"
+                @select="addTemplate"
+              />
+            </div>
+          </q-tab-panel>
+        </q-tab-panels>
+      </q-card>
     </template>
 
     <!-- DELETE DIALOG -->
@@ -136,10 +226,13 @@ import { cloneDeep as _cloneDeep } from 'lodash'
 import { useQuasar } from 'quasar'
 import { ref, reactive, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import BaseAutocompleteTemplate from '@/components/BaseAutocompleteTemplate.vue'
 import BaseDialog from '@/components/BaseDialog.vue'
 import BaseTooltipIcon from '@/components/BaseTooltipIcon.vue'
+import FormTemplateEditor from '@/components/FormTemplateEditor.vue'
 import IconLibrary from '@/components/IconLibrary.vue'
 import NoDataAlert from '@/components/NoDataAlert.vue'
+import PrintTemplateCard from '@/components/PrintTemplateCard.vue'
 import { useTaskTypeStore } from '@/stores/taskType'
 import TaskTypeDelete from './TaskTypeDelete.vue'
 
@@ -162,12 +255,24 @@ const editMode = ref(false)
 const saving = ref(false)
 const showDeleteDialog = ref(false)
 const show_icon_library = ref(false)
+const tab = ref('form')
+
+const linkedEntityOptions = [
+  { value: 'work_order', labelKey: 'work_order.long' },
+  { value: 'serial', labelKey: 'serial' },
+  { value: 'task', labelKey: 'task' },
+  { value: 'issue', labelKey: 'issue' },
+  { value: 'product', labelKey: 'product.label' },
+]
 
 const temp_metadata = reactive({
   name: '',
   description: '',
   active: true,
   icon: 'mdi-check-circle',
+  form_fields: [],
+  print_templates: [],
+  allowed_linked_entities: [],
 })
 
 const setTempData = () => {
@@ -175,6 +280,9 @@ const setTempData = () => {
     Object.keys(temp_metadata).forEach((key) => {
       if (key in props.taskType) {
         temp_metadata[key] = _cloneDeep(props.taskType[key])
+      } else if (key === 'allowed_linked_entities') {
+        // Default to empty array if field doesn't exist in taskType yet
+        temp_metadata[key] = []
       }
     })
   }
@@ -222,6 +330,20 @@ const save = async () => {
       position: 'top',
     })
   }
+}
+
+const addTemplate = (template) => {
+  temp_metadata.print_templates.push({
+    ...template,
+    temp: true,
+  })
+}
+
+const deleteTemplate = (template_index) => {
+  const template = temp_metadata.print_templates[template_index]
+  template.temp
+    ? temp_metadata.print_templates.splice(template_index, 1)
+    : (template.trash = true)
 }
 
 const onTaskTypeDeleted = () => {

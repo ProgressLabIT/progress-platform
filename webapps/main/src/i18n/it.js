@@ -842,6 +842,9 @@ export default {
   task_type: 'tipo di compito | tipi di compito',
   task_type_delete_question: 'Sei sicuro di voler eliminare questo tipo di compito?',
   task_type_new: 'Nuovo tipo di compito',
+  linked_entities: 'Entità collegate',
+  allowed_linked_entities_title: 'Entità collegabili consentite',
+  allowed_linked_entities_description: 'Seleziona quali tipi di entità possono essere collegate ai compiti di questo tipo',
   time: {
     hour: 'Ora | Ore',
     minute: 'Minuto | Minuti',

@@ -257,14 +257,13 @@ async def get_task_types(
 ):
     """Get task types, optionally filtered by active status and name"""
     try:
-        query = {}
-        if active_only:
-            query["active"] = True
-        if name:
-            query["name"] = name
+        match = dict(
+            active_only=active_only,
+            name=name
+        )
 
-        cursor = db.collection('TaskType').find(query)
-        return [TaskType(**t) for t in cursor]
+        cursor = db.aql.execute(Queries.FETCH_TASK_TYPES, bind_vars=match)
+        return [TaskTypeFull(**t) for t in cursor]
     except Exception:
         raise HTTPException(
             status_code=500,

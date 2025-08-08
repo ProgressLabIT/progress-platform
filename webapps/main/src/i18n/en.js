@@ -832,6 +832,9 @@ export default {
   task_type: 'Task type | Task types',
   task_type_delete_question: 'Are you sure you want to delete this task type?',
   task_type_new: 'New task type',
+  linked_entities: 'Linked entities',
+  allowed_linked_entities_title: 'Allowed linked entities',
+  allowed_linked_entities_description: 'Select which entity types can be linked to tasks of this type',
   time: {
     hour: 'Hour',
     minute: 'Minute',
