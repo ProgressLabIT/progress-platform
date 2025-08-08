@@ -260,6 +260,14 @@ collections = [
     DBIndex(fields=['batch_key, step_key, status, canceled'], name='sxd-batch-step-status-canceled')
   ]),
   Collection(name='Tag'),
+  Collection(name='Task', indexes=[
+    DBIndex(fields=['task_type_key'], name='task-type'),
+    DBIndex(fields=['status'], name='task-status'),
+    DBIndex(fields=['code'], name='task-code', unique=True),
+    DBIndex(fields=['assigned_to', 'status'], name='task-assignee-status'),
+  ]),
+  Collection(name='TaskType'),
+  Collection(name='task_rel', edge=True),
   Collection(name='Token'),
   Collection(name='User', default_records=[
     dict(
@@ -268,7 +276,7 @@ collections = [
       surname = 'Amministratore',
       active = True,
       psw_hash = pwd_context.hash('resetme'),
-      scope = 'admin production library operator',
+      scope = 'admin production library operator quality warehouse task traceability reporting',
       site_key = '0',
       reset_password = True
     )
