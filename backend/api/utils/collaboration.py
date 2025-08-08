@@ -209,15 +209,22 @@ class Queries:
               : type == "choice" ? f.value._key == advanced_filter.value._key
               : type == "boolean" ? !!f.value
               : type == "files" ? !!LENGTH(f.value)
-              : d.value == advanced_filter.value
+              : f.value == advanced_filter.value
             )
             RETURN 1
           ) >= (@advanced_filters.operator == "OR" ? 1 : LENGTH(@advanced_filters.filters))
         : true
       )
+
+    LET type_data = FIRST(
+      FOR tt IN TaskType
+      FILTER tt._key == t.task_type_key
+      RETURN tt
+    )
+
     SORT t.due_by
     LIMIT @offset, @limit || null
-    RETURN t
+    RETURN MERGE(t, { icon: type_data.icon, task_type_name: type_data.name })
   """
 
   GET_TASK_DATA = """

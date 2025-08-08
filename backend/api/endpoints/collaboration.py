@@ -226,7 +226,7 @@ async def get_messages(recipient_id: str):
 async def search_tasks(params: Annotated[TaskSearchParameters, Query()]):
   try:
     results = db.aql.execute(Queries.FIND_TASKS, bind_vars=params.model_dump())
-    return [Task(**t) for t in results]
+    return [TaskSearchResult(**t) for t in results]
   except Exception:
     raise HTTPException(
       status_code=500,

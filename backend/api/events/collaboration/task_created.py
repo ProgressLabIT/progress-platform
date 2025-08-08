@@ -10,7 +10,7 @@ from utils.counter import _generate_counter
 class TaskCreatedEvent(BaseEvent):
 
   class InfoModel(EventInfoModel):
-    task_type: str
+    task_type_key: str
     task_key: str | None = None
     code: str | None = None
     title: str | None = None
@@ -22,7 +22,7 @@ class TaskCreatedEvent(BaseEvent):
 
   @classmethod
   def get_tx_collections(self):
-    return ['Task']
+    return ['Task', 'Counter']
 
   @classmethod
   def get_event_type(self):
@@ -34,8 +34,8 @@ class TaskCreatedEvent(BaseEvent):
     task_data = Task(**self.info.model_dump())
 
     # generate task code if not provided
-    if self.info.code is not None:
-      counter_key = self.tx.collection('Config').get('system_counters')['tasks']
+    if self.info.code is None:
+      counter_key = self.tx.collection('Config').get('system_counters').get('tasks', 'default')
       task_data.code = _generate_counter(self.tx, counter_key)
 
     # set created and created_by

@@ -36,14 +36,45 @@
           >
           </q-btn>
 
-          <IssueForm
-            :show="show_issue_form"
-            mode="new"
-            with_links
-            @cancel="show_issue_form = false"
-            @issue-created="getIssues"
+          <!-- CREATE TASK MODAL -->
+          <BaseModalForm
+            v-if="show_task_form"
+            :show="show_task_form"
+            :loading="creating"
+            :enable-save="isCreateFormValid"
+            @submit="handleCreateTask"
+            @cancel="cancelCreate"
           >
-          </IssueForm>
+            <template #title>
+              {{ $t('create_task') }}
+            </template>
+
+            <template #form>
+              <div class="q-gutter-md">
+                <BaseAutocompleteTaskType
+                  :value="newTask.type"
+                  key-only
+                  load-data
+                  @select="(selection) => newTask.type = selection"
+                />
+
+                <q-input
+                  v-model="newTask.title"
+                  :label="$t('title')"
+                  filled
+                  :rules="[val => !!val || $t('field_required')]"
+                />
+
+                <q-input
+                  v-model="newTask.description"
+                  :label="$t('description')"
+                  autogrow
+                  filled
+                  rows="3"
+                />
+              </div>
+            </template>
+          </BaseModalForm>
 
           <q-btn
             v-if="!showFilterDrawer && $route.name !== 'workOrderArchive'"
@@ -86,17 +117,60 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
-// import { useStore } from 'vuex';
+import { ref, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
+import BaseAutocompleteTaskType from '@/components/BaseAutocompleteTaskType.vue';
+import BaseModalForm from '@/components/BaseModalForm.vue';
 import FilterDrawer from '@/components/FilterDrawer.vue';
-// import queryModel, { useQueryModel } from '@/lib/queryModelFactory.js';
+import { useTaskStore } from '@/stores/task.js';
 
-// const store = useStore();
+const { t: $t } = useI18n();
+const taskStore = useTaskStore();
 
 const showFilterDrawer = ref(false);
-
 const filters_active = ref(0);
-
 const views = [{ component: 'TaskOverview', route_name: 'taskOverview' }];
 
+// Task creation state
+const show_task_form = ref(false);
+const creating = ref(false);
+const newTask = ref({
+  task_type_key: '',
+  title: '',
+  description: '',
+});
+
+const isCreateFormValid = computed(() => {
+  return newTask.value.task_type_key && newTask.value.title;
+});
+
+async function handleCreateTask() {
+  creating.value = true;
+  try {
+    await taskStore.createTask(newTask.value);
+    show_task_form.value = false;
+    resetCreateForm();
+  } catch (error) {
+    console.error('Error creating task:', error);
+  } finally {
+    creating.value = false;
+  }
+}
+
+function cancelCreate() {
+  show_task_form.value = false;
+  resetCreateForm();
+}
+
+function resetCreateForm() {
+  newTask.value = {
+    type: '',
+    title: '',
+    description: '',
+  };
+}
+
+function resetFilters() {
+  filters_active.value = 0;
+}
 </script>

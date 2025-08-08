@@ -2,8 +2,9 @@ from base64 import b64decode
 from datetime import datetime, date
 from enum import Enum
 import json
+from typing import Annotated
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator, StringConstraints
 
 from models.form import FormFieldDefinition, FormFieldValue, TaskFormFieldValue
 from models.print import PrintTemplateRecord
@@ -147,8 +148,8 @@ class TaskStatus(str, Enum):
 
 
 class Task(ArangoDocument):
-  type: str
-  code: str
+  task_type_key: str
+  code: Annotated[str, StringConstraints(to_upper=True, strip_whitespace=True, min_length=1)] | None = None
   status: TaskStatus | None = TaskStatus.PENDING
   assigned_to: list[str] | None = []
   start_from: datetime | None = None
@@ -184,3 +185,8 @@ class TaskSearchParameters(BaseModel):
   @field_validator('advanced_filters', mode='after')
   def deserialize_advanced_filters(cls, value):
     return json.loads(b64decode(value).decode('latin-1')) if value else None
+
+
+class TaskSearchResult(Task):
+  icon: str | None = None
+  task_type_name: str | None = None
