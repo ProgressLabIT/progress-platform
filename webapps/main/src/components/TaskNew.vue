@@ -3,6 +3,7 @@
     :show="props.show"
     :loading="creating"
     :enable-save="isFormValid"
+    :handle-close="() => null"
     @submit="handleCreateTask"
     @cancel="handleCancel"
   >
