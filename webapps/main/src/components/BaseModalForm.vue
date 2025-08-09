@@ -1,5 +1,5 @@
 <template>
-  <BaseDialog :show="show" :maximized="maximized" @close="$router.back()">
+  <BaseDialog :show="show" :maximized="maximized" @close="handleClose">
     <q-card class="surface1 q-pa-md" :style="{ maxWidth: maxWidth, minWidth: minWidth }">
       <!-- DIALOG TITLE -->
       <q-card-section class="text-h3 display weight-medium">
@@ -74,6 +74,12 @@ export default {
     enableSave: {
       type: Boolean,
       default: true,
+    },
+    handleClose: {
+      type: Function,
+      default: () => {
+        this.$router.back();
+      },
     },
   },
   emits: ['submit', 'cancel'],

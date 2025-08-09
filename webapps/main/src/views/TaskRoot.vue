@@ -37,44 +37,10 @@
           </q-btn>
 
           <!-- CREATE TASK MODAL -->
-          <BaseModalForm
-            v-if="show_task_form"
+          <TaskNew
             :show="show_task_form"
-            :loading="creating"
-            :enable-save="isCreateFormValid"
-            @submit="handleCreateTask"
-            @cancel="cancelCreate"
-          >
-            <template #title>
-              {{ $t('create_task') }}
-            </template>
-
-            <template #form>
-              <div class="q-gutter-md">
-                <BaseAutocompleteTaskType
-                  :value="newTask.type"
-                  key-only
-                  load-data
-                  @select="(selection) => newTask.type = selection"
-                />
-
-                <q-input
-                  v-model="newTask.title"
-                  :label="$capitalize($t('title'))"
-                  filled
-                  :rules="[val => !!val || $t('field_required')]"
-                />
-
-                <q-input
-                  v-model="newTask.description"
-                  :label="$capitalize($t('description'))"
-                  autogrow
-                  filled
-                  rows="3"
-                />
-              </div>
-            </template>
-          </BaseModalForm>
+            @close="show_task_form = false"
+          />
 
           <q-btn
             v-if="!showFilterDrawer && $route.name !== 'workOrderArchive'"
@@ -418,10 +384,9 @@
 import { ref, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
-import BaseAutocompleteTaskType from '@/components/BaseAutocompleteTaskType.vue';
 import BaseAutocompleteUser from '@/components/BaseAutocompleteUser.vue';
-import BaseModalForm from '@/components/BaseModalForm.vue';
 import FilterDrawer from '@/components/FilterDrawer.vue';
+import TaskNew from '@/components/TaskNew.vue';
 import { useQueryModel } from '@/lib/queryModelFactory.js';
 import { useTaskStore } from '@/stores/task.js';
 
@@ -434,12 +399,6 @@ const views = [{ component: 'TaskOverview', route_name: 'taskOverview' }];
 
 // Task creation state
 const show_task_form = ref(false);
-const creating = ref(false);
-const newTask = ref({
-  task_type_key: '',
-  title: '',
-  description: '',
-});
 
 // Filter query models
 const task_type_key = useQueryModel(String, 'task_type', null);
@@ -536,36 +495,6 @@ const filters = computed(() => {
 
   return filters_object;
 });
-
-const isCreateFormValid = computed(() => {
-  return newTask.value.task_type_key && newTask.value.title;
-});
-
-async function handleCreateTask() {
-  creating.value = true;
-  try {
-    await taskStore.createTask(newTask.value);
-    show_task_form.value = false;
-    resetCreateForm();
-  } catch (error) {
-    console.error('Error creating task:', error);
-  } finally {
-    creating.value = false;
-  }
-}
-
-function cancelCreate() {
-  show_task_form.value = false;
-  resetCreateForm();
-}
-
-function resetCreateForm() {
-  newTask.value = {
-    type: '',
-    title: '',
-    description: '',
-  };
-}
 
 async function resetFilters() {
   await router.replace({ query: null });

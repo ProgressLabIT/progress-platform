@@ -2,6 +2,7 @@
   <q-select
     use-input
     filled
+    label-slot
     :label="$capitalize(t('task_type'))"
     :dense="dense"
     :clearable="clearable"
@@ -15,6 +16,10 @@
     @filter="filter"
     @update:model-value="(selection) => $emit('select', selection)"
   >
+    <template #label>
+      {{ $capitalize(t('task_type')) }}
+      <span v-if="mandatory" class="text-theme-red"> * </span>
+    </template>
     <template #option="scope">
       <q-item v-bind="scope.itemProps" class="q-px-lg">
         <q-item-section avatar>
@@ -63,6 +68,11 @@ const props = defineProps({
   clearable: {
     type: Boolean,
     default: true,
+  },
+
+  mandatory: {
+    type: Boolean,
+    default: false,
   },
 });
 
