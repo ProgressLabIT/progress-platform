@@ -68,7 +68,7 @@
           <template v-for="column in columns" :key="column.name">
             <q-td class="ellipsis" :props="props">
               <template v-if="column.name === 'type'">
-                <q-icon :name="props.row.icon || 'mdi-check-circle-outline'" />
+                <q-icon :name="props.row.icon || 'mdi-check-circle-outline'" size="18px"/>
               </template>
 
               <template v-else-if="column.name === 'status'">
@@ -147,6 +147,7 @@
           placeholder="YYYY-MM-DD"
           :rules="[validateDate]"
           style="min-width: 150px"
+          hide-bottom-space
         >
           <template #append>
             <q-icon name="mdi-calendar" class="cursor-pointer">
@@ -175,7 +176,9 @@
           :label="$t('due_by')"
           placeholder="YYYY-MM-DD"
           :rules="[validateDate]"
+          class="text-white"
           style="min-width: 150px"
+          hide-bottom-space
         >
           <template #append>
             <q-icon name="mdi-calendar" class="cursor-pointer">
@@ -226,33 +229,20 @@
                   :show-name="false"
                 />
               </q-item-section>
-              <q-item-section>
-                <q-item-label>{{ scope.opt.label }}</q-item-label>
-              </q-item-section>
             </q-item>
           </template>
 
-          <template #selected-item>
-            <!-- Hide default selected items since we're using a custom display -->
-          </template>
-
-          <template #prepend>
+          <template #selected>
             <template v-if="task_assigned_to.length === 1">
               <BaseUserAvatar
                 :user="getUserByKey(task_assigned_to[0])"
-                :size="'24px'"
-                :show-name="false"
+                :show-avatar="false"
                 dense
                 class="q-mr-xs"
               />
             </template>
             <template v-else-if="task_assigned_to.length > 1">
-              <q-avatar size="24px" color="theme-blue" text-color="white" class="text-caption q-mr-xs">
-                {{ task_assigned_to.length }}
-              </q-avatar>
-            </template>
-            <template v-else>
-              <q-icon name="mdi-account-multiple" size="24px" color="grey-5" class="q-mr-xs" />
+                {{ task_assigned_to.length }}x
             </template>
           </template>
         </q-select>
@@ -280,23 +270,6 @@
                 />
               </q-item-section>
             </q-item>
-          </template>
-
-          <template #selected-item>
-            <!-- Hide default selected items since we're using a custom display -->
-          </template>
-
-          <template #prepend>
-            <template v-if="task_status">
-              <q-icon
-                :color="status_options[task_status]?.color || 'grey'"
-                :name="status_options[task_status]?.icon || 'mdi-circle-outline'"
-                class="q-mr-xs"
-              />
-            </template>
-            <template v-else>
-              <q-icon name="mdi-tag" size="24px" color="grey-5" class="q-mr-xs" />
-            </template>
           </template>
         </q-select>
       </div>
