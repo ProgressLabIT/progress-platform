@@ -1,5 +1,5 @@
 <template>
-  <BaseDialog :show="show" :maximized="maximized" @close="handleClose">
+  <BaseDialog :show="show" :maximized="maximized" @close="onClose">
     <q-card class="surface1 q-pa-md" :style="{ maxWidth: maxWidth, minWidth: minWidth }">
       <!-- DIALOG TITLE -->
       <q-card-section class="text-h3 display weight-medium">
@@ -19,7 +19,7 @@
                 color="theme-blue"
                 :loading="loading"
                 :disable="!enableSave"
-                @click="$emit('submit')"
+                @click="emit('submit')"
               >
                 {{ $t('save') }}
               </q-btn>
@@ -28,7 +28,7 @@
               <q-btn
                 class="full-width"
                 color="theme-grey"
-                @click="$emit('cancel')"
+                @click="emit('cancel')"
               >
                 {{ $t('cancel') }}
               </q-btn>
@@ -40,55 +40,29 @@
   </BaseDialog>
 </template>
 
-<script>
+<script setup>
+import { useRouter } from 'vue-router';
 import BaseDialog from '@/components/BaseDialog.vue';
-export default {
-  name: 'BaseModalForm',
 
-  components: {
-    BaseDialog,
-  },
+const props = defineProps({
+  show: { type: Boolean, default: true },
+  maxWidth: { type: String, default: '800px' },
+  minWidth: { type: String, default: '500px' },
+  loading: { type: Boolean, default: false },
+  maximized: { type: Boolean, default: false },
+  enableSave: { type: Boolean, default: true },
+  handleClose: { type: Function, default: undefined },
+});
 
-  props: {
-    show: {
-      type: Boolean,
-      default: true,
-      required: false,
-    },
-    maxWidth: {
-      type: String,
-      default: '800px',
-    },
-    minWidth: {
-      type: String,
-      default: '500px',
-    },
-    loading: {
-      type: Boolean,
-      default: false,
-    },
-    maximized: {
-      type: Boolean,
-      default: false,
-    },
-    enableSave: {
-      type: Boolean,
-      default: true,
-    },
-    handleClose: {
-      type: Function,
-      default: () => {
-        this.$router.back();
-      },
-    },
-  },
-  emits: ['submit', 'cancel'],
+const emit = defineEmits(['submit', 'cancel']);
 
-  data() {
-    return {
-      saving: false,
-      valid: true,
-    };
-  },
-};
+const router = useRouter();
+
+function onClose() {
+  if (props.handleClose === undefined) {
+    router.back();
+  } else {
+    props.handleClose();
+  }
+}
 </script>
