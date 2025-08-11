@@ -18,7 +18,6 @@ class TaskCreatedEvent(BaseEvent):
     assigned_to: list[str]
     start_from: date | None = None
     due_by: date | None = None
-    form_data: list[TaskFormFieldValue] | None = None
 
   @classmethod
   def get_tx_collections(self):
@@ -37,6 +36,16 @@ class TaskCreatedEvent(BaseEvent):
     if self.info.code is None:
       counter_key = self.tx.collection('Config').get('system_counters').get('tasks', 'default')
       task_data.code = _generate_counter(self.tx, counter_key)
+
+    # Prepare form fields
+    task_type = self.tx.collection('TaskType').get(self.info.task_type_key)
+    task_data.form_fields = [
+      TaskFormFieldValue(
+        **f,
+        form_field_key=f['_key'],
+        value=None
+      ) for f in task_type['form_fields']
+    ]
 
     # set created and created_by
     task_data.created = self.info.timestamp

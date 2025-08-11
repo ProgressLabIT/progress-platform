@@ -80,10 +80,10 @@ class FormFieldValue(BaseModel):
 
 class TaskFormFieldValue(BaseModel):
   form_field_key: str
-  custom_field_key: str | None = None
-  label: str | None = None
+  custom_field_key: str
+  label: str
   hint: str | None = None
-  mandatory: bool | None = None
+  mandatory: bool | None = False
   value: Any | None = None
   last_updated: str | None = None
 
