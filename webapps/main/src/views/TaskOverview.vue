@@ -65,6 +65,58 @@
             />
           </q-td>
 
+          <!-- TASK CARD CONTEXT MENU -->
+          <q-popup-proxy context-menu>
+            <div class="q-pa-md column q-gutter-y-md" style="max-width: 300px">
+                <!-- CODE AND STATUS -->
+
+                <div class="row items-center justify-between">
+                  <div class="text-h5 col-auto">
+                    #{{ props.row.code || '-'}}
+                  </div>
+                  <div class="col-auto">
+                    <q-chip
+                      size="xs"
+                      :color="taskStatusOptions[props.row.status]?.color || 'theme-grey'"
+                      :label="taskStatusOptions[props.row.status]?.label"
+                      :icon="taskStatusOptions[props.row.status]?.icon || 'mdi-circle-outline'"
+                      class="text-uppercase highlight"
+                    />
+                  </div>
+                </div>
+
+              <!-- TITLE -->
+              <div class="text-h4 highlight">
+                {{ props.row.title }}
+              </div>
+
+              <!-- DESCRIPTION -->
+              <div class="q-mt-md" v-if="props.row.description">
+                {{ props.row.description }}
+              </div>
+
+              <template v-if="props.row.assigned_to && props.row.assigned_to.length > 0">
+
+                <q-separator />
+
+                <!-- ASSIGNED TO -->
+                <div class="text-h5 uppercase text-low">{{ $t('assigned_to') }}</div>
+                <q-list dense>
+                  <q-item v-for="userKey in props.row.assigned_to" :key="userKey" style="padding-left: 0px; padding-right: 0px;">
+                    <BaseUserAvatar
+                    :user="getUserByKey(userKey)"
+                    :size="'24px'"
+                    />
+                  </q-item>
+                </q-list>
+              </template>
+
+            </div>
+          </q-popup-proxy>
+
+
+          <!-- TASK COLUMNS -->
+
           <template v-for="column in taskColumns" :key="column.name">
             <q-td class="ellipsis" :props="props">
               <template v-if="column.name === 'type'">
@@ -97,17 +149,6 @@
                     :show_name="false"
                     dense
                   />
-                  <q-tooltip class="q-pa-none" :delay="300">
-                    <q-card square outline class="column surface1 shadow-2 q-gutter-xs q-pa-md">
-                      <BaseUserAvatar
-                        v-for="userKey in props.row.assigned_to"
-                        :key="userKey"
-                        :user="getUserByKey(userKey)"
-                        :size="'32px'"
-                        dense
-                      />
-                    </q-card>
-                  </q-tooltip>
                 </div>
                 <span v-else>-</span>
               </template>
