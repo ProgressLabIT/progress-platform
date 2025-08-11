@@ -428,7 +428,7 @@ function getUserByKey(userKey) {
 
 function showTaskDetails(taskKey) {
   const to_route = {
-    name: 'taskDetail',
+    name: 'taskScreen',
     params: { taskKey },
     query: {
       back_to: route.name,

@@ -10,16 +10,14 @@ const taskRoutes = [
         path: '',
         name: 'taskOverview',
         component: () => import('@/views/TaskOverview.vue'),
-        children: [
-          {
-            path: ':taskKey',
-            name: 'taskDetail',
-            component: () => import('@/views/TaskDetail.vue'),
-            props: true,
-          },
-        ],
       },
     ],
+  },
+  {
+    path: 'task/:taskKey',
+    name: 'taskScreen',
+    component: () => import('@/views/TaskScreen.vue'),
+    props: true,
   },
 ];
 
