@@ -68,22 +68,20 @@
           <!-- TASK CARD CONTEXT MENU -->
           <q-popup-proxy context-menu>
             <div class="q-pa-md column q-gutter-y-md" style="max-width: 300px">
-                <!-- CODE AND STATUS -->
-
-                <div class="row items-center justify-between">
-                  <div class="text-h5 col-auto">
-                    #{{ props.row.code || '-'}}
-                  </div>
-                  <div class="col-auto">
-                    <q-chip
-                      size="xs"
-                      :color="taskStatusOptions[props.row.status]?.color || 'theme-grey'"
-                      :label="taskStatusOptions[props.row.status]?.label"
-                      :icon="taskStatusOptions[props.row.status]?.icon || 'mdi-circle-outline'"
-                      class="text-uppercase highlight"
-                    />
-                  </div>
+              <!-- CODE AND STATUS -->
+              <div class="row items-center justify-between">
+                <div class="text-h5">
+                  {{ props.row.task_type_name }} #{{ props.row.code || '-'}}
                 </div>
+                <div class="q-mx-md"></div>
+                <q-chip
+                  size="xs"
+                  :color="taskStatusOptions[props.row.status]?.color || 'theme-grey'"
+                  :label="taskStatusOptions[props.row.status]?.label"
+                  :icon="taskStatusOptions[props.row.status]?.icon || 'mdi-circle-outline'"
+                  class="text-uppercase highlight"
+                />
+              </div>
 
               <!-- TITLE -->
               <div class="text-h4 highlight">
