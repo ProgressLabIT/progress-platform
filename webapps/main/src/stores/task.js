@@ -85,7 +85,6 @@ export const useTaskStore = defineStore('task', {
           event_type: 'TASK_CREATED',
           event_data: eventData
         })
-        await this.fetchTasks() // Refresh the list
         return response.data
       } catch (error) {
         console.error('Error creating task:', error)

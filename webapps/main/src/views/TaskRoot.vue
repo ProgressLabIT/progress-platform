@@ -39,6 +39,7 @@
           <!-- CREATE TASK MODAL -->
           <TaskNew
             :show="show_task_form"
+            @created="onTaskCreated"
             @close="show_task_form = false"
           />
 
@@ -503,6 +504,11 @@ const filters = computed(() => {
 
   return filters_object;
 });
+
+function onTaskCreated() {
+  show_task_form.value = false;
+  taskStore.fetchTasks();
+}
 
 async function resetFilters() {
   await router.replace({ query: null });

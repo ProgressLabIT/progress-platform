@@ -109,7 +109,7 @@ async function handleCreateTask() {
 
     // Reset form and close modal
     resetForm();
-    emit('close');
+    emit('created');
   } catch (error) {
     console.error('Error creating task:', error);
     // TODO: Add error notification handling here if needed
