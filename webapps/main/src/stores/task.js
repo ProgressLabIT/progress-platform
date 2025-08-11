@@ -22,14 +22,6 @@ export const useTaskStore = defineStore('task', {
         task.assigned_to && task.assigned_to.includes(userKey)
       )
     },
-
-    getPendingTasks: (state) => {
-      return state.tasks.filter((task) => task.status === 'pending')
-    },
-
-    getCompletedTasks: (state) => {
-      return state.tasks.filter((task) => task.status === 'completed')
-    },
   },
 
   actions: {

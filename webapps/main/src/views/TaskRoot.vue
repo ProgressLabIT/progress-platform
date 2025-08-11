@@ -79,27 +79,16 @@
       <!-- STATUS CHECKBOXES -->
       <div class="q-mb-md">
         <div class="text-h5 text-low q-mb-sm">{{ $capitalize($t('status')) }}</div>
-        <div class="row q-col-gutter-sm capitalize">
-          <div class="col">
+        <div class="row q-col-gutter-xs capitalize justify-between">
+          <div v-for="status in statusFilters" :key="status.value" class="col-auto">
             <q-checkbox
-              v-model="status_open"
-              :label="$t('open')"
+              v-model="status.queryModel.value"
+              size="sm"
               dense
-            />
-          </div>
-          <div class="col">
-            <q-checkbox
-              v-model="status_completed"
-              :label="$t('completed')"
-              dense
-            />
-          </div>
-          <div class="col">
-            <q-checkbox
-              v-model="status_canceled"
-              :label="$t('canceled')"
-              dense
-            />
+            >
+            {{ status.label }}
+              <q-icon :name="status.icon" :color="status.color" />
+            </q-checkbox>
           </div>
         </div>
       </div>
@@ -366,7 +355,7 @@
 
       <!-- ASSIGNEE -->
       <BaseAutocompleteUser
-        :placeholder="$capitalize($t('assignee'))"
+        :placeholder="$capitalize($t('assigned_to'))"
         dense
         class="q-mb-md"
         behavior="menu"
@@ -384,15 +373,18 @@
 import { ref, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
+import BaseAutocompleteTaskType from '@/components/BaseAutocompleteTaskType.vue';
 import BaseAutocompleteUser from '@/components/BaseAutocompleteUser.vue';
 import FilterDrawer from '@/components/FilterDrawer.vue';
 import TaskNew from '@/components/TaskNew.vue';
+import { useTask } from '@/composables/task.js';
 import { useQueryModel } from '@/lib/queryModelFactory.js';
 import { useTaskStore } from '@/stores/task.js';
 
 const { t: $t } = useI18n();
 const router = useRouter();
 const taskStore = useTaskStore();
+const { taskStatusOptions } = useTask();
 
 const showFilterDrawer = ref(false);
 const views = [{ component: 'TaskOverview', route_name: 'taskOverview' }];
@@ -405,6 +397,22 @@ const task_type_key = useQueryModel(String, 'task_type', null);
 const status_open = useQueryModel(Boolean, 'status_open', true);
 const status_completed = useQueryModel(Boolean, 'status_completed', true);
 const status_canceled = useQueryModel(Boolean, 'status_canceled', true);
+
+// Map status options to their query models for easy iteration
+const statusFilters = computed(() => [
+  {
+    ...taskStatusOptions.open,
+    queryModel: status_open,
+  },
+  {
+    ...taskStatusOptions.completed,
+    queryModel: status_completed,
+  },
+  {
+    ...taskStatusOptions.canceled,
+    queryModel: status_canceled,
+  },
+]);
 const text_search = useQueryModel(String, 'search', null);
 const start_from_min = useQueryModel(String, 'start_from_min', null);
 const start_from_max = useQueryModel(String, 'start_from_max', null);

@@ -14,7 +14,7 @@
     <q-table
       id="task_list"
       v-model:pagination="pagination"
-      :columns="columns"
+      :columns="taskColumns"
       :rows="task_list"
       row-key="_key"
       :loading="loading"
@@ -65,7 +65,7 @@
             />
           </q-td>
 
-          <template v-for="column in columns" :key="column.name">
+          <template v-for="column in taskColumns" :key="column.name">
             <q-td class="ellipsis" :props="props">
               <template v-if="column.name === 'type'">
                 <q-icon :name="props.row.icon || 'mdi-check-circle-outline'" size="18px"/>
@@ -74,8 +74,8 @@
               <template v-else-if="column.name === 'status'">
                 <q-icon
                   size="16px"
-                  :color="status_options[props.row.status]?.color || 'grey'"
-                  :name="status_options[props.row.status]?.icon || 'mdi-circle-outline'"
+                  :color="taskStatusOptions[props.row.status]?.color || 'grey'"
+                  :name="taskStatusOptions[props.row.status]?.icon || 'mdi-circle-outline'"
                 />
               </template>
 
@@ -97,7 +97,7 @@
                     :show_name="false"
                     dense
                   />
-                  <q-tooltip class="q-pa-none" delay="300">
+                  <q-tooltip class="q-pa-none" :delay="300">
                     <q-card square outline class="column surface1 shadow-2 q-gutter-xs q-pa-md">
                       <BaseUserAvatar
                         v-for="userKey in props.row.assigned_to"
@@ -250,7 +250,7 @@
         <!-- STATUS -->
         <q-select
           v-model="task_status"
-          :options="Object.values(status_options)"
+          :options="Object.values(taskStatusOptions)"
           option-label="label"
           option-value="value"
           filled
@@ -310,6 +310,8 @@ import BaseUserAvatar from '@/components/BaseUserAvatar.vue';
 import { sendEvent } from '@/composables/event.js';
 import multiMatch from '@/lib/MultiFieldSearch.js';
 import { useTaskStore } from '@/stores/task.js';
+import { useTask } from '@/composables/task.js';
+
 
 // Props and emits
 defineProps({
@@ -328,6 +330,7 @@ const store = useStore();
 const { t } = useI18n();
 const $q = useQuasar();
 const taskStore = useTaskStore();
+const { taskColumns, taskStatusOptions } = useTask();
 
 // Reactive state
 const pagination = ref({
@@ -353,85 +356,8 @@ const task_status = ref(null);
 const user_options = ref([]);
 const all_users = ref([]);
 
-// Status options
-const status_options = {
-  open: { label: t('open'), value: 'open', color: 'theme-blue', icon: 'mdi-circle-outline' },
-  completed: { label: t('completed'), value: 'completed', color: 'theme-green', icon: 'mdi-check-circle' },
-  canceled: { label: t('canceled'), value: 'canceled', color: 'theme-grey', icon: 'mdi-close-circle' }
-};
-
 // Computed properties
 const task_list = computed(() => taskStore.tasks);
-
-const columns = computed(() => [
-  {
-    name: 'type',
-    field: 'type',
-    sortable: true,
-    label: t('type').toUpperCase(),
-    align: 'left',
-  },
-  {
-    name: 'code',
-    field: 'code',
-    sortable: true,
-    label: t('code').toUpperCase(),
-    align: 'left',
-    style: 'max-width: 10vw',
-  },
-  {
-    name: 'title',
-    field: 'title',
-    sortable: true,
-    label: t('title').toUpperCase(),
-    align: 'left',
-  },
-  {
-    name: 'status',
-    field: 'status',
-    sortable: true,
-    label: t('status').toUpperCase(),
-    align: 'left',
-  },
-  {
-    name: 'assigned_to',
-    field: 'assigned_to',
-    sortable: false,
-    label: t('assigned_to').toUpperCase(),
-    align: 'left',
-  },
-  {
-    name: 'start_from',
-    field: 'start_from',
-    sortable: true,
-    align: 'right',
-    label: t('start_from').toUpperCase(),
-    style: 'max-width: 10vw',
-  },
-  {
-    name: 'due_by',
-    field: 'due_by',
-    sortable: true,
-    align: 'right',
-    label: t('due_by').toUpperCase(),
-    style: 'max-width: 10vw',
-  },
-  {
-    name: 'created',
-    field: 'created',
-    sortable: true,
-    align: 'right',
-    label: t('created_date').toUpperCase(),
-    style: 'max-width: 10vw',
-  },
-  {
-    name: 'closed',
-    field: 'closed',
-    sortable: true,
-    align: 'right',
-    label: t('closed_date').toUpperCase(),
-  },
-]);
 
 // Edit mode computed properties
 const allTasksSelected = computed(() => {
