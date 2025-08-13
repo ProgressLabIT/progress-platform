@@ -248,6 +248,10 @@ const homePageOptions = computed(() => [
     value: 'traceabilityRoot',
   },
   {
+    label: capitalizeAll(t('views.taskRoot')),
+    value: 'taskRoot',
+  },
+  {
     label: capitalizeAll(t('views.warehouseRoot')),
     value: 'warehouseRoot',
   },
