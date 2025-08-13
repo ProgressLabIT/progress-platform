@@ -2,14 +2,13 @@
   <div class="row items-center user-avatar" :class="name_first ? ' reverse' : ''">
     <q-avatar
       v-if="initials && showAvatar"
-      color="theme-grey"
       :size="computed_size"
       class="weight-bold"
       font-size=".4em"
     >
       <q-img :src="avatar_src" :alt="initials" :style="avatar_style">
         <template #error>
-          <div v-if="initials" class="absolute-center bg-theme-grey">
+          <div v-if="initials" class="absolute-center" :class="initialsBackground">
             {{ initials }}
           </div>
           <q-icon v-else name="mdi-account-circle" :size="computed_size" />
@@ -47,6 +46,11 @@ export default {
     name_first: {
       type: Boolean,
       default: false,
+    },
+
+    avatarColorClass: {
+      type: String,
+      default: undefined,
     },
 
     user: {
@@ -123,6 +127,10 @@ export default {
 
     computed_size() {
       return this.dense ? '26px' : this.size;
+    },
+
+    initialsBackground() {
+      return this.avatarColorClass || 'bg-theme-grey';
     },
   },
 };

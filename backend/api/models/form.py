@@ -14,6 +14,7 @@ class FileBucket(str, Enum):
   TRACEABILITY = 'traceability'
   USER = 'user'
   SERIAL = 'serial'
+  TASK = 'task'
 
 class FileTargetData(BaseModel):
   bucket: FileBucket

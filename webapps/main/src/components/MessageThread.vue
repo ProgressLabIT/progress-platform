@@ -56,9 +56,7 @@ export default {
   props: {
     context: {
       type: String,
-      default: undefined,
-      validator: (value) =>
-        value || ['issue', 'work_order', 'job'].includes(value),
+      required: true
     },
     context_key: {
       type: String,
@@ -72,6 +70,7 @@ export default {
         issue: 'Issue/',
         work_order: 'WorkOrder/',
         serial: 'Serial/',
+        task: 'Task/',
       },
       messages: [],
       new_message: '',

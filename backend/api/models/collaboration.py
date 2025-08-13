@@ -152,11 +152,21 @@ class TaskStatus(str, Enum):
   CANCELED = "canceled"
 
 
+
+class TaskAssignmentRole(str, Enum):
+  OWNER = 'owner'
+  PARTICIPANT = 'participant'
+
+class TaskAssignment(BaseModel):
+  user_key: str
+  role: TaskAssignmentRole | None = TaskAssignmentRole.PARTICIPANT
+
 class Task(ArangoDocument):
   task_type_key: str
   code: Annotated[str, StringConstraints(to_upper=True, strip_whitespace=True, min_length=1)] | None = None
   status: TaskStatus | None = TaskStatus.OPEN
-  assigned_to: list[str] | None = []
+  owner_key: str | None = None
+  assigned_to: list[TaskAssignment] | None = []
   start_from: datetime | None = None
   due_by: datetime | None = None
   created: datetime | None = None
@@ -167,10 +177,24 @@ class Task(ArangoDocument):
   description: str | None = None
   form_fields: list[TaskFormFieldValue] | None = []
 
+  @model_validator(mode='after')
+  def validate_assignments(self):
+    # Ensure single owner if assignments are provided
+    owners = [a for a in self.assigned_to if a.role == TaskAssignmentRole.OWNER]
+    if len(self.assigned_to) > 0 and len(owners) != 1:
+      raise ValueError('You must provide one and only one owner when specifying assignments')
+
+    # Set top level owner key for easier access and reorder assignments to put owner first
+    self.owner_key = owners[0].user_key if owners else None
+    if owners:
+      owner = owners[0]
+      participants = [a for a in self.assigned_to if a.role == TaskAssignmentRole.PARTICIPANT]
+      self.assigned_to = [owner] + participants
+    return self
+
 class TaskLink(ArangoEdge):
   created: datetime = Field(default_factory=timestamp)
   created_by: str | None = None
-
 
 class TaskSearchParameters(BaseModel):
   search: str | None = None
@@ -178,20 +202,24 @@ class TaskSearchParameters(BaseModel):
   status_open: bool | None = None
   status_completed: bool | None = None
   status_canceled: bool | None = None
-  assigned_to: str | None = None
+  owner_key: str | None = None # Owner is a special case of participant.
+  assigned_to: list[str] | None = None
   start_from: date | None = None
   due_by: date | None = None
   created_from: date | None = None
   created_to: date | None = None
   closed_from: date | None = None
   closed_to: date | None = None
-  advanced_filters: str | None = None
+  advanced_filters: dict | None = None
   limit: int | None = 200
   offset: int | None = 0
 
-  @field_validator('advanced_filters', mode='after')
-  def deserialize_advanced_filters(cls, value):
-    return json.loads(b64decode(value).decode('latin-1')) if value else None
+  @field_validator('advanced_filters', 'assigned_to', mode='before')
+  @classmethod
+  def deserialize_base64(cls, value: str | None) -> dict | list[str] | None:
+    if isinstance(value, str):
+      return json.loads(b64decode(value).decode('latin-1'))
+    return value
 
 
 class TaskSearchResult(Task):

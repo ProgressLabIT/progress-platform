@@ -1,5 +1,5 @@
 <template>
-  <div ref="container" class="q-px-sm q-pt-sm full-height">
+  <div ref="container" class="q-px-sm q-pt-sm full-height relative-position">
     <!-- EDIT BUTTON -->
     <q-btn
       v-if="!edit_mode && task_list.length > 0"
@@ -44,6 +44,7 @@
           dense
           :model-value="allTasksSelected"
           @update:model-value="toggleAllTasks"
+          @click.stop
         />
       </template>
 
@@ -62,12 +63,13 @@
               dense
               :model-value="selected_tasks.has(props.row._key)"
               @update:model-value="toggleTask(props.row._key)"
+              @click.stop
             />
           </q-td>
 
           <!-- TASK CARD CONTEXT MENU -->
           <q-popup-proxy context-menu>
-            <div class="q-pa-md column q-gutter-y-md" style="max-width: 300px">
+            <div class="q-pa-md column q-gutter-y-md" style="min-width: 300px; max-width: 600px">
               <!-- CODE AND STATUS -->
               <div class="row items-center justify-between">
                 <div class="text-h5">
@@ -89,25 +91,45 @@
               </div>
 
               <!-- DESCRIPTION -->
-              <div class="q-mt-md" v-if="props.row.description">
+              <div v-if="props.row.description" class="q-mt-md">
                 {{ props.row.description }}
               </div>
 
-              <template v-if="props.row.assigned_to && props.row.assigned_to.length > 0">
+              <!-- OWNER -->
+              <template v-if="props.row.owner_key">
+                <div class="text-h5 uppercase text-low q-mt-lg">{{ $t('owner') }}</div>
+                <BaseUserAvatar
+                  :user="getUserByKey(props.row.owner_key)"
+                  :size="'24px'"
+                  :avatar-color-class="'bg-theme-blue'"
+                />
+              </template>
 
-                <q-separator />
-
-                <!-- ASSIGNED TO -->
-                <div class="text-h5 uppercase text-low">{{ $t('assigned_to') }}</div>
-                <q-list dense>
-                  <q-item v-for="userKey in props.row.assigned_to" :key="userKey" style="padding-left: 0px; padding-right: 0px;">
+              <!-- PARTICIPANTS -->
+              <template v-if="props.row.assigned_to?.length > 1">
+                <div class="text-h5 uppercase text-low q-mb-xs q-mt-lg">{{ $t('participants') }}</div>
+                <q-list dense class="q-mt-xs">
+                  <q-item
+                    v-for="user in props.row.assigned_to.filter(u => u.role === 'participant')"
+                    :key="user.user_key"
+                    style="padding-left: 0px; padding-right: 0px;"
+                  >
                     <BaseUserAvatar
-                    :user="getUserByKey(userKey)"
+                    :user="getUserByKey(user.user_key)"
                     :size="'24px'"
                     />
                   </q-item>
                 </q-list>
               </template>
+
+              <!-- ACTIONS -->
+              <q-btn
+                color="theme-blue"
+                class="q-mt-lg"
+                size="0.75rem"
+                :label="$t('go_to_task')"
+                @click="router.push({ name: 'taskScreen', params: { taskKey: props.row._key } })"
+              />
 
             </div>
           </q-popup-proxy>
@@ -137,19 +159,33 @@
                 }}
               </template>
 
-              <template v-else-if="column.name === 'assigned_to'">
-                <div v-if="props.row.assigned_to && props.row.assigned_to.length > 0" class="row q-gutter-xs">
+              <div v-else-if="column.name === 'assigned_to'" class="row items-center">
+                <div v-if="props.row.assigned_to?.length > 0" class="row q-gutter-xs">
                   <BaseUserAvatar
-                    v-for="userKey in props.row.assigned_to"
-                    :key="userKey"
-                    :user="getUserByKey(userKey)"
+                    :key="props.row.owner_key"
+                    :user="getUserByKey(props.row.owner_key)"
                     :size="'24px'"
                     :show_name="false"
+                    avatar-color-class="bg-theme-blue"
                     dense
                   />
                 </div>
+
+                <template v-if="parseAssignments(props.row).participants.length > 0">
+                  <div class="q-mx-sm text-h5 text-low">/</div>
+                  <BaseUserAvatar
+                    v-for="assignment in parseAssignments(props.row).participants"
+                    :key="assignment.user_key"
+                    :user="getUserByKey(assignment.user_key)"
+                    :size="'24px'"
+                    :show_name="false"
+                    class="q-mr-xs"
+                    dense
+                  />
+                </template>
+
                 <span v-else>-</span>
-              </template>
+              </div>
 
               <template v-else>
                 {{ $capitalizeAll(props.row[column.name] || '-') }}
@@ -160,196 +196,205 @@
       </template>
     </q-table>
 
-    <!-- Extra space to account for bottom toolbar -->
-    <div v-if="edit_mode" class="q-my-xl" />
-
-    <!-- ############### -->
-    <!--   EDIT ACTIONS  -->
-    <!-- ############### -->
+    <!-- Bottom drawer for edit actions -->
     <div
       v-if="edit_mode"
-      class="row full-width bg-theme-blue justify-between q-py-sm q-px-md items-center absolute-bottom"
+      class="full-width bg-blue-backdrop justify-between q-py-sm q-px-md items-center absolute-bottom edit-drawer"
+      :class="{ 'drawer-visible': edit_mode }"
+
     >
-      <div class="col-auto">
-        {{ $t('countInfo.selected', { count: selected_tasks.size }) }}
-      </div>
+      <div class="row items-center justify-between q-my-md">
+          <div class="text-subtitle1">
+            {{ $t('countInfo.selected', { count: selected_tasks.size }) }}
+          </div>
+          <div class="row items-center">
+            <q-btn
+            size="0.75rem"
 
-      <div v-if="selected_tasks.size" class="col-auto row items-center q-gutter-md">
-        <!-- START FROM DATE -->
-        <q-input
-          v-model="task_start_from"
-          filled
-          dense
-          clearable
-          mask="####-##-##"
-          :label="$t('start_from')"
-          placeholder="YYYY-MM-DD"
-          :rules="[validateDate]"
-          style="min-width: 150px"
-          hide-bottom-space
-        >
-          <template #append>
-            <q-icon name="mdi-calendar" class="cursor-pointer">
-              <q-popup-proxy
-                cover
-                transition-show="scale"
-                transition-hide="scale"
-              >
-                <q-date v-model="task_start_from" minimal mask="YYYY-MM-DD">
-                  <div class="row items-center justify-end">
-                    <q-btn v-close-popup :label="$t('close')" color="primary" flat />
-                  </div>
-                </q-date>
-              </q-popup-proxy>
-            </q-icon>
-          </template>
-        </q-input>
+              flat
+              round
+              dense
+              icon="mdi-close"
+              @click="exitEditMode"
+            />
+          </div>
+        </div>
 
-        <!-- DUE BY DATE -->
-        <q-input
-          v-model="task_due_by"
-          filled
-          dense
-          clearable
-          mask="####-##-##"
-          :label="$t('due_by')"
-          placeholder="YYYY-MM-DD"
-          :rules="[validateDate]"
-          class="text-white"
-          style="min-width: 150px"
-          hide-bottom-space
-        >
-          <template #append>
-            <q-icon name="mdi-calendar" class="cursor-pointer">
-              <q-popup-proxy
-                cover
-                transition-show="scale"
-                transition-hide="scale"
-              >
-                <q-date v-model="task_due_by" minimal mask="YYYY-MM-DD">
-                  <div class="row items-center justify-end">
-                    <q-btn v-close-popup :label="$t('close')" color="primary" flat />
-                  </div>
-                </q-date>
-              </q-popup-proxy>
-            </q-icon>
-          </template>
-        </q-input>
+        <div class="row q-col-gutter-md">
+          <!-- START FROM DATE -->
+          <div class="col-12 col-sm-6 col-md-3">
+            <q-input
+              v-model="task_start_from"
+              filled
+              dense
+              clearable
+              mask="####-##-##"
+              :label="$t('start_from')"
+              placeholder="YYYY-MM-DD"
+              :rules="[validateDate]"
+              hide-bottom-space
+              :disable="selected_tasks.size === 0"
+              @click.stop
+            >
+              <template #append>
+                <q-icon name="mdi-calendar" class="cursor-pointer" @click.stop>
+                  <q-popup-proxy cover transition-show="scale" transition-hide="scale" @click.stop>
+                    <q-date v-model="task_start_from" minimal mask="YYYY-MM-DD" @click.stop>
+                      <div class="row items-center justify-end">
+                        <q-btn v-close-popup :label="$t('close')" color="primary" flat @click.stop />
+                      </div>
+                    </q-date>
+                  </q-popup-proxy>
+                </q-icon>
+              </template>
+            </q-input>
+          </div>
 
-        <!-- ASSIGNEES -->
-        <q-select
-          v-model="task_assigned_to"
-          :options="user_options"
-          option-label="label"
-          option-value="value"
-          multiple
-          filled
-          dense
-          clearable
-          emit-value
-          map-options
-          :label="$t('assigned_to')"
-          :placeholder="task_assigned_to.length === 0 ? $t('operator_select_prompt') : ''"
-          style="min-width: 200px"
-          @filter="filterUsers"
-        >
-          <template #option="scope">
-            <q-item v-bind="scope.itemProps">
-              <q-item-section side>
-                <q-checkbox
-                  :model-value="scope.selected"
-                  @update:model-value="scope.toggleOption"
-                />
-              </q-item-section>
-              <q-item-section avatar>
-                <BaseUserAvatar
-                  :user="getUserByKey(scope.opt.value)"
-                  :size="'32px'"
-                  :show-name="false"
-                />
-              </q-item-section>
-            </q-item>
-          </template>
+          <!-- DUE BY DATE -->
+          <div class="col-12 col-sm-6 col-md-3">
+            <q-input
+              v-model="task_due_by"
+              filled
+              dense
+              clearable
+              mask="####-##-##"
+              :label="$t('due_by')"
+              placeholder="YYYY-MM-DD"
+              :rules="[validateDate]"
+              hide-bottom-space
+              :disable="selected_tasks.size === 0"
+              @click.stop
+            >
+              <template #append>
+                <q-icon name="mdi-calendar" class="cursor-pointer" @click.stop>
+                  <q-popup-proxy cover transition-show="scale" transition-hide="scale" @click.stop>
+                    <q-date v-model="task_due_by" minimal mask="YYYY-MM-DD" @click.stop>
+                      <div class="row items-center justify-end">
+                        <q-btn v-close-popup :label="$t('close')" color="primary" flat @click.stop />
+                      </div>
+                    </q-date>
+                  </q-popup-proxy>
+                </q-icon>
+              </template>
+            </q-input>
+          </div>
 
-          <template #selected>
-            <template v-if="task_assigned_to.length === 1">
-              <BaseUserAvatar
-                :user="getUserByKey(task_assigned_to[0])"
-                :show-avatar="false"
-                dense
-                class="q-mr-xs"
-              />
-            </template>
-            <template v-else-if="task_assigned_to.length > 1">
-                {{ task_assigned_to.length }}x
-            </template>
-          </template>
-        </q-select>
+          <!-- ASSIGNEES -->
+          <div class="col-12 col-md-4">
+            <q-select
+              :model-value="task_assigned_to"
+              :options="user_options"
+              option-label="label"
+              option-value="value"
+              multiple
+              filled
+              dense
+              clearable
+              emit-value
+              map-options
+              use-input
+              input-debounce="0"
+              :label="$t('assigned_to')"
+              :placeholder="task_assigned_to.length === 0 ? $t('operator_select_prompt') : ''"
+              :disable="selected_tasks.size === 0"
+              @filter="filterUsers"
+              @update:model-value="updateTaskAssignees"
+              @clear="task_owner_key = null; task_assigned_to = [];"
+            >
+              <template #option="scope">
+                <q-item v-bind="scope.itemProps">
+                  <q-item-section side>
+                    <q-checkbox :model-value="scope.selected" @update:model-value="scope.toggleOption(scope.opt)" />
+                  </q-item-section>
+                  <q-item-section avatar>
+                    <BaseUserAvatar :user="getUserByKey(scope.opt.value)" :size="'32px'" :show-name="false" />
+                  </q-item-section>
+                  <q-item-section />
+                  <q-item-section side>
+                    <q-btn
+                      v-if="task_assigned_to.includes(scope.opt.value)"
+                      flat
+                      round
+                      :color="task_owner_key === scope.opt.value ? 'theme-blue' : null"
+                      padding="0px"
+                      size="18px"
+                      :icon="task_owner_key === scope.opt.value ? 'mdi-crown-circle' : 'mdi-circle-outline'"
+                      @click.stop="makeOwner(scope.opt.value)"
+                    />
+                  </q-item-section>
+                </q-item>
+              </template>
 
-        <!-- STATUS -->
-        <q-select
-          v-model="task_status"
-          :options="Object.values(taskStatusOptions)"
-          option-label="label"
-          option-value="value"
-          filled
-          dense
-          clearable
-          emit-value
-          map-options
-          :label="$t('status')"
-          style="min-width: 150px"
-        >
-          <template #option="scope">
-            <q-item v-bind="scope.itemProps">
-              <q-item-section>
-                <q-badge
-                  :color="scope.opt.color"
-                  :label="scope.opt.label"
-                />
-              </q-item-section>
-            </q-item>
-          </template>
-        </q-select>
-      </div>
+              <template #selected>
+                <template v-if="task_assigned_to.length === 1">
+                  <BaseUserAvatar :user="getUserByKey(task_assigned_to[0])" :show-avatar="false" dense class="q-mr-xs" />
+                </template>
+                <template v-else-if="task_assigned_to.length > 1">
+                  {{ task_assigned_to.length }}x
+                </template>
+              </template>
+            </q-select>
+          </div>
 
-      <div class="col-auto row">
-        <q-btn
-          v-if="selected_tasks.size && hasEditData"
-          size="sm"
-          color="theme-blue"
-          class="q-mr-md"
-          unelevated
-          :label="$t('confirm')"
-          :loading="saving"
-          @click="updateTasks"
-        />
-        <q-btn
-          size="sm"
-          color="theme-grey"
-          unelevated
-          :label="$t('cancel_changes')"
-          @click="exitEditMode"
-        />
-      </div>
-    </div>
+          <!-- STATUS -->
+          <div class="col-12 col-md-2">
+            <q-select
+              v-model="task_status"
+              :options="Object.values(taskStatusOptions)"
+              option-label="label"
+              option-value="value"
+              filled
+              dense
+              clearable
+              emit-value
+              map-options
+              :label="$t('status')"
+              :disable="selected_tasks.size === 0"
+            >
+              <template #option="scope">
+                <q-item v-bind="scope.itemProps">
+                  <q-item-section side>
+                    <q-icon :name="scope.opt.icon" size="18px" :color="scope.opt.color" />
+                  </q-item-section>
+                  <q-item-section class="capitalize">
+                    {{ scope.opt.label }}
+                  </q-item-section>
+                </q-item>
+              </template>
+            </q-select>
+          </div>
+        </div>
 
-    <!-- TASK DETAIL -->
-    <router-view />
+        <div class="row q-mt-md q-gutter-sm">
+          <q-btn
+            v-if="selected_tasks.size && hasEditData"
+            color="theme-blue"
+            class="q-mr-sm"
+            size="0.75rem"
+            unelevated
+            :label="$t('confirm')"
+            :loading="saving"
+            @click.stop="updateTasks"
+          />
+          <q-btn color="theme-grey" unelevated :label="$t('cancel_changes')" @click.stop="exitEditMode" size="0.75rem"/>
+        </div>
   </div>
+
+  <!-- TASK DETAIL -->
+</div>
 </template>
 
 <script setup>
 import { useQuasar, date } from 'quasar';
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter, useRoute } from 'vue-router';
 import { useStore } from 'vuex';
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue';
 import { sendEvent } from '@/composables/event.js';
+import { useTask } from '@/composables/task.js';
 import multiMatch from '@/lib/MultiFieldSearch.js';
 import { useTaskStore } from '@/stores/task.js';
-import { useTask } from '@/composables/task.js';
 
 
 // Props and emits
@@ -389,6 +434,7 @@ const saving = ref(false);
 const task_start_from = ref(null);
 const task_due_by = ref(null);
 const task_assigned_to = ref([]);
+const task_owner_key = ref(null);
 const task_status = ref(null);
 
 // User selection state
@@ -419,6 +465,11 @@ function onRequest(requestProps) {
   pagination.value.rowsPerPage = rowsPerPage;
 }
 
+function parseAssignments(task) {
+  let owner = task.assigned_to.find(assignment => assignment.role === 'owner');
+  let participants = task.assigned_to.filter(assignment => assignment.role === 'participant');
+  return { owner, participants };
+}
 
 function getUserByKey(userKey) {
   return store.getters.getUserByKey(userKey);
@@ -461,6 +512,7 @@ function exitEditMode() {
   task_start_from.value = null;
   task_due_by.value = null;
   task_assigned_to.value = [];
+  task_owner_key.value = null;
   task_status.value = null;
 }
 
@@ -503,27 +555,42 @@ async function updateTasks() {
   saving.value = true;
   try {
     const updatePromises = Array.from(selected_tasks.value).map(taskKey => {
-      const eventData = {
-        task_key: taskKey
-      };
+      let chain = Promise.resolve();
 
+      // Non-status updates via TASK_UPDATED
+      const updateData = { task_key: taskKey };
       if (task_start_from.value) {
-        eventData.start_from = task_start_from.value;
+        updateData.start_from = task_start_from.value;
       }
       if (task_due_by.value) {
-        eventData.due_by = task_due_by.value;
+        updateData.due_by = task_due_by.value;
       }
-      if (task_assigned_to.value.length > 0) {
-        eventData.assigned_to = task_assigned_to.value;
+      if (task_assigned_to.value.length > 0 && task_owner_key.value) {
+        const assignments = [
+          { user_key: task_owner_key.value, role: 'owner' },
+          ...task_assigned_to.value
+            .filter(u => u !== task_owner_key.value)
+            .map(u => ({ user_key: u, role: 'participant' }))
+        ];
+        updateData.assigned_to = assignments;
       }
-      if (task_status.value) {
-        eventData.status = task_status.value;
+      const hasFieldUpdates = Object.keys(updateData).length > 1; // beyond task_key
+      if (hasFieldUpdates) {
+        chain = chain.then(() => sendEvent({ event_type: 'TASK_UPDATED', event_data: updateData }));
       }
 
-      return sendEvent({
-        event_type: 'TASK_UPDATED',
-        event_data: eventData
-      });
+      // Status updates via dedicated events
+      if (task_status.value) {
+        if (task_status.value === 'completed') {
+          chain = chain.then(() => sendEvent({ event_type: 'TASK_COMPLETED', event_data: { task_key: taskKey } }));
+        } else if (task_status.value === 'canceled') {
+          chain = chain.then(() => sendEvent({ event_type: 'TASK_CANCELED', event_data: { task_key: taskKey } }));
+        } else if (task_status.value === 'open') {
+          chain = chain.then(() => sendEvent({ event_type: 'TASK_REOPENED', event_data: { task_key: taskKey } }));
+        }
+      }
+
+      return chain;
     });
 
     await Promise.all(updatePromises);
@@ -560,6 +627,31 @@ function validateDate(value) {
   return date.isValid(value) || 'Please enter a valid date';
 }
 
+// Keep owner consistent with selected users
+watch(task_assigned_to, (newVal) => {
+  if (task_owner_key.value && !newVal.includes(task_owner_key.value)) {
+    task_owner_key.value = null;
+  }
+  // If no owner yet but we have selected users, set first as owner
+  if (!task_owner_key.value && newVal.length > 0) {
+    task_owner_key.value = newVal[0];
+  }
+});
+
+function makeOwner(userKey) {
+  console.log('makeOwner', userKey);
+  task_owner_key.value = userKey;
+}
+
+function updateTaskAssignees(userKeys) {
+  task_assigned_to.value = userKeys;
+  console.log('updateTaskAssignees', userKeys);
+  if (task_owner_key.value === null) { // if no owner yet, set first as owner
+    task_owner_key.value = userKeys[0];
+  }
+  console.log('task_owner_key', task_owner_key.value);
+}
+
 // Lifecycle
 onMounted(async () => {
   await Promise.all([
@@ -590,4 +682,16 @@ onMounted(async () => {
     position: sticky
     z-index: 1
     top: 0
+
+.edit-drawer
+  transform: translateY(100%)
+  transition: transform 0.2s ease-out, opacity 0.3s ease-out
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.15)
+  opacity: 0
+  pointer-events: none
+
+  &.drawer-visible
+    transform: translateY(0)
+    opacity: 1
+    pointer-events: auto
 </style>

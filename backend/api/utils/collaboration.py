@@ -218,7 +218,8 @@ class Queries:
       && (@status_open == false ? t.status != 'open' : true)
       && (@status_completed == false ? t.status != 'completed' : true)
       && (@status_canceled == false ? t.status != 'canceled' : true)
-      && (@assigned_to ? POSITION(t.assigned_to, @assigned_to) : true)
+      && (@owner_key ? t.owner_key == @owner_key : true)
+      && (@assigned_to ? LENGTH(INTERSECTION(t.assigned_to[* RETURN CURRENT.user_key], @assigned_to)) == LENGTH(@assigned_to) : true)
       && (@start_from ? t.start_from >= @start_from : true)
       && (@due_by ? t.due_by <= @due_by : true)
       && (@created_from ? t.created >= @created_from : true)
@@ -259,6 +260,12 @@ class Queries:
     FOR t IN Task
     FILTER t._key == @task_key
 
+    LET task_type = FIRST(
+      FOR tt IN TaskType
+      FILTER tt._key == t.task_type_key
+      RETURN tt
+    )
+
     LET work_sessions = (
       FOR ws IN WorkSession
       FILTER ws.task_key == t._key
@@ -297,6 +304,8 @@ class Queries:
 
     RETURN MERGE(t, {
       time_spent,
-      links: task_links
+      links: task_links,
+      icon: task_type.icon,
+      task_type_name: task_type.name
     })
   """

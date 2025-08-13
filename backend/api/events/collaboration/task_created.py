@@ -3,7 +3,7 @@ from datetime import date
 from events.base_event import BaseEvent, EventInfoModel
 from models.event import EventType
 from models.form import TaskFormFieldValue
-from models.collaboration import Task
+from models.collaboration import Task, TaskAssignment
 from utils.counter import _generate_counter
 
 
@@ -11,11 +11,10 @@ class TaskCreatedEvent(BaseEvent):
 
   class InfoModel(EventInfoModel):
     task_type_key: str
-    task_key: str | None = None
     code: str | None = None
     title: str | None = None
     description: str | None = None
-    assigned_to: list[str]
+    assigned_to: list[TaskAssignment] | None = []
     start_from: date | None = None
     due_by: date | None = None
 

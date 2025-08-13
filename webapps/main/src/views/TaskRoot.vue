@@ -354,14 +354,27 @@
         </div>
       </div>
 
-      <!-- ASSIGNEE -->
+      <!-- OWNER -->
       <BaseAutocompleteUser
-        :placeholder="$capitalize($t('assigned_to'))"
+        :placeholder="$capitalize($t('owner'))"
         dense
         class="q-mb-md"
         behavior="menu"
         key-only
-        :label="$capitalize($t('assigned_to'))"
+        :label="$capitalize($t('owner'))"
+        :operator-only="false"
+        :value="owner_key"
+        @select="(selection) => (owner_key = selection)"
+      />
+
+      <!-- PARTICIPANTS -->
+      <BaseAutocompleteUser
+        :placeholder="$capitalize($t('participants'))"
+        dense
+        class="q-mb-md"
+        behavior="menu"
+        key-only
+        :label="$capitalize($t('participants'))"
         :operator-only="false"
         :value="assigned_to"
         @select="(selection) => (assigned_to = selection)"
@@ -423,7 +436,8 @@ const created_from = useQueryModel(String, 'created_from', null);
 const created_to = useQueryModel(String, 'created_to', null);
 const closed_from = useQueryModel(String, 'closed_from', null);
 const closed_to = useQueryModel(String, 'closed_to', null);
-const assigned_to = useQueryModel(String, 'assigned_to', null);
+const owner_key = useQueryModel(String, 'owner_key', null);
+const assigned_to = useQueryModel(Array, 'assigned_to', null);
 
 
 // Computed filters object and active filter count
@@ -439,6 +453,7 @@ const filters_active = computed(() => {
     created_to,
     closed_from,
     closed_to,
+    owner_key,
     assigned_to,
   };
 
@@ -469,11 +484,14 @@ const filters = computed(() => {
   if (status_canceled.value !== null) {
     filters_object.status_canceled = status_canceled.value;
   }
+  if (assigned_to.value) {
+    filters_object.assigned_to = assigned_to.value;
+  }
   if (text_search.value) {
     filters_object.search = text_search.value;
   }
-  if (assigned_to.value) {
-    filters_object.assigned_to = assigned_to.value;
+  if (owner_key.value) {
+    filters_object.owner_key = owner_key.value;
   }
 
   // Date filters

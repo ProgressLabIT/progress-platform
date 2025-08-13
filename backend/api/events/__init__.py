@@ -20,6 +20,7 @@ from events.collaboration.task_created import TaskCreatedEvent
 from events.collaboration.task_updated import TaskUpdatedEvent
 from events.collaboration.task_completed import TaskCompletedEvent
 from events.collaboration.task_canceled import TaskCanceledEvent
+from events.collaboration.task_reopened import TaskReopenedEvent
 from events.collaboration.task_linked import TaskLinkedEvent
 from events.collaboration.task_unlinked import TaskUnlinkedEvent
 
