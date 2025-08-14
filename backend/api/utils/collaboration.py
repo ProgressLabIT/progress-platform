@@ -219,7 +219,7 @@ class Queries:
       && (@status_completed == false ? t.status != 'completed' : true)
       && (@status_canceled == false ? t.status != 'canceled' : true)
       && (@owner_key ? t.owner_key == @owner_key : true)
-      && (@assigned_to ? LENGTH(INTERSECTION(t.assigned_to[* RETURN CURRENT.user_key], @assigned_to)) == LENGTH(@assigned_to) : true)
+      && (@assigned_to ? @assigned_to ALL IN t.assigned_to[* RETURN CURRENT.user_key] : true)
       && (@start_from ? t.start_from >= @start_from : true)
       && (@due_by ? t.due_by <= @due_by : true)
       && (@created_from ? t.created >= @created_from : true)
