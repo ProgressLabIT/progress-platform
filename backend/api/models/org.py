@@ -49,6 +49,7 @@ class HomePageOptions(str, Enum):
   PRODUCTION = 'productionRoot'
   OPERATOR = 'operatorRoot'
   QUALITY = 'qualityRoot'
+  TASKS = 'taskRoot'
   REPORTS = 'reportRoot'
   WAREHOUSE = 'warehouseRoot'
 
