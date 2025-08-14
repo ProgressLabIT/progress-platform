@@ -500,7 +500,7 @@ export default {
           if (phase.steps) {
             phase.steps.forEach((step) => {
               data.push(...this.getFormFieldValue(
-                phase.phase_key,
+                phase._key,
                 step._key,
                 step.form_fields ? step.form_fields : [],
               ));
