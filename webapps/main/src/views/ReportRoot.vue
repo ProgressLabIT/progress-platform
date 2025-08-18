@@ -12,7 +12,8 @@ export default {
     src() {
       const port = '8501';
       const domain = window.location.hostname;
-      return `http://${domain}:${port}`;
+      const protocol = window.location.protocol;
+      return `${protocol}//${domain}:${port}`;
     },
   },
 
