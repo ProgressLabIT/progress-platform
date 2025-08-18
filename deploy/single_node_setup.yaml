@@ -7,6 +7,7 @@
   vars:
     root_dir: /opt/progress
     image_tag: "0.9-latest"
+    domain: "progresslab.it"
     volumes:
       - db_data
       - db_backup
@@ -18,6 +19,7 @@
       - reports
       - cmounts
       - notebooks
+      - letsencrypt
     additional_folders:
       - config
     swarm_join_tkn_manager: "{{ init.swarm_facts.JoinTokens.Manager }}"
@@ -165,7 +167,8 @@
           environment:
             VERSION: "{{ image_tag }}"
             DB_ROOT_PWD: "{{ db_root_pwd.stdout }}"
-            HOST: "{{ inventory_hostname }}"
+            DOMAIN: "{{ domain }}"
+            SUBDOMAIN: "{{ subdomain }}"
 
         - name: Copy init script to be run
           ansible.builtin.copy:
