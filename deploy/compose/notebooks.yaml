@@ -24,10 +24,19 @@ services:
     networks:
       - progress
     ports:
-      - "8888:8888"
+      - "8888"
     secrets:
       - progress_api_db_pwd
     environment:
       GRANT_SUDO: "yes"
     deploy:
       replicas: 1
+      labels:
+        - "traefik.enable=true"
+        - "traefik.docker.network=progress"
+        - "traefik.http.services.notebooks.loadbalancer.server.port=8888"
+        - "traefik.http.routers.notebooks.rule=Host(`${SUBDOMAIN}.${DOMAIN:-progresslab.it}`) && PathPrefix(`/notebooks`)"
+        - "traefik.http.routers.notebooks.tls.certresolver=letsencrypt"
+        - "traefik.http.routers.notebooks.middlewares=strip_notebooks_prefix"
+        - "traefik.http.middlewares.strip_notebooks_prefix.stripprefix.prefixes=/notebooks"
+        - "traefik.http.middlewares.strip_notebooks_prefix.stripprefix.forceslash=false"

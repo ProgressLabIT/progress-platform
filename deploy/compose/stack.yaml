@@ -10,6 +10,11 @@ secrets:
   progress_jwt_secret:
     external: true
 
+volumes:
+  letsencrypt:
+    external: true
+
+
 services:
   router:
     command:
@@ -20,6 +25,16 @@ services:
       - --api.debug
       - --api.insecure
       - --log.level=INFO
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      - --entrypoints.web.http.redirections.entrypoint.to=websecure
+      - --entrypoints.web.http.redirections.entrypoint.scheme=https
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge=true
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web
+      - --certificatesresolvers.letsencrypt.acme.email=admin@progresslab.it
+      - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
+    volumes:
+      - letsencrypt:/letsencrypt
     networks:
       - progress
     deploy:
@@ -42,10 +57,11 @@ services:
         - "traefik.enable=true"
         - "traefik.docker.network=progress"
         - "traefik.http.services.db.loadbalancer.server.port=8529"
-        - "traefik.http.routers.db.rule=HostRegexp(`{anyhost:.*}`) && PathPrefix(`/_db`)"
+        - "traefik.http.routers.db.rule=Host(`${SUBDOMAIN}.${DOMAIN:-progresslab.it}`) && PathPrefix(`/_db`)"
         - "traefik.http.routers.db.middlewares=db_root"
         - "traefik.http.middlewares.db_root.replacepathregex.regex=^/_db/?$$"
         - "traefik.http.middlewares.db_root.replacepathregex.replacement=/"
+        - "traefik.http.routers.db.tls.certresolver=letsencrypt"
 
   broker:
     networks:
@@ -86,7 +102,8 @@ services:
         - "traefik.enable=true"
         - "traefik.docker.network=progress"
         - "traefik.http.services.api.loadbalancer.server.port=8000"
-        - "traefik.http.routers.api.rule=HostRegexp(`{anyhost:.*}`) && PathPrefix(`/api`)"
+        - "traefik.http.routers.api.rule=Host(`${SUBDOMAIN}.${DOMAIN:-progresslab.it}`) && PathPrefix(`/api`)"
+        - "traefik.http.routers.api.tls.certresolver=letsencrypt"
         - "traefik.http.routers.api.middlewares=strip_api_prefix"
         - "traefik.http.middlewares.strip_api_prefix.stripprefix.prefixes=/api"
         - "traefik.http.middlewares.strip_api_prefix.stripprefix.forceslash=false"
@@ -109,8 +126,8 @@ services:
         - "traefik.enable=true"
         - "traefik.docker.network=progress"
         - "traefik.http.services.app.loadbalancer.server.port=80"
-        - "traefik.http.routers.app.rule=HostRegexp(`{anyhost:.*}`)"
-
+        - "traefik.http.routers.app.rule=Host(`${SUBDOMAIN}.${DOMAIN:-progresslab.it}`)"
+        - "traefik.http.routers.app.tls.certresolver=letsencrypt"
 
   # warehouse:
   #   image: registry.gitlab.com/progresslab/progress-platform/warehouse:${VERSION}

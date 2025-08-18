@@ -26,7 +26,7 @@ services:
     networks:
       - progress
     environment:
-      - PREFECT_UI_API_URL=http://${HOST}:4200/api
+      - PREFECT_UI_API_URL=https://${SUBDOMAIN}.${DOMAIN:-progresslab.it}:4200/api
       - PREFECT_SERVER_API_HOST=0.0.0.0
       - PREFECT_API_DATABASE_CONNECTION_URL=postgresql+asyncpg://postgres:postgres@workflow-db:5432/prefect
     ports:
@@ -37,6 +37,8 @@ services:
         - "traefik.enable=true"
         - "traefik.docker.network=progress"
         - "traefik.http.services.wf-server.loadbalancer.server.port=4200"
+        - "traefik.http.routers.wf-server.rule=Host(`${SUBDOMAIN}.${DOMAIN:-progresslab.it}`) && PathPrefix(`/api`)"
+        - "traefik.http.routers.wf-server.tls.certresolver=letsencrypt"
 
   wf-system-agent: # System Workflow Agent
     image: registry.gitlab.com/progresslab/progress-platform/wf-sys-agent:${VERSION}
