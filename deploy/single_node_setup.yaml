@@ -150,7 +150,7 @@
             src: "config/{{ item }}"
             dest: "{{ root_dir }}/config/{{ item }}"
           loop:
-            - apiConfig.js
+            - appConfig.js
             - api.env
 
         - name: Copy reports application files
