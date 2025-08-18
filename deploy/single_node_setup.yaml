@@ -6,6 +6,8 @@
 
   vars:
     root_dir: /opt/progress
+    venv_path: /opt/progress/.venv
+    ansible_python_interpreter: "{{ venv_path }}/bin/python"
     image_tag: "0.9-latest"
     domain: "progresslab.it"
     volumes:
@@ -51,7 +53,7 @@
               - curl
               - software-properties-common
               - python3-pip
-              - virtualenv
+              - python3-venv
               - python3-setuptools
             state: latest
             update_cache: true
@@ -63,7 +65,7 @@
 
         - name: Add Docker Repository
           apt_repository:
-            repo: deb https://download.docker.com/linux/ubuntu focal stable
+            repo: deb https://download.docker.com/linux/ubuntu noble stable
             state: present
 
         - name: Update apt and install docker-ce
@@ -72,13 +74,17 @@
             state: latest
             update_cache: true
 
-        - name: Install required python packages
+        - name: Create virtual environment for Ansible dependencies
           tags: pip
           pip:
             name:
               - docker
               - jsondiff
               - pyyaml
+            virtualenv: "{{ venv_path }}" # will be created if not exists
+            virtualenv_python: python3
+          vars:
+            ansible_python_interpreter: /usr/bin/python3
 
     - name: Setup folders
       tags: folders
