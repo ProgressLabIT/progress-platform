@@ -147,6 +147,14 @@
             - apiConfig.js
             - api.env
 
+        - name: Copy reports application files
+          ansible.builtin.copy:
+            src: scripts/{{ item }}
+            dest: "{{ root_dir }}/reports/{{ item }}"
+          loop:
+            - main.py
+            - entrypoint.sh
+
         - name: Generate DB root password
           ansible.builtin.shell:
             cmd: "openssl rand -hex 12"
@@ -164,6 +172,8 @@
               - "{{ root_dir}}/config/base.yaml"
               - "{{ root_dir}}/config/stack.yaml"
               - "{{ root_dir}}/config/workflow.yaml"
+              - "{{ root_dir}}/config/reporting.yaml"
+              - "{{ root_dir}}/config/notebooks.yaml"
           environment:
             VERSION: "{{ image_tag }}"
             DB_ROOT_PWD: "{{ db_root_pwd.stdout }}"
