@@ -3,6 +3,8 @@ import json
 
 from base64 import b64decode
 from fastapi import APIRouter, HTTPException, Query, Depends
+from fastapi.responses import StreamingResponse
+import io
 from utils import auth
 from datetime import datetime
 from typing import Dict, List, Union
@@ -10,9 +12,12 @@ from typing import Dict, List, Union
 from models.form import CustomField
 from models.serial import SerialSelection, Serial, SerialTreeNode
 from utils.db import db
-from utils.serial import Queries, get_bom_components_requiring_traceability, search_children, get_serial_child_nodes
+from utils.serial import Queries, get_bom_components_requiring_traceability, search_children, get_serial_child_nodes, generate_dhr_for_serial
+from pypdf import PdfReader, PdfWriter
 
 router = APIRouter()
+
+# DHR generation has been moved to utils/serial.py
 
 @router.get('/serial-field',
     dependencies=[Depends(auth.verify_token)])
@@ -290,3 +295,92 @@ async def search_serials(
     )
 
 
+
+
+@router.get('/serial/{serial_key}/dhr', dependencies=[Depends(auth.verify_token)])
+async def get_device_history_record(serial_key: str, include_attachments: bool = False, include_children: bool = False):
+  """Generate a device history record for a serial"""
+  try:
+    # Fetch children serials using GET_SERIAL_CHILDREN_FOR_DHR query for DHR generation
+    children_serials = []
+    if include_children:
+      try:
+        bind_vars = dict(serial_id=f'Serial/{serial_key}')
+        children_result = list(db.aql.execute(Queries.GET_SERIAL_CHILDREN_FOR_DHR, bind_vars=bind_vars))
+        children_serials = children_result
+      except Exception:
+        # If children fetching fails, continue without children data
+        children_serials = []
+
+    # Start Playwright session
+    try:
+      from playwright.async_api import async_playwright
+    except Exception as e:
+      raise HTTPException(status_code=500, detail=dict(message="Playwright is not available. Ensure it is installed and browsers are set up (e.g., 'playwright install chromium').", error=str(e)))
+
+    async with async_playwright() as p:
+      browser = await p.chromium.launch(args=['--no-sandbox'])
+      context = await browser.new_context()
+
+      # Generate main DHR
+      main_pdf_bytes = await generate_dhr_for_serial(serial_key, context, include_attachments)
+      if not main_pdf_bytes:
+        raise HTTPException(status_code=404, detail=dict(message=f"Serial {serial_key} not found"))
+
+      # Prepare PDF writer and append the main DHR
+      writer = PdfWriter()
+      main_reader = PdfReader(io.BytesIO(main_pdf_bytes))
+      for pg in main_reader.pages:
+        writer.add_page(pg)
+
+      # Generate and append DHRs only for complex children (those with data or children) if include_children is True
+      if include_children and children_serials:
+        # Filter to only complex children (those with data or sub-children)
+        complex_children = [child for child in children_serials if child.get('has_data') or child.get('has_children')]
+
+        # Sort children by product code first, then serial code
+        complex_children.sort(key=lambda x: (x.get('product_code') or '', x.get('serial_code') or ''))
+
+        for child in complex_children:
+          child_serial_key = child.get('serial_key')
+          if child_serial_key:
+            try:
+              # Pass through include_attachments to children DHRs so they can have their own attachments
+              child_pdf_bytes = await generate_dhr_for_serial(child_serial_key, context, include_attachments)
+              if child_pdf_bytes:
+                child_reader = PdfReader(io.BytesIO(child_pdf_bytes))
+                for pg in child_reader.pages:
+                  writer.add_page(pg)
+            except Exception:
+              # Continue if child DHR generation fails
+              continue
+
+      await browser.close()
+
+    # Serialize combined PDF
+    output = io.BytesIO()
+    writer.write(output)
+    output.seek(0)
+
+    # Generate filename from the main serial
+    main_serial_data = list(db.aql.execute("""
+      LET s = DOCUMENT(Serial, @serial_key)
+      RETURN s ? s.code : null
+    """, bind_vars=dict(serial_key=serial_key)))
+    serial_code = main_serial_data[0] if main_serial_data else None
+
+    filename = f"DHR_{serial_code or serial_key}.pdf"
+    return StreamingResponse(output, media_type='application/pdf', headers={
+      'Content-Disposition': f'inline; filename="{filename}"'
+    })
+
+  except HTTPException:
+    raise
+  except Exception:
+    raise HTTPException(
+      status_code=500,
+      detail=dict(
+        message="There was an error generating the device history record.",
+        error=traceback.format_exc()
+      )
+    )

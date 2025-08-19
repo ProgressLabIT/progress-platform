@@ -5,6 +5,9 @@ COPY requirements.txt /api/requirements.txt
 
 RUN pip install --upgrade pip && pip install -r /api/requirements.txt
 
+# Install Playwright browsers and system deps (Chromium)
+RUN python -m playwright install --with-deps chromium
+
 COPY . /api
 
 WORKDIR /api

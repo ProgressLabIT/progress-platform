@@ -49,6 +49,14 @@
               <div class="col-auto row q-gutter-md q-px-md q-pt-md justify-end">
                 <q-btn
                   v-if="!editMode && can_edit"
+                  color="theme-blue"
+                  :label="$t('print')"
+                  @click="requestDHRPrint"
+                >
+                </q-btn>
+
+                <q-btn
+                  v-if="!editMode && can_edit"
                   color="theme-orange"
                   :label="$t('edit')"
                   @click="editMode = true"
@@ -395,6 +403,45 @@ export default {
           });
           this.exit();
         });
+    },
+
+    async requestDHRPrint() {
+      this.$q.dialog({
+        title: this.$t('DHR Options'),
+        message: this.$t('Select DHR generation options:'),
+        options: {
+          type: 'checkbox',
+          model: ['include_attachments', 'include_children'],
+          items: [
+            {
+              label: this.$t('Include Attachments'),
+              value: 'include_attachments'
+            },
+            {
+              label: this.$t('Include Children'),
+              value: 'include_children'
+            }
+          ]
+        },
+        cancel: true,
+        persistent: true
+      }).onOk(async (input) => {
+        this.$q.loading.show();
+        const includeAttachments = input.includes('include_attachments');
+        const includeChildren = input.includes('include_children');
+        const params = { include_attachments: includeAttachments, include_children: includeChildren }
+        const resp = await this.$api.get(`serial/${this.serialKey}/dhr`, { responseType: 'blob', params })
+        const blob = new Blob([resp.data], { type: 'application/pdf' });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `DHR_${this.serialKey}.pdf`;
+        link.click();
+        window.URL.revokeObjectURL(url);
+        this.$q.loading.hide();
+      }).onCancel(() => {
+        return;
+      });
     },
   },
 };
