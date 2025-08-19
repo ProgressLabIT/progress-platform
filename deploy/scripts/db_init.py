@@ -269,7 +269,7 @@ collections = [
       surname = 'Amministratore',
       active = True,
       psw_hash = pwd_context.hash('resetme'),
-      scope = 'admin production library operator',
+      scope = 'admin production library operator quality reporting warehouse traceability',
       site_key = '0',
       reset_password = True
     )
