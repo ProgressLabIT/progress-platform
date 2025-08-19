@@ -420,6 +420,10 @@ export default {
             {
               label: this.$t('Include Children'),
               value: 'include_children'
+            },
+            {
+              label: this.$t('Include Step Data'),
+              value: 'include_step_data'
             }
           ]
         },
@@ -427,18 +431,28 @@ export default {
         persistent: true
       }).onOk(async (input) => {
         this.$q.loading.show();
-        const includeAttachments = input.includes('include_attachments');
-        const includeChildren = input.includes('include_children');
-        const params = { include_attachments: includeAttachments, include_children: includeChildren }
-        const resp = await this.$api.get(`serial/${this.serialKey}/dhr`, { responseType: 'blob', params })
-        const blob = new Blob([resp.data], { type: 'application/pdf' });
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `DHR_${this.serialKey}.pdf`;
-        link.click();
-        window.URL.revokeObjectURL(url);
-        this.$q.loading.hide();
+        try {
+          const includeAttachments = input.includes('include_attachments');
+          const includeChildren = input.includes('include_children');
+          const includeStepData = input.includes('include_step_data');
+          const params = { include_attachments: includeAttachments, include_children: includeChildren, include_step_data: includeStepData }
+          const resp = await this.$api.get(`serial/${this.serialKey}/dhr`, { responseType: 'blob', params })
+          const blob = new Blob([resp.data], { type: 'application/pdf' });
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `DHR_${this.serialKey}.pdf`;
+          link.click();
+          window.URL.revokeObjectURL(url);
+        } catch (error) {
+          this.$q.notify({
+            message: error.message,
+            color: 'theme-red',
+            position: 'top',
+          });
+        } finally {
+          this.$q.loading.hide();
+        }
       }).onCancel(() => {
         return;
       });

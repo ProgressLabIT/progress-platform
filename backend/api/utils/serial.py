@@ -460,13 +460,14 @@ def get_serial_child_nodes(parent: SerialTreeNode, serial_list: list[dict]) -> l
 
 # DHR (Device History Record) utility functions
 
-def fetch_dhr_data(serial_key: str) -> Dict[str, Any]:
+def fetch_dhr_data(serial_key: str, include_step_data: bool = False) -> Dict[str, Any]:
   """Fetch serial and product data for DHR generation"""
   aql = """
     LET s = DOCUMENT(Serial, @serial_key)
     FILTER s != null
     LET product = s.product_key ? DOCUMENT(Product, s.product_key) : null
     LET wo = s.wo_key ? DOCUMENT(WorkOrder, s.wo_key) : null
+
     LET fields = (
       FOR d IN NOT_NULL(s.data, [])
         LET cf = d.custom_field_key ? DOCUMENT(CustomField, d.custom_field_key) : null
@@ -485,18 +486,41 @@ def fetch_dhr_data(serial_key: str) -> Dict[str, Any]:
           last_updated_user: last_user ? { name: last_user.name, surname: last_user.surname } : null
         }
     )
+
+    // Get step execution data for this specific serial
+    LET step_data = (wo && @include_step_data) ? (
+      LET batches = (FOR b IN 1..1 INBOUND s batch_serial SORT b.end RETURN b)
+      LET jobs = UNIQUE(batches[*].job_key)[* RETURN DOCUMENT(Job, CURRENT)]
+      FOR j IN jobs // should already be sorted by time since batches are sorted
+      FOR b IN batches
+      FOR step IN NOT_NULL(j.step_sequence, [])
+      FOR x IN StepExecutionData
+      FILTER x.step_key == step._key && x.batch_key == b._key
+      LET operator = x.user_key ? DOCUMENT(User, x.user_key) : null
+      RETURN {
+        step_key: step._key,
+        step_title: step.title,
+        batch_key: b._key,
+        job_key: j._key,
+        timestamp: x.completed,
+        phase_key: j.phase_key,
+        phase_alias: j.phase_alias,
+        operator_username: operator ? operator.username : null,
+        operator_name: operator ? CONCAT_SEPARATOR(' ', operator.name, operator.surname) : null
+      }
+    ) : []
+
     RETURN {
       serial: { code: s.code, created: s.created, released: s.released },
       product_code: product ? product.code : null,
       product_description: product ? product.description : null,
       wo_phase_sequence: wo ? wo.phase_sequence : [],
-      fields
+      fields,
+      step_data
     }
   """
-  result = list(db.aql.execute(aql, bind_vars=dict(serial_key=serial_key)))
-  if not result:
-    return {}
-  return result[0]
+
+  return db.aql.execute(aql, bind_vars=dict(serial_key=serial_key, include_step_data=include_step_data)).next()
 
 
 def safe_text(value) -> str:
@@ -659,6 +683,68 @@ def process_fields_for_display(fields: List[Dict], wo_phase_sequence: List[str])
   return rows_html, has_serial_data
 
 
+def generate_step_data_table(step_data: List[Dict], wo_phase_sequence: List[str]) -> str:
+  """Generate HTML for step data table"""
+  if not step_data:
+    return ''
+
+  # Group step data by phase
+  steps_by_phase = {}
+  for step in step_data:
+    phase_key = step.get('phase_key')
+    if phase_key not in steps_by_phase:
+      steps_by_phase[phase_key] = []
+    steps_by_phase[phase_key].append(step)
+
+  # Order phases by work order phase sequence when available
+  ordered_phase_keys = []
+  for k in wo_phase_sequence:
+    if k in steps_by_phase and k not in ordered_phase_keys:
+      ordered_phase_keys.append(k)
+  for k in [k for k in steps_by_phase.keys() if k]:
+    if k not in ordered_phase_keys:
+      ordered_phase_keys.append(k)
+
+  # Build step data table HTML
+  step_data_html = """
+    <h2>Step Execution Data</h2>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Phase</th>
+          <th>Step</th>
+          <th>Operator</th>
+          <th>Timestamp</th>
+        </tr>
+      </thead>
+      <tbody>"""
+
+  for phase_key in ordered_phase_keys:
+    phase_steps = steps_by_phase.get(phase_key, [])
+    # Sort steps by timestamp
+    phase_steps.sort(key=lambda x: x.get('timestamp') or '')
+
+    for step in phase_steps:
+      phase_alias = step.get('phase_alias') or phase_key or ''
+      step_title = step.get('step_title') or ''
+      operator_name = step.get('operator_name') or step.get('operator_username') or ''
+      timestamp = format_minute(step.get('timestamp'))
+
+      step_data_html += f"""
+        <tr>
+          <td class="cell">{phase_alias}</td>
+          <td class="cell">{step_title}</td>
+          <td class="cell">{operator_name}</td>
+          <td class="cell">{timestamp}</td>
+        </tr>"""
+
+  step_data_html += """
+      </tbody>
+    </table>"""
+
+  return step_data_html
+
+
 def generate_children_tables(serial_key: str) -> Tuple[str, str]:
   """Generate HTML for simple and complex children tables"""
   simple_children_table_html = ''
@@ -729,6 +815,7 @@ def generate_dhr_html(serial_key: str, data: Dict[str, Any]) -> str:
   created = serial_info.get('created') or ''
   released = serial_info.get('released') or ''
   fields = data.get('fields') or []
+  step_data = data.get('step_data') or []
   wo_phase_sequence = data.get('wo_phase_sequence') or []
 
   # Process fields for display
@@ -752,6 +839,9 @@ def generate_dhr_html(serial_key: str, data: Dict[str, Any]) -> str:
             {rows_html}
           </tbody>
         </table>"""
+
+  # Generate step data table
+  step_data_table_html = generate_step_data_table(step_data, wo_phase_sequence)
 
   # Generate children tables
   simple_children_table_html, complex_children_list_html = generate_children_tables(serial_key)
@@ -788,6 +878,7 @@ def generate_dhr_html(serial_key: str, data: Dict[str, Any]) -> str:
           <div><strong>Released:</strong> {released}</div>
         </div>
         {serial_data_table_html}
+        {step_data_table_html}
         {simple_children_table_html}
         {complex_children_list_html}
       </body>
@@ -1188,11 +1279,11 @@ def process_pdf_attachments(pdf_attachments: List[Dict], serial_info_for_headers
   return processed_pdfs
 
 
-async def generate_dhr_for_serial(serial_key: str, context, include_attachments: bool = False) -> bytes:
+async def generate_dhr_for_serial(serial_key: str, context, include_attachments: bool = False, include_step_data: bool = False) -> bytes:
   """Generate a DHR PDF for a specific serial"""
   try:
     # Fetch serial and product data
-    data = fetch_dhr_data(serial_key)
+    data = fetch_dhr_data(serial_key, include_step_data)
     if not data:
       return b''
 
@@ -1264,6 +1355,7 @@ async def generate_dhr_for_serial(serial_key: str, context, include_attachments:
     print(f"🔍 DEBUG: Final PDF size: {final_size} bytes")
     return output.getvalue()
 
-  except Exception:
+  except Exception as e:
+    print(f"🔍 DEBUG: Error generating DHR for serial {serial_key}: {e}")
     return b''
 

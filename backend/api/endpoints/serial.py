@@ -298,7 +298,7 @@ async def search_serials(
 
 
 @router.get('/serial/{serial_key}/dhr', dependencies=[Depends(auth.verify_token)])
-async def get_device_history_record(serial_key: str, include_attachments: bool = False, include_children: bool = False):
+async def get_device_history_record(serial_key: str, include_attachments: bool = False, include_children: bool = False, include_step_data: bool = False):
   """Generate a device history record for a serial"""
   try:
     # Fetch children serials using GET_SERIAL_CHILDREN_FOR_DHR query for DHR generation
@@ -323,7 +323,7 @@ async def get_device_history_record(serial_key: str, include_attachments: bool =
       context = await browser.new_context()
 
       # Generate main DHR
-      main_pdf_bytes = await generate_dhr_for_serial(serial_key, context, include_attachments)
+      main_pdf_bytes = await generate_dhr_for_serial(serial_key, context, include_attachments, include_step_data)
       if not main_pdf_bytes:
         raise HTTPException(status_code=404, detail=dict(message=f"Serial {serial_key} not found"))
 
@@ -346,7 +346,7 @@ async def get_device_history_record(serial_key: str, include_attachments: bool =
           if child_serial_key:
             try:
               # Pass through include_attachments to children DHRs so they can have their own attachments
-              child_pdf_bytes = await generate_dhr_for_serial(child_serial_key, context, include_attachments)
+              child_pdf_bytes = await generate_dhr_for_serial(child_serial_key, context, include_attachments, include_step_data)
               if child_pdf_bytes:
                 child_reader = PdfReader(io.BytesIO(child_pdf_bytes))
                 for pg in child_reader.pages:
