@@ -437,11 +437,25 @@ export default {
           const includeStepData = input.includes('include_step_data');
           const params = { include_attachments: includeAttachments, include_children: includeChildren, include_step_data: includeStepData }
           const resp = await this.$api.get(`serial/${this.serialKey}/dhr`, { responseType: 'blob', params })
+          console.log('resp.headers', resp.headers)
+
+          // Extract filename from Content-Disposition header
+          const contentDisposition = resp.headers['content-disposition'];
+          console.log('Content-Disposition', contentDisposition)
+          let filename = `DHR_${this.serial.code}_${new Date().toISOString().split('T')[0]}.pdf`; // fallback
+
+          if (contentDisposition) {
+            const filenameMatch = contentDisposition.match(/filename="([^"]+)"/);
+            if (filenameMatch) {
+              filename = filenameMatch[1];
+            }
+          }
+
           const blob = new Blob([resp.data], { type: 'application/pdf' });
           const url = window.URL.createObjectURL(blob);
           const link = document.createElement('a');
           link.href = url;
-          link.download = `DHR_${this.serialKey}.pdf`;
+          link.download = filename; // Use the extracted filename
           link.click();
           window.URL.revokeObjectURL(url);
         } catch (error) {
