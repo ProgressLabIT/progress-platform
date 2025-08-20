@@ -409,10 +409,16 @@ export default {
       this.$q.dialog({
         title: this.$t('DHR Options'),
         message: this.$t('Select DHR generation options:'),
+        class: 'background',
+        color: 'theme-blue',
         options: {
           type: 'checkbox',
-          model: ['include_attachments', 'include_children'],
+          model: ['include_step_data'],
           items: [
+            {
+              label: this.$t('Include Step Data'),
+              value: 'include_step_data'
+            },
             {
               label: this.$t('Include Attachments'),
               value: 'include_attachments'
@@ -421,11 +427,7 @@ export default {
               label: this.$t('Include Children'),
               value: 'include_children'
             },
-            {
-              label: this.$t('Include Step Data'),
-              value: 'include_step_data'
-            }
-          ]
+          ],
         },
         cancel: true,
         persistent: true
