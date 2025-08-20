@@ -350,19 +350,18 @@ def get_device_history_record(serial_key: str, include_attachments: bool = False
     output.seek(0)
 
     # Generate filename from the main serial
-    main_serial_data = list(db.aql.execute("""
-      LET s = DOCUMENT(Serial, @serial_key)
-      RETURN s ? s.code : null
-    """, bind_vars=dict(serial_key=serial_key)))
-    serial_code = main_serial_data[0] if main_serial_data else None
+    main_serial_data = db.collection('Serial').get(serial_key)
+    serial_code = main_serial_data['code'] if main_serial_data else None
 
-    filename = f"DHR_{serial_code or serial_key}.pdf"
-    return StreamingResponse(output, media_type='application/pdf', headers={
-      'Content-Disposition': f'inline; filename="{filename}"'
-    })
+    filename = f"DHR_{serial_code or serial_key}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+    return Response(
+        content=output.getvalue(),
+        media_type='application/pdf',
+        headers={
+            'Content-Disposition': f'attachment; filename="{filename}"'
+        }
+    )
 
-  except HTTPException:
-    raise
   except Exception:
     raise HTTPException(
       status_code=500,
