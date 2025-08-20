@@ -1,9 +1,12 @@
+import os
+import timeit
 import traceback
 import json
-import os
 import base64
 import io
 from typing import Dict, Any, List, Tuple
+from datetime import datetime
+
 
 from models.bom import BomLineRead
 from models.serial import SerialTreeNode
@@ -14,6 +17,7 @@ from pypdf import PdfReader, PdfWriter, Transformation
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
+from weasyprint import HTML, CSS
 
 class Queries:
 
@@ -359,6 +363,68 @@ class Queries:
   """
 
 
+def get_company_info() -> Dict[str, str]:
+  """Get company name and logo path from config"""
+  try:
+    company_name = "Progress Platform"  # Default fallback
+    company_logo_path = None
+
+    # Get company name from config
+    try:
+      company_name_config = db.collection('Config').get('company_name')
+      if company_name_config and company_name_config.get('value'):
+        company_name = company_name_config['value']
+    except Exception:
+      pass
+
+    # Get company logo path from config
+    try:
+      company_logo_config = db.collection('Config').get('company_logo')
+      if company_logo_config and company_logo_config.get('value'):
+        logo_path = company_logo_config['value']
+        if os.path.exists(logo_path):
+          company_logo_path = logo_path
+    except Exception:
+      pass
+
+    return {
+      'name': company_name,
+      'logo_path': company_logo_path
+    }
+  except Exception:
+    return {
+      'name': "Progress Platform",
+      'logo_path': None
+    }
+
+
+def get_company_logo_base64(logo_path: str) -> str:
+  """Convert company logo to base64 data URI for embedding in HTML"""
+  try:
+    if not logo_path or not os.path.exists(logo_path):
+      return ""
+
+    with open(logo_path, 'rb') as f:
+      logo_data = f.read()
+
+    # Determine MIME type based on file extension
+    ext = os.path.splitext(logo_path)[1].lower()
+    mime_type = 'image/png'  # Default
+    if ext == '.jpg' or ext == '.jpeg':
+      mime_type = 'image/jpeg'
+    elif ext == '.svg':
+      mime_type = 'image/svg+xml'
+    elif ext == '.gif':
+      mime_type = 'image/gif'
+    elif ext == '.webp':
+      mime_type = 'image/webp'
+
+    logo_base64 = base64.b64encode(logo_data).decode('ascii')
+    return f"data:{mime_type};base64,{logo_base64}"
+  except Exception:
+    return ""
+
+
 def get_bom_components_requiring_traceability(product_key: str) -> list[BomLineRead]:
   """
   Get components from the product BOM that require traceability
@@ -566,6 +632,20 @@ def format_minute(iso_ts) -> str:
   except Exception:
     pass
   return str(iso_ts)
+
+
+def format_date_readable(iso_ts) -> str:
+  """Format ISO datetime string to human-readable date format like 'January 15, 2024 at 2:30 PM'"""
+  if not iso_ts:
+    return 'Not specified'
+  try:
+    from datetime import datetime as _dt
+    # Parse ISO format string and format as "January 15, 2024 at 2:30 PM"
+    dt = _dt.fromisoformat(iso_ts.replace('Z', '+00:00'))
+    return dt.strftime('%B %d, %Y at %I:%M %p')
+  except Exception:
+    # Fallback to the original format_minute function
+    return format_minute(iso_ts)
 
 
 def get_checkbox_svgs() -> Dict[str, str]:
@@ -791,9 +871,11 @@ def generate_children_tables(serial_key: str) -> Tuple[str, str]:
 
       # Create list for complex children
       if complex_children:
-        complex_children_list_html = '<h2 class="small-heading">Child Serials with Detailed Data</h2>'
-        complex_children_list_html += '<p class="small-text"><em>The following child serials contain detailed data or sub-components. Their complete Device History Records are included on the following pages.</em></p>'
-        complex_children_list_html += '<ul>'
+        complex_children_list_html = """
+        <h2>Child Serials with Detailed Data</h2>
+        <p><em>The following child serials contain detailed data or sub-components. Their complete Device History Records are included on the following pages.</em></p>
+        <ul>
+        """
         for child in complex_children:
           child_serial_code = child.get('serial_code') or ''
           child_product_code = child.get('product_code') or ''
@@ -806,17 +888,52 @@ def generate_children_tables(serial_key: str) -> Tuple[str, str]:
   return simple_children_table_html, complex_children_list_html
 
 
+
+
+
+def generate_dhr_pdf(serial_key: str, include_step_data: bool = False) -> bytes:
+  """Generate a DHR PDF using WeasyPrint"""
+  try:
+    # Fetch serial and product data
+    data = fetch_dhr_data(serial_key, include_step_data)
+    if not data:
+      return b''
+
+    # Generate HTML content with optimized CSS for WeasyPrint
+    html_content = generate_dhr_html(serial_key, data)
+
+    # Create PDF using WeasyPrint
+    html_doc = HTML(string=html_content)
+    pdf_bytes = html_doc.write_pdf()
+
+    return pdf_bytes
+
+  except Exception as e:
+    print(f"🔍 DEBUG: Error generating DHR with WeasyPrint for serial {serial_key}: {e}")
+    raise
+
+
 def generate_dhr_html(serial_key: str, data: Dict[str, Any]) -> str:
-  """Generate HTML content for DHR"""
+  """Generate HTML content optimized for WeasyPrint DHR generation"""
   serial_info = data.get('serial') or {}
   serial_code = serial_info.get('code') or ''
   product_code = data.get('product_code') or ''
   product_description = data.get('product_description') or ''
-  created = serial_info.get('created') or ''
-  released = serial_info.get('released') or ''
+  created = format_date_readable(serial_info.get('created'))
+  released = format_date_readable(serial_info.get('released'))
   fields = data.get('fields') or []
   step_data = data.get('step_data') or []
   wo_phase_sequence = data.get('wo_phase_sequence') or []
+
+  # Get company information for footer
+  company_info = get_company_info()
+  company_name = company_info['name']
+  company_logo_data_uri = ""
+  if company_info['logo_path']:
+    company_logo_data_uri = get_company_logo_base64(company_info['logo_path'])
+
+  # Get current date and time for footer
+  current_datetime = datetime.now().strftime('%B %d, %Y at %I:%M %p')
 
   # Process fields for display
   rows_html, has_serial_data = process_fields_for_display(fields, wo_phase_sequence)
@@ -847,36 +964,211 @@ def generate_dhr_html(serial_key: str, data: Dict[str, Any]) -> str:
   simple_children_table_html, complex_children_list_html = generate_children_tables(serial_key)
 
   html = f"""
+    <!DOCTYPE html>
     <html>
       <head>
         <meta charset="utf-8" />
         <style>
-          @page {{ margin: 20mm 15mm; }}
-          body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif; color: #222; }}
-          h1 {{ font-size: 18px; margin: 0 0 8px 0; }}
-          h2 {{ font-size: 14px; margin: 16px 0 8px 0; }}
-          h3 {{ font-size: 12px; margin: 12px 0 6px 0; }}
-          .meta {{ font-size: 12px; margin-bottom: 12px; }}
-          .table {{ width: 100%; border-collapse: collapse; }}
-          .table th {{ text-align: left; font-size: 12px; border-bottom: 1px solid #ccc; padding: 6px 4px; }}
-          .cell {{ font-size: 12px; border-bottom: 1px solid #eee; padding: 6px 4px; vertical-align: top; }}
-          .phase-header {{ font-size: 12px; background-color: #f6f6f6; border-top: 1px solid #ccc; border-bottom: 1px solid #ccc; padding: 8px 4px; }}
-          .small-heading {{ font-size: 12px; margin: 16px 0 8px 0; }}
-          .small-text {{ font-size: 12px; margin: 8px 0; }}
-          ul {{ margin: 8px 0; padding-left: 20px; }}
-          li {{ font-size: 12px; margin: 2px 0; }}
+          @page {{
+            margin: 20mm 15mm 35mm 15mm;
+            size: A4;
+            @bottom-left {{
+              content: element(footer-left);
+            }}
+            @bottom-center {{
+              content: element(footer-center);
+            }}
+            @bottom-right {{
+              content: element(footer-right);
+            }}
+            @top-right {{
+              content: element(header-right);
+            }}
+          }}
+
+          @page :first {{
+            @top-right {{
+              content: none;
+            }}
+          }}
+          body {{
+            font-family: 'DejaVu Sans', Arial, sans-serif;
+            color: #222;
+            font-size: 10pt;
+            line-height: 1.3;
+          }}
+          h1 {{
+            font-size: 16pt;
+            margin: 0 0 8pt 0;
+            page-break-after: avoid;
+          }}
+          h2 {{
+            font-size: 12pt;
+            margin: 14pt 0 6pt 0;
+            page-break-after: avoid;
+          }}
+          .meta {{
+            margin-bottom: 10pt;
+            page-break-after: avoid;
+          }}
+          .header-table {{
+            width: 100%;
+            border-collapse: collapse;
+            margin: 8pt 0 16pt 0;
+            border: 1pt solid #ccc;
+          }}
+          .header-table th {{
+            text-align: left;
+            border: 1pt solid #ccc;
+            padding: 4pt 6pt;
+            background-color: #f0f0f0;
+            font-weight: bold;
+            font-size: 10pt;
+            width: 25%;
+          }}
+          .header-table td {{
+            border: 1pt solid #ccc;
+            padding: 4pt 6pt;
+            font-size: 10pt;
+            width: 25%;
+          }}
+          .table {{
+            width: 100%;
+            border-collapse: collapse;
+            margin: 8pt 0;
+          }}
+          .table th {{
+            text-align: left;
+            border-bottom: 1pt solid #ccc;
+            padding: 4pt 3pt;
+            background-color: #f8f8f8;
+            font-weight: bold;
+          }}
+          .cell {{
+            font-size: 8pt;
+            border-bottom: 0.5pt solid #eee;
+            padding: 4pt 3pt;
+            vertical-align: top;
+          }}
+          .phase-header {{
+            font-size: 8pt;
+            background-color: #f6f6f6;
+            border-top: 1pt solid #ccc;
+            border-bottom: 1pt solid #ccc;
+            padding: 6pt 3pt;
+            font-weight: bold;
+          }}
+          .small-heading {{
+            font-size: 8pt;
+            margin: 12pt 0 6pt 0;
+            page-break-after: avoid;
+          }}
+          .small-text {{
+            font-size: 8pt;
+            margin: 6pt 0;
+          }}
+          ul {{
+            margin: 6pt 0;
+            padding-left: 16pt;
+          }}
+          li {{
+            font-size: 8pt;
+            margin: 2pt 0;
+          }}
+          .table tbody tr {{
+            page-break-inside: avoid;
+          }}
+          .table thead {{
+            break-after: avoid;
+          }}
+          .table thead + tbody tr:first-child {{
+            break-before: avoid;
+          }}
+
+          /* Footer and Header Elements */
+          .footer-left {{
+            position: running(footer-left);
+            display: flex;
+            align-items: center;
+            font-size: 8pt;
+          }}
+
+          .footer-center {{
+            position: running(footer-center);
+            text-align: center;
+            font-size: 8pt;
+          }}
+
+          .footer-center::after {{
+            content: counter(page) " of " counter(pages);
+          }}
+
+          .footer-right {{
+            position: running(footer-right);
+            text-align: right;
+            font-size: 8pt;
+          }}
+
+          .header-right {{
+            position: running(header-right);
+            text-align: right;
+            font-size: 8pt;
+            color: #666;
+          }}
+
+          .footer-logo {{
+            height: 1cm;
+            width: auto;
+            margin-right: 5pt;
+            max-width: 2cm;
+          }}
+
+          .footer-company-name {{
+            font-weight: bold;
+          }}
         </style>
       </head>
       <body>
-        <h1>Device History Record</h1>
-        <div class="meta">
-          <div><strong>Serial Key:</strong> {serial_key}</div>
-          <div><strong>Serial Code:</strong> {serial_code}</div>
-          <div><strong>Product Code:</strong> {product_code}</div>
-          <div><strong>Product Description:</strong> {product_description}</div>
-          <div><strong>Created:</strong> {created}</div>
-          <div><strong>Released:</strong> {released}</div>
+        <!-- Footer Elements -->
+        <div class="footer-left">
+          {f'<img src="{company_logo_data_uri}" alt="Company Logo" class="footer-logo" />' if company_logo_data_uri else ''}
+          <span class="footer-company-name">{company_name}</span>
         </div>
+
+        <div class="footer-center">
+          Page
+        </div>
+
+        <div class="footer-right">
+          Printed on {current_datetime}
+        </div>
+
+        <!-- Header for pages after first -->
+        <div class="header-right">
+          {product_code} - {serial_code}
+        </div>
+
+        <h1>Device History Record</h1>
+        <table class="header-table">
+          <tr>
+            <th>Product Code</th>
+            <td colspan="3">{product_code}</td>
+          </tr>
+          <tr>
+            <th>Product Description</th>
+            <td colspan="3">{product_description}</td>
+          </tr>
+          <tr>
+            <th>Serial Code</th>
+            <td colspan="3">{serial_code}</td>
+          </tr>
+          <tr>
+            <th>Created</th>
+            <td>{created}</td>
+            <th>Released</th>
+            <td>{released}</td>
+          </tr>
+        </table>
         {serial_data_table_html}
         {step_data_table_html}
         {simple_children_table_html}
@@ -888,107 +1180,21 @@ def generate_dhr_html(serial_key: str, data: Dict[str, Any]) -> str:
   return html
 
 
-def collect_attachments(fields: List[Dict], serial_key: str, include_attachments: bool) -> List[Dict]:
-  """Collect file attachments from serial fields with metadata including phase information"""
-  attachments: List[Dict] = []
+# Replace your entire process_image_attachments function with this:
 
-  if not include_attachments:
-    return attachments
+# Replace your process_image_attachments function with this approach:
+# Process images ONE PER PAGE to avoid page break issues
 
-  print(f"🔍 DEBUG: Starting attachment collection for serial {serial_key}")
-  media_root = get_config().media_path
-  print(f"🔍 DEBUG: Media root path: {media_root}")
-  image_exts = {'.png', '.jpg', '.jpeg', '.webp', '.gif', '.bmp'}
+# Updated process_image_attachments function - no page numbering in footer
 
-  # Build a list of attachment dictionaries with metadata
-  print(f"🔍 DEBUG: Total fields to check: {len(fields)}")
-  file_fields_count = 0
-
-  for f in fields:
-    field_type = (f.get('field_type') or '').lower()
-    if field_type != 'files':
-      continue
-
-    file_fields_count += 1
-    print(f"🔍 DEBUG: Found file field {file_fields_count}: {f.get('label', 'N/A')}")
-    form_field_key = f.get('form_field_key') or ''
-    field_label = f.get('label') or ''
-    phase_alias = f.get('phase_alias') or ''
-    phase_key = f.get('phase_key') or ''
-    print(f"🔍 DEBUG: Form field key: '{form_field_key}', Phase: '{phase_alias}' (key: '{phase_key}'), Field: '{field_label}'")
-    print(f"🔍 DEBUG: Full field data: {f}")
-    value = f.get('value')
-    print(f"🔍 DEBUG: Field value type: {type(value)}, value: {value}")
-
-    if not value:
-      print(f"🔍 DEBUG: No value in field, skipping")
-      continue
-
-    # value expected to be a list of dicts with 'name'
-    try:
-      if isinstance(value, list):
-        print(f"🔍 DEBUG: Processing {len(value)} items in value list")
-        for i, item in enumerate(value):
-          filename = None
-          if isinstance(item, dict):
-            filename = item.get('name')
-            print(f"🔍 DEBUG: Item {i+1} is dict, filename: {filename}")
-          elif isinstance(item, str):
-            filename = item
-            print(f"🔍 DEBUG: Item {i+1} is string, filename: {filename}")
-          else:
-            print(f"🔍 DEBUG: Item {i+1} unexpected type: {type(item)}")
-
-          if not filename:
-            print(f"🔍 DEBUG: No filename for item {i+1}, skipping")
-            continue
-
-          file_path = os.path.join(media_root, 'serial', serial_key, form_field_key, filename)
-          ext = os.path.splitext(filename)[1].lower()
-          file_exists = os.path.exists(file_path)
-
-          print(f"🔍 DEBUG: File {i+1}: {filename}")
-          print(f"🔍 DEBUG: Extension: {ext}")
-          print(f"🔍 DEBUG: Full path: {file_path}")
-          print(f"🔍 DEBUG: File exists: {file_exists}")
-
-          if ext == '.pdf' or ext in image_exts:
-            attachment_type = 'pdf' if ext == '.pdf' else 'image'
-            attachment_data = {
-              'path': file_path,
-              'type': attachment_type,
-              'filename': filename,
-              'field_label': field_label,
-              'phase_alias': phase_alias or 'General',  # Fallback to 'General' if phase_alias is empty
-              'phase_key': phase_key
-            }
-            attachments.append(attachment_data)
-            print(f"🔍 DEBUG: Added {attachment_type} attachment: {filename} (Phase: '{phase_alias}' -> '{attachment_data['phase_alias']}', Field: '{field_label}')")
-          else:
-            print(f"🔍 DEBUG: Unsupported file type: {ext}")
-      else:
-        print(f"🔍 DEBUG: Value is not a list, type: {type(value)}")
-    except Exception as e:
-      print(f"🔍 DEBUG: Exception processing field: {e}")
-      # If format is unexpected, skip
-      pass
-
-  print(f"🔍 DEBUG: File fields found: {file_fields_count}")
-  print(f"🔍 DEBUG: Total attachments collected: {len(attachments)}")
-  for i, attachment in enumerate(attachments):
-    print(f"🔍 DEBUG: Attachment {i+1}: {attachment['type']} - {attachment['filename']} (Phase: {attachment['phase_alias']}, Field: {attachment['field_label']})")
-
-  return attachments
-
-
-async def process_image_attachments(context, image_attachments: List[Dict], serial_info_for_headers: str, wo_phase_sequence: List[str]) -> List[bytes]:
-  """Process image attachments grouped by phase and return list of PDF bytes"""
+def process_image_attachments(image_attachments: List[Dict], serial_info_for_headers: str, wo_phase_sequence: List[str]) -> List[bytes]:
+  """Process image attachments using WeasyPrint - no page numbering"""
   pdf_pages = []
 
   if not image_attachments:
     return pdf_pages
 
-  print(f"🔍 DEBUG: Processing {len(image_attachments)} images grouped by phase")
+  print(f"🔍 DEBUG: Processing {len(image_attachments)} images with WeasyPrint (no page numbers)")
 
   # Group images by phase
   images_by_phase = {}
@@ -998,7 +1204,7 @@ async def process_image_attachments(context, image_attachments: List[Dict], seri
       images_by_phase[phase_key] = []
     images_by_phase[phase_key].append(attachment)
 
-  # Order phases by work order phase sequence when available
+  # Order phases by work order phase sequence
   ordered_phase_keys = []
   for k in wo_phase_sequence:
     if k in images_by_phase and k not in ordered_phase_keys:
@@ -1019,7 +1225,6 @@ async def process_image_attachments(context, image_attachments: List[Dict], seri
 
     # Get phase title
     if phase_key:
-      # Try to get a meaningful phase title with multiple fallbacks
       phase_title = (
         phase_images[0].get('phase_alias') or
         phase_images[0].get('phase_key') or
@@ -1031,109 +1236,288 @@ async def process_image_attachments(context, image_attachments: List[Dict], seri
 
     print(f"🔍 DEBUG: Processing {len(phase_images)} images for phase: {phase_title}")
 
-    # Process images in groups of 2 per page
-    for page_num in range(0, len(phase_images), 2):
-      images_on_page = phase_images[page_num:page_num + 2]
-      print(f"🔍 DEBUG: Creating image page {page_num//2 + 1} for phase {phase_title} with {len(images_on_page)} images")
+    # Process each image individually
+    for img_index, attachment in enumerate(phase_images):
+      img_path = attachment['path']
 
       try:
-        # Prepare image data for both images
-        image_data_list = []
-        for attachment in images_on_page:
-          img_path = attachment['path']
-          try:
-            print(f"🔍 DEBUG: Reading image: {img_path}")
-            with open(img_path, 'rb') as imgf:
-              file_data = imgf.read()
-              print(f"🔍 DEBUG: Read {len(file_data)} bytes from {attachment['filename']}")
-              b64 = base64.b64encode(file_data).decode('ascii')
-              ext = os.path.splitext(img_path)[1].lower()
-              mime = 'image/png'
-              if ext == '.jpg' or ext == '.jpeg':
-                mime = 'image/jpeg'
-              elif ext == '.webp':
-                mime = 'image/webp'
-              elif ext == '.gif':
-                mime = 'image/gif'
-              elif ext == '.bmp':
-                mime = 'image/bmp'
+        print(f"🔍 DEBUG: Creating individual page for image: {attachment['filename']}")
 
-              image_data_list.append({
-                'filename': attachment['filename'],
-                'field_label': attachment['field_label'],
-                'b64': b64,
-                'mime': mime
-              })
-          except Exception as e:
-            print(f"🔍 DEBUG: Error reading image {img_path}: {e}")
-            continue
+        # Read image data
+        with open(img_path, 'rb') as imgf:
+          file_data = imgf.read()
+          print(f"🔍 DEBUG: Read {len(file_data)} bytes from {attachment['filename']}")
+          b64 = base64.b64encode(file_data).decode('ascii')
+          ext = os.path.splitext(img_path)[1].lower()
+          mime = 'image/png'
+          if ext == '.jpg' or ext == '.jpeg':
+            mime = 'image/jpeg'
+          elif ext == '.webp':
+            mime = 'image/webp'
+          elif ext == '.gif':
+            mime = 'image/gif'
+          elif ext == '.bmp':
+            mime = 'image/bmp'
 
-        if not image_data_list:
-          print(f"🔍 DEBUG: No valid images for this page, skipping")
-          continue
+        # Create display name
+        display_name = f"{attachment['field_label']} - {attachment['filename']}" if attachment['field_label'] else attachment['filename']
 
-        # Create HTML for 1 or 2 images
-        images_html = ""
-        for i, img_data in enumerate(image_data_list):
-          display_name = f"{img_data['field_label']} - {img_data['filename']}" if img_data['field_label'] else img_data['filename']
-          images_html += f"""
-            <div class="image-container">
-              <div class="filename">{display_name}</div>
-              <img src="data:{img_data['mime']};base64,{img_data['b64']}" />
-            </div>
-          """
-
-        # Determine page title
+        # Create page title with correct numbering
         page_title = f"Attachments - {phase_title}"
-        if len(phase_images) > 2:
-          page_start = page_num + 1
-          page_end = min(page_num + 2, len(phase_images))
-          page_title += f" ({page_start}-{page_end}/{len(phase_images)})"
+        if len(phase_images) > 1:
+          page_title += f" ({img_index + 1}/{len(phase_images)})"
 
+        # Get company information for footer
+        company_info = get_company_info()
+        company_name = company_info['name']
+        company_logo_data_uri = ""
+        if company_info['logo_path']:
+          company_logo_data_uri = get_company_logo_base64(company_info['logo_path'])
+
+        # Get current date and time for footer
+        current_datetime = datetime.now().strftime('%B %d, %Y at %I:%M %p')
+
+        # Extract product code and serial code from serial_info_for_headers
+        parts = serial_info_for_headers.split(' - ', 1)
+        header_product_code = parts[0] if len(parts) >= 1 else ''
+        header_serial_code = parts[1] if len(parts) >= 2 else ''
+
+        # Create HTML for single image page - NO PAGE NUMBERING
         img_html = f"""
+          <!DOCTYPE html>
           <html>
             <head>
               <meta charset='utf-8' />
               <style>
-                @page {{ margin: 15mm 10mm 15mm 10mm; }}
-                body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif; color: #222; margin: 0; padding: 0; }}
-                .header {{ text-align: center; border-bottom: 1px solid #ccc; padding-bottom: 8px; margin-bottom: 15px; }}
-                .header h2 {{ font-size: 16px; margin: 0 0 4px 0; }}
-                .header .serial-info {{ font-size: 12px; color: #666; margin: 0; }}
-                .images-container {{ display: flex; flex-direction: column; gap: 15px; height: calc(100vh - 60px); }}
-                .image-container {{ text-align: center; flex: 1; display: flex; flex-direction: column; }}
-                .filename {{ font-size: 11px; margin-bottom: 8px; font-weight: bold; }}
-                img {{ max-height: calc((100vh - 120px) / {len(image_data_list)}); max-width: 100%; object-fit: contain; }}
+                @page {{
+                  margin: 15mm 10mm 25mm 10mm;
+                  size: A4;
+                  @bottom-left {{
+                    content: element(footer-left);
+                  }}
+                  @bottom-right {{
+                    content: element(footer-right);
+                  }}
+                  @top-right {{
+                    content: element(header-right);
+                  }}
+                }}
+                body {{
+                  font-family: 'DejaVu Sans', Arial, sans-serif;
+                  color: #222;
+                  margin: 0;
+                  padding: 0;
+                }}
+                .header {{
+                  text-align: center;
+                  border-bottom: 1pt solid #ccc;
+                  padding-bottom: 6pt;
+                  margin-bottom: 12pt;
+                  height: 50pt;
+                  page-break-after: avoid;
+                }}
+                .header h2 {{
+                  font-size: 14pt;
+                  margin: 0 0 3pt 0;
+                }}
+                .header .serial-info {{
+                  font-size: 10pt;
+                  color: #666;
+                  margin: 0;
+                }}
+                .image-container {{
+                  text-align: center;
+                  height: calc(257mm - 80pt);
+                  position: relative;
+                }}
+                .filename {{
+                  font-size: 11pt;
+                  margin-bottom: 12pt;
+                  font-weight: bold;
+                  color: #333;
+                  text-align: center;
+                }}
+                .main-image {{
+                  max-width: 90%;
+                  max-height: calc(257mm - 120pt);
+                  width: auto;
+                  height: auto;
+                  display: block;
+                  margin: auto;
+                }}
+
+                /* Footer Elements - NO CENTER (page numbering) */
+                .footer-left {{
+                  position: running(footer-left);
+                  display: flex;
+                  align-items: center;
+                  font-size: 8pt;
+                }}
+
+                .footer-right {{
+                  position: running(footer-right);
+                  text-align: right;
+                  font-size: 8pt;
+                }}
+
+                .header-right {{
+                  position: running(header-right);
+                  text-align: right;
+                  font-size: 8pt;
+                  color: #666;
+                }}
+
+                .footer-logo {{
+                  height: 1cm;
+                  width: auto;
+                  margin-right: 5pt;
+                  max-width: 2cm;
+                }}
+
+                .footer-company-name {{
+                  font-weight: bold;
+                }}
               </style>
             </head>
             <body>
+              <!-- Footer Elements - NO PAGE NUMBER -->
+              <div class="footer-left">
+                {f'<img src="{company_logo_data_uri}" alt="Company Logo" class="footer-logo" />' if company_logo_data_uri else ''}
+                <span class="footer-company-name">{company_name}</span>
+              </div>
+
+              <div class="footer-right">
+                Printed on {current_datetime}
+              </div>
+
+              <!-- Header for pages after first -->
+              <div class="header-right">
+                {header_product_code} - {header_serial_code}
+              </div>
+
               <div class="header">
                 <h2>{page_title}</h2>
                 <div class="serial-info">{serial_info_for_headers}</div>
               </div>
-              <div class="images-container">
-                {images_html}
+
+              <div class="image-container">
+                <div class="filename">{display_name}</div>
+                <img src="data:{mime};base64,{b64}"
+                     alt="{display_name}"
+                     class="main-image" />
               </div>
             </body>
           </html>
         """
 
-        img_page = await context.new_page()
-        await img_page.set_content(img_html, wait_until='load')
-        img_pdf_bytes = await img_page.pdf(
-          format='A4',
-          print_background=True,
-          margin={'top': '15mm', 'bottom': '15mm', 'left': '10mm', 'right': '10mm'}
-        )
-        await img_page.close()
+        # Generate PDF using WeasyPrint
+        html_doc = HTML(string=img_html)
+        img_pdf_bytes = html_doc.write_pdf()
         pdf_pages.append(img_pdf_bytes)
-        print(f"🔍 DEBUG: Successfully created PDF for {len(image_data_list)} images in phase {phase_title}")
+        print(f"🔍 DEBUG: Successfully created PDF page for {attachment['filename']} in phase {phase_title}")
 
       except Exception as e:
-        print(f"🔍 DEBUG: Error creating image page for phase {phase_title}: {e}")
+        print(f"🔍 DEBUG: Error creating image page for {img_path}: {e}")
         continue
 
   return pdf_pages
+
+
+def collect_attachments(fields: List[Dict], serial_key: str, include_attachments: bool) -> List[Dict]:
+  """Collect file attachments from serial fields with metadata including phase information"""
+  attachments: List[Dict] = []
+
+  if not include_attachments:
+    return attachments
+
+  # print(f"🔍 DEBUG: Starting attachment collection for serial {serial_key}")
+  media_root = get_config().media_path
+  # print(f"🔍 DEBUG: Media root path: {media_root}")
+  image_exts = {'.png', '.jpg', '.jpeg', '.webp', '.gif', '.bmp'}
+
+  # Build a list of attachment dictionaries with metadata
+  # print(f"🔍 DEBUG: Total fields to check: {len(fields)}")
+  file_fields_count = 0
+
+  for f in fields:
+    field_type = (f.get('field_type') or '').lower()
+    if field_type != 'files':
+      continue
+
+    file_fields_count += 1
+    # print(f"🔍 DEBUG: Found file field {file_fields_count}: {f.get('label', 'N/A')}")
+    form_field_key = f.get('form_field_key') or ''
+    field_label = f.get('label') or ''
+    phase_alias = f.get('phase_alias') or ''
+    phase_key = f.get('phase_key') or ''
+    # print(f"🔍 DEBUG: Form field key: '{form_field_key}', Phase: '{phase_alias}' (key: '{phase_key}'), Field: '{field_label}'")
+    # print(f"🔍 DEBUG: Full field data: {f}")
+    value = f.get('value')
+    # print(f"🔍 DEBUG: Field value type: {type(value)}, value: {value}")
+
+    if not value:
+      print(f"🔍 DEBUG: No value in field, skipping")
+      continue
+
+    # value expected to be a list of dicts with 'name'
+    try:
+      if isinstance(value, list):
+        print(f"🔍 DEBUG: Processing {len(value)} items in value list")
+        for i, item in enumerate(value):
+          filename = None
+          if isinstance(item, dict):
+            filename = item.get('name')
+            # print(f"🔍 DEBUG: Item {i+1} is dict, filename: {filename}")
+          elif isinstance(item, str):
+            filename = item
+            # print(f"🔍 DEBUG: Item {i+1} is string, filename: {filename}")
+          else:
+            # print(f"🔍 DEBUG: Item {i+1} unexpected type: {type(item)}")
+            continue
+
+          if not filename:
+            print(f"🔍 DEBUG: No filename for item {i+1}, skipping")
+            continue
+
+          file_path = os.path.join(media_root, 'serial', serial_key, form_field_key, filename)
+          ext = os.path.splitext(filename)[1].lower()
+          file_exists = os.path.exists(file_path)
+
+          # print(f"🔍 DEBUG: File {i+1}: {filename}")
+          # print(f"🔍 DEBUG: Extension: {ext}")
+          # print(f"🔍 DEBUG: Full path: {file_path}")
+          # print(f"🔍 DEBUG: File exists: {file_exists}")
+
+          if ext == '.pdf' or ext in image_exts:
+            attachment_type = 'pdf' if ext == '.pdf' else 'image'
+            attachment_data = {
+              'path': file_path,
+              'type': attachment_type,
+              'filename': filename,
+              'field_label': field_label,
+              'phase_alias': phase_alias or 'General',  # Fallback to 'General' if phase_alias is empty
+              'phase_key': phase_key
+            }
+            attachments.append(attachment_data)
+            # print(f"🔍 DEBUG: Added {attachment_type} attachment: {filename} (Phase: '{phase_alias}' -> '{attachment_data['phase_alias']}', Field: '{field_label}')")
+          else:
+            print(f"🔍 DEBUG: Unsupported file type: {ext}")
+      else:
+        print(f"🔍 DEBUG: Value is not a list, type: {type(value)}")
+    except Exception as e:
+      print(f"🔍 DEBUG: Exception processing field: {e}")
+      # If format is unexpected, skip
+      pass
+
+  # print(f"🔍 DEBUG: File fields found: {file_fields_count}")
+  # print(f"🔍 DEBUG: Total attachments collected: {len(attachments)}")
+  for i, attachment in enumerate(attachments):
+    print(f"🔍 DEBUG: Attachment {i+1}: {attachment['type']} - {attachment['filename']} (Phase: {attachment['phase_alias']}, Field: {attachment['field_label']})")
+
+  return attachments
+
+
+
 
 
 def process_pdf_attachments(pdf_attachments: List[Dict], serial_info_for_headers: str, wo_phase_sequence: List[str]) -> List[bytes]:
@@ -1205,8 +1589,8 @@ def process_pdf_attachments(pdf_attachments: List[Dict], serial_info_for_headers
           left_margin = 15 * mm
           right_margin = 15 * mm
           bottom_margin = 15 * mm
-          top_margin = 35 * mm  # Increased for 3-line header
-          header_area = 28 * mm  # Increased for 3-line header
+          top_margin = 20 * mm  # Reduced from 35mm to 20mm for more space
+          header_area = 18 * mm  # Reduced from 28mm to 18mm for more space
           frame_left = float(left_margin)
           frame_bottom = float(bottom_margin)
           frame_right = float(page_width - right_margin)
@@ -1222,10 +1606,10 @@ def process_pdf_attachments(pdf_attachments: List[Dict], serial_info_for_headers
             overlay_buf = io.BytesIO()
             c = canvas.Canvas(overlay_buf, pagesize=A4)
 
-            # Draw 3-line header
-            header_y_line1 = float(page_height - top_margin - 4)
-            header_y_line2 = float(page_height - top_margin - 16)
-            header_y_line3 = float(page_height - top_margin - 26)
+            # Draw 3-line header with better spacing
+            header_y_line1 = float(page_height - top_margin - 6)
+            header_y_line2 = float(page_height - top_margin - 18)
+            header_y_line3 = float(page_height - top_margin - 30)
 
             c.setFont("Helvetica-Bold", 16)
             c.drawString(float(left_margin), header_y_line1, f"Attachments - {phase_title}")
@@ -1279,46 +1663,47 @@ def process_pdf_attachments(pdf_attachments: List[Dict], serial_info_for_headers
   return processed_pdfs
 
 
-async def generate_dhr_for_serial(serial_key: str, context, include_attachments: bool = False, include_step_data: bool = False) -> bytes:
-  """Generate a DHR PDF for a specific serial"""
+def generate_dhr_for_serial(serial_key: str, include_attachments: bool = False, include_step_data: bool = False) -> bytes:
+  """Generate a DHR PDF for a specific serial using WeasyPrint"""
   try:
-    # Fetch serial and product data
+    time_start = timeit.default_timer()
+
+    # Fetch data once and generate main DHR
     data = fetch_dhr_data(serial_key, include_step_data)
     if not data:
       return b''
 
-    # Generate HTML content
-    html = generate_dhr_html(serial_key, data)
+    # Generate main DHR HTML and PDF
+    html_content = generate_dhr_html(serial_key, data)
+    html_doc = HTML(string=html_content)
+    main_pdf_bytes = html_doc.write_pdf()
 
-    # Convert main content to PDF
-    page = await context.new_page()
-    await page.set_content(html, wait_until='load')
-    main_pdf_bytes = await page.pdf(
-      format='A4',
-      print_background=True,
-      margin={'top': '20mm', 'bottom': '20mm', 'left': '15mm', 'right': '15mm'}
-    )
-    await page.close()
+    time_main_pdf = timeit.default_timer()
+    print(f"⏱️ ##### TIME #####: Time taken to generate main PDF: {time_main_pdf - time_start} seconds")
+
+    if not main_pdf_bytes:
+      return b''
 
     # If no attachments requested, return the main PDF
     if not include_attachments:
       return main_pdf_bytes
 
     # Create a PDF writer to combine main content with attachments
+
     writer = PdfWriter()
     main_reader = PdfReader(io.BytesIO(main_pdf_bytes))
     for pg in main_reader.pages:
       writer.add_page(pg)
 
-    # Collect and process attachments
+    # Use the already fetched data for attachment processing
     fields = data.get('fields', [])
     attachments = collect_attachments(fields, serial_key, include_attachments)
 
     if not attachments:
-      print(f"🔍 DEBUG: No attachments to process")
+      # print(f"🔍 DEBUG: No attachments to process")
       return main_pdf_bytes
 
-    # Get serial info for attachment headers
+    # Get serial info for attachment headers from existing data
     serial_info = data.get('serial') or {}
     product_code = data.get('product_code') or ''
     serial_code = serial_info.get('code') or ''
@@ -1329,15 +1714,19 @@ async def generate_dhr_for_serial(serial_key: str, context, include_attachments:
     image_attachments = [attachment for attachment in attachments if attachment['type'] == 'image']
     pdf_attachments = [attachment for attachment in attachments if attachment['type'] == 'pdf']
 
-    # Process image attachments
+    time_start_image_attachments = timeit.default_timer()
+
+    # Process image attachments with WeasyPrint
     if image_attachments:
-      image_pdf_pages = await process_image_attachments(context, image_attachments, serial_info_for_headers, wo_phase_sequence)
+      image_pdf_pages = process_image_attachments(image_attachments, serial_info_for_headers, wo_phase_sequence)
       for img_pdf_bytes in image_pdf_pages:
         img_reader = PdfReader(io.BytesIO(img_pdf_bytes))
         for pg in img_reader.pages:
           writer.add_page(pg)
 
-    # Process PDF attachments
+    time_start_pdf_attachments = timeit.default_timer()
+
+    # Process PDF attachments (keep using ReportLab)
     if pdf_attachments:
       processed_pdf_bytes_list = process_pdf_attachments(pdf_attachments, serial_info_for_headers, wo_phase_sequence)
       for pdf_bytes in processed_pdf_bytes_list:
@@ -1345,17 +1734,30 @@ async def generate_dhr_for_serial(serial_key: str, context, include_attachments:
         for pg in pdf_reader.pages:
           writer.add_page(pg)
 
+    time_end_pdf_attachments = timeit.default_timer()
+
     # Return combined PDF
     total_pages = len(writer.pages)
-    print(f"🔍 DEBUG: Final PDF has {total_pages} total pages")
+    # print(f"🔍 DEBUG: Final PDF has {total_pages} total pages")
     output = io.BytesIO()
     writer.write(output)
     output.seek(0)
     final_size = len(output.getvalue())
-    print(f"🔍 DEBUG: Final PDF size: {final_size} bytes")
+    # print(f"🔍 DEBUG: Final PDF size: {final_size} bytes")
+    time_end = timeit.default_timer()
+    time_dict = dict(
+      main_pdf=time_main_pdf - time_start,
+      image_attachments=time_start_image_attachments - time_main_pdf,
+      pdf_attachments=time_start_pdf_attachments - time_start_image_attachments,
+      total=time_end - time_start
+    )
+    print(f"⏱️ ##### TIME #####: {time_dict}")
     return output.getvalue()
 
   except Exception as e:
-    print(f"🔍 DEBUG: Error generating DHR for serial {serial_key}: {e}")
-    return b''
+    print(f"🔍 DEBUG: Error generating DHR with WeasyPrint for serial {serial_key}: {e}")
+    raise
+
+
+
 

@@ -24,6 +24,6 @@ sse_starlette
 python-jose
 
 # PDF generation
-playwright==1.*
+weasyprint==66.*
 pypdf==4.*
 reportlab==4.*
