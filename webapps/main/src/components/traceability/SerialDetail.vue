@@ -407,8 +407,8 @@ export default {
 
     async requestDHRPrint() {
       this.$q.dialog({
-        title: this.$t('DHR Options'),
-        message: this.$t('Select DHR generation options:'),
+        title: this.$t('dhr.options'),
+        message: this.$t('dhr.select_options'),
         class: 'background',
         color: 'theme-blue',
         options: {
@@ -416,15 +416,15 @@ export default {
           model: ['include_step_data'],
           items: [
             {
-              label: this.$t('Include Step Data'),
+              label: this.$t('dhr.include_step_data'),
               value: 'include_step_data'
             },
             {
-              label: this.$t('Include Attachments'),
+              label: this.$t('dhr.include_attachments'),
               value: 'include_attachments'
             },
             {
-              label: this.$t('Include Children'),
+              label: this.$t('dhr.include_children'),
               value: 'include_children'
             },
           ],
