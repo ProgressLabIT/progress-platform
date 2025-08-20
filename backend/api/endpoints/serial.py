@@ -3,7 +3,7 @@ import json
 
 from base64 import b64decode
 from fastapi import APIRouter, HTTPException, Query, Depends
-from fastapi.responses import StreamingResponse
+from fastapi.responses import Response
 import io
 from utils import auth
 from datetime import datetime
@@ -11,12 +11,12 @@ from typing import List, Union
 
 from models.serial import SerialSelection, Serial, SerialTreeNode
 from utils.db import db
-from utils.serial import Queries, get_serial_child_nodes, generate_dhr_for_serial
+from utils.serial import Queries, get_serial_child_nodes
+from utils.dhr import generate_dhr_for_serial
 from pypdf import PdfReader, PdfWriter
 
 router = APIRouter()
 
-# DHR generation has been moved to utils/serial.py
 
 @router.get('/serial-field',
     dependencies=[Depends(auth.verify_token)])
