@@ -124,7 +124,7 @@ export default {
 
   computed: {
     base_url() {
-      return 'http://' + window.location.hostname + ':4200/api';
+      return window.location.protocol + '//' + window.location.hostname + '/workflow/api';
     },
 
     deployments_url() {
