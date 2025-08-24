@@ -5,11 +5,21 @@
   #debugger: on_failed
 
   vars:
+    # Deployment vars
+    public_env_vars:
+      - VERSION
+      - DOMAIN
+      - SUBDOMAIN
+      - DNS_PROVIDER
+      - DNS_EMAIL
+      - DNS_DELAY
+      - DNS_API_KEY_VAR
+      - DNS_API_SECRET_VAR
+    private_env_vars:
+      - DNS_API_KEY
+      - DNS_API_SECRET
     root_dir: /opt/progress
     venv_path: /opt/progress/.venv
-    ansible_python_interpreter: "{{ venv_path }}/bin/python"
-    image_tag: "0.9-latest"
-    domain: "progresslab.it"
     volumes:
       - db_data
       - db_backup
@@ -27,15 +37,31 @@
     swarm_join_tkn_manager: "{{ init.swarm_facts.JoinTokens.Manager }}"
     swarm_join_tkn_worker: "{{ init.swarm_facts.JoinTokens.Worker }}"
     registry_url: registry.gitlab.com/progresslab/progress-platform
+    progress_env_filename: "progress.env"
     secrets:
       - { name: "progress_api_db_pwd", length: 32 }
-      - { name: "progress_admin_pwd", length: 6 }
+      - { name: "progress_admin_pwd", length: 16 }
       - { name: "progress_jwt_secret", length: 32 }
+      - { name: "progress_db_root_pwd", length: 16 }
+    dns_secrets:
+      - { name: "dns_api_key", value: "DNS_API_KEY" }
+      - { name: "dns_api_secret", value: "DNS_API_SECRET" }
 
   vars_files:
     - registry_creds
 
   tasks:
+    - name: Load environment variables from progress.env.yaml
+      include_vars:
+        file: config/progress.env.yaml
+        name: progress_env_vars
+
+    - name: Validate and set required environment variables
+      fail:
+        msg: "{{ item }} is not set in progress.env.yaml"
+      when: progress_env_vars[item] is not defined or not progress_env_vars[item]
+      loop: "{{ public_env_vars + private_env_vars }}"
+
     - name: Setup system
       tags: system
       block:
@@ -76,13 +102,18 @@
 
         - name: Create virtual environment for Ansible dependencies
           tags: pip
+          command: "python3 -m venv {{ venv_path }}"
+          args:
+            creates: "{{ venv_path }}/bin/activate"
+
+        - name: Install Python dependencies in virtual environment
+          tags: pip
           pip:
             name:
               - docker
               - jsondiff
               - pyyaml
-            virtualenv: "{{ venv_path }}" # will be created if not exists
-            virtualenv_python: python3
+            virtualenv: "{{ venv_path }}"
           vars:
             ansible_python_interpreter: /usr/bin/python3
 
@@ -102,6 +133,8 @@
 
     - name: Setup infrastructure
       tags: docker
+      vars:
+        ansible_python_interpreter: "{{ venv_path }}/bin/python"
       block:
         - name: Login to GitLab container registry
           community.docker.docker_login:
@@ -137,8 +170,17 @@
             cmd: "openssl rand -hex {{ item.length }} | docker secret create {{ item.name }} -"
           loop: "{{ secrets }}"
 
+        - name: Add DNS secrets
+          ansible.builtin.shell:
+            cmd: "echo '{{ progress_env_vars[item.value] }}' | docker secret create {{ item.name }} -"
+          loop: "{{ dns_secrets }}"
+
+
+
     - name: Deploy stack
       tags: deploy
+      vars:
+        ansible_python_interpreter: "{{ venv_path }}/bin/python"
       block:
         - name: Copy deployment files
           ansible.builtin.copy:
@@ -161,30 +203,28 @@
             - main.py
             - entrypoint.sh
 
-        - name: Generate DB root password
-          ansible.builtin.shell:
-            cmd: "openssl rand -hex 12"
-          register: db_root_pwd
-
-        - name: Show DB root password
-          ansible.builtin.debug:
-            var: db_root_pwd.stdout
+        - name: Create progress.env file with non-secret environment variables
+          ansible.builtin.template:
+            src: config/env_template.j2
+            dest: "{{ root_dir }}/config/{{ progress_env_filename }}"
+          vars:
+            progress_env_vars: "{{ progress_env_vars }}"
 
         - name: Deploy to production
-          community.docker.docker_stack:
-            name: progress
-            with_registry_auth: yes
-            compose:
-              - "{{ root_dir}}/config/base.yaml"
-              - "{{ root_dir}}/config/stack.yaml"
-              - "{{ root_dir}}/config/workflow.yaml"
-              - "{{ root_dir}}/config/reporting.yaml"
-              - "{{ root_dir}}/config/notebooks.yaml"
-          environment:
-            VERSION: "{{ image_tag }}"
-            DB_ROOT_PWD: "{{ db_root_pwd.stdout }}"
-            DOMAIN: "{{ domain }}"
-            SUBDOMAIN: "{{ subdomain }}"
+          # Load environment variables from progress.env file before running docker stack deploy
+          ansible.builtin.shell:
+            executable: /bin/bash
+            cmd: |
+              cd {{ root_dir }}/config && \
+              export $(cat {{ progress_env_filename }} | xargs) && \
+              docker stack deploy \
+                --with-registry-auth \
+                -c base.yaml \
+                -c stack.yaml \
+                -c workflow.yaml \
+                -c reporting.yaml \
+                -c notebooks.yaml \
+                progress
 
         - name: Copy init script to be run
           ansible.builtin.copy:
@@ -201,14 +241,13 @@
             secrets:
               - secret_name: progress_admin_pwd
               - secret_name: progress_api_db_pwd
+              - secret_name: progress_db_root_pwd
             networks:
               - progress
             mounts:
               - source: "{{ root_dir }}/db_init.py"
                 target: /db_init.py
                 type: bind
-            env:
-              DB_ROOT_PWD: "{{ db_root_pwd.stdout }}"
             command: python3 /db_init.py
 
         # Last try failed when loading flows because the agent container was not ready, probably busy installing python dependencies

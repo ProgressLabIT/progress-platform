@@ -10,10 +10,9 @@ export default {
 
   computed: {
     src() {
-      const port = '8501';
       const domain = window.location.hostname;
       const protocol = window.location.protocol;
-      return `${protocol}//${domain}:${port}`;
+      return `${protocol}//reporting.${domain}`;
     },
   },
 

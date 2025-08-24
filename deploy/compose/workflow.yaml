@@ -26,19 +26,28 @@ services:
     networks:
       - progress
     environment:
-      - PREFECT_UI_API_URL=https://${SUBDOMAIN}.${DOMAIN:-progresslab.it}:4200/api
-      - PREFECT_SERVER_API_HOST=0.0.0.0
-      - PREFECT_API_DATABASE_CONNECTION_URL=postgresql+asyncpg://postgres:postgres@workflow-db:5432/prefect
-    ports:
-      - "4200:4200"
+      PREFECT_SERVER_API_HOST: 0.0.0.0
+      PREFECT_API_DATABASE_CONNECTION_URL: postgresql+asyncpg://postgres:postgres@workflow-db:5432/prefect
     deploy:
       replicas: 1
       labels:
+        # Main config
         - "traefik.enable=true"
         - "traefik.docker.network=progress"
         - "traefik.http.services.wf-server.loadbalancer.server.port=4200"
-        - "traefik.http.routers.wf-server.rule=Host(`${SUBDOMAIN}.${DOMAIN:-progresslab.it}`) && PathPrefix(`/api`)"
+        # Routing to UI
+        - "traefik.http.routers.wf-server.rule=Host(`workflow.${SUBDOMAIN}.${DOMAIN}`)"
+        - "traefik.http.routers.wf-server.entrypoints=websecure"
         - "traefik.http.routers.wf-server.tls.certresolver=letsencrypt"
+        # Setting /api/wf route on main domain to bypass CORS for requests from webapp
+        - "traefik.http.routers.wf-api-from-app.entrypoints=websecure"
+        - "traefik.http.routers.wf-api-from-app.rule=Host(`${SUBDOMAIN}.${DOMAIN}`) && PathPrefix(`/wf-api`)"
+        - "traefik.http.routers.wf-api-from-app.service=wf-server"
+        - "traefik.http.routers.wf-api-from-app.tls.certresolver=letsencrypt"
+        - "traefik.http.routers.wf-api-from-app.middlewares=no-cors-api-from-app"
+        - "traefik.http.middlewares.no-cors-api-from-app.chain.middlewares=strip-custom, add-original"
+        - "traefik.http.middlewares.strip-custom.stripprefix.prefixes=/wf-api"
+        - "traefik.http.middlewares.add-original.addprefix.prefix=/api"
 
   wf-system-agent: # System Workflow Agent
     image: registry.gitlab.com/progresslab/progress-platform/wf-sys-agent:${VERSION}
