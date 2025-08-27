@@ -228,7 +228,7 @@ export default {
     },
 
     async saveFiles(serial_key) {
-      let form_fields = this.serial.data;
+      let form_fields = this.serial.data || [];
 
       const promises = form_fields
         .filter((field) => this.getFieldType(field) === 'files')
