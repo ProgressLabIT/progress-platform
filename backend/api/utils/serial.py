@@ -12,12 +12,6 @@ from models.bom import BomLineRead
 from models.serial import SerialTreeNode
 from utils.bom import get_bom_from_db
 from utils.db import db
-from utils.config import get_config
-from pypdf import PdfReader, PdfWriter, Transformation
-from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import A4
-from reportlab.lib.units import mm
-from weasyprint import HTML, CSS
 
 class Queries:
 
