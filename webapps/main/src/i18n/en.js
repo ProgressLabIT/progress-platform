@@ -119,6 +119,7 @@ export default {
     label: 'document | documents',
     missing: 'nessun documento',
   },
+  download_log: 'Download log',
   due_by: 'due by',
   edit: 'edit',
   element: 'element',

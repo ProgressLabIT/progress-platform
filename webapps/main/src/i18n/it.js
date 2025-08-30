@@ -122,6 +122,7 @@ export default {
     label: 'documento | documenti',
     missing: 'nessun documento',
   },
+  download_log: 'Scarica log',
   due_by: 'scadenza',
   edit: 'modifica',
   view: 'visualizza',

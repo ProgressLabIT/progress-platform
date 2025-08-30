@@ -77,8 +77,13 @@
 
         <q-card-section
           v-if="!active_states.includes(flow_state)"
-          class="row justify-end"
+          class="row justify-between"
         >
+          <q-btn
+            :label="$t('download_log')"
+            color="theme-blue"
+            @click="downloadLog"
+          />
           <q-btn
             :label="$t('close')"
             color="theme-grey"
@@ -272,6 +277,13 @@ export default {
       if (['COMPLETED', 'FAILED', 'CRASHED'].includes(this.flow_state)) {
         clearInterval(this.polling_instance);
       }
+    },
+
+    downloadLog() {
+      const csv = this.flow_logs.map((l) => `${l.timestamp},${l.message}`).join('\n');
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
     },
 
     clearFlowData() {
