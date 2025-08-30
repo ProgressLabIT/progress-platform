@@ -3,6 +3,7 @@ from fastapi import FastAPI, APIRouter
 from starlette.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 
+import endpoints.inventory
 from utils.config import get_config
 from utils.kafka.kafka_producer import KafkaProducer
 from managers.kafka_consumer_manager import KafkaConsumerManager
@@ -22,8 +23,9 @@ config = get_config()
 
 KafkaAdmin.getInstance().create_topic("notifications")
 
-# instantiate FastAPI app with root path
-app = FastAPI(root_path=config.api_root_path)
+app = FastAPI(
+	root_path=config.api_root_path
+)
 
 app.add_middleware(
   CORSMiddleware,
@@ -31,6 +33,7 @@ app.add_middleware(
   allow_credentials=True,
   allow_methods=["*"],
   allow_headers=["*"],
+  expose_headers=["Content-Disposition", "Content-Encoding", "Content-Length", "Content-Type"]
 )
 
 app.add_middleware(GZipFilterMiddleware, minimum_size=500, filtered_api="/notification")
@@ -49,23 +52,23 @@ async def hello():
 
 @app.on_event("startup")
 async def startup_event():
-  KafkaProducer.getInstance()
-  notificationsConsumer = NotificationsKafkaConsumer()
-  KafkaConsumerManager.getInstance().registerConsumer(notificationsConsumer)
-  WebsocketManager.getInstance()
+    KafkaProducer.getInstance()
+    notificationsConsumer = NotificationsKafkaConsumer()
+    KafkaConsumerManager.getInstance().registerConsumer(notificationsConsumer)
+    WebsocketManager.getInstance()
 
 def broadcast_message(self, msg):
-  print("%% %s [%d] at offset %d with key %s:\n" %(msg.topic(), msg.partition(), msg.offset(),str(msg.key())))
-  WebsocketManager.getInstance().enqueue(msg.value().decode('utf-8'))
+      print("%% %s [%d] at offset %d with key %s:\n" %(msg.topic(), msg.partition(), msg.offset(),str(msg.key())))
+      WebsocketManager.getInstance().enqueue(msg.value().decode('utf-8'))
 
 @app.on_event("shutdown")
 def shutdown_event():
-  KafkaProducer.getInstance().close()
-  KafkaConsumerManager.getInstance().closeAllConsumers()
-  WebsocketManager.getInstance().close()
-  ExecutorManager.getInstance().close()
-  ServerEventManager.getInstance().close()
-  NotificationManager.getInstance().close()
+   KafkaProducer.getInstance().close()
+   KafkaConsumerManager.getInstance().closeAllConsumers()
+   WebsocketManager.getInstance().close()
+   ExecutorManager.getInstance().close()
+   ServerEventManager.getInstance().close()
+   NotificationManager.getInstance().close()
 
 app.include_router(endpoints.admin, tags=['Administration'])
 app.include_router(endpoints.auth, tags=['Security'])

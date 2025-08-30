@@ -49,6 +49,14 @@
               <div class="col-auto row q-gutter-md q-px-md q-pt-md justify-end">
                 <q-btn
                   v-if="!editMode && can_edit"
+                  color="theme-blue"
+                  :label="$t('print')"
+                  @click="requestDHRPrint"
+                >
+                </q-btn>
+
+                <q-btn
+                  v-if="!editMode && can_edit"
                   color="theme-orange"
                   :label="$t('edit')"
                   @click="editMode = true"
@@ -220,9 +228,7 @@ export default {
     },
 
     async saveFiles(serial_key) {
-      // TODO: OBJECT STORAGE MIGRATION - Update serial file operations for object storage
-      // Replace file upload/delete API calls with object storage operations
-      let form_fields = this.serial.data;
+      let form_fields = this.serial.data || [];
 
       const promises = form_fields
         .filter((field) => this.getFieldType(field) === 'files')
@@ -397,6 +403,75 @@ export default {
           });
           this.exit();
         });
+    },
+
+    async requestDHRPrint() {
+      this.$q.dialog({
+        title: this.$t('dhr.options'),
+        message: this.$t('dhr.select_options'),
+        class: 'background',
+        color: 'theme-blue',
+        options: {
+          type: 'checkbox',
+          model: ['include_step_data'],
+          items: [
+            {
+              label: this.$t('dhr.include_step_data'),
+              value: 'include_step_data'
+            },
+            {
+              label: this.$t('dhr.include_attachments'),
+              value: 'include_attachments'
+            },
+            {
+              label: this.$t('dhr.include_children'),
+              value: 'include_children'
+            },
+          ],
+        },
+        cancel: true,
+        persistent: true
+      }).onOk(async (input) => {
+        this.$q.loading.show();
+        try {
+          const includeAttachments = input.includes('include_attachments');
+          const includeChildren = input.includes('include_children');
+          const includeStepData = input.includes('include_step_data');
+          const params = { include_attachments: includeAttachments, include_children: includeChildren, include_step_data: includeStepData }
+          const resp = await this.$api.get(`serial/${this.serialKey}/dhr`, { responseType: 'blob', params })
+          console.log('resp.headers', resp.headers)
+
+          // Extract filename from Content-Disposition header
+          const contentDisposition = resp.headers['content-disposition'];
+          console.log('Content-Disposition', contentDisposition)
+          let filename = `DHR_${this.serial.code}_${new Date().toISOString().split('T')[0]}.pdf`; // fallback
+
+          if (contentDisposition) {
+            const filenameMatch = contentDisposition.match(/filename="([^"]+)"/);
+            if (filenameMatch) {
+              filename = filenameMatch[1];
+            }
+          }
+
+          const blob = new Blob([resp.data], { type: 'application/pdf' });
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = filename; // Use the extracted filename
+          link.click();
+          window.URL.revokeObjectURL(url);
+        } catch (error) {
+          this.$q.notify({
+            message: error.message,
+            color: 'theme-red',
+            position: 'top',
+          });
+        } finally {
+          this.$q.loading.hide();
+        }
+      }).onCancel(() => {
+        return;
+      });
     },
   },
 };

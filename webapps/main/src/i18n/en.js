@@ -119,6 +119,7 @@ export default {
     label: 'document | documents',
     missing: 'nessun documento',
   },
+  download_log: 'Download log',
   due_by: 'due by',
   edit: 'edit',
   element: 'element',
@@ -1075,4 +1076,11 @@ export default {
     output_position: 'Output position',
   },
   release_date: 'release date',
+  dhr: {
+    options: 'DHR Options',
+    select_options: 'Select DHR generation options',
+    include_step_data: 'Include Step Execution Data',
+    include_attachments: 'Include Attachments',
+    include_children: 'Include Children',
+  },
 };

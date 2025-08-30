@@ -1,4 +1,12 @@
+import os
+import timeit
 import traceback
+import json
+import base64
+import io
+from typing import Dict, Any, List, Tuple
+from datetime import datetime
+
 
 from models.bom import BomLineRead
 from models.serial import SerialTreeNode
@@ -106,6 +114,31 @@ class Queries:
       product_code: product.code,
       product_description: product.description,
       confirmed: NOT_NULL(e.confirmed, true)
+    }
+  """
+
+  GET_SERIAL_CHILDREN_FOR_DHR = """
+    LET start = @serial_id
+    FOR v, e IN 1..999 OUTBOUND start contains
+    PRUNE e.replaced == true || e.confirmed == false
+    LET product = DOCUMENT(Product, v.product_key)
+    LET has_data = LENGTH(NOT_NULL(v.data, [])) > 0
+    LET has_children = COUNT(
+      FOR child_v, child_e IN 1..1 OUTBOUND v._id contains
+      FILTER child_e.replaced == false && NOT_NULL(child_e.confirmed, true) == true
+      RETURN 1
+    ) > 0
+    RETURN {
+      parent_key: PARSE_IDENTIFIER(e._from).key,
+      serial_key: v._key,
+      replaced: e.replaced,
+      serial_code: v.code,
+      product_key: product._key,
+      product_code: product.code,
+      product_description: product.description,
+      confirmed: NOT_NULL(e.confirmed, true),
+      has_data: has_data,
+      has_children: has_children
     }
   """
 
@@ -324,6 +357,7 @@ class Queries:
   """
 
 
+
 def get_bom_components_requiring_traceability(product_key: str) -> list[BomLineRead]:
   """
   Get components from the product BOM that require traceability
@@ -421,4 +455,3 @@ def get_serial_child_nodes(parent: SerialTreeNode, serial_list: list[dict]) -> l
   except Exception:
     traceback.print_exc()
     raise
-

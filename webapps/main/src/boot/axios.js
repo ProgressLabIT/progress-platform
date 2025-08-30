@@ -7,7 +7,7 @@ import { i18n } from '@/boot/i18n';
 const DEFAULT_CONFIG = {
   baseURL: window.location.hostname === 'localhost'
     ? 'http://0.0.0.0:8000'
-    : 'http://' + window.location.hostname,
+    : window.location.protocol + '//' + window.location.hostname,
   basePath: '/api'
 };
 

@@ -32,7 +32,7 @@ class Serial(ArangoDocument):
   quantity: int = 1
   created: datetime | None = Field(default_factory=timestamp)
   released: datetime | None = None
-  data: list[SerialFormFieldValue] | None = None
+  data: list[SerialFormFieldValue] | None = []
   deleted: str | bool | None = False # event key of the deletion event if deleted, false if not deleted
 
 class SerialSelection(BaseModel):

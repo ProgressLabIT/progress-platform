@@ -13,6 +13,7 @@ class JobStartedEvent(BaseProductionEvent):
 
   class InfoModel(EventInfoModel):
     job_key: str
+    batch_serials: list[str] | None = None
 
   @classmethod
   def get_event_type(cls) -> EventType:

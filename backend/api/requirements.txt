@@ -23,3 +23,7 @@ websockets
 sse_starlette
 python-jose
 
+# PDF generation
+weasyprint==66.*
+pypdf==4.*
+reportlab==4.*
