@@ -1,38 +1,101 @@
-import os
+import logging
 import time
 from datetime import datetime
 
 from arango import ArangoClient
+from arango.exceptions import ServerStatusError
 from pydantic import BaseModel, Field
 from passlib.context import CryptContext
+import socket
+
+# Configure logging for Docker compatibility
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+logger = logging.getLogger(__name__)
+
+
+def wait_for_db_ready(db):
+  """
+  Checks database readiness with progressive backoff (doubles delay every 5 attempts),
+  and exits if delay exceeds 5 minutes.
+
+  Args:
+    client: ArangoDB client instance
+    credentials: Database credentials dict
+
+  Returns:
+    bool: True if database is ready
+
+  Raises:
+    Exception: If database connection fails with a permanent error or delay exceeds 5 minutes
+  """
+
+  attempt = 0
+  current_delay = 1.0  # Start with 1 second
+  max_delay = 300  # 5 minutes maximum
+
+  def wait():
+    nonlocal current_delay
+    # Check if we've exceeded the maximum delay
+    if current_delay > max_delay:
+      logger.error(f"Maximum delay ({max_delay}s) exceeded while waiting for database to be ready")
+      raise SystemExit("Database failed to become ready within the maximum delay period (5 minutes). Exiting...")
+
+    logger.info(f"Retrying in {current_delay} seconds...")
+
+    # Progressive backoff: double delay every 5 attempts
+    if attempt % 5 == 0:
+      current_delay *= 2
+      logger.info(f"Delay doubled to {current_delay} seconds")
+
+    time.sleep(current_delay)
+
+
+  while True:
+    attempt += 1
+
+    try:
+      status = db.status()
+      if status is not None:
+        logger.info(f"DB Status: {status}")
+        logger.info("Database ready!")
+        return True
+      else:
+        logger.warning(f"Database not ready (attempt {attempt}): status is None")
+        wait()
+
+    except (ServerStatusError, ConnectionAbortedError, ConnectionError, ConnectionRefusedError, ConnectionResetError, socket.error, OSError) as e:
+      logger.warning(f"Database not ready (attempt {attempt}): Connection error - {str(e)}")
+      wait()
+
 
 
 # ————————————————————————————
 # Setup DB
 # ————————————————————————————
-
 def get_secret(name):
   with open(f'/run/secrets/{name}') as secret:
     return secret.read().rstrip('\n')
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
+logger.info('Setting up DB connection...')
 client = ArangoClient(hosts='http://db:8529')
-root_creds = dict(username='root', password=os.getenv('DB_ROOT_PWD'))
+root_creds = dict(username='root', password=get_secret('progress_db_root_pwd'))
 sys_db_connection = client.db(**root_creds)
 
-print('Checking DB status...')
 
-db_ready = False
-while not db_ready:
-  try:
-    log = sys_db_connection.read_log()['text']
-    if 'Have fun!' in ''.join(log):
-      db_ready = True
-  except:
-    time.sleep(0.5)
 
-print('Database ready. Creating DB users...')
+
+# Wait for database to be ready with progressive backoff
+logger.info('Waiting for DB to be ready...')
+
+wait_for_db_ready(sys_db_connection)
+
+logger.info('Database ready. Creating DB users...')
 with sys_db_connection.begin_batch_execution() as sys_db:
 
   # ————————————————————————————
@@ -47,9 +110,9 @@ with sys_db_connection.begin_batch_execution() as sys_db:
   # TODO: Check if users are present
   for u, pwd in db_users.items():
     sys_db.create_user(username=u, password=pwd)
-    print('Created user', u)
+    logger.info(f'Created user: {u}')
 
-  print('Done\n\nCreating DBs...')
+  logger.info('Done creating DB users\nCreating DBs...')
   # ————————————————————————————
   # Create DBs
   # ————————————————————————————
@@ -61,9 +124,9 @@ with sys_db_connection.begin_batch_execution() as sys_db:
 
   for db in dbs:
     sys_db.create_database(db)
-    print('Created DB', db)
+    logger.info(f'Created DB: {db}')
 
-  print('Done\n\nSetting user permissions...', end=' ')
+  logger.info('Done creating DBs\nSetting user permissions...')
 
   # ————————————————————————————
   # Set permissions
@@ -72,7 +135,7 @@ with sys_db_connection.begin_batch_execution() as sys_db:
   sys_db.update_permission(username='progress_api', permission='rw', database='*')
   sys_db.update_permission(username='customer', permission='ro', database='*')
 
-  print('Done\n\nCreating collections...', end=' ')
+  logger.info('Done setting user permissions\nCreating collections...')
 
 
 # ————————————————————————————
@@ -269,7 +332,7 @@ collections = [
       surname = 'Amministratore',
       active = True,
       psw_hash = pwd_context.hash('resetme'),
-      scope = 'admin production library operator quality reporting warehouse traceability',
+      scope = 'admin production library operator warehouse reporting quality traceability',
       site_key = '0',
       reset_password = True
     )
@@ -312,8 +375,10 @@ for db in db_handles:
     if len(c.default_records):
       collection.insert_many(c.default_records)
 
-    print(f"Created collection {c.name} in {db.db_name}")
+    logger.info(f"Created collection {c.name} in {db.db_name}")
 
-  print('Created collections and data in db ', db.db_name)
+  logger.info(f'Created collections and data in db {db.db_name}')
+
+logger.info('Database initialization completed successfully!')
 
 
