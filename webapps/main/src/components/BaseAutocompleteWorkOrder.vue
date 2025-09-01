@@ -22,6 +22,7 @@
       <q-item
         v-bind="scope.itemProps"
         :class="{ 'text-low': scope.opt.status === 'closed' }"
+        :disable="disableKeys.includes(scope.opt._key)"
       >
         <q-item-section class="text-h4 highlight col-auto q-pr-md">
           {{ scope.opt.wo_code }}
@@ -98,6 +99,11 @@ export default {
     placeholder: {
       type: String,
       default: null,
+    },
+
+    disableKeys: {
+      type: Array,
+      default: () => [],
     },
   },
 

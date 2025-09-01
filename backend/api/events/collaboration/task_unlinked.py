@@ -29,11 +29,11 @@ class TaskUnlinkedEvent(BaseEvent):
     )
 
     link_collection = link_type_map[self.info.link_type]
-    link_id = f'{link_collection}/{self.info.link_key}'
+    linked_entity_id = f'{link_collection}/{self.info.link_key}'
 
-    deleted_count = self.tx.collection('task_rel').delete(dict(
+    deleted_count = self.tx.collection('task_rel').delete_match(dict(
       _from=f'Task/{self.info.task_key}',
-      _to=link_id
+      _to=linked_entity_id
     ))
 
     if deleted_count > 0:

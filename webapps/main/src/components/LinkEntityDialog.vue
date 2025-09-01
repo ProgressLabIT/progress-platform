@@ -31,6 +31,7 @@
             v-if="selectedEntityType === 'work_order'"
             v-model:value="selectedEntity"
             :label="$t('work_order.long')"
+            :disable-keys="excludeLinkKeys('work_order')"
             @select="onEntitySelect"
           />
 
@@ -39,6 +40,7 @@
             v-else-if="selectedEntityType === 'issue'"
             v-model:value="selectedEntity"
             :label="$t('issue')"
+            :used-issues="excludeLinkKeys('issue')"
             @select="onEntitySelect"
           />
 
@@ -50,6 +52,7 @@
             :show-link-status="false"
             :show-inventory-status="false"
             :label="$t('serial')"
+            :disable-keys="excludeLinkKeys('serial')"
             @select="onEntitySelect"
           />
 
@@ -66,6 +69,7 @@
             v-else-if="selectedEntityType === 'task'"
             v-model:value="selectedEntity"
             :label="$t('task')"
+            :disable-options="excludeLinkKeys('task')"
             @select="onEntitySelect"
           />
         </div>
@@ -94,6 +98,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useRoute } from 'vue-router';
 import BaseAutocompleteIssue from './BaseAutocompleteIssue.vue';
 import BaseAutocompleteProduct from './BaseAutocompleteProduct.vue';
 import BaseAutocompleteSerial from './BaseAutocompleteSerial.vue';
@@ -110,6 +115,10 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  existingLinks: {
+    type: Array,
+    default: () => [],
+  },
 });
 
 const selectedEntityType = defineModel('selectedEntityType', {
@@ -120,7 +129,7 @@ const selectedEntityType = defineModel('selectedEntityType', {
 const emit = defineEmits(['save', 'close']);
 
 const { t: $t } = useI18n();
-
+const route = useRoute();
 const selectedEntity = ref(null);
 
 const entityTypeOptions = computed(() => [
@@ -142,6 +151,15 @@ function handleSave() {
       entity: selectedEntity.value,
     });
   }
+}
+
+
+function excludeLinkKeys(type) {
+  const base = props.existingLinks.filter(link => link.type === type).map(link => link.key);
+  if (type === 'task') {
+    return [route.params.taskKey, ...base];
+  }
+  return base;
 }
 
 function handleClose() {
