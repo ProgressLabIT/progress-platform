@@ -293,7 +293,7 @@ class Queries:
         Serial: { type: 'serial', code: 'code' },
         Task: { type: 'task', code: 'code' }
       }
-      FOR l IN 1..1 OUTBOUND t task_rel
+      FOR l IN 1..1 ANY t task_rel
       LET meta = link_type[PARSE_IDENTIFIER(l._id).collection]
       RETURN {
         type: meta.type,
