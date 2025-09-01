@@ -213,7 +213,7 @@ class Queries:
   FIND_TASKS = """
     FOR t IN Task
     FILTER
-      @search ? CONTAINS(LOWER(CONCAT(t.code, ' ', t.title, ' ', t.description)), LOWER(@search)) : true
+      @search ? CONTAINS(LOWER(CONCAT(t.code, ' ', t.title)), LOWER(@search)) : true
       && (@task_type_key ? t.task_type_key == @task_type_key : true)
       && (@status_open == false ? t.status != 'open' : true)
       && (@status_completed == false ? t.status != 'completed' : true)
