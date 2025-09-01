@@ -164,6 +164,15 @@ export default {
     MESSAGE_UPDATED: 'Messaggio modificato',
     MESSAGE_DELETED: 'Messaggio cancellato',
 
+    // Eventi Compiti
+    TASK_CREATED: 'Compito creato',
+    TASK_UPDATED: 'Compito aggiornato',
+    TASK_COMPLETED: 'Compito completato',
+    TASK_CANCELED: 'Compito annullato',
+    TASK_REOPENED: 'Compito riaperto',
+    TASK_LINKED: 'Compito collegato',
+    TASK_UNLINKED: 'Compito scollegato',
+
     // Eventi Amministrativi
     BATCH_CREATED: 'Lotto creato',
     BATCH_CANCELED: 'Lotto annullato',
@@ -327,7 +336,7 @@ export default {
   issue_update_success: 'Segnalazione aggiornata con successo',
   issue_update_title: 'Modifica segnalazione',
   serial_id: 'id matricola',
-  serial: 'matricola | matricole',
+  serial: 'Matricola | Matricole',
   serials: 'matricole',
   serial_data: 'Dati matricola',
   serial_new_title: 'Nuova matricola',
@@ -384,6 +393,7 @@ export default {
   last_update: 'Ultimo aggiornamento',
   late: 'in ritardo',
   link: 'Collegamento | Collegamenti',
+  link_entity: 'Collega entità',
   list: 'Lista',
   loading_signal: {
     default_title: 'caricamento dati...',
@@ -766,6 +776,9 @@ export default {
   scroll: {
     to_top: 'torna su',
   },
+  select_entity: 'Seleziona entità',
+  select_entity_type: 'Seleziona tipo di entità',
+  entity_type: 'Tipo di entità',
   search: 'cerca',
   select: 'seleziona',
   select_all: 'seleziona tutti',
@@ -843,11 +856,23 @@ export default {
       hint: 'Clicca o premi {key} per creare',
     },
   },
-  task: 'compito | compiti',
+  task: 'Compito | Compiti',
   task_type: 'tipo di compito | tipi di compito',
   task_type_delete_question: 'Sei sicuro di voler eliminare questo tipo di compito?',
   task_type_new: 'Nuovo tipo di compito',
-  linked_entities: 'Entità collegate',
+  edit_assignments: 'Modifica assegnazioni',
+  no_assignees: 'Nessun assegnatario',
+  add_user: 'Aggiungi utente',
+  select_user: 'Seleziona utente',
+  linked_entities: {
+    title: 'Entità collegate',
+    issue: 'Segnalazione',
+    work_order: 'Ordine di produzione',
+    product: 'Prodotto',
+    equipment: 'Equipaggiamento',
+    serial: 'Matricola',
+    task: 'Compito',
+  },
   allowed_linked_entities_title: 'Entità collegabili consentite',
   allowed_linked_entities_description: 'Seleziona quali tipi di entità possono essere collegate ai compiti di questo tipo',
   time: {

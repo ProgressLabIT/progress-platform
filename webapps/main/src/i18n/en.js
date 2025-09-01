@@ -159,6 +159,15 @@ export default {
     MESSAGE_UPDATED: 'Message updated',
     MESSAGE_DELETED: 'Message deleted',
 
+    // Task Events
+    TASK_CREATED: 'Task created',
+    TASK_UPDATED: 'Task updated',
+    TASK_COMPLETED: 'Task completed',
+    TASK_CANCELED: 'Task canceled',
+    TASK_REOPENED: 'Task reopened',
+    TASK_LINKED: 'Task linked',
+    TASK_UNLINKED: 'Task unlinked',
+
     // Admin Events
     BATCH_CREATED: 'Batch created',
     BATCH_CANCELED: 'Batch canceled',
@@ -374,6 +383,7 @@ export default {
   last_update: 'Last updated',
   late: 'late',
   link: 'Link | Links',
+  link_entity: 'Link entity',
   list: 'List',
   loading_text: 'getting data...',
   massCopyProcess: {
@@ -756,6 +766,9 @@ export default {
   scroll: {
     to_top: 'back to top',
   },
+  select_entity: 'Select entity',
+  select_entity_type: 'Select entity type',
+  entity_type: 'Entity type',
   search: 'search',
   select: 'select',
   select_all: 'select all',
@@ -837,7 +850,19 @@ export default {
   task_type: 'Task type | Task types',
   task_type_delete_question: 'Are you sure you want to delete this task type?',
   task_type_new: 'New task type',
-  linked_entities: 'Linked entities',
+  edit_assignments: 'Edit assignments',
+  no_assignees: 'No assignees',
+  add_user: 'Add user',
+  select_user: 'Select user',
+  linked_entities: {
+    title: 'Linked entities',
+    issue: 'Issue',
+    work_order: 'Work order',
+    product: 'Product',
+    equipment: 'Equipment',
+    serial: 'Serial',
+    task: 'Task',
+  },
   allowed_linked_entities_title: 'Allowed linked entities',
   allowed_linked_entities_description: 'Select which entity types can be linked to tasks of this type',
   time: {

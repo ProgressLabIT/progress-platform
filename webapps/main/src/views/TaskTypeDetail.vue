@@ -134,7 +134,7 @@
           name="form"
           :label="$t('form_title')"
         />
-        <q-tab name="linked_entities" :label="$t('linked_entities')" />
+        <q-tab name="linked_entities" :label="$t('linked_entities.title')" />
         <q-tab name="prints" :label="$t('print_templates')" />
       </q-tabs>
 
