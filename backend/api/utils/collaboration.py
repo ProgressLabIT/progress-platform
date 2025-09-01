@@ -306,6 +306,7 @@ class Queries:
       time_spent,
       links: task_links,
       icon: task_type.icon,
-      task_type_name: task_type.name
+      task_type_name: task_type.name,
+      allowed_linked_entities: task_type.allowed_linked_entities
     })
   """
