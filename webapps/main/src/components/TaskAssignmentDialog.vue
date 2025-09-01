@@ -12,7 +12,6 @@
 
     <template #form>
       <div class="column q-gutter-md">
-        <div class="text-h6">{{ $t('current_assignments') || 'Current assignments' }}</div>
 
         <q-list v-if="localAssignments.length">
           <q-item
@@ -81,6 +80,7 @@
 </template>
 
 <script setup>
+import { cloneDeep } from 'lodash';
 import { ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useStore } from 'vuex';
@@ -115,7 +115,7 @@ watch(
   () => props.show,
   (isShown) => {
     if (isShown) {
-      localAssignments.value = [...(props.assignments || [])];
+      localAssignments.value = cloneDeep(props.assignments || []);
     }
   }
 );
