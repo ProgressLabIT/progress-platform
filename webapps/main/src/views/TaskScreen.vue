@@ -9,7 +9,11 @@
           <!-- CODE AND STATUS -->
           <div class="col-auto row q-col-gutter-x-md items-center">
           <q-icon :name="task.icon" size="18px" />
-          <div class="text-h5 weight-bold text-uppercase q-ml-sm">
+          <div
+            class="text-h5 weight-bold text-uppercase"
+            :class="{ 'hover-underline': hasAdminAccess, 'pointer': hasAdminAccess }"
+            @click="hasAdminAccess ? goToTaskType() : null"
+          >
             {{ task.task_type_name }} #{{ task.code || '-'}}
           </div>
           <q-chip
@@ -69,13 +73,12 @@
             <!-- EDIT ASSIGNMENT BUTTON -->
             <q-btn
               flat
-              round
               icon="mdi-pencil-circle"
               padding="0px"
               class="q-ml-lg"
               @click="showAssignmentDialog = true"
             >
-              <q-tooltip anchor="center right" self="center left" delay="200">
+              <q-tooltip anchor="center right" self="center left" :delay="200">
                 {{ $t('edit_assignments') }}
               </q-tooltip>
             </q-btn>
@@ -99,31 +102,32 @@
           </div>
           <q-space />
           <!-- EDIT BUTTON -->
-          <q-btn
-            v-if="!editMode"
-            flat
-            round
-            icon="mdi-pencil"
-            color="theme-blue"
-            @click="editMode = true"
-          >
-            <q-tooltip>{{ $t('edit') }}</q-tooltip>
-          </q-btn>
-          <!-- SAVE/CANCEL BUTTONS -->
-          <div v-else class="row q-gutter-md">
+
+          <div class="col-auto">
             <q-btn
+              v-if="!editMode"
+              :label="$t('edit')"
+              icon="mdi-pencil"
+              color="theme-blue"
+              size="10px"
+              @click="editMode = true"
+            />
+            <!-- SAVE/CANCEL BUTTONS -->
+            <div v-else class="row q-gutter-md">
+              <q-btn
               size="12px"
               color="theme-blue"
               :loading="saving"
               :label="$t('save')"
               @click="save"
-            />
-            <q-btn
+              />
+              <q-btn
               size="12px"
               color="theme-grey"
               :label="$t('cancel')"
               @click="cancel"
-            />
+              />
+            </div>
           </div>
         </div>
 
@@ -146,6 +150,9 @@
           />
         </div>
 
+        <q-separator class="q-mt-md" />
+
+
         <!-- TABS -->
         <q-tabs
           v-model="tab"
@@ -156,10 +163,12 @@
           align="left"
           active-class="text-high weight-bold"
         >
-          <q-tab name="form" :label="$t('task_data')" class="text-left" />
+          <q-tab name="form" :label="$t('form')" class="text-left" />
           <q-tab name="history" :label="$t('history')" />
           <q-tab name="messages" :label="$t('message', 2)" />
+          <q-tab name="linked_entities" :label="$t('link', 2)" />
         </q-tabs>
+
 
         <q-card square class="col surface2 scroll">
           <q-tab-panels v-model="tab" class="transparent">
@@ -272,6 +281,47 @@
                 </template>
               </MessageThread>
             </q-tab-panel>
+
+            <!-- LINKED ENTITIES -->
+            <q-tab-panel name="linked_entities">
+              <div class="column q-col-gutter-y-sm">
+                <div v-for="type in availableEntityTypes" :key="type" class="row items-center q-col-gutter-x-sm" style="min-height: 42px;">
+                  <div class="text-h5 text-low text-uppercase col-2">
+                    {{ $t(`linked_entities.${type}`) }}
+                  </div>
+
+                  <div class="col-auto q-pr-md">
+                  <q-btn
+                    color="theme-blue"
+                    round
+                    icon="mdi-plus"
+                    size="8px"
+                      padding="2px"
+                      @click="openLinkDialog(type)"
+                    />
+                  </div>
+
+                  <div
+                    v-for="link in linksByEntityType[type] || []"
+                    :key="link.key"
+                    class="col-auto">
+                    <q-chip
+                      clickable
+                      square
+                      style="border-radius: 4px;"
+                      outline
+                      size="12px"
+                      padding="2px 12px"
+                      @click="goToEntity(link)">
+                      <div class="text-uppercase" :class="{ 'text-italic': !link?.code }">
+                        <template v-if="link?.code">{{ link?.code }}</template>
+                        <template v-else>({{ $t('id') }} {{ link?.key || '-' }})</template>
+                      </div>
+                    </q-chip>
+                  </div>
+                </div>
+              </div>
+            </q-tab-panel>
           </q-tab-panels>
         </q-card>
 
@@ -285,6 +335,15 @@
           @cancel="cancelAssignment"
         />
 
+        <!-- LINK ENTITY DIALOG -->
+        <LinkEntityDialog
+          v-model:selected-entity-type="selectedEntityType"
+          :show="showLinkDialog"
+          :saving="savingLink"
+          @save="saveLink"
+          @close="closeLinkDialog"
+        />
+
       </div>
     </q-page>
   </q-page-container>
@@ -293,18 +352,21 @@
 <script setup>
 import { cloneDeep } from 'lodash';
 import { Notify } from 'quasar';
-import { onMounted, onBeforeUnmount, ref, computed } from 'vue';
+import { onMounted, onBeforeUnmount, ref, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useRouter } from 'vue-router';
 import { useStore } from 'vuex';
 import { api as $api } from 'src/boot/axios';
 import { capitalize } from 'src/boot/filters';
 import BaseUserAvatar from 'src/components/BaseUserAvatar.vue';
 import FormField from 'src/components/FormField.vue';
+import LinkEntityDialog from 'src/components/LinkEntityDialog.vue';
 import MessageThread from 'src/components/MessageThread.vue';
 import TaskAssignmentDialog from 'src/components/TaskAssignmentDialog.vue';
 import { sendEvent } from 'src/composables/event.js';
 import { useTask } from 'src/composables/task';
 import { formatDateTime } from 'src/lib/TimeHandling';
+import { useQueryModel } from 'src/lib/queryModelFactory';
 import { useTaskStore } from 'src/stores/task';
 
 const props = defineProps({
@@ -316,21 +378,27 @@ const props = defineProps({
 
 const store = useStore();
 const taskStore = useTaskStore();
+const router = useRouter();
 const { taskStatusOptions } = useTask();
 const { t: $t, locale } = useI18n();
 
 const task = ref(null);
-const tab = ref('form');
+const tab = useQueryModel(String, 'tab', 'form');
 const editMode = ref(false);
 const saving = ref(false);
 const originalTaskData = ref(null);
 const history = ref([]);
 const events = ref(null);
 const messages = ref([]);
+const showLinkDialog = ref(false);
 
 // Assignment dialog state
 const showAssignmentDialog = ref(false);
 const savingAssignment = ref(false);
+
+// Link dialog state
+const savingLink = ref(false);
+const selectedEntityType = ref(null);
 
 // Assignee grouping
 const ownerAssignment = computed(() => {
@@ -342,6 +410,40 @@ const otherAssignments = computed(() => {
   const assignments = task.value?.assigned_to || [];
   return assignments.filter((a) => a.role !== 'owner');
 });
+
+// Admin access check
+const hasAdminAccess = computed(() => {
+  return store.getters.hasPermission('admin');
+});
+
+// Available entity types for linking
+const availableEntityTypes = computed(() => {
+  return task.value?.allowed_linked_entities || [];
+});
+
+
+
+
+
+// Watch for taskKey changes to handle navigation to linked tasks
+watch(() => props.taskKey, async (newTaskKey, oldTaskKey) => {
+  if (newTaskKey && newTaskKey !== oldTaskKey) {
+    // Close any open dialogs
+    showAssignmentDialog.value = false;
+    showLinkDialog.value = false;
+    selectedEntityType.value = null;
+
+    // Reset edit mode
+    editMode.value = false;
+
+    // Fetch new task data
+    task.value = await taskStore.getTaskData(newTaskKey);
+    originalTaskData.value = cloneDeep(task.value);
+
+    // Reload history
+    getTaskHistory();
+  }
+}, { immediate: false });
 
 onMounted(async () => {
   await store.dispatch('loadUsers');
@@ -382,17 +484,21 @@ function getUserByKey(userKey) {
   return user;
 }
 
-function getFieldUser(_field) {
-  // This would need to be implemented based on task history/event tracking
-  // For now, return null as tasks may not have field-level user tracking yet
-  return null;
-}
+const getFieldUser = (field) => {
+  const userKey = history.value.find((e) => e._key === field.last_updated)?.user_key;
+  return store.getters.user_data(userKey);
+};
 
-function getFieldTimestamp(_field) {
-  // This would need to be implemented based on task history/event tracking
-  // For now, return null as tasks may not have field-level timestamp tracking yet
-  return null;
-}
+const getFieldTimestamp = (field) => {
+  const timestamp = history.value.find((e) => e._key === field.last_updated)?.timestamp;
+  return getHumanDate(timestamp, {
+    year: '2-digit',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+};
 
 // History-related methods
 function getTaskHistory() {
@@ -542,6 +648,84 @@ async function saveAssignments(newAssignments) {
   }
 }
 
+// Navigate to task type detail page
+function goToTaskType() {
+  if (!task.value?.task_type_key) {
+    console.warn('No task type key available for navigation');
+    return;
+  }
+
+  try {
+    router.push({
+      name: 'taskTypeDetail',
+      params: { taskTypeKey: task.value.task_type_key }
+    });
+  } catch (error) {
+    console.error('Error navigating to task type:', error);
+    Notify.create({
+      message: $t('errors.navigation_err') || 'Error navigating to task type',
+      color: 'theme-red',
+      timeout: 3000,
+      position: 'top',
+    });
+  }
+}
+
+// Navigate to entity screen based on entity type
+function goToEntity(link) {
+  if (!link || !link.type || !link.key) {
+    console.warn('Invalid link data:', link);
+    return;
+  }
+
+  const entityRoutes = {
+    work_order: {
+      name: 'workOrderScreen',
+      params: { wo_key: link.key }
+    },
+    product: {
+      name: 'productHome',
+      params: { product_key: link.key }
+    },
+    issue: {
+      name: 'issueDetail',
+      params: { issueKey: link.key }
+    },
+    serial: {
+      name: 'serialDetail',
+      params: { serialKey: link.key }
+    },
+    task: {
+      name: 'taskScreen',
+      params: { taskKey: link.key }
+    }
+  };
+
+  try {
+    const route = entityRoutes[link.type];
+
+    if (route) {
+      router.push(route);
+    } else {
+      console.warn(`Unknown entity type: ${link.type}`);
+      Notify.create({
+        message: $t('errors.unknown_entity_type') || 'Unknown entity type',
+        color: 'theme-orange',
+        timeout: 3000,
+        position: 'top',
+      });
+    }
+  } catch (error) {
+    console.error('Error navigating to entity:', error);
+    Notify.create({
+      message: $t('errors.navigation_err') || 'Error navigating to entity',
+      color: 'theme-red',
+      timeout: 3000,
+      position: 'top',
+    });
+  }
+}
+
 async function save() {
   saving.value = true;
   try {
@@ -611,6 +795,71 @@ async function save() {
     });
   } finally {
     saving.value = false;
+  }
+}
+
+// Link dialog functions
+function openLinkDialog(entityType) {
+  selectedEntityType.value = entityType;
+  showLinkDialog.value = true;
+}
+
+function closeLinkDialog() {
+  showLinkDialog.value = false;
+  selectedEntityType.value = null;
+}
+
+
+// #########################################################
+// LINK MANAGEMENT
+// #########################################################
+
+// Group links by entity type
+const linksByEntityType = computed(() => {
+  return task.value.links.reduce((acc, link) => {
+    acc[link.type] = [...(acc[link.type] || []), link];
+    return acc;
+  }, {});
+});
+
+
+async function saveLink(linkData) {
+  savingLink.value = true;
+  try {
+    // TODO: Implement the actual API call to link the entity to the task
+    // This would depend on your backend API structure
+    sendEvent({
+      event_type: 'TASK_LINKED',
+      event_data: {
+        task_key: props.taskKey,
+        link_type: linkData.entityType,
+        link_key: linkData.entity._key || linkData.entity,
+      }
+    });
+
+    // For now, we'll just close the dialog and show a success message
+    showLinkDialog.value = false;
+
+    // Refresh task data to get updated links
+    task.value = await taskStore.getTaskData(props.taskKey);
+    console.log(task.value);
+
+    Notify.create({
+      message: $t('entity_linked_successfully') || 'Entity linked successfully',
+      color: 'theme-green',
+      timeout: 2000,
+      position: 'top',
+    });
+  } catch (error) {
+    console.error('Error linking entity:', error);
+    Notify.create({
+      message: $t('errors.link_err') || 'Error linking entity',
+      color: 'theme-red',
+      timeout: 3000,
+      position: 'top',
+    });
+  } finally {
+    savingLink.value = false;
   }
 }
 </script>
