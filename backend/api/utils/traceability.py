@@ -8,6 +8,7 @@ class Queries:
       && @job_key ? e.job_key == @job_key : true
       && @issue_key ? e.issue_data._key == @issue_key : true
       && @serial_key ? e.serial_key == @serial_key : true
+      && @task_key ? e.task_key == @task_key : true
       && @time_from ? e.timestamp >= @time_from : true
       && @time_to ? e.timestamp <= @time_to : true
       && @type ? e.event_type == @type : true

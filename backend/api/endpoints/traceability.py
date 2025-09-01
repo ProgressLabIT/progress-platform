@@ -79,6 +79,7 @@ async def get_events(
   work_order_key: str | None = None,
   time_from: datetime | None = None,
   time_to: datetime | None = None,
+  task_key: str | None = None,
   type: EventType | None = None
 ):
   bind_vars = dict(
@@ -88,6 +89,7 @@ async def get_events(
     work_order_key = work_order_key,
     time_from = time_from,
     time_to = time_to,
+    task_key = task_key,
     type = type
   )
   return [e for e in db.aql.execute(Queries.GET_EVENTS, bind_vars=bind_vars)]
