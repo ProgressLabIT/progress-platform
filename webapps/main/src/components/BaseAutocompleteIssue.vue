@@ -30,7 +30,7 @@
       <q-item
         v-bind="scope.itemProps"
         :id="scope.opt._key"
-        :disable="(usedIssues || []).includes(scope.opt._key)"
+        :disable="disableKeys.includes(scope.opt._key)"
         :class="scope.opt.open ? 'highlight' : 'text-low'"
       >
         <q-item-section side>
@@ -217,9 +217,9 @@ const props = defineProps({
     default: null,
   },
 
-  usedIssues: {
+  disableKeys: {
     type: Array,
-    default: null,
+    default: () => [],
   },
 
   hint: {

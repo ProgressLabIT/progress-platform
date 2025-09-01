@@ -31,18 +31,26 @@
       <q-item
         v-bind="scope.itemProps"
         :id="scope.opt._key"
+        :disable="disableKeys.includes(scope.opt._key)"
       >
+        <q-item-section side>
+          <q-icon :name="scope.opt.icon" size="md" />
+        </q-item-section>
         <q-item-section>
-          <q-item-label class="highlight">
+          <q-item-label caption>
+            <div class="row items-center q-gutter-x-sm">
+              <div>
+                {{ scope.opt.task_type_name }}
+              </div>
+              <div>
+                {{ scope.opt.code }}
+              </div>
+            </div>
+          </q-item-label>
+          <q-item-label class="highlight" lines="2">
             {{
               scope.opt.title || scope.opt.code || '(' + $t('id') + ' ' + scope.opt._key + ')'
             }}
-          </q-item-label>
-          <q-item-label caption lines="2">
-            <div class="row items-center q-gutter-x-sm">
-              <q-icon :name="scope.opt.icon" size="sm" />
-            <div>{{ scope.opt.task_type_name }}</div>
-            </div>
           </q-item-label>
         </q-item-section>
         <q-item-section side top>
@@ -148,6 +156,11 @@ const props = defineProps({
     type: Number,
     default: 0,
   },
+
+  disableKeys: {
+    type: Array,
+    default: () => [],
+  },
 });
 
 const emit = defineEmits(['select', 'remove']);
@@ -177,21 +190,19 @@ function initialize() {
 function loadOptions(search_value) {
   loading.value = true;
   let params = {
-    wo_key: props.work_order_key,
-    product_key: props.product_key,
-    serial_key: props.serial_key,
     search: search_value,
     limit: 100,
   };
 
   api.get('task', { params }).then((resp) => {
-    options.value = resp.data.map((item) => ({
-      _key: item._key,
-      code: item.code,
-      title: item.title,
-      task_type_name: item.task_type_name,
-      task_type: item.task_type,
-      status: item.status,
+    options.value = resp.data.map(({_key, code, title, task_type_name, task_type, status, icon}) => ({
+      _key,
+      code,
+      title,
+      task_type_name,
+      task_type,
+      status,
+      icon,
     }));
     loading.value = false;
   }).catch((error) => {

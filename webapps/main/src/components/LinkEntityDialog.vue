@@ -40,7 +40,7 @@
             v-else-if="selectedEntityType === 'issue'"
             v-model:value="selectedEntity"
             :label="$t('issue')"
-            :used-issues="excludeLinkKeys('issue')"
+            :disable-keys="excludeLinkKeys('issue')"
             @select="onEntitySelect"
           />
 
@@ -61,6 +61,7 @@
             v-else-if="selectedEntityType === 'product'"
             v-model:value="selectedEntity"
             :label="$t('product.label')"
+            :disable-keys="excludeLinkKeys('product')"
             @select="onEntitySelect"
           />
 
@@ -69,7 +70,7 @@
             v-else-if="selectedEntityType === 'task'"
             v-model:value="selectedEntity"
             :label="$t('task')"
-            :disable-options="excludeLinkKeys('task')"
+            :disable-keys="excludeLinkKeys('task')"
             @select="onEntitySelect"
           />
         </div>

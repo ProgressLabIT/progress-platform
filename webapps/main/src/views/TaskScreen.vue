@@ -317,6 +317,13 @@
                         <template v-if="link?.code">{{ link?.code }}</template>
                         <template v-else>({{ $t('id') }} {{ link?.key || '-' }})</template>
                       </div>
+                      <q-icon
+                        name="mdi-close"
+                        size="14px"
+                        class="q-ml-xs cursor-pointer"
+                        color="theme-grey"
+                        @click.stop="confirmRemoveLink(link)"
+                      />
                     </q-chip>
                   </div>
                 </div>
@@ -340,9 +347,28 @@
           v-model:selected-entity-type="selectedEntityType"
           :show="showLinkDialog"
           :saving="savingLink"
+          :existing-links="task.links"
           @save="saveLink"
           @close="closeLinkDialog"
         />
+
+        <!-- REMOVE LINK CONFIRMATION DIALOG -->
+        <BaseConfirmationDialog
+          :show="showRemoveConfirmation"
+          :confirm-color="'theme-red'"
+          :confirm-prompt="$t('remove')"
+          @confirm="removeLink"
+          @close="cancelRemoveLink"
+        >
+          <template #default>
+            <div class="text-center">
+              {{ $t('confirm_remove_link') || 'Are you sure you want to remove this link?' }}
+              <div v-if="linkToRemove" class="text-h5 q-mt-sm text-low">
+                {{ linkToRemove.code || linkToRemove.key }}
+              </div>
+            </div>
+          </template>
+        </BaseConfirmationDialog>
 
       </div>
     </q-page>
@@ -358,6 +384,7 @@ import { useRouter } from 'vue-router';
 import { useStore } from 'vuex';
 import { api as $api } from 'src/boot/axios';
 import { capitalize } from 'src/boot/filters';
+import BaseConfirmationDialog from 'src/components/BaseConfirmationDialog.vue';
 import BaseUserAvatar from 'src/components/BaseUserAvatar.vue';
 import FormField from 'src/components/FormField.vue';
 import LinkEntityDialog from 'src/components/LinkEntityDialog.vue';
@@ -399,6 +426,10 @@ const savingAssignment = ref(false);
 // Link dialog state
 const savingLink = ref(false);
 const selectedEntityType = ref(null);
+
+// Remove link confirmation state
+const showRemoveConfirmation = ref(false);
+const linkToRemove = ref(null);
 
 // Assignee grouping
 const ownerAssignment = computed(() => {
@@ -807,6 +838,56 @@ function openLinkDialog(entityType) {
 function closeLinkDialog() {
   showLinkDialog.value = false;
   selectedEntityType.value = null;
+}
+
+// Remove link functions
+function confirmRemoveLink(link) {
+  linkToRemove.value = link;
+  showRemoveConfirmation.value = true;
+}
+
+function cancelRemoveLink() {
+  showRemoveConfirmation.value = false;
+  linkToRemove.value = null;
+}
+
+async function removeLink() {
+  if (!linkToRemove.value) {
+    return;
+  }
+
+  try {
+    await sendEvent({
+      event_type: 'TASK_UNLINKED',
+      event_data: {
+        task_key: props.taskKey,
+        link_type: linkToRemove.value.type,
+        link_key: linkToRemove.value.key,
+      }
+    });
+
+    // Close confirmation dialog
+    showRemoveConfirmation.value = false;
+    linkToRemove.value = null;
+
+    // Refresh task data to get updated links
+    task.value = await taskStore.getTaskData(props.taskKey);
+
+    Notify.create({
+      message: $t('link_removed_successfully') || 'Link removed successfully',
+      color: 'theme-green',
+      timeout: 2000,
+      position: 'top',
+    });
+  } catch (error) {
+    console.error('Error removing link:', error);
+    Notify.create({
+      message: $t('errors.unlink_err') || 'Error removing link',
+      color: 'theme-red',
+      timeout: 3000,
+      position: 'top',
+    });
+  }
 }
 
 
