@@ -255,7 +255,7 @@ class Queries:
     FILTER @user_key ? m.user_key == @user_key : true
     COLLECT product = DOCUMENT(Product, m.product_key)
     AGGREGATE end = MAX(m.end)
-    FILTER product != null
+    FILTER product != null && product.active == true && !product.trash
     SORT end DESC
     LIMIT @limit
     RETURN product
