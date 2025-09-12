@@ -49,7 +49,8 @@ class BatchCompletedEvent(BaseProductionEvent):
     # ===================================================================
     self.batch = Batch(**self.tx.collection('Batch').get(self.info.active_batch_key))
 
-    # Validate batch quantity
+    # Validate batch quantity. Can't automatically update the batch quantity
+    # because it may need to pick specific serials
     if self.batch.qt_total != self.info.completed_batch_qt:
       raise ValueError("Active batch quantity does not match the completed quantity provided. Update the active batch first.")
 

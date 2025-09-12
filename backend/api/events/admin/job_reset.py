@@ -249,6 +249,11 @@ class JobResetEvent(BaseAdmin):
       qt_completed = 0,
       qt_released = 0,
       stage = 'created',
+      active_batch_key = None,
+      active_batch_qt = 0,
+      last_work_session_started = None,
+      active = False,
+      last_online = None,
       start = None,
       end = None,
       progress = 0
