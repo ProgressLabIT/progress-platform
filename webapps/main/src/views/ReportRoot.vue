@@ -13,7 +13,7 @@ const store = useStore();
 const src = computed(() => {
   const domain = window.location.hostname;
   const protocol = window.location.protocol;
-  const sessionData = store.getters.sessionData;
+  const sessionData = store.state.session;
   const sessionDataStr = JSON.stringify(sessionData);
   const encodedSession = btoa(sessionDataStr);
   return `${protocol}//${domain}:8501?session=${encodedSession}`;
