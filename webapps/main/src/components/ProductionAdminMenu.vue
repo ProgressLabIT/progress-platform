@@ -449,15 +449,9 @@ async function initTempData() {
 // Initialize data on setup
 initTempData()
 
-// Watch for changes in props and refresh data
-watch(() => props.job, async () => {
-  if (props.job) {
-    await initTempData()
-  }
-}, { immediate: false })
-
-watch(() => props.wo, async () => {
-  if (props.wo) {
+// Watch for changes in wo key from job or wo and refresh data
+watch(() => props.job?.wo_key || props.wo?._key, async (wo_key) => {
+  if (wo_key) {
     await initTempData()
   }
 }, { immediate: false })
