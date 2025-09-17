@@ -74,14 +74,14 @@ export default route(function ({ store }) {
   Router.beforeEach(async (to, from, next) => {
     // Make sure user is authenticated
     const login_route = ['root', 'login'].includes(to.name);
-
+    const homepage = store.getters.userHomepage;
     if (
       login_route &&
       (store.getters.isLoggedIn || (await store.dispatch('recognizeMe')))
     ) {
       let nextPage = to.query.redirect_to
         ? to.query.redirect_to
-        : store.getters.userHomepage;
+        : homepage;
       next({ name: nextPage });
     } else if (
       !login_route &&
@@ -96,7 +96,13 @@ export default route(function ({ store }) {
       const not_authorized = to.matched.some((r) => !hasRoutePermission(r));
       if (not_authorized) {
         window.alert(translate('login_page.not_authorized'));
-        next(false);
+        const stay = from.matched.some((r) => hasRoutePermission(r));
+        if (stay) {
+          next(false);
+        }
+        else {
+          next({ name: homepage });
+        }
       } else {
         // Consider the navigation as an interaction > Reset session timeout
         if (!login_route) {
