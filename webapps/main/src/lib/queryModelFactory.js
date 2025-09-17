@@ -16,7 +16,7 @@ function baseQueryModelFactory(
       if (data_type === Number) {
         value = parseFloat(value);
       } else if (data_type === Boolean) {
-        value = value != 'false';
+        value = ['true', 'false'].includes(value) ? value === 'true' : default_value;
       } else if (data_type === Object || data_type === Array) {
         value = value ? JSON.parse(atob(value)) : null;
       }
@@ -31,9 +31,10 @@ function baseQueryModelFactory(
             : value,
       };
 
-      // Remove query param from url if value is empty, null, undefined or true (for booleans)
+      // Remove query param from url if value equals default or is empty/null/undefined
       if (
-        [null, undefined, '', true].includes(value) ||
+        [null, undefined, ''].includes(value) ||
+        value === default_value ||
         (data_type === Object && Object.keys(value).length === 0) ||
         (data_type === Array && value.length === 0)
       ) {

@@ -49,7 +49,8 @@ class BatchCompletedEvent(BaseProductionEvent):
     # ===================================================================
     self.batch = Batch(**self.tx.collection('Batch').get(self.info.active_batch_key))
 
-    # Validate batch quantity
+    # Validate batch quantity. Can't automatically update the batch quantity
+    # because it may need to pick specific serials
     if self.batch.qt_total != self.info.completed_batch_qt:
       raise ValueError("Active batch quantity does not match the completed quantity provided. Update the active batch first.")
 
@@ -320,12 +321,13 @@ class BatchCompletedEvent(BaseProductionEvent):
 
       # Save step data into batch serials if needed
       serial_data = self._prepare_serial_data()
-      if len(serial_data) > 0:
-        for serial_key in self.info.batch_serial_keys:
+      for serial_key in self.info.batch_serial_keys:
+        serial_code = self._handle_serial_code(serial_key)
+        if len(serial_data) > 0 or serial_code is not None:
           SerialUpdatedEvent.create_as_child(self, dict(
             serial_key = serial_key,
             serial_data = serial_data,
-            serial_code = self._handle_serial_code(serial_key),
+            serial_code = serial_code,
           ))
 
           # Copy batch media to serials

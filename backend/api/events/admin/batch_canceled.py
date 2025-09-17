@@ -9,7 +9,7 @@ from utils.serial import Queries as SerialQueries
 from utils.traceability import Queries as TraceabilityQueries
 
 
-class BatchCanceled(BaseAdmin):
+class BatchCanceledEvent(BaseAdmin):
 
   class InfoModel(EventInfoModel):
     job_key: str

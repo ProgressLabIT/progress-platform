@@ -1,6 +1,8 @@
 from events.admin.base_admin import BaseAdmin, Queries
-from events.inventory.movement_reversed import MovementReversedEvent
 from events.inventory.movement_completed import MovementCompletedEvent
+from events.inventory.movement_reversed import MovementReversedEvent
+from events.production.base_production import BaseProductionEvent
+from events.production.job_closed import JobClosedEvent
 from utils.inventory import Queries as InventoryQueries
 from models.inventory import InventoryMovementType, InventoryMovementReferences
 from models.event import EventInfoModel, EventType
@@ -17,7 +19,11 @@ from collections import deque
 from utils.production import Queries as ProductionQueries
 from utils.traceability import Queries as TraceabilityQueries
 
-class ProgressOverrideRequestedEvent(BaseAdmin):
+class ProgressOverrideRequestedEvent(BaseAdmin, BaseProductionEvent):
+
+  def post_processing(self):
+    # Override post_processing to avoid updating job last_online field
+    self.update_work_order()
 
   class InfoModel(EventInfoModel):
     job_key: str
@@ -70,6 +76,8 @@ class ProgressOverrideRequestedEvent(BaseAdmin):
     # Update job status and batch available states
     self._handle_job_status()
     self._update_batch_available_states()
+
+    # Work order update is handled in post_processing
 
 
   # =================================================================================================
@@ -288,20 +296,16 @@ class ProgressOverrideRequestedEvent(BaseAdmin):
     if self.info.quantity_change > 0:
         # Set job as started if not already
         if self.job.stage == WorkStatus.CREATED:
+          self.job_update['start'] = self.info.timestamp
+          if self.info.new_job_qt_completed < self.job.qt_planned:
             self.job_update['stage'] = WorkStatus.STARTED
-            self.job_update['start'] = self.info.timestamp
+          else:
+            # Set job as closed and remove it from queues if necessary
+            JobClosedEvent.create_as_child(self, dict(
+                job_key=self.job.key,
+                completed_qt=self.info.new_job_qt_completed
+            ))
 
-        # Set job as closed and remove it from queues if necessary
-        if self.info.new_job_qt_completed == self.job.qt_planned:
-            self.job_update['stage'] = WorkStatus.CLOSED
-            self.job_update['end'] = self.info.timestamp
-            self.tx.aql.execute(
-                ProductionQueries.REMOVE_JOB_FROM_QUEUE,
-                bind_vars=dict(
-                    target_key=self.job.assigned_to,
-                    job_key=self.job.key
-                )
-            )
     else:  # quantity_change < 0
         # Reopen job if it was closed
         if self.job.stage == WorkStatus.CLOSED:

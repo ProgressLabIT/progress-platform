@@ -1,25 +1,28 @@
 <template>
   <div class="absolute-full scroll">
-    <iframe id="iframe" :src="src" frameborder="0"></iframe>
+    <iframe id="iframe" :src="src" frameborder="0" ref="streamlitIframe"></iframe>
   </div>
 </template>
 
-<script>
-export default {
-  name: 'ReportRoot',
+<script setup>
+import { computed, onMounted } from 'vue';
+import { useStore } from 'vuex';
 
-  computed: {
-    src() {
-      const port = '8501';
-      const domain = window.location.hostname;
-      return `http://${domain}:${port}`;
-    },
-  },
+const store = useStore();
 
-  created() {
-    console.log(this.src);
-  },
-};
+const src = computed(() => {
+  const domain = window.location.hostname;
+  const protocol = window.location.protocol;
+  const sessionData = store.state.session;
+  const sessionDataStr = JSON.stringify(sessionData);
+  const encodedSession = btoa(sessionDataStr);
+  return `${protocol}//reporting.${domain}?session=${encodedSession}`;
+});
+
+
+onMounted(() => {
+  console.log(src.value);
+});
 </script>
 
 <style lang="sass" scoped>

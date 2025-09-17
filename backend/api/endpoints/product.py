@@ -34,7 +34,7 @@ async def get_product_list(
   search: str | None = None, # filter by code or description
   has_operation_key: str | None = None, # filter by operation key
   details: bool = False,
-  filter_inactive: bool = False,
+  active_only: bool = True,
   tag_search: str | None = None,
   traceability_only: bool | None = False
 ):
@@ -47,7 +47,7 @@ async def get_product_list(
       has_operation_key = has_operation_key,
       details = details,
       tag = tag_search,
-      active_only = filter_inactive,
+      active_only = active_only,
       traceability_only = traceability_only
     )
   )

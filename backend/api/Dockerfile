@@ -1,5 +1,15 @@
 FROM python:3.11-slim
 
+# Install system dependencies for WeasyPrint
+RUN apt-get update && apt-get install -y \
+    libpango-1.0-0 \
+    libpangoft2-1.0-0 \
+    libfontconfig1 \
+    libcairo2 \
+    libgdk-pixbuf-xlib-2.0-0 \
+    libgtk-3-0 \
+    && rm -rf /var/lib/apt/lists/*
+
 # Install dependencies
 COPY requirements.txt /api/requirements.txt
 

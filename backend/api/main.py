@@ -22,47 +22,18 @@ import endpoints
 config = get_config()
 
 KafkaAdmin.getInstance().create_topic("notifications")
-#KafkaAdmin.getInstance().create_topic("serials")
 
 app = FastAPI(
-	# openapi_url=f"{config.root_path}/openapi.json",
 	root_path=config.api_root_path
 )
-# global_router = APIRouter()
 
-# origins = [
-#     "http://localhost",
-#     "http://localhost:9000",
-#     "http://localhost:9001",
-#     "http://0.0.0.0",
-#     "http://0.0.0.0:9000",
-#     "http://0.0.0.0:9001",
-#     "http://127.0.0.1",
-#     "http://127.0.0.1:9000",
-#     "http://127.0.0.1:9001",
-#     "http://192.168.1.3",
-#     "http://192.168.1.3:9000",
-#     "http://192.168.1.3:9001",
-#     "http://192.168.2.1:9000",
-#     "http://192.168.2.1:9001",
-#     "http://192.168.2.1",
-#     "http://192.168.64.1:9000",
-#     "http://192.168.64.1:9001",
-#     "http://192.168.64.1",
-#     "http://10.0.0.156:9000",
-#     "http://10.0.0.156:9001",
-#     "http://10.0.0.156",
-#     "http://10.0.0.70",
-#     "http://10.0.0.70:9000",
-#     "http://10.0.0.70:9001",
-#     "http://172.232.211.239:9000"
-# ]
 app.add_middleware(
   CORSMiddleware,
   allow_origins=config.cors_allowed_origins,
   allow_credentials=True,
   allow_methods=["*"],
   allow_headers=["*"],
+  expose_headers=["Content-Disposition", "Content-Encoding", "Content-Length", "Content-Type"]
 )
 
 app.add_middleware(GZipFilterMiddleware, minimum_size=500, filtered_api="/notification")

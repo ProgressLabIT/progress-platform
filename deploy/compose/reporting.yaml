@@ -14,6 +14,7 @@ secrets:
   progress_api_db_pwd:
     external: true
 
+
 services:
   reporting: # Streamlit app
     image: python:3.11-slim
@@ -24,10 +25,12 @@ services:
       - cmounts:/cmounts
     networks:
       - progress
-    ports:
-      - "8501:8501"
     secrets:
       - progress_api_db_pwd
+    environment:
+      # Load SUBDOMAIN and DOMAIN variables for entrypoint.sh
+      SUBDOMAIN: ${SUBDOMAIN}
+      DOMAIN: ${DOMAIN}
     entrypoint: >
       sh -c "chmod +x /app/entrypoint.sh && /app/entrypoint.sh"
     deploy:
@@ -36,7 +39,13 @@ services:
         - "traefik.enable=true"
         - "traefik.docker.network=progress"
         - "traefik.http.services.reporting.loadbalancer.server.port=8501"
-        - "traefik.http.routers.reporting.rule=HostRegexp(`{anyhost:.*}`) && PathPrefix(`/reports`)"
-        - "traefik.http.routers.reporting.middlewares=strip_reporting_prefix"
-        - "traefik.http.middlewares.strip_reporting_prefix.stripprefix.prefixes=/reports"
-        - "traefik.http.middlewares.strip_reporting_prefix.stripprefix.forceslash=false"
+        - "traefik.http.routers.reporting.entrypoints=websecure"
+        - "traefik.http.routers.reporting.rule=Host(`reporting.${SUBDOMAIN}.${DOMAIN}`)"
+        - "traefik.http.routers.reporting.tls.certresolver=letsencrypt"
+        # Ensure access is only via iframe from main sub.domain url
+        - "traefik.http.routers.reporting.middlewares=embed-only,reporting-embed"
+        - "traefik.http.middlewares.reporting-embed.headers.framedeny=false"
+        # Allows embedding in iframe from main sub.domain url
+        - "traefik.http.middlewares.reporting-embed.headers.customresponseheaders.Content-Security-Policy=frame-ancestors 'self' https://${SUBDOMAIN}.${DOMAIN}"
+        # Prevents direct access to the app
+        - "traefik.http.middlewares.embed-only.headers.customrequestheaders.X-Forwarded-Host=${SUBDOMAIN}.${DOMAIN}"

@@ -1,0 +1,71 @@
+#!/bin/bash
+
+# Exit immediately if a command exits with a non-zero status.
+set -e
+
+# --- Argument Handling ---
+# Get the image tag from the first command-line argument.
+TAG="$1"
+
+# If the tag was NOT provided as an argument, ask the user for it.
+if [ -z "$TAG" ]; then
+  read -p "Please enter the image tag to deploy: " TAG
+  # If the user still didn't enter anything, exit.
+  if [ -z "$TAG" ]; then
+    echo "❌ Error: No tag provided. Aborting."
+    exit 1
+  fi
+fi
+
+echo "✅ Using tag: ${TAG}"
+
+
+# --- Configuration ---
+# Your GitLab registry URL
+REGISTRY="registry.gitlab.com/progresslab/progress-platform"
+
+# List your image names here (without the registry part)
+IMAGES=("api" "app" "wf-sys-agent")
+
+# List the corresponding service names here.
+STACK_NAME="progress"
+SERVICES=("${STACK_NAME}_api" "${STACK_NAME}_app" "${STACK_NAME}_wf-system-agent")
+
+
+# --- Script Logic ---
+echo "🚀 Starting image pull and service update process for tag '${TAG}'..."
+
+# Loop through the images and pull the specified version
+for IMAGE in "${IMAGES[@]}"; do
+  FULL_IMAGE_NAME="${REGISTRY}/${IMAGE}:${TAG}"
+  echo "--------------------------------------------------"
+  echo "⬇️  Pulling image: ${FULL_IMAGE_NAME}"
+  docker pull "${FULL_IMAGE_NAME}"
+done
+
+echo ""
+echo "✅ All images pulled successfully."
+echo ""
+
+# Loop through the services and update them with the new images
+for i in "${!SERVICES[@]}"; do
+  SERVICE_NAME="${SERVICES[$i]}"
+  IMAGE_NAME="${REGISTRY}/${IMAGES[$i]}:${TAG}"
+  echo "--------------------------------------------------"
+  echo "🔄 Updating service '${SERVICE_NAME}' with image '${IMAGE_NAME}'"
+
+  docker service update --image "${IMAGE_NAME}" --force "${SERVICE_NAME}"
+done
+
+echo ""
+echo "🎉 All services updated successfully to tag '${TAG}'!"
+
+echo "--------------------------------------------------"
+echo "📋 Adding release log entry"
+echo "$(date +%Y%m%d-%H%M) ${TAG}" >> /opt/progress/release
+echo "Release log entry added successfully"
+
+echo "--------------------------------------------------"
+echo "🎉 All operations completed successfully! Updated services:"
+docker service ls
+echo "--------------------------------------------------"

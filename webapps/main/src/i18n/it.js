@@ -126,6 +126,7 @@ export default {
     label: 'documento | documenti',
     missing: 'nessun documento',
   },
+  download_log: 'Scarica log',
   due_by: 'scadenza',
   due_by_min: 'Scadenza (min)',
   due_by_max: 'Scadenza (max)',
@@ -1193,4 +1194,11 @@ export default {
   },
   release_date: 'data rilascio',
   phase_delete_has_components: 'La fase ha componenti, non può essere eliminata',
+  dhr: {
+    options: 'Opzioni DHR',
+    select_options: 'Seleziona le opzioni di generazione DHR',
+    include_step_data: 'Includi dati di esecuzione passi',
+    include_attachments: 'Includi allegati',
+    include_children: 'Includi figli',
+  },
 };

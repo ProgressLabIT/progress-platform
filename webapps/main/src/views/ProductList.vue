@@ -34,7 +34,7 @@
 
         <!-- View controls -->
         <q-checkbox
-          v-model="filter_inactive"
+          v-model="active_only"
           class="col-auto text-body1 low-text"
           :label="$capitalize($t('product.filters.active_only'))"
         >
@@ -127,49 +127,10 @@ export default {
       return this.load_quantity + this.offset;
     },
 
-    search_string: {
-      get() {
-        return this.$route.query.search;
-      },
-      set(value) {
-        this.$router.replace({
-          query: {
-            ...this.$route.query,
-            search: value,
-          },
-        });
-      },
-    },
-
-    show_images: {
-      get() {
-        return this.$route.query.show_images === 'true' ? true : false;
-      },
-      set(value) {
-        this.$router.replace({
-          query: {
-            ...this.$route.query,
-            show_images: value,
-          },
-        });
-      },
-    },
-
-    filter_inactive: {
-      get() {
-        return this.$route.query.filter_inactive === 'true' ? true : false;
-      },
-      set(value) {
-        this.$router.replace({
-          query: {
-            ...this.$route.query,
-            filter_inactive: value,
-          },
-        });
-      },
-    },
-
+    search_string: queryModel(String, 'search', null),
     tag_search: queryModel(String, 'tag_search', null),
+    active_only: queryModel(Boolean, 'active_only', false),
+    show_images: queryModel(Boolean, 'show_images', false),
 
     filters() {
       let filter = {
@@ -181,8 +142,8 @@ export default {
         filter.search = this.search_string;
       }
 
-      if (this.filter_inactive) {
-        filter.filter_inactive = this.filter_inactive;
+      if (this.active_only) {
+        filter.active_only = this.active_only;
       }
 
       if (this.tag_search) {
@@ -203,7 +164,7 @@ export default {
       handler: 'fetchProducts',
     },
 
-    filter_inactive: {
+    active_only: {
       immediate: true,
       handler: 'fetchProducts',
     },

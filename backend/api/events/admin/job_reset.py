@@ -1,10 +1,10 @@
 from events.admin.base_admin import BaseAdmin
+from events.admin.batch_canceled import BatchCanceledEvent
 from events.inventory.movement_reversed import MovementReversedEvent
 from events.serial.serial_deleted import SerialDeletedEvent
 from events.serial.serial_updated import SerialUpdatedEvent
 from events.serial.serial_unlinked import SerialUnlinkedEvent
 from models.event import EventInfoModel, EventType
-from utils.serial import Queries as SerialQueries
 from utils.production import update_target_queue
 from utils.traceability import Queries as TraceabilityQueries
 from utils.exceptions import WipNotAvailableError
@@ -36,6 +36,12 @@ class JobResetEvent(BaseAdmin):
 
   def apply(self):
     self._get_job_data()
+
+    if self.job.active_batch_key is not None:
+      BatchCanceledEvent.create_as_child(self, dict(
+        batch_key = self.job.active_batch_key,
+        reason = f'Job reset by user {self.info.user_key} at {self.info.timestamp}'
+      ))
 
     # Check there's enough free available downstream wip before next phase
     self.available_wip = self.tx.aql.execute(
@@ -243,6 +249,11 @@ class JobResetEvent(BaseAdmin):
       qt_completed = 0,
       qt_released = 0,
       stage = 'created',
+      active_batch_key = None,
+      active_batch_qt = 0,
+      last_work_session_started = None,
+      active = False,
+      last_online = None,
       start = None,
       end = None,
       progress = 0
