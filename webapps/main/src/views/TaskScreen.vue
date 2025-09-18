@@ -1,30 +1,28 @@
 <template>
-  <q-page-container>
-    <q-page class="q-pa-md column full-height">
+  <BaseModalScreen :show="true" @close="exit">
+    <template #header>
+      <span v-if="!task" class="q-ml-md display medium highlight weight-medium text-uppercase">
+        {{ $t('task') }}: {{ taskKey }}
+      </span>
+      <div v-else class="col-auto row q-mx-none items-center q-gutter-x-md display medium highlight weight-medium text-uppercase">
+        <div
+          :class="{ 'hover-underline': hasAdminAccess, 'pointer': hasAdminAccess }"
+          @click="hasAdminAccess ? goToTaskType() : null">
+        {{ task.task_type_name }}
+        </div>
+        <div>
+          <q-icon :name="task.icon" size="18px" />
+        {{ task.code || '-'}}
+        </div>
+      </div>
+      <q-space />
+    </template>
 
+    <template #content>
       <q-skeleton v-if="!task" type="text" />
 
-      <div v-else class="column full-height">
+      <div v-else class="q-pa-md">
         <div class="row items-center text-low q-col-gutter-x-xl">
-          <!-- CODE AND STATUS -->
-          <div class="col-auto row q-col-gutter-x-md items-center">
-          <q-icon :name="task.icon" size="18px" />
-          <div
-            class="text-h5 weight-bold text-uppercase"
-            :class="{ 'hover-underline': hasAdminAccess, 'pointer': hasAdminAccess }"
-            @click="hasAdminAccess ? goToTaskType() : null"
-          >
-            {{ task.task_type_name }} #{{ task.code || '-'}}
-          </div>
-          <q-chip
-            :color="taskStatusOptions[task.status]?.color || 'theme-grey'"
-            :label="taskStatusOptions[task.status]?.label"
-            :icon="taskStatusOptions[task.status]?.icon || 'mdi-circle-outline'"
-            size="10px"
-            class="text-uppercase highlight q-ml-lg"
-          />
-          </div>
-
           <!-- CREATED BY -->
           <div class="col-auto row q-gutter-x-md items-center">
             <div class="text-h5 uppercase text-low">{{ $t('created_date') }}</div>
@@ -82,6 +80,16 @@
                 {{ $t('edit_assignments') }}
               </q-tooltip>
             </q-btn>
+          </div>
+
+          <div class="col-auto">
+            <q-chip
+              :color="taskStatusOptions[task.status]?.color || 'theme-grey'"
+              :label="taskStatusOptions[task.status]?.label"
+              :icon="taskStatusOptions[task.status]?.icon || 'mdi-circle-outline'"
+              size="10px"
+              class="highlight text-uppercase"
+              />
           </div>
         </div>
 
@@ -371,8 +379,8 @@
         </BaseConfirmationDialog>
 
       </div>
-    </q-page>
-  </q-page-container>
+    </template>
+  </BaseModalScreen>
 </template>
 
 <script setup>
@@ -380,21 +388,22 @@ import { cloneDeep } from 'lodash';
 import { Notify } from 'quasar';
 import { onMounted, onBeforeUnmount, ref, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import { useStore } from 'vuex';
-import { api as $api } from 'src/boot/axios';
-import { capitalize } from 'src/boot/filters';
-import BaseConfirmationDialog from 'src/components/BaseConfirmationDialog.vue';
-import BaseUserAvatar from 'src/components/BaseUserAvatar.vue';
-import FormField from 'src/components/FormField.vue';
-import LinkEntityDialog from 'src/components/LinkEntityDialog.vue';
-import MessageThread from 'src/components/MessageThread.vue';
-import TaskAssignmentDialog from 'src/components/TaskAssignmentDialog.vue';
-import { sendEvent } from 'src/composables/event.js';
-import { useTask } from 'src/composables/task';
-import { formatDateTime } from 'src/lib/TimeHandling';
-import { useQueryModel } from 'src/lib/queryModelFactory';
-import { useTaskStore } from 'src/stores/task';
+import { api as $api } from '@/boot/axios';
+import { capitalize } from '@/boot/filters';
+import { sendEvent } from '@/composables/event.js';
+import { useTask } from '@/composables/task';
+import { formatDateTime } from '@/lib/TimeHandling';
+import { useQueryModel } from '@/lib/queryModelFactory';
+import { useTaskStore } from '@/stores/task';
+import BaseModalScreen from '@/components/BaseModalScreen.vue';
+import BaseConfirmationDialog from '@/components/BaseConfirmationDialog.vue';
+import BaseUserAvatar from '@/components/BaseUserAvatar.vue';
+import FormField from '@/components/FormField.vue';
+import LinkEntityDialog from '@/components/LinkEntityDialog.vue';
+import MessageThread from '@/components/MessageThread.vue';
+import TaskAssignmentDialog from '@/components/TaskAssignmentDialog.vue';
 
 const props = defineProps({
   taskKey: {
@@ -406,6 +415,7 @@ const props = defineProps({
 const store = useStore();
 const taskStore = useTaskStore();
 const router = useRouter();
+const route = useRoute();
 const { taskStatusOptions } = useTask();
 const { t: $t, locale } = useI18n();
 
@@ -453,6 +463,18 @@ const availableEntityTypes = computed(() => {
 });
 
 
+function exit() {
+  let query = { ...route.query };
+
+  if (route.query.back_to) {
+    delete query.back_to;
+    const push_route = { name: route.query.back_to, query };
+    router.push(push_route);
+  } else {
+    router.back()
+  }
+}
+
 
 
 
@@ -479,7 +501,6 @@ watch(() => props.taskKey, async (newTaskKey, oldTaskKey) => {
 onMounted(async () => {
   await store.dispatch('loadUsers');
   task.value = await taskStore.getTaskData(props.taskKey);
-  console.log(task.value);
   // Store original data for cancel functionality
   originalTaskData.value = cloneDeep(task.value);
 
