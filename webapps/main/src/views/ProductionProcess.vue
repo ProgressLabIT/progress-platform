@@ -393,9 +393,30 @@ export default {
       // use onEnd event provided by SortableJs library
       onEnd: ({ newIndex, oldIndex }) => {
         _self.dragging = false;
-        const moved = _self.process.splice(oldIndex, 1)[0];
-        _self.process.splice(newIndex, 0, moved);
-        _self.updateActivePhaseIndex({ oldIndex, newIndex });
+        // Store the _key of the currently active phase before reordering
+        const activePhaseKey = _self.process[_self.current_phase]?._key;
+
+        // Create a copy of the process array to avoid direct mutation
+        const newProcess = [..._self.process];
+        const moved = newProcess.splice(oldIndex, 1)[0];
+        newProcess.splice(newIndex, 0, moved);
+
+        // Find the new index of the previously active phase
+        const newActivePhaseIndex = activePhaseKey
+          ? newProcess.findIndex(phase => phase._key === activePhaseKey)
+          : _self.current_phase;
+
+        // Update both the process and current_phase atomically
+        _self.process = newProcess;
+        if (newActivePhaseIndex >= 0) {
+          _self.current_phase = newActivePhaseIndex;
+        }
+
+        // Update the steps map to match the new phase order
+        const new_steps_map = [..._self.product_nav_state.last_steps];
+        const movedStep = new_steps_map.splice(oldIndex, 1)[0];
+        new_steps_map.splice(newIndex, 0, movedStep);
+        _self.updateStepsMap(new_steps_map);
       },
     });
   },
