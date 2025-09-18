@@ -74,14 +74,13 @@ export default route(function ({ store }) {
   Router.beforeEach(async (to, from, next) => {
     // Make sure user is authenticated
     const login_route = ['root', 'login'].includes(to.name);
-    const homepage = store.getters.userHomepage;
     if (
       login_route &&
       (store.getters.isLoggedIn || (await store.dispatch('recognizeMe')))
     ) {
       let nextPage = to.query.redirect_to
         ? to.query.redirect_to
-        : homepage;
+        : store.getters.userHomepage;
       next({ name: nextPage });
     } else if (
       !login_route &&
@@ -101,7 +100,7 @@ export default route(function ({ store }) {
           next(false);
         }
         else {
-          next({ name: homepage });
+          next({ name: store.getters.userHomepage });
         }
       } else {
         // Consider the navigation as an interaction > Reset session timeout

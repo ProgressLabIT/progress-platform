@@ -179,6 +179,7 @@ const session = {
         return userDefaultPage;
       }
 
+
       const scopes = state.scope.split(' ');
       switch (true) {
         case scopes.includes('operator'):
@@ -193,12 +194,14 @@ const session = {
           return 'qualityRoot';
         case scopes.includes('traceability'):
           return 'traceabilityRoot';
+        case scopes.includes('warehouse'):
+          return 'warehouseRoot';
         case scopes.includes('reporting'):
           return 'reportRoot';
+        case scopes.includes('task'):
+          return 'taskRoot';
         default:
-          throw new Error(
-            'No homepage found for user with scopes: ' + scopes.join(', '),
-          );
+          return null
       }
     },
   },
