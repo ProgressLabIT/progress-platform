@@ -128,9 +128,27 @@ class TaskLinkType(str, Enum):
   ISSUE = 'issue'
   WORK_ORDER = 'work_order'
   PRODUCT = 'product'
-  EQUIPMENT = 'equipment'
+  # EQUIPMENT = 'equipment'
   SERIAL = 'serial'
   TASK = 'task'
+
+class TaskLinkedEntitySettings(BaseModel):
+  type: TaskLinkType
+  enabled: bool | None = False
+  allow_multiple: bool | None = False
+  required: bool | None = False
+
+
+def set_default_task_linked_entity_settings():
+  return [
+    TaskLinkedEntitySettings(type=TaskLinkType.ISSUE),
+    TaskLinkedEntitySettings(type=TaskLinkType.WORK_ORDER),
+    TaskLinkedEntitySettings(type=TaskLinkType.PRODUCT),
+    TaskLinkedEntitySettings(type=TaskLinkType.EQUIPMENT),
+    TaskLinkedEntitySettings(type=TaskLinkType.SERIAL),
+    TaskLinkedEntitySettings(type=TaskLinkType.TASK)
+  ]
+
 
 class TaskType(ArangoDocument):
   name: str
@@ -139,7 +157,8 @@ class TaskType(ArangoDocument):
   icon: str | None = None
   created: datetime = Field(default_factory=timestamp)
   form_fields: list[FormFieldDefinition] | None = []
-  allowed_linked_entities: list[TaskLinkType] | None = []
+  link_settings: list[TaskLinkedEntitySettings] | None = Field(default_factory=set_default_task_linked_entity_settings)
+  require_time_entry: bool | None = False
 
 
 class TaskTypeFull(TaskType):

@@ -874,8 +874,8 @@ export default {
     serial: 'Matricola',
     task: 'Compito',
   },
-  allowed_linked_entities_title: 'Entità collegabili consentite',
-  allowed_linked_entities_description: 'Seleziona quali tipi di entità possono essere collegate ai compiti di questo tipo',
+  task_link_settings_title: 'Entità collegabili consentite',
+  task_link_settings_description: 'Seleziona quali tipi di entità possono essere collegate ai compiti di questo tipo',
   time: {
     hour: 'Ora | Ore',
     minute: 'Minuto | Minuti',

@@ -151,27 +151,50 @@
           <!-- LINKED ENTITIES -->
           <q-tab-panel name="linked_entities" class="surface2 column q-pa-md">
             <div class="text-h6 q-mb-md">
-              {{ $t('allowed_linked_entities_title') }}
+              {{ $t('task_link_settings_title') }}
             </div>
             <div class="text-body2 text-low q-mb-lg">
-              {{ $t('allowed_linked_entities_description') }}
+              {{ $t('task_link_settings_description') }}
             </div>
 
-            <div class="row q-col-gutter-md">
-              <div
-                v-for="option in linkedEntityOptions"
-                :key="option.value"
-                class="col-12 col-md-6 col-lg-4"
+            <!-- ENTITY SETTINGS GRID -->
+            <div class="col q-mt-lg">
+              <q-table
+                :rows="temp_metadata.link_settings"
+                :columns="linkSettingsColumns"
+                row-key="type"
+                flat
+                hide-pagination
+                :pagination="{ rowsPerPage: 0 }"
+                class="link-settings-table"
               >
-                <q-checkbox
-                  v-model="temp_metadata.allowed_linked_entities"
-                  :val="option.value"
-                  :disable="!editMode"
-                  :label="$capitalize($t(option.labelKey))"
-                  class="q-mb-sm"
-                />
-              </div>
+                                <template #body="tableProps">
+                  <q-tr :key="tableProps.row.type" :props="tableProps">
+                    <!-- Entity Type Label -->
+                    <q-td key="label" :props="tableProps">
+                      <div class="text-weight-medium">
+                        {{ $t(linkSettingLabels[tableProps.row.type]) }}
+                      </div>
+                    </q-td>
+
+                    <!-- Dynamic Property Checkboxes -->
+                    <q-td
+                      v-for="property in linkSettingsProperties"
+                      :key="property.key"
+                      :props="tableProps"
+                      class="text-center"
+                    >
+                      <q-checkbox
+                        v-model="tableProps.row[property.key]"
+                        :disable="!editMode || property.disableCondition(tableProps.row)"
+                        color="theme-blue"
+                      />
+                    </q-td>
+                  </q-tr>
+                </template>
+              </q-table>
             </div>
+
           </q-tab-panel>
 
           <!-- PRINT TEMPLATES -->
@@ -257,12 +280,62 @@ const showDeleteDialog = ref(false)
 const show_icon_library = ref(false)
 const tab = ref('form')
 
-const linkedEntityOptions = [
-  { value: 'work_order', labelKey: 'work_order.long' },
-  { value: 'serial', labelKey: 'serial' },
-  { value: 'task', labelKey: 'task' },
-  { value: 'issue', labelKey: 'issue' },
-  { value: 'product', labelKey: 'product.label' },
+const linkSettingLabels = {
+  work_order: 'work_order.long',
+  serial: 'serial',
+  task: 'task',
+  issue: 'issue',
+  product: 'product.label',
+}
+
+// Configuration for checkbox properties
+const linkSettingsProperties = [
+  {
+    key: 'enabled',
+    label: 'Enabled',
+    disableCondition: () => false // Always enabled in edit mode
+  },
+  {
+    key: 'allow_multiple',
+    label: 'Allow Multiple',
+    disableCondition: (row) => !row.enabled // Disabled when enabled is false
+  },
+  {
+    key: 'required',
+    label: 'Required',
+    disableCondition: (row) => !row.enabled // Disabled when enabled is false
+  }
+]
+
+const linkSettingsColumns = [
+  {
+    name: 'label',
+    required: true,
+    label: 'Entity Type',
+    align: 'left',
+    field: 'type',
+    format: (val) => linkSettingLabels[val] || val,
+    sortable: false
+  },
+  ...linkSettingsProperties.map(prop => ({
+    name: prop.key,
+    required: true,
+    label: prop.label,
+    align: 'center',
+    field: prop.key,
+    sortable: false
+  }))
+]
+
+
+
+// Default link settings for all entity types
+const getDefaultLinkSettings = () => [
+  { type: 'issue', enabled: false, allow_multiple: false, required: false },
+  { type: 'work_order', enabled: false, allow_multiple: false, required: false },
+  { type: 'product', enabled: false, allow_multiple: false, required: false },
+  { type: 'serial', enabled: false, allow_multiple: false, required: false },
+  { type: 'task', enabled: false, allow_multiple: false, required: false },
 ]
 
 const temp_metadata = reactive({
@@ -272,7 +345,7 @@ const temp_metadata = reactive({
   icon: 'mdi-check-circle',
   form_fields: [],
   print_templates: [],
-  allowed_linked_entities: [],
+  link_settings: getDefaultLinkSettings(),
 })
 
 const setTempData = () => {
@@ -280,11 +353,24 @@ const setTempData = () => {
     Object.keys(temp_metadata).forEach((key) => {
       if (key in props.taskType) {
         temp_metadata[key] = _cloneDeep(props.taskType[key])
-      } else if (key === 'allowed_linked_entities') {
-        // Default to empty array if field doesn't exist in taskType yet
-        temp_metadata[key] = []
+      } else if (key === 'link_settings') {
+        // Use default link settings if not present in taskType
+        temp_metadata[key] = getDefaultLinkSettings()
       }
     })
+
+    // Ensure link_settings has all entity types if it exists but is incomplete
+    if (props.taskType.link_settings) {
+      const existingTypes = props.taskType.link_settings.map(setting => setting.type)
+      const defaultSettings = getDefaultLinkSettings()
+
+      // Add any missing entity types with default values
+      defaultSettings.forEach(defaultSetting => {
+        if (!existingTypes.includes(defaultSetting.type)) {
+          temp_metadata.link_settings.push(defaultSetting)
+        }
+      })
+    }
   }
 }
 

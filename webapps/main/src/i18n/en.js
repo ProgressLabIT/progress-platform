@@ -864,8 +864,8 @@ export default {
     serial: 'Serial',
     task: 'Task',
   },
-  allowed_linked_entities_title: 'Allowed linked entities',
-  allowed_linked_entities_description: 'Select which entity types can be linked to tasks of this type',
+  task_link_settings_title: 'Allowed linked entities',
+  task_link_settings_description: 'Select which entity types can be linked to tasks of this type',
   time: {
     hour: 'Hour',
     minute: 'Minute',
