@@ -731,7 +731,7 @@ async def get_active_work_session_for_job(job_key: str):
     dependencies=[Depends(auth.verify_token)])
 async def update_jobs(job_updates:List[JobUpdate]):
 
-  tx = db.begin_transaction(write=['Job', 'Queue'])
+  tx = db.begin_transaction(write=['Job', 'Queue', 'WorkOrder'])
   job_db = tx.collection('Job')
 
   results = []
