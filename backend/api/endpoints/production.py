@@ -850,6 +850,11 @@ async def update_jobs(job_updates:List[JobUpdate]):
       )
     )
 
+    tx.aql.execute(
+      TraceabilityQueries.UPDATE_WORK_ORDER,
+      bind_vars = dict(wo_key = wo_key)
+    )
+
     tx.commit_transaction()
     return APIResponse(detail=results, message="Jobs updated successfully")
 
