@@ -286,50 +286,51 @@ class ProgressOverrideRequestedEvent(BaseAdmin, BaseProductionEvent):
     new_job_progress = round(100 * self.info.new_job_qt_completed / self.job.qt_planned)
 
     self.job_update = dict(
-        _key=self.job.key,
-        qt_completed=self.info.new_job_qt_completed,
-        qt_released=self.info.new_job_qt_completed,
-        progress=new_job_progress,
-        forced=self.event_key
+      _key=self.job.key,
+      qt_completed=self.info.new_job_qt_completed,
+      qt_released=self.info.new_job_qt_completed,
+      progress=new_job_progress,
+      forced=self.event_key
     )
 
     if self.info.quantity_change > 0:
-        # Set job as started if not already
-        if self.job.stage == WorkStatus.CREATED:
-          self.job_update['start'] = self.info.timestamp
-          if self.info.new_job_qt_completed < self.job.qt_planned:
-            self.job_update['stage'] = WorkStatus.STARTED
-          else:
-            # Set job as closed and remove it from queues if necessary
-            JobClosedEvent.create_as_child(self, dict(
-                job_key=self.job.key,
-                completed_qt=self.info.new_job_qt_completed
-            ))
+      # Set job as started if not already
+      if self.job.stage == WorkStatus.CREATED:
+        self.job_update['start'] = self.info.timestamp
+        if self.info.new_job_qt_completed < self.job.qt_planned:
+          self.job_update['stage'] = WorkStatus.STARTED
+
+      if self.info.new_job_qt_completed >= self.job.qt_planned:
+        # Set job as closed and remove it from queues if necessary
+        JobClosedEvent.create_as_child(self, dict(
+          job_key=self.job.key,
+          completed_qt=self.info.new_job_qt_completed
+        ))
 
     else:  # quantity_change < 0
-        # Reopen job if it was closed
-        if self.job.stage == WorkStatus.CLOSED:
-            self.job_update['stage'] = WorkStatus.STARTED
-            self.job_update['end'] = None
-            # Readd job to queue and reorder
-            self.tx.aql.execute(
-                ProductionQueries.ADD_JOB_TO_QUEUE,
-                bind_vars=dict(
-                    job_key=self.job.key,
-                    target_key=self.job.assigned_to
-                )
-            )
-            self.tx.aql.execute(
-                ProductionQueries.REORDER_JOB_QUEUES,
-                bind_vars=dict(
-                    site_key='0',
-                    target_key=self.job.assigned_to
-                )
-            )
+      # Reopen job if it was closed
+      if self.job.stage == WorkStatus.CLOSED:
+        self.job_update['stage'] = WorkStatus.STARTED
+        self.job_update['end'] = None
+        # Readd job to queue and reorder
+        self.tx.aql.execute(
+          ProductionQueries.ADD_JOB_TO_QUEUE,
+          bind_vars=dict(
+            job_key=self.job.key,
+            target_key=self.job.assigned_to
+          )
+        )
+        self.tx.aql.execute(
+          ProductionQueries.REORDER_JOB_QUEUES,
+          bind_vars=dict(
+            site_key='0',
+            target_key=self.job.assigned_to
+          )
+        )
 
-        # Reset to created if quantity is 0
-        if self.info.new_job_qt_completed == 0:
-            self.job_update['stage'] = WorkStatus.CREATED
+      # Reset to created if quantity is 0
+      if self.info.new_job_qt_completed == 0:
+        self.job_update['stage'] = WorkStatus.CREATED
 
     # Update job status
     self.tx.collection('Job').update(self.job_update)
