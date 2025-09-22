@@ -163,7 +163,7 @@ export class TemplateContext {
   }
 
   getPresetValue(presetName) {
-    if (presetName.includes('extra')) {
+    if (presetName?.includes('extra')) {
       return this.getExtraValue(presetName);
     }
     try {
@@ -277,9 +277,9 @@ export class TemplateContext {
      * @param {string} presetName - Dot-notation path to the desired value
      * @returns {*} The value at the specified path, or undefined if path is invalid
      */
-    const parts = presetName.split('.').map(String);
+    const parts = presetName?.split('.').map(String);
     const base = parts[0];
-    const propertyPath = parts.slice(1); // Everything after the base (e.g., ['extra', 'one', 'two', 'three'])
+    const propertyPath = parts?.slice(1); // Everything after the base (e.g., ['extra', 'one', 'two', 'three'])
 
     const baseObjectMap = {
       serial: this.serial,
@@ -308,7 +308,7 @@ export class TemplateContext {
     }
 
     let current = obj;
-    for (const key of path) {
+    for (const key of path ?? []) {
       if (current == null || typeof current !== 'object') {
         return undefined;
       }
