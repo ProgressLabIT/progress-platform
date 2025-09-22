@@ -377,7 +377,7 @@ async function selectTemplate(template) {
             return [fieldName, ''];
           }
 
-          if (link?.value.includes('serial')) {
+          if (link?.value?.includes('serial')) {
             hasSerialLink.value = true;
           }
 
