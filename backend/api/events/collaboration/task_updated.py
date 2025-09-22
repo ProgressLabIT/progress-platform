@@ -14,7 +14,7 @@ class TaskUpdatedEvent(BaseEvent):
     task_key: str
     title: str | None = None
     description: str | None = None
-    assigned_to: list[TaskAssignment] | None = []
+    assigned_to: list[TaskAssignment] | None = None
     start_from: date | None = None
     due_by: date | None = None
     form_fields: list[TaskFormFieldValue] | None = None
@@ -22,12 +22,15 @@ class TaskUpdatedEvent(BaseEvent):
     @model_validator(mode='after')
     def validate_assignments(self):
       # Ensure single owner if assignments are provided
+      if self.assigned_to is None:
+        return self
+
       owners = [a for a in self.assigned_to if a.role == TaskAssignmentRole.OWNER]
       if len(self.assigned_to) > 0 and len(owners) != 1:
         raise ValueError('You must provide one and only one owner when specifying assignments')
 
       # Set top level owner key for easier access
-      self.owner_key = owners[0].user_key if owners else None
+      self.owner_key = None if len(owners) == 0 else owners[0].user_key
 
       # Reorder assignments to put owner first
       if owners:
@@ -79,7 +82,7 @@ class TaskUpdatedEvent(BaseEvent):
       updates['title'] = self.info.title
     if self.info.description:
       updates['description'] = self.info.description
-    if len(self.info.assigned_to) > 0:
+    if self.info.assigned_to is not None:
       updates['assigned_to'] = self.info.assigned_to
       updates['owner_key'] = self.info.owner_key
     if self.info.start_from:
