@@ -14,6 +14,9 @@ class JobPausedEvent(BaseProductionEvent):
 
   def apply(self):
     self._get_job_data()
+    if not self.job.active or self.info.work_session_key is None:
+      raise ValueError("Job is not active or work session key is not set")
+
     WorkSessionClosedEvent.create_as_child(self, dict(
       work_session_key = self.info.work_session_key,
       work_session_end = self.info.timestamp
