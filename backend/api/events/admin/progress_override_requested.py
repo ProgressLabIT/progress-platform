@@ -294,18 +294,22 @@ class ProgressOverrideRequestedEvent(BaseAdmin, BaseProductionEvent):
     )
 
     if self.info.quantity_change > 0:
-      # Set job as started if not already
       if self.job.stage == WorkStatus.CREATED:
         self.job_update['start'] = self.info.timestamp
-        if self.info.new_job_qt_completed < self.job.qt_planned:
-          self.job_update['stage'] = WorkStatus.STARTED
 
       if self.info.new_job_qt_completed >= self.job.qt_planned:
-        # Set job as closed and remove it from queues if necessary
         JobClosedEvent.create_as_child(self, dict(
           job_key=self.job.key,
           completed_qt=self.info.new_job_qt_completed
         ))
+        # Avoid redundant updates - JobClosedEvent handles qt_completed, qt_released, progress
+        self.job_update.pop('qt_completed', None)
+        self.job_update.pop('qt_released', None)
+        self.job_update.pop('progress', None)
+
+      else:
+        # Normal progression: set job as started if not already
+        self.job_update['stage'] = WorkStatus.STARTED
 
     else:  # quantity_change < 0
       # Reopen job if it was closed
