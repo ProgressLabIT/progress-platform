@@ -286,6 +286,15 @@ async def update_work_order_quantities(
               notes=job.notes
             ),
           )
+          # Remove closed job from assigned user's queue
+          if job.assigned_to:
+            tx.aql.execute(
+              Queries.REMOVE_JOB_FROM_QUEUE,
+              bind_vars=dict(
+                job_key=job.key,
+                target_key=job.assigned_to
+              )
+            )
       else:
         tx.abort_transaction()
         raise HTTPError(422, "Invalid job update action")
