@@ -105,6 +105,7 @@ class EventInfoModel(BaseModel):
   event_type: EventType
   event_group: str | None = None #
   primary: bool = True
+  task_key: str | None = None
   user_key: str | None = None
   user_session_key: str | None = None
   timestamp: datetime | None = Field(default_factory=timestamp)
