@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { api } from '@/boot/axios.js'
 import { sendEvent } from '@/composables/event.js'
+import { useStorePersistence } from '@/composables/reStore.js'
 
 export const useTaskStore = defineStore('task', {
   state: () => ({
@@ -122,3 +123,13 @@ export const useTaskStore = defineStore('task', {
     },
   },
 })
+
+// Helper function to set up task store persistence
+export function useTaskStorePersistence() {
+  const taskStore = useTaskStore()
+
+  return useStorePersistence(taskStore, {
+    excludeKeys: ['loading'], // Don't persist loading state
+    expirationMinutes: 30,    // 30 minute session timeout
+  })
+}
