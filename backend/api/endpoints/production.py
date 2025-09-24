@@ -869,7 +869,7 @@ async def update_jobs(job_updates:List[JobUpdate]):
     updated_wo_data = tx.aql.execute(
       TraceabilityQueries.UPDATE_WORK_ORDER,
       bind_vars = dict(wo_key = wo_key)
-    )
+    ).next()
 
     # Handle work order status changes in the queue
     if work_order_data['status'] != WorkStatus.CLOSED and updated_wo_data['status'] == WorkStatus.CLOSED:
