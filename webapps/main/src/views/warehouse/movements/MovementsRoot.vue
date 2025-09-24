@@ -148,7 +148,7 @@ import { ref } from 'vue';
 import BasePrompt from '@/components/BasePrompt.vue';
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue';
 import queryModel from '@/lib/queryModelFactory.js';
-import eventMixin from '@/mixins/event.js';
+import { sendEvent } from '@/composables/event.js';
 import { useMovementColumns } from 'app/src/composables/warehouse';
 
 export default {
@@ -159,7 +159,6 @@ export default {
     BaseUserAvatar
   },
 
-  mixins: [eventMixin],
 
   setup() {
     const pagination = ref({
@@ -320,14 +319,16 @@ export default {
       return movement.qt_confirmed !== 0 && movement.type !== 'reversal' && !isContainerTransfer;
     },
 
-    revertMovement(reason) {
-      this.sendEvent({
-        event_type: 'MOVEMENT_REVERSED',
-        event_data: {
-          original_movement_key: this.revert_movement_key,
-          reason
-        }
-      }).then(() => {
+    async revertMovement(reason) {
+      try {
+        await sendEvent({
+          event_type: 'MOVEMENT_REVERSED',
+          event_data: {
+            original_movement_key: this.revert_movement_key,
+            reason
+          }
+        });
+
         this.$q.notify({
           message: this.$t('movement.revert_success'),
           color: 'theme-green',
@@ -336,7 +337,7 @@ export default {
         });
         this.revert_movement_key = null;
         this.refreshMovements();
-      }).catch(error => {
+      } catch (error) {
         this.$q.notify({
           message: error.response?.data?.message || this.$t('movement.revert_error'),
           color: 'theme-orange',
@@ -346,7 +347,7 @@ export default {
             { label: 'Close', textColor: 'white', handler: () => undefined }
           ]
         });
-      });
+      }
     },
 
     formatDate(date, endOfDay = false) {

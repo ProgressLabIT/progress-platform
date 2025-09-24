@@ -214,7 +214,7 @@ import BaseAutocompleteWorkOrder from '@/components/BaseAutocompleteWorkOrder.vu
 import BaseDialog from '@/components/BaseDialog.vue';
 import FormField from '@/components/FormField.vue';
 import JobListItem from '@/components/JobListItem.vue';
-import { timestamp } from '@/lib/TimeHandling.js';
+import { sendEvent } from '@/composables/event.js';
 
 const props = defineProps({
   show: {
@@ -552,11 +552,9 @@ async function save() {
     })),
   };
 
-  const user = session_data.value.user._key;
-
   if (props.mode === 'new') {
     // if link is active send data in the form e.g. { type: product, key: whatever }
-    issue_data.created_by = `User/${user}`; // temporarily hardcoding DB id
+    issue_data.created_by = `User/${session_data.value.user._key}`; // temporarily hardcoding DB id
     issue_data.close_within = issue_type.value?.close_within ?? 0;
 
     // Map links to list of objects, including only populated properties
@@ -571,17 +569,12 @@ async function save() {
     issue_data._key = props.issue._key;
   }
 
-  const event = {
-    event_type: props.mode === 'new' ? 'ISSUE_CREATED' : 'ISSUE_UPDATED',
-    user_key: user,
-    user_session_key: session_data.value.session_key,
-    timestamp: timestamp(),
-    issue_data,
-  };
-
   const message =
     props.mode === 'new' ? 'issue_new_success' : 'issue_update_success';
-  const { data } = await api.post('event', event);
+  const { data } = await sendEvent({
+    event_type: props.mode === 'new' ? 'ISSUE_CREATED' : 'ISSUE_UPDATED',
+    event_data: { issue_data },
+  });
   const issue_key =
     props.mode === 'new' ? data.detail.issue_key : issue_data._key;
 

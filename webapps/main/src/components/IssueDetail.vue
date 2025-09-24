@@ -215,245 +215,240 @@
   </BaseDialog>
 </template>
 
-<script>
+<script setup>
+import { useQuasar } from 'quasar';
+import { ref, computed, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { useRouter } from 'vue-router';
+import { useStore } from 'vuex';
+import { api } from '@/boot/axios.js';
 import BaseDialog from '@/components/BaseDialog.vue';
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue';
 import FormField from '@/components/FormField.vue';
 import IssueHeader from '@/components/IssueHeader.vue';
 import MessageThread from '@/components/MessageThread.vue';
-import event from '@/mixins/event.js';
-import enrichIssue from '@/mixins/issues.js';
+import { sendEvent } from '@/composables/event.js';
 
-export default {
-  name: 'IssueDetail',
-
-  components: {
-    IssueHeader,
-    MessageThread,
-    BaseUserAvatar,
-    BaseDialog,
-    FormField,
+const props = defineProps({
+  // from router
+  issueKey: {
+    type: String,
+    required: true,
   },
+});
 
-  mixins: [enrichIssue, event],
+// Composables
+const store = useStore();
+const { t } = useI18n();
+const $q = useQuasar();
+const router = useRouter();
 
-  props: {
-    // from router
-    issueKey: {
-      type: String,
-      required: true,
-    },
+// Reactive data
+const messages = ref([]);
+const history = ref([]);
+const base_path = ref('/media/user/');
+const tab = ref('form');
+const dataColumnWidth = ref(70);
+const linkTypes = ref({
+  job: {
+    label: 'job.label',
+    prop: '_key'
   },
-
-  data() {
-    return {
-      messages: [],
-      history: [],
-      loading: false,
-      recording: false,
-      base_path: '/media/user/',
-      tab: 'form',
-      dataColumnWidth: 70,
-      linkTypes: {
-        job: {
-          label: 'job.label',
-          prop: '_key'
-        },
-        product: {
-          prop: 'code',
-          label: 'product.label'
-        },
-        phase: {
-          prop: 'alias',
-          label: 'phase.phase'
-        },
-        work_order: {
-          prop: 'wo_code',
-          label: 'work_order.long'
-        },
-        serial: {
-          prop: 'code',
-          label: 'serial',
-        },
-        user: {
-          prop: 'username',
-          label: 'user.label'
-        },
-        'operation': {
-          prop: 'name',
-          label: 'operation.label'
-        }
-      }
-    };
+  product: {
+    prop: 'code',
+    label: 'product.label'
   },
-
-  computed: {
-    issue() {
-      const issue_data = this.$store.getters.getIssueData(this.issueKey);
-      return this.enrichIssue(issue_data);
-    },
-
-    issue_type() {
-      return this.$store.getters.getIssueType(this.issue.issue_type_key);
-    },
-
-    form_fields() {
-      const form_template = this.issue_type?.form_template ?? [];
-      return form_template.map((field) => ({
-        ...field,
-        value: this.issue.data.find(
-          ({ form_field_key }) => form_field_key === field._key,
-        )?.value,
-      }));
-    },
-
-    root_path() {
-      return '/media/issue/' + this.issueKey;
-    },
-
-    user_can_delete() {
-      return this.$store.getters.hasPermission('production');
-    },
+  phase: {
+    prop: 'alias',
+    label: 'phase.phase'
   },
-
-  created() {
-    this.$store.dispatch('loadUsers');
-    this.getHistory();
+  work_order: {
+    prop: 'wo_code',
+    label: 'work_order.long'
   },
+  serial: {
+    prop: 'code',
+    label: 'serial',
+  },
+  user: {
+    prop: 'username',
+    label: 'user.label'
+  },
+  'operation': {
+    prop: 'name',
+    label: 'operation.label'
+  }
+});
 
-  methods: {
-    getHistory() {
-      this.$api
-        .get('event', { params: { issue_key: this.issue._key } })
-        .then((resp) => (this.history = resp.data));
-    },
+// Helper function (from enrichIssue mixin)
+function enrichIssue(i) {
+  // Add badge data for visual indication of status
+  let badge = !i.open
+    ? { color: 'theme-grey', text: t('closed') }
+    : i.critical
+      ? { color: 'theme-red', text: t('critical') }
+      : { color: 'theme-blue', text: t('open') };
+  return { ...i, badge };
+}
 
-    getAvatarSrc(user) {
-      return (
-        this.base_path + (user.name + user.surname).replace(/\s+/g, '') + '.jpg'
-      );
-    },
+// Computed properties
+const issue = computed(() => {
+  const issue_data = store.getters.getIssueData(props.issueKey);
+  return enrichIssue(issue_data);
+});
 
-    getUserData(event) {
-      const user = this.$store.getters.user_data(event.user_key);
-      return {
-        ...user,
-        full_name: user.name + ' ' + user.surname,
-        src: this.getAvatarSrc(user),
-      };
-    },
+const root_path = computed(() => '/media/issue/' + props.issueKey);
 
-    getHumanDate(timestamp) {
-      const config = {
-        year: '2-digit',
-        month: 'short',
-        day: 'numeric',
-        hour: 'numeric',
-        minute: '2-digit',
-        second: '2-digit',
-        weekday: 'short',
-      };
-      return this.$capitalize(
-        this.$formatDateTime(timestamp, this.$i18n.locale, config),
-      );
-    },
+const user_can_delete = computed(() => store.getters.hasPermission('production'));
 
-    notify({ message, color = 'theme-green' }) {
-      this.$q.notify({
-        message,
-        color,
-        timeout: '1500',
-        position: 'top',
-      });
-    },
+// Methods
+function getHistory() {
+  api
+    .get('event', { params: { issue_key: issue.value._key } })
+    .then((resp) => (history.value = resp.data));
+}
 
-    refreshIssue() {
-      this.$store.dispatch('getIssues', { issue_key: this.issueKey });
-      this.getHistory();
-    },
+function getAvatarSrc(user) {
+  return (
+    base_path.value + (user.name + user.surname).replace(/\s+/g, '') + '.jpg'
+  );
+}
 
-    closeIssue() {
-      this.sendEvent({
-        event_type: 'ISSUE_CLOSED',
-        event_data: {
-          issue_data: {
-            _key: this.issue._key,
-          },
+function getUserData(event) {
+  const user = store.getters.user_data(event.user_key);
+  return {
+    ...user,
+    full_name: user.name + ' ' + user.surname,
+    src: getAvatarSrc(user),
+  };
+}
+
+function getHumanDate(timestamp) {
+  const config = {
+    year: '2-digit',
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    second: '2-digit',
+    weekday: 'short',
+  };
+  return $q.lang.capitalize(
+    $q.date.formatDate(timestamp, config),
+  );
+}
+
+function notify({ message, color = 'theme-green' }) {
+  $q.notify({
+    message,
+    color,
+    timeout: 1500,
+    position: 'top',
+  });
+}
+
+function refreshIssue() {
+  store.dispatch('getIssues', { issue_key: props.issueKey });
+  getHistory();
+}
+
+async function closeIssue() {
+  try {
+    await sendEvent({
+      event_type: 'ISSUE_CLOSED',
+      event_data: {
+        issue_data: {
+          _key: issue.value._key,
         },
-      }).then(() => {
-        this.refreshIssue();
-        this.notify({ message: this.$t('issue_update_success') });
-      });
-    },
+      },
+    });
+    refreshIssue();
+    notify({ message: t('issue_update_success') });
+  } catch (error) {
+    console.error('Error closing issue:', error);
+  }
+}
 
-    toggleCritical() {
-      this.issue.critical = !this.issue.critical;
-      this.sendEvent({
-        event_type: 'ISSUE_UPDATED',
-        event_data: {
-          issue_data: {
-            _key: this.issue._key,
-            critical: this.issue.critical,
-          },
+async function toggleCritical() {
+  issue.value.critical = !issue.value.critical;
+  try {
+    await sendEvent({
+      event_type: 'ISSUE_UPDATED',
+      event_data: {
+        issue_data: {
+          _key: issue.value._key,
+          critical: issue.value.critical,
         },
-      }).then(() => {
-        this.refreshIssue();
-        this.notify({
-          message: this.$t('issue_update_success'),
-          color: this.issue.critical ? 'theme-red' : 'theme-green',
-        });
-      });
-    },
+      },
+    });
+    refreshIssue();
+    notify({
+      message: t('issue_update_success'),
+      color: issue.value.critical ? 'theme-red' : 'theme-green',
+    });
+  } catch (error) {
+    console.error('Error updating issue critical status:', error);
+  }
+}
 
-    reopenIssue() {
-      this.sendEvent({
-        event_type: 'ISSUE_REOPENED',
-        event_data: {
-          issue_data: {
-            _key: this.issue._key,
-            critical: this.issue.critical,
-          },
+async function reopenIssue() {
+  try {
+    await sendEvent({
+      event_type: 'ISSUE_REOPENED',
+      event_data: {
+        issue_data: {
+          _key: issue.value._key,
+          critical: issue.value.critical,
         },
-      }).then(() => {
-        this.refreshIssue();
-        this.notify({
-          message: this.$t('issue_updated'),
-        });
-      });
-    },
+      },
+    });
+    refreshIssue();
+    notify({
+      message: t('issue_updated'),
+    });
+  } catch (error) {
+    console.error('Error reopening issue:', error);
+  }
+}
 
-    deleteIssue() {
-      this.$q
-        .dialog({
-          cancel: true,
-          title: this.$t('issue_delete_confirm_title'),
-          message: this.$t('issue_delete_confirm_question'),
-        })
-        .onOk(() => {
-          this.sendEvent({
-            event_type: 'ISSUE_DELETED',
-            event_data: {
-              issue_data: {
-                _key: this.issueKey,
-              },
+function deleteIssue() {
+  $q
+    .dialog({
+      cancel: true,
+      title: t('issue_delete_confirm_title'),
+      message: t('issue_delete_confirm_question'),
+    })
+    .onOk(async () => {
+      try {
+        await sendEvent({
+          event_type: 'ISSUE_DELETED',
+          event_data: {
+            issue_data: {
+              _key: props.issueKey,
             },
-          }).then(async () => {
-            const work_order_key =
-              this.$store.state.traceability.working_job_data.wo_key;
-            await this.$store.dispatch('getIssues', { work_order_key });
-            this.exit();
-            this.notify({
-              message: this.$t('issue_delete_success'),
-            });
-          });
+          },
         });
-    },
+        const work_order_key = store.state.traceability.working_job_data.wo_key;
+        await store.dispatch('getIssues', { work_order_key });
+        exit();
+        notify({
+          message: t('issue_delete_success'),
+        });
+      } catch (error) {
+        console.error('Error deleting issue:', error);
+      }
+    });
+}
 
-    exit() {
-      this.$router.back();
-    },
-  },
-};
+function exit() {
+  router.back();
+}
+
+// Lifecycle
+onMounted(() => {
+  store.dispatch('loadUsers');
+  getHistory();
+});
 </script>
 
 <style lang="sass" scoped>

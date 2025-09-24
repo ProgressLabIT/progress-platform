@@ -259,7 +259,6 @@ import BaseProgressBar from '@/components/BaseProgressBar.vue';
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue';
 import JobRebalanceActionCard from '@/components/JobRebalanceActionCard.vue';
 import { formatDateTime } from '@/lib/TimeHandling';
-import sendEvent from '@/mixins/event.js';
 import ProductionAdminMenu from '@/components/ProductionAdminMenu.vue';
 
 export default {
@@ -272,7 +271,6 @@ export default {
     JobRebalanceActionCard, // Make changes to phase jobs
   },
 
-  mixins: [sendEvent],
 
   props: {
     wo_data: {

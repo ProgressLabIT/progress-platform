@@ -54,12 +54,11 @@ import { mapState } from 'vuex';
 import QuantityPickerDialog from '@/components/QuantityPickerDialog.vue';
 import SerialBatchDeclareSerialNumber from '@/components/job/SerialBatchDeclareSerialNumber.vue';
 import SerialBatchSelectionDialog from '@/components/job/SerialBatchSelectionDialog.vue';
-import eventMixin from '@/mixins/event.js';
+import { sendEvent } from '@/composables/event.js';
 
 export default {
   name: 'ProgressBtn',
 
-  mixins: [eventMixin],
 
   data() {
     return {
@@ -325,7 +324,7 @@ export default {
     },
 
     async postSerialUpdate(serial) {
-      await this.sendEvent({
+      await sendEvent({
         event_type: 'SERIAL_UPDATED',
         event_data: serial
       });

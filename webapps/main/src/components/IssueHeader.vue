@@ -59,112 +59,29 @@
   </q-item>
 </template>
 
-<script>
+<script setup>
+import { ref } from 'vue';
 import IssueForm from '@/components/IssueForm.vue';
 import { usePrintDialog } from '@/lib/print';
-import event from '@/mixins/event.js';
 
-export default {
-  name: 'IssueHeader',
-
-  components: {
-    IssueForm,
+const props = defineProps({
+  issue: {
+    type: Object,
+    required: true,
   },
-
-  mixins: [event],
-
-  props: {
-    issue: {
-      type: Object,
-      required: true,
-    },
-    clickable: {
-      type: Boolean,
-      default: false,
-    },
+  clickable: {
+    type: Boolean,
+    default: false,
   },
+});
 
-  emits: ['typeChange'],
 
-  setup(props) {
-    const { open: openPrintDialog, isAvailable } = usePrintDialog({
-      context: 'issue_type',
-      contextData: props.issue,
-    });
+// Composables
+const { open: openPrintDialog, isAvailable } = usePrintDialog({
+  context: 'issue_type',
+  contextData: props.issue,
+});
 
-    return {
-      openPrintDialog,
-      isAvailable,
-    };
-  },
-
-  data() {
-    return {
-      over_icon: false,
-      show_issue_update: false,
-      new_issue_type: null,
-    };
-  },
-
-  computed: {
-    icon() {
-      return this.over_icon ? 'mdi-pencil' : this.issue.icon || 'mdi-help';
-    },
-
-    save_btn_color() {
-      return this.new_issue_type == null
-        ? 'theme-blue'
-        : this.new_issue_type.critical
-          ? 'theme-red'
-          : 'theme-blue';
-    },
-
-    save_btn_label() {
-      const base = this.$t('save');
-      const critical =
-        this.new_issue_type == null
-          ? ''
-          : this.new_issue_type.critical
-            ? ' ' + this.$t('critical')
-            : '';
-      return base + critical;
-    },
-  },
-  watch: {
-    show_type_picker() {
-      if (this.show_type_picker == false) {
-        this.new_issue_type = null;
-      }
-    },
-  },
-
-  methods: {
-    changeIssueType() {
-      const set_as_critical = this.new_issue_type
-        ? this.new_issue_type.critical
-        : false;
-      const event = {
-        event_type: 'ISSUE_UPDATED',
-        event_data: {
-          issue_data: {
-            _key: this.issue._key,
-            issue_type: this.new_issue_type ? this.new_issue_type._key : null,
-          },
-        },
-      };
-
-      if (set_as_critical) {
-        event.event_data.issue_data.critical = true;
-      }
-
-      this.sendEvent(event).then(() => {
-        this.$emit(
-          'typeChange',
-          this.new_issue_type ? this.new_issue_type._key : null,
-        );
-        this.show_type_picker = false;
-      });
-    },
-  },
-};
+// Reactive data
+const show_issue_update = ref(false);
 </script>

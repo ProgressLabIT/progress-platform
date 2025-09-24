@@ -117,18 +117,18 @@
 </template>
 
 <script setup>
+import { cloneDeep } from 'lodash';
 import { useQuasar } from 'quasar';
 import { ref, computed, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 import { useStore } from 'vuex';
-import { cloneDeep } from 'lodash';
 import { api } from '@/boot/axios.js';
 import BaseModalScreen from '@/components/BaseModalScreen.vue';
 import MessageThread from '@/components/MessageThread.vue';
 import SerialDetailForm from '@/components/traceability/SerialDetailForm.vue';
 import SerialTree from '@/components/traceability/SerialTree.vue';
-import { timestamp } from '@/lib/TimeHandling.js';
+import { sendEvent } from '@/composables/event.js';
 import { useConfigStore } from '../../stores/config';
 
 const props = defineProps({
@@ -285,22 +285,17 @@ async function save() {
     return;
   }
 
-  const user = session_data.value.user._key;
-
-  serial_data.updated_by = `User/${user}`; // temporarily hardcoding DB id
-
-  const event = {
-    event_type: 'SERIAL_UPDATED',
-    user_key: user,
-    user_session_key: session_data.value.session_key,
-    timestamp: timestamp(),
-    serial_key: serial_data._key,
-    serial_code: serial_data.code,
-    serial_data: serial_data.data
-  };
+  serial_data.updated_by = `User/${session_data.value.user._key}`; // temporarily hardcoding DB id
 
   await saveFiles(serial_data._key);
-  await api.post('event', event);
+  await sendEvent({
+    event_type: 'SERIAL_UPDATED',
+    event_data: {
+      serial_key: serial_data._key,
+      serial_code: serial_data.code,
+      serial_data: serial_data.data
+    }
+  });
   refreshSerial();
 
   editMode.value = false;
@@ -357,17 +352,13 @@ function deleteSerial() {
       },
     })
     .onOk(async (delete_children) => {
-      const user = session_data.value.user._key;
-      const event = {
+      await sendEvent({
         event_type: 'SERIAL_DELETED',
-        user_key: user,
-        user_session_key: session_data.value.session_key,
-        timestamp: timestamp(),
-        delete_children: delete_children,
-        serial_key: serial.value._key,
-      };
-
-      await api.post('event', event);
+        event_data: {
+          delete_children: delete_children,
+          serial_key: serial.value._key,
+        }
+      });
       await store.dispatch('loadSerials');
       $q.notify({
         message: t(`Seriale ${serial.value.code} eliminato`),

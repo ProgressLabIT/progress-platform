@@ -155,14 +155,14 @@
 
 <script setup>
 import { useQuasar } from 'quasar';
-import { ref, computed, watch, onMounted } from 'vue';
+import { ref, watch, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useStore } from 'vuex';
 import { api } from '@/boot/axios.js';
 import BaseAutocompleteProduct from '@/components/BaseAutocompleteProduct.vue';
 import BaseDialog from '@/components/BaseDialog.vue';
 import FormField from '@/components/FormField.vue';
-import { timestamp } from '@/lib/TimeHandling.js';
+import { sendEvent } from '@/composables/event.js';
 
 const props = defineProps({
   show: {
@@ -206,7 +206,6 @@ const links = ref({
 });
 
 // Computed properties
-const session_data = computed(() => store.state.session);
 
 // Methods
 function initFormData() {
@@ -490,27 +489,27 @@ async function save() {
     });
   }
 
-  const event = {
-    event_type: 'SERIAL_CREATED',
-    user_key: session_data.value.user._key,
-    user_session_key: session_data.value.session_key,
-    timestamp: timestamp(),
-    product_key: links.value.product._key,
-    code: serial_code.value,
-    counter_key: counter_key.value,
-    data
-  };
+  try {
+    const { data: response } = await sendEvent({
+      event_type: 'SERIAL_CREATED',
+      event_data: {
+        product_key: links.value.product._key,
+        code: serial_code.value,
+        counter_key: counter_key.value,
+        data
+      }
+    });
 
-  api.post('event', event).then((resp) => {
-    if (resp.status === 200) {
-      emit('serialCreated');
-      saveFiles(resp?.data?.detail?.serial_key).then(() => {
-        cancel();
-        saving.value = false;
-      });
-    } else if (resp.response?.status === 422) {
+    emit('serialCreated');
+    await saveFiles(response?.detail?.serial_key);
+    cancel();
+  } catch (error) {
+    console.error('Error creating serial:', error);
+
+    // Handle specific serial creation errors
+    if (error.response?.status === 422) {
       let error_message = 'traceability.errors.EXCEPTION';
-      switch (resp.response?.data?.detail?.error_type) {
+      switch (error.response?.data?.detail?.error_type) {
         case 'SerialNotCreatedError':
           error_message = 'traceability.errors.SERIAL_NEW_ERROR';
           break;
@@ -528,9 +527,10 @@ async function save() {
         position: 'top',
       });
       cancel();
-      saving.value = false;
     }
-  });
+  } finally {
+    saving.value = false;
+  }
 }
 
 // Watchers
