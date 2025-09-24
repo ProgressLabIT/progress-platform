@@ -116,8 +116,14 @@
   </BaseModalScreen>
 </template>
 
-<script>
+<script setup>
+import { useQuasar } from 'quasar';
+import { ref, computed, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { useRoute, useRouter } from 'vue-router';
+import { useStore } from 'vuex';
 import { cloneDeep } from 'lodash';
+import { api } from '@/boot/axios.js';
 import BaseModalScreen from '@/components/BaseModalScreen.vue';
 import MessageThread from '@/components/MessageThread.vue';
 import SerialDetailForm from '@/components/traceability/SerialDetailForm.vue';
@@ -125,356 +131,330 @@ import SerialTree from '@/components/traceability/SerialTree.vue';
 import { timestamp } from '@/lib/TimeHandling.js';
 import { useConfigStore } from '../../stores/config';
 
-export default {
-  name: 'SerialDetail',
-
-  components: {
-    BaseModalScreen,
-    MessageThread,
-    SerialTree,
-    SerialDetailForm,
+const props = defineProps({
+  // from router
+  serialKey: {
+    type: String,
+    required: true,
   },
+});
 
-  props: {
-    // from router
-    serialKey: {
-      type: String,
-      required: true,
-    },
-  },
+// Composables
+const store = useStore();
+const { t } = useI18n();
+const $q = useQuasar();
+const route = useRoute();
+const router = useRouter();
+const { config } = useConfigStore();
 
-  setup() {
-    const { config } = useConfigStore();
-    return {
-      config,
-    };
-  },
+// Reactive data
+const messages = ref([]);
+const data_column_width = ref(65);
+const serial_detail_splitted_width = ref(30);
+const mini_state = ref(false);
+const no_hierarchy = ref(false);
+const selected = ref(null);
+const editMode = ref(false);
+const saving = ref(false);
 
-  data() {
-    return {
-      messages: [],
-      data_column_width: 65,
-      serial_detail_splitted_width: 30,
-      mini_state: false,
-      no_hierarchy: false,
-      selected: null,
-      editMode: false,
-      saving: false,
-    };
-  },
+// Computed properties
+const serial = computed(() => store.getters.getSerialData(props.serialKey));
+const session_data = computed(() => store.state.session);
+const user_can_delete = computed(() => (
+  store.getters.hasPermission('production') &&
+  !store.getters.getSerialData(props.serialKey)?.deleted &&
+  config.allowSerialDelete
+));
+const can_edit = computed(() => !serial.value?.deleted);
 
-  computed: {
-    serial() {
-      return this.$store.getters.getSerialData(this.serialKey);
-    },
+// Methods
+function exit() {
+  if (route.query.back_to) {
+    let query = { ...route.query };
+    delete query.back_to;
+    router.push({ name: route.query.back_to, query });
+  } else {
+    router.back();
+  }
+}
 
-    session_data() {
-      return this.$store.state.session;
-    },
+function getFieldType(field) {
+  return store.getters.getCustomFieldByKey(field.custom_field_key)?.type;
+}
 
-    user_can_delete() {
-      return (
-        this.$store.getters.hasPermission('production') &&
-        !this.$store.getters.getSerialData(this.serialKey)?.deleted &&
-        this.config.allowSerialDelete
-      );
-    },
+function missingMandatoryValues(form_data) {
+  let missing_mandatory_fields = false;
+  if (!form_data) {
+    return missing_mandatory_fields;
+  }
+  form_data.forEach((field) => {
+    let type = getFieldType(field);
+    if (
+      type !== 'ternary' &&
+      field.mandatory &&
+      (!field.value || field.value === null || field.value === '' || field.value?.length === 0)
+    ) {
+      missing_mandatory_fields = true;
+    }
+  });
+  return missing_mandatory_fields;
+}
 
-    can_edit() {
-      return !this.serial?.deleted;
-    },
-  },
+async function saveFiles(serial_key) {
+  let form_fields = serial.value.data || [];
 
-  created() {
-    this.editMode = false;
-    this.saving = false;
-    this.selected = null;
-    this.$store.dispatch('loadUsers');
-    this.$store.dispatch('appendSerial', { serial_key: this.serialKey });
-  },
+  const promises = form_fields
+    .filter((field) => getFieldType(field) === 'files')
+    .map(async (field) => {
+      const to_delete = [];
+      const to_add = [];
 
-  methods: {
-    exit() {
-      if (this.$route.query.back_to) {
-        let query = { ...this.$route.query };
-        delete query.back_to;
-        this.$router.push({ name: this.$route.query.back_to, query });
-      } else {
-        this.$router.back();
-      }
-    },
-
-    getFieldType(field) {
-      return this.$store.getters.getCustomFieldByKey(field.custom_field_key)
-        ?.type;
-    },
-
-    missingMandatoryValues(form_data) {
-      let missing_mandatory_fields = false;
-      if (!form_data) {
-        return missing_mandatory_fields;
-      }
-      form_data.forEach((field) => {
-        let type = this.getFieldType(field);
-        if (
-          type !== 'ternary' &&
-          field.mandatory &&
-          (!field.value || field.value === null || field.value === '' || field.value?.length === 0)
-        ) {
-          missing_mandatory_fields = true;
+      field.value?.forEach((file) => {
+        if (file.temp) {
+          to_add.push(file.content);
+        } else if (file.delete && file.bucket !== 'traceability') {
+          to_delete.push(file.name);
         }
       });
-      return missing_mandatory_fields;
-    },
 
-    async saveFiles(serial_key) {
-      let form_fields = this.serial.data || [];
-
-      const promises = form_fields
-        .filter((field) => this.getFieldType(field) === 'files')
-        .map(async (field) => {
-          const to_delete = [];
-          const to_add = [];
-
-          field.value?.forEach((file) => {
-            if (file.temp) {
-              to_add.push(file.content);
-            } else if (file.delete && file.bucket !== 'traceability') {
-              to_delete.push(file.name);
-            }
-          });
-
-          const target = {
-            bucket: 'serial',
-            object_key: serial_key,
-            subfolder: field.form_field_key,
-          };
-
-          // Upload new files
-          if (to_add.length) {
-            // Populate form data
-            const add_body = new FormData();
-            Object.entries(target).forEach(([k, v]) => add_body.append(k, v));
-            to_add.forEach((file) => add_body.append('contents', file));
-            // Post files
-            try {
-              await this.$api.post('/files', add_body);
-            } catch (error) {
-              console.error(error);
-              window.alert(error);
-            }
-          }
-
-          // Delete files
-          if (to_delete.length) {
-            try {
-              await this.$api.delete('/files', {
-                data: {
-                  ...target,
-                  filenames: to_delete,
-                },
-              });
-            } catch (error) {
-              console.error(error);
-              window.alert(error);
-            }
-          }
-        });
-
-      return Promise.all(promises);
-    },
-
-    async save() {
-      this.saving = true;
-
-      let serial_data = cloneDeep(this.serial);
-      if (this.serial?.data) {
-        let form_data = [];
-        for (const field_data of this.serial.data) {
-          form_data.push({
-            form_field_key: field_data.form_field_key,
-            custom_field_key: field_data.custom_field_key,
-            value:
-              this.getFieldType(field_data) === 'files'
-                ? field_data.value
-                    ?.filter((file) => !file.delete)
-                    .map(({ size, name }) => ({ size, name }))
-                : field_data.value,
-          });
-        }
-        serial_data.data = form_data;
-      }
-
-      if (this.serial.released && this.missingMandatoryValues(this.serial.data)) {
-        // Enable updating partial data if serial is not released
-        window.alert(this.$t('fill_mandatory_fields'));
-        this.saving = false;
-        return;
-      }
-
-      const user = this.session_data.user._key;
-
-      serial_data.updated_by = `User/${user}`; // temporarily hardcoding DB id
-
-      const event = {
-        event_type: 'SERIAL_UPDATED',
-        user_key: user,
-        user_session_key: this.session_data.session_key,
-        timestamp: timestamp(),
-        serial_key: serial_data._key,
-        serial_code: serial_data.code,
-        serial_data: serial_data.data
+      const target = {
+        bucket: 'serial',
+        object_key: serial_key,
+        subfolder: field.form_field_key,
       };
 
-      await this.saveFiles(serial_data._key);
-      await this.$api.post('event', event);
-      this.refreshSerial();
-
-      this.editMode = false;
-      this.saving = false;
-    },
-
-    refreshSerial() {
-      this.$store.dispatch('updateSerials', { serial_key: this.serialKey });
-    },
-
-    async onDialogCancel() {
-      this.refreshSerial();
-      this.editMode = false;
-    },
-
-    goToSerial(serialKey) {
-      const to_route = {
-        name: 'serialDetail',
-        params: { serialKey },
-        query: {
-          back_to: this.$route.name,
-          ...this.$route.query,
-        },
-      };
-      this.$router.push(to_route);
-    },
-
-    async onSerialSelection(selected_key) {
-      // Fetch data from server is serial data is not present
-      if (!this.$store.getters.getSerialData(selected_key)) {
-        await this.$store.dispatch('appendSerial', { serial_key: selected_key })
-        this.goToSerial(selected_key);
-      } else {
-        this.goToSerial(selected_key);
-      }
-    },
-
-    deleteSerial() {
-      this.$q
-        .dialog({
-          cancel: true,
-          title: this.$t('serial_delete_confirm_title'),
-          message: this.$t('serial_delete_confirm_question'),
-          options: {
-            type: 'toggle',
-            modelValue: '',
-            // inline: true
-            items: [
-              {
-                label: this.$t('serial_delete_also_children'),
-                value: 'delete_children',
-              },
-            ],
-          },
-        })
-        .onOk(async (delete_children) => {
-          const user = this.session_data.user._key;
-          const event = {
-            event_type: 'SERIAL_DELETED',
-            user_key: user,
-            user_session_key: this.session_data.session_key,
-            timestamp: timestamp(),
-            delete_children: delete_children,
-            serial_key: this.serial._key,
-          };
-
-          await this.$api.post('event', event);
-          await this.$store.dispatch('loadSerials');
-          this.$q.notify({
-            message: this.$t(`Seriale ${this.serial.code} eliminato`),
-            color: 'theme-orange',
-            position: 'top',
-          });
-          this.exit();
-        });
-    },
-
-    async requestDHRPrint() {
-      this.$q.dialog({
-        title: this.$t('dhr.options'),
-        message: this.$t('dhr.select_options'),
-        class: 'background',
-        color: 'theme-blue',
-        options: {
-          type: 'checkbox',
-          model: ['include_step_data'],
-          items: [
-            {
-              label: this.$t('dhr.include_step_data'),
-              value: 'include_step_data'
-            },
-            {
-              label: this.$t('dhr.include_attachments'),
-              value: 'include_attachments'
-            },
-            {
-              label: this.$t('dhr.include_children'),
-              value: 'include_children'
-            },
-          ],
-        },
-        cancel: true,
-        persistent: true
-      }).onOk(async (input) => {
-        this.$q.loading.show();
+      // Upload new files
+      if (to_add.length) {
+        // Populate form data
+        const add_body = new FormData();
+        Object.entries(target).forEach(([k, v]) => add_body.append(k, v));
+        to_add.forEach((file) => add_body.append('contents', file));
+        // Post files
         try {
-          const includeAttachments = input.includes('include_attachments');
-          const includeChildren = input.includes('include_children');
-          const includeStepData = input.includes('include_step_data');
-          const params = { include_attachments: includeAttachments, include_children: includeChildren, include_step_data: includeStepData }
-          const resp = await this.$api.get(`serial/${this.serialKey}/dhr`, { responseType: 'blob', params })
-          console.log('resp.headers', resp.headers)
-
-          // Extract filename from Content-Disposition header
-          const contentDisposition = resp.headers['content-disposition'];
-          console.log('Content-Disposition', contentDisposition)
-          let filename = `DHR_${this.serial.code}_${new Date().toISOString().split('T')[0]}.pdf`; // fallback
-
-          if (contentDisposition) {
-            const filenameMatch = contentDisposition.match(/filename="([^"]+)"/);
-            if (filenameMatch) {
-              filename = filenameMatch[1];
-            }
-          }
-
-          const blob = new Blob([resp.data], { type: 'application/pdf' });
-          const url = window.URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          link.href = url;
-          link.download = filename; // Use the extracted filename
-          link.click();
-          window.URL.revokeObjectURL(url);
+          await api.post('/files', add_body);
         } catch (error) {
-          this.$q.notify({
-            message: error.message,
-            color: 'theme-red',
-            position: 'top',
-          });
-        } finally {
-          this.$q.loading.hide();
+          console.error(error);
+          window.alert(error);
         }
-      }).onCancel(() => {
-        return;
+      }
+
+      // Delete files
+      if (to_delete.length) {
+        try {
+          await api.delete('/files', {
+            data: {
+              ...target,
+              filenames: to_delete,
+            },
+          });
+        } catch (error) {
+          console.error(error);
+          window.alert(error);
+        }
+      }
+    });
+
+  return Promise.all(promises);
+}
+
+async function save() {
+  saving.value = true;
+
+  let serial_data = cloneDeep(serial.value);
+  if (serial.value?.data) {
+    let form_data = [];
+    for (const field_data of serial.value.data) {
+      form_data.push({
+        form_field_key: field_data.form_field_key,
+        custom_field_key: field_data.custom_field_key,
+        value:
+          getFieldType(field_data) === 'files'
+            ? field_data.value
+                ?.filter((file) => !file.delete)
+                .map(({ size, name }) => ({ size, name }))
+            : field_data.value,
       });
+    }
+    serial_data.data = form_data;
+  }
+
+  if (serial.value.released && missingMandatoryValues(serial.value.data)) {
+    // Enable updating partial data if serial is not released
+    window.alert(t('fill_mandatory_fields'));
+    saving.value = false;
+    return;
+  }
+
+  const user = session_data.value.user._key;
+
+  serial_data.updated_by = `User/${user}`; // temporarily hardcoding DB id
+
+  const event = {
+    event_type: 'SERIAL_UPDATED',
+    user_key: user,
+    user_session_key: session_data.value.session_key,
+    timestamp: timestamp(),
+    serial_key: serial_data._key,
+    serial_code: serial_data.code,
+    serial_data: serial_data.data
+  };
+
+  await saveFiles(serial_data._key);
+  await api.post('event', event);
+  refreshSerial();
+
+  editMode.value = false;
+  saving.value = false;
+}
+
+function refreshSerial() {
+  store.dispatch('updateSerials', { serial_key: props.serialKey });
+}
+
+async function onDialogCancel() {
+  refreshSerial();
+  editMode.value = false;
+}
+
+function goToSerial(serialKey) {
+  const to_route = {
+    name: 'serialDetail',
+    params: { serialKey },
+    query: {
+      back_to: route.name,
+      ...route.query,
     },
-  },
-};
+  };
+  router.push(to_route);
+}
+
+async function onSerialSelection(selected_key) {
+  // Fetch data from server is serial data is not present
+  if (!store.getters.getSerialData(selected_key)) {
+    await store.dispatch('appendSerial', { serial_key: selected_key });
+    goToSerial(selected_key);
+  } else {
+    goToSerial(selected_key);
+  }
+}
+
+function deleteSerial() {
+  $q
+    .dialog({
+      cancel: true,
+      title: t('serial_delete_confirm_title'),
+      message: t('serial_delete_confirm_question'),
+      options: {
+        type: 'toggle',
+        modelValue: '',
+        // inline: true
+        items: [
+          {
+            label: t('serial_delete_also_children'),
+            value: 'delete_children',
+          },
+        ],
+      },
+    })
+    .onOk(async (delete_children) => {
+      const user = session_data.value.user._key;
+      const event = {
+        event_type: 'SERIAL_DELETED',
+        user_key: user,
+        user_session_key: session_data.value.session_key,
+        timestamp: timestamp(),
+        delete_children: delete_children,
+        serial_key: serial.value._key,
+      };
+
+      await api.post('event', event);
+      await store.dispatch('loadSerials');
+      $q.notify({
+        message: t(`Seriale ${serial.value.code} eliminato`),
+        color: 'theme-orange',
+        position: 'top',
+      });
+      exit();
+    });
+}
+
+async function requestDHRPrint() {
+  $q.dialog({
+    title: t('dhr.options'),
+    message: t('dhr.select_options'),
+    class: 'background',
+    color: 'theme-blue',
+    options: {
+      type: 'checkbox',
+      model: ['include_step_data'],
+      items: [
+        {
+          label: t('dhr.include_step_data'),
+          value: 'include_step_data'
+        },
+        {
+          label: t('dhr.include_attachments'),
+          value: 'include_attachments'
+        },
+        {
+          label: t('dhr.include_children'),
+          value: 'include_children'
+        },
+      ],
+    },
+    cancel: true,
+    persistent: true
+  }).onOk(async (input) => {
+    $q.loading.show();
+    try {
+      const includeAttachments = input.includes('include_attachments');
+      const includeChildren = input.includes('include_children');
+      const includeStepData = input.includes('include_step_data');
+      const params = { include_attachments: includeAttachments, include_children: includeChildren, include_step_data: includeStepData }
+      const resp = await api.get(`serial/${props.serialKey}/dhr`, { responseType: 'blob', params })
+      console.log('resp.headers', resp.headers)
+
+      // Extract filename from Content-Disposition header
+      const contentDisposition = resp.headers['content-disposition'];
+      console.log('Content-Disposition', contentDisposition)
+      let filename = `DHR_${serial.value.code}_${new Date().toISOString().split('T')[0]}.pdf`; // fallback
+
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="([^"]+)"/);
+        if (filenameMatch) {
+          filename = filenameMatch[1];
+        }
+      }
+
+      const blob = new Blob([resp.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename; // Use the extracted filename
+      link.click();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      $q.notify({
+        message: error.message,
+        color: 'theme-red',
+        position: 'top',
+      });
+    } finally {
+      $q.loading.hide();
+    }
+  }).onCancel(() => {
+    return;
+  });
+}
+
+// Lifecycle
+onMounted(() => {
+  editMode.value = false;
+  saving.value = false;
+  selected.value = null;
+  store.dispatch('loadUsers');
+  store.dispatch('appendSerial', { serial_key: props.serialKey });
+});
 </script>
 
 <style lang="sass" scoped>
