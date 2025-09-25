@@ -421,6 +421,10 @@ const tempData = reactive({})
 
 
 async function getWoData() {
+  if (props.wo) {
+    Object.assign(woData, props.wo)
+    return
+  }
   const wo_key = props.job?.wo_key || props.wo?._key
   const resp = await api.get(`work-order/${wo_key}`)
   Object.assign(woData, resp.data.detail)

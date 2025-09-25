@@ -146,7 +146,7 @@
                   icon="mdi-dots-horizontal"
                   class="q-ml-sm"
                 >
-                  <ProductionAdminMenu :job="job" show-job-actions/>
+                  <ProductionAdminMenu :job="job" :wo="wo_data" show-job-actions/>
                 </q-btn>
               </div>
             </template>
