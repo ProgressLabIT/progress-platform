@@ -24,6 +24,10 @@ export function usePrintDialog({ context: contextType, contextData }) {
   );
 
   async function open() {
+    // Start with a clean state
+    context.resetState();
+
+    // Open the dialog
     return Dialog.create({
       component: PrintDialog,
       componentProps: {
@@ -80,6 +84,13 @@ export class TemplateContext {
 
   constructor(store = useStore()) {
     this._store = store;
+  }
+
+  resetState() {
+    this.serial = null;
+    this.product = null;
+    this.workOrder = null;
+    this.issue = null;
   }
 
   getTemplateContextKey() {
