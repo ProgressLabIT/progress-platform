@@ -314,13 +314,13 @@ async def update_work_order_quantities(
     ).next()
 
     # Handle work order status changes in the queue
-    if wo_data['status'] != WorkStatus.CLOSED and updated_wo_data['status'] == WorkStatus.CLOSED:
+    if wo_data.status != WorkStatus.CLOSED and updated_wo_data['status'] == WorkStatus.CLOSED:
       tx.aql.execute(
         Queries.REMOVE_WORK_ORDER_FROM_QUEUE,
         bind_vars=dict(wo_key=wo_key)
       )
 
-    if wo_data['status'] == WorkStatus.CLOSED and updated_wo_data['status'] != WorkStatus.CLOSED:
+    if wo_data.status == WorkStatus.CLOSED and updated_wo_data['status'] != WorkStatus.CLOSED:
       tx.aql.execute(
         Queries.ADD_WORK_ORDER_TO_QUEUE,
         bind_vars=dict(new_wo_key=wo_key)
