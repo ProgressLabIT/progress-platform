@@ -235,6 +235,8 @@ const serialModelInitalValue = ref([]);
 
 const selectedTemplateBK = ref();
 const hasSerialLink = ref(false);
+const previewSrc = ref();
+
 
 function resetState() {
   activeStep.value = 0;
@@ -524,7 +526,6 @@ async function prepareInputs() {
   return inputs;
 }
 
-const previewSrc = ref();
 /**
  * Generates a PDF preview using the selected template and form data
  * Validates template structure, prepares inputs, and generates PDF using @pdfme/generator
