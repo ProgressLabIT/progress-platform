@@ -31,13 +31,15 @@ class JobClosedEvent(BaseEvent):
       bind_vars=bind_vars
     ).next())
 
-    self.tx.aql.execute(
-      ProductionQueries.REMOVE_JOB_FROM_QUEUE,
-      bind_vars=dict(
-        job_key=self.info.job_key,
-        target_key=self.info.user_key
+    # Remove job from the assigned user's queue, not the event user's queue
+    if completed_job.assigned_to:
+      self.tx.aql.execute(
+        ProductionQueries.REMOVE_JOB_FROM_QUEUE,
+        bind_vars=dict(
+          job_key=self.info.job_key,
+          target_key=completed_job.assigned_to
+        )
       )
-    )
 
     self.response = completed_job
 

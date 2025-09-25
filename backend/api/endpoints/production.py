@@ -286,6 +286,15 @@ async def update_work_order_quantities(
               notes=job.notes
             ),
           )
+          # Remove closed job from assigned user's queue
+          if job.assigned_to:
+            tx.aql.execute(
+              Queries.REMOVE_JOB_FROM_QUEUE,
+              bind_vars=dict(
+                job_key=job.key,
+                target_key=job.assigned_to
+              )
+            )
       else:
         tx.abort_transaction()
         raise HTTPError(422, "Invalid job update action")
@@ -304,11 +313,17 @@ async def update_work_order_quantities(
       bind_vars=dict(wo_key=wo_key)
     ).next()
 
-    # If the work order became closed, remove it from the queue
-    if updated_wo_data['status'] == WorkStatus.CLOSED:
+    # Handle work order status changes in the queue
+    if wo_data['status'] != WorkStatus.CLOSED and updated_wo_data['status'] == WorkStatus.CLOSED:
       tx.aql.execute(
         Queries.REMOVE_WORK_ORDER_FROM_QUEUE,
         bind_vars=dict(wo_key=wo_key)
+      )
+
+    if wo_data['status'] == WorkStatus.CLOSED and updated_wo_data['status'] != WorkStatus.CLOSED:
+      tx.aql.execute(
+        Queries.ADD_WORK_ORDER_TO_QUEUE,
+        bind_vars=dict(new_wo_key=wo_key)
       )
 
     tx.commit_transaction()
@@ -850,10 +865,24 @@ async def update_jobs(job_updates:List[JobUpdate]):
       )
     )
 
-    tx.aql.execute(
+    # Update work order
+    updated_wo_data = tx.aql.execute(
       TraceabilityQueries.UPDATE_WORK_ORDER,
       bind_vars = dict(wo_key = wo_key)
-    )
+    ).next()
+
+    # Handle work order status changes in the queue
+    if work_order_data['status'] != WorkStatus.CLOSED and updated_wo_data['status'] == WorkStatus.CLOSED:
+      tx.aql.execute(
+        Queries.REMOVE_WORK_ORDER_FROM_QUEUE,
+        bind_vars=dict(wo_key=wo_key)
+      )
+
+    if work_order_data['status'] == WorkStatus.CLOSED and updated_wo_data['status'] != WorkStatus.CLOSED:
+      tx.aql.execute(
+        Queries.ADD_WORK_ORDER_TO_QUEUE,
+        bind_vars=dict(new_wo_key=wo_key)
+      )
 
     tx.commit_transaction()
     return APIResponse(detail=results, message="Jobs updated successfully")
