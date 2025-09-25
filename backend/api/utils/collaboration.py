@@ -307,6 +307,6 @@ class Queries:
       links: task_links,
       icon: task_type.icon,
       task_type_name: task_type.name,
-      allowed_linked_entities: task_type.allowed_linked_entities
+      allowed_linked_entities: task_type.link_settings[*].type
     })
   """
