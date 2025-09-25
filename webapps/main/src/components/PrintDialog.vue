@@ -236,7 +236,20 @@ const serialModelInitalValue = ref([]);
 const selectedTemplateBK = ref();
 const hasSerialLink = ref(false);
 
+function resetState() {
+  activeStep.value = 0;
+  allowSelectTemplate.value = true;
+  selectedTemplate.value = undefined;
+  isLoadingTemplate.value = false;
+  formModel = undefined;
+  serialModelInitalValue.value = [];
+  selectedTemplateBK.value = undefined;
+  hasSerialLink.value = false;
+  previewSrc.value = undefined;
+}
+
 function initialize() {
+  resetState();
   if (props.context.type === 'issue' && props.context.links) {
     loadSerial(props.context.link);
   }
@@ -348,6 +361,8 @@ async function selectSerial(serial) {
  * @param {Object} template - The template object containing _key property
  */
 async function selectTemplate(template) {
+  resetState();
+
   hasSerialLink.value = false;
   selectedTemplateBK.value = template;
   activeStep.value = 1;
