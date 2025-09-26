@@ -348,7 +348,7 @@ function notify({ message, color = 'theme-green' }) {
 }
 
 function refreshIssue() {
-  store.dispatch('getIssues', { issue_key: props.issueKey });
+  store.dispatch('refreshIssueData', props.issueKey);
   getHistory();
 }
 
