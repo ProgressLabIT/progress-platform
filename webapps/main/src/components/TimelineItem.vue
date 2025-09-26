@@ -27,7 +27,7 @@
         <q-item-label>
           {{ $t(`events.${event.event_type}`) }}
         </q-item-label>
-        <q-item-label caption>
+        <q-item-label caption @click="goToContext()" class="hover-underline">
           <span class="text-uppercase">{{ event.context_name }}</span> {{ event.context_code }}
           <q-icon :name="event.context_icon" />
         </q-item-label>
@@ -76,6 +76,7 @@
 <script setup>
 import { computed, ref, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useRouter } from 'vue-router';
 import { capitalize } from '@/boot/filters';
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue';
 import { formatDateTime } from '@/lib/TimeHandling';
@@ -96,6 +97,7 @@ const props = defineProps({
 });
 
 const { t: $t, locale } = useI18n();
+const router = useRouter();
 
 // Reactive state for expansion
 const isExpanded = ref(false);
@@ -165,6 +167,13 @@ const eventDetails = computed(() => {
 
   return details;
 });
+
+const goToContext = () => {
+  router.push({ name: 'taskScreen', params: { taskKey: props.event.context_key } });
+};
+
+
+
 </script>
 
 <style lang="sass" scoped>
