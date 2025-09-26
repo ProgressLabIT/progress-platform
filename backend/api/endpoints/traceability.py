@@ -93,19 +93,27 @@ async def get_events(
   serial_key: str | None = None,
   job_key: str | None = None,
   work_order_key: str | None = None,
+  task_key: str | None = None,
   time_from: datetime | None = None,
   time_to: datetime | None = None,
-  task_key: str | None = None,
+  context_type: EventContextType | None = None,
+  context_key: str | None = None,
   type: EventType | None = None
 ):
+
+  if context_type is not None and context_type not in context_map:
+    raise HTTPException(status_code=422, detail=f'Invalid context type: {context_type}')
+
   bind_vars = dict(
     issue_key = issue_key,
     serial_key = serial_key,
     job_key = job_key,
     work_order_key = work_order_key,
+    task_key = task_key,
     time_from = time_from,
     time_to = time_to,
-    task_key = task_key,
+    context_type = context_type,
+    context_key = context_key,
     type = type
   )
   return [e for e in db.aql.execute(Queries.GET_EVENTS, bind_vars=bind_vars)]

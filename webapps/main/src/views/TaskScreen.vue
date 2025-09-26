@@ -21,7 +21,7 @@
     <template #content>
       <q-skeleton v-if="!task" type="text" />
 
-      <div v-else class="q-pa-md">
+      <div v-else class="q-pa-md full-height column">
         <div class="row items-center text-low q-col-gutter-x-xl">
           <!-- CREATED BY -->
           <div class="col-auto row q-gutter-x-md items-center">
@@ -256,7 +256,7 @@
 
             <!-- HISTORY -->
             <q-tab-panel name="history">
-              <q-list class="q-pl-xl col scroll q-pb-lg">
+              <q-list class="col q-pb-lg">
                 <TimelineItem
                   v-for="(e, index) in history"
                   :key="e._key"

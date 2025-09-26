@@ -142,7 +142,7 @@
 
         <!-- EVENTS -->
         <q-tab-panel name="history">
-          <q-list class="q-pl-xl col scroll q-pb-lg">
+          <q-list class="col q-pb-lg">
             <TimelineItem
               v-for="(e, index) in history"
               :key="e._key"
