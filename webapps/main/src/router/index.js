@@ -9,6 +9,7 @@ import {
 import en from '@/i18n/en.js';
 import it from '@/i18n/it.js';
 import routes from './routes';
+import { extractEntityFromRoute, handleEntityNavigation } from '@/composables/taskNavigation.js';
 /*
  * If not building with SSR mode, you can
  * directly export the Router instantiation;
@@ -103,6 +104,23 @@ export default route(function ({ store }) {
           next({ name: store.getters.userHomepage });
         }
       } else {
+        // Handle task navigation for entity routes
+        if (!login_route) {
+          try {
+            const entityInfo = extractEntityFromRoute(to);
+            if (entityInfo) {
+              const shouldContinue = await handleEntityNavigation(entityInfo, to);
+              if (!shouldContinue) {
+                // User chose to cancel navigation
+                return next(false);
+              }
+            }
+          } catch (error) {
+            console.error('Task navigation error:', error);
+            // Continue navigation on error
+          }
+        }
+
         // Consider the navigation as an interaction > Reset session timeout
         if (!login_route) {
           store.commit('SET_SESSION_TIMEOUT');

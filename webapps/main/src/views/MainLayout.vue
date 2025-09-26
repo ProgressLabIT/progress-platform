@@ -5,6 +5,8 @@
     <!-- <template v-if="!session_locked"> -->
     <AppBar v-if="$q.screen.height > 400" />
 
+    <TaskBar v-if="taskStore.activeTaskKey" />
+
     <q-drawer
       id="menu"
       v-model="drawerModel"
@@ -63,11 +65,14 @@ import { useStore } from 'vuex';
 import AppBar from '@/components/AppBar.vue';
 import AppFooter from '@/components/AppFooter.vue';
 import { useDrawer } from '@/composables/drawer';
+import TaskBar from '@/components/TaskBar.vue';
+import { useTaskStore } from '@/stores/task.js';
 // import SessionLock from '@/views/SessionLock'
 
 const $q = useQuasar();
 const store = useStore();
 const { drawerModel } = useDrawer();
+const taskStore = useTaskStore();
 
 const tab_routes = [
   'adminPanel',

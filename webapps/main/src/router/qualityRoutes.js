@@ -16,6 +16,12 @@ const qualityRoutes = [
             name: 'issueDetail',
             component: () => import('@/components/IssueDetail.vue'),
             props: true,
+            meta: {
+              entity: {
+                type: 'issue',
+                keyParam: 'issueKey'
+              }
+            },
           },
         ],
       },

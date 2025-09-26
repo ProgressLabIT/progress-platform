@@ -16,7 +16,14 @@ const taskRoutes = [
   {
     path: 'task/:taskKey',
     name: 'taskScreen',
-    meta: { scope: 'task', screen_title: 'Task' },
+    meta: {
+      scope: 'task',
+      screen_title: 'Task',
+      entity: {
+        type: 'task',
+        keyParam: 'taskKey'
+      }
+    },
     component: () => import('@/views/TaskScreen.vue'),
     props: true,
   },

@@ -53,7 +53,6 @@
           :id="props.row._key"
           :key="props.row._key"
           :props="props"
-          :style="props.row.status === 'completed' ? 'opacity: .5' : ''"
           @click="edit_mode ? toggleTask(props.row._key) : null"
           @dblclick="!edit_mode ? showTaskDetails(props.row._key) : null"
         >
@@ -115,21 +114,42 @@
                     style="padding-left: 0px; padding-right: 0px;"
                   >
                     <BaseUserAvatar
-                    :user="getUserByKey(user.user_key)"
-                    :size="'24px'"
+                      :user="getUserByKey(user.user_key)"
+                      :size="'24px'"
                     />
                   </q-item>
                 </q-list>
               </template>
 
               <!-- ACTIONS -->
-              <q-btn
-                color="theme-blue"
-                class="q-mt-lg"
-                size="0.75rem"
-                :label="$t('go_to_task')"
-                @click="router.push({ name: 'taskScreen', params: { taskKey: props.row._key } })"
-              />
+              <div class="row q-gutter-sm q-mt-lg">
+                <q-btn
+                  color="theme-grey"
+                  size="0.75rem"
+                  :label="$t('go_to_task')"
+                  @click="router.push({ name: 'taskScreen', params: { taskKey: props.row._key } })"
+                />
+
+                <template v-if="!['completed', 'canceled'].includes(props.row.status)">
+                  <q-btn
+                    v-if="!isTaskActive(props.row._key)"
+                    color="theme-green"
+                    size="0.75rem"
+                    icon="mdi-pin"
+                    label="Activate Task"
+                    @click="activateTask(props.row._key)"
+                  />
+
+                  <q-btn
+                    v-else
+                    color="orange"
+                    size="0.75rem"
+                    icon="mdi-pin-off"
+                    label="Deactivate"
+                    @click="deactivateTask()"
+                  />
+                </template>
+              </div>
 
             </div>
           </q-popup-proxy>
@@ -138,9 +158,16 @@
           <!-- TASK COLUMNS -->
 
           <template v-for="column in taskColumns" :key="column.name">
-            <q-td class="ellipsis" :props="props">
+            <q-td
+              class="ellipsis"
+              :style="props.row.status === 'completed' ? 'opacity: .7' : ''"
+              :props="props">
               <template v-if="column.name === 'type'">
-                <q-icon :name="props.row.icon || 'mdi-check-circle-outline'" size="18px"/>
+                <q-icon
+                  :name="props.row.icon || 'mdi-check-circle-outline'"
+                  size="18px"
+                  :class="{ 'active-task-icon': isTaskActive(props.row._key) }"
+                />
               </template>
 
               <template v-else-if="column.name === 'status'">
@@ -184,7 +211,6 @@
                   />
                 </template>
 
-                <span v-else>-</span>
               </div>
 
               <template v-else>
@@ -376,7 +402,7 @@
             :loading="saving"
             @click.stop="updateTasks"
           />
-          <q-btn color="theme-grey" unelevated :label="$t('cancel_changes')" @click.stop="exitEditMode" size="0.75rem"/>
+          <q-btn color="theme-grey" unelevated size="0.75rem" :label="$t('cancel_changes')" @click.stop="exitEditMode"/>
         </div>
   </div>
 
@@ -386,7 +412,7 @@
 
 <script setup>
 import { useQuasar, date } from 'quasar';
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter, useRoute } from 'vue-router';
 import { useStore } from 'vuex';
@@ -425,6 +451,9 @@ const pagination = ref({
   rowsNumber: 1000,
 });
 
+// UI state
+const hoveredTask = ref(null);
+
 // Edit mode state
 const edit_mode = ref(false);
 const selected_tasks = ref(new Set());
@@ -443,6 +472,19 @@ const all_users = ref([]);
 
 // Computed properties
 const task_list = computed(() => taskStore.tasks);
+
+// Task activation methods
+function isTaskActive(taskKey) {
+  return taskStore.activeTaskKey === taskKey;
+}
+
+function activateTask(taskKey) {
+  taskStore.activeTaskKey = taskKey
+}
+
+function deactivateTask() {
+  taskStore.activeTaskKey = null;
+}
 
 // Edit mode computed properties
 const allTasksSelected = computed(() => {
@@ -652,6 +694,36 @@ function updateTaskAssignees(userKeys) {
   console.log('task_owner_key', task_owner_key.value);
 }
 
+// Keyboard shortcuts
+function handleKeyPress(event) {
+  if (event.key.toLowerCase() === 'a' && !event.ctrlKey && !event.metaKey && !event.altKey) {
+    // Prevent default if focused on input elements
+    if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA' || event.target.isContentEditable) {
+      return;
+    }
+
+    event.preventDefault();
+
+    // If in edit mode and tasks are selected, activate first selected task
+    if (edit_mode.value && selected_tasks.value.size === 1) {
+      const taskKey = Array.from(selected_tasks.value)[0];
+      if (isTaskActive(taskKey)) {
+        deactivateTask();
+      } else {
+        activateTask(taskKey);
+      }
+    }
+    // If there's a hovered task, activate it
+    else if (hoveredTask.value) {
+      if (isTaskActive(hoveredTask.value)) {
+        deactivateTask();
+      } else {
+        activateTask(hoveredTask.value);
+      }
+    }
+  }
+}
+
 // Lifecycle
 onMounted(async () => {
   await Promise.all([
@@ -659,6 +731,14 @@ onMounted(async () => {
     store.dispatch('loadUsers')
   ]);
   initUserOptions();
+
+  // Add keyboard event listener
+  document.addEventListener('keydown', handleKeyPress);
+});
+
+onUnmounted(() => {
+  // Clean up keyboard event listener
+  document.removeEventListener('keydown', handleKeyPress);
 });
 </script>
 
@@ -694,4 +774,23 @@ onMounted(async () => {
     transform: translateY(0)
     opacity: 1
     pointer-events: auto
+
+// Active task icon styling
+.active-task-icon
+  color: var(--theme-blue) !important
+  animation: pulse-active-icon 2s ease-in-out infinite
+  border-radius: 50%
+  padding: 2px
+
+// Pulse animation for active task icon
+@keyframes pulse-active-icon
+  0%
+    color: var(--theme-blue)
+    background-color: transparent
+  50%
+    color: white
+    background-color: var(--theme-blue)
+  100%
+    color: var(--theme-blue)
+    background-color: transparent
 </style>

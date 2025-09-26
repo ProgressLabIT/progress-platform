@@ -20,6 +20,12 @@ const traceabilityRoutes = [
     component: () =>
           import('app/src/components/traceability/SerialDetail.vue'),
     props: true,
+    meta: {
+      entity: {
+        type: 'serial',
+        keyParam: 'serialKey'
+      }
+    },
   },
 ];
 

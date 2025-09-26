@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { Notify, Dialog } from 'quasar'
 import { api } from '@/boot/axios.js'
 import { sendEvent } from '@/composables/event.js'
 import { useStorePersistence } from '@/composables/reStore.js'
@@ -8,6 +9,7 @@ export const useTaskStore = defineStore('task', {
     tasks: [],
     activeTaskKey: null,
     loading: false,
+    ignoredEntities: [], // Entities ignored for current active task
   }),
 
   getters: {
@@ -27,6 +29,11 @@ export const useTaskStore = defineStore('task', {
       return state.tasks.filter((task) =>
         task.assigned_to && task.assigned_to.includes(userKey)
       )
+    },
+
+    isEntityIgnored: (state) => (entityType, entityKey) => {
+      const entityId = `${entityType}:${entityKey}`
+      return state.ignoredEntities.includes(entityId)
     },
   },
 
@@ -98,17 +105,157 @@ export const useTaskStore = defineStore('task', {
       }
     },
 
-    async updateTask(taskKey, updateData) {
+    async completeTask(taskKey) {
       try {
-        const { data } = await api.patch(`/task/${taskKey}`, updateData)
-        // Update task in local state
+        const response = await sendEvent({ event_type: 'TASK_COMPLETED', event_data: { task_key: taskKey } })
+        Notify.create({
+          message: 'Task completed successfully',
+          color: 'theme-green',
+          timeout: 2000,
+          position: 'top',
+        })
+        return response.data
+      } catch (error) {
+        console.error('Error completing task:', error)
+        Notify.create({
+          message: 'Error completing task',
+          color: 'theme-red',
+          timeout: 3000,
+          position: 'top',
+        })
+      }
+      finally {
+        if (this.activeTaskKey === taskKey) {
+          this.deactivateTask()
+        }
+        this.fetchTasks()
+      }
+    },
+
+    async completeTaskWithConfirmation(taskKey, t) {
+      return new Promise((resolve) => {
+        Dialog.create({
+          title: t('task_complete'),
+          message: t('task_complete_confirmation'),
+          color: 'theme-green',
+          ok: {
+            label: t('complete'),
+            color: 'theme-green'
+          },
+          cancel: {
+            label: t('cancel'),
+            color: 'theme-grey'
+          }
+        }).onOk(async () => {
+          try {
+            await this.completeTask(taskKey)
+            resolve(true)
+          } catch (error) {
+            resolve(false)
+          }
+        }).onCancel(() => {
+          resolve(false)
+        })
+      })
+    },
+
+    async dismissTaskWithConfirmation(t) {
+      return new Promise((resolve) => {
+        Dialog.create({
+          title: t('dismiss_task'),
+          message: t('dismiss_task_confirmation'),
+          color: 'theme-orange',
+          ok: {
+            label: t('dismiss'),
+            color: 'theme-orange'
+          },
+          cancel: {
+            label: t('cancel'),
+            color: 'theme-grey'
+          }
+        }).onOk(() => {
+          this.deactivateTask()
+          resolve(true)
+        }).onCancel(() => {
+          resolve(false)
+        })
+      })
+    },
+
+    async reopenTaskWithConfirmation(taskKey, t) {
+      return new Promise((resolve) => {
+        Dialog.create({
+          title: t('task_reopen'),
+          message: t('task_reopen_confirmation') || 'Are you sure you want to reopen this task?',
+          color: 'theme-green',
+          ok: {
+            label: t('reopen'),
+            color: 'theme-green'
+          },
+          cancel: {
+            label: t('cancel'),
+            color: 'theme-grey'
+          }
+        }).onOk(async () => {
+          try {
+            await sendEvent({
+              event_type: 'TASK_REOPENED',
+              event_data: {
+                task_key: taskKey,
+              }
+            })
+
+            await this.refreshTaskData(taskKey)
+
+            Notify.create({
+              message: t('task_reopen_success') || 'Task reopened successfully',
+              color: 'theme-green',
+              timeout: 2000,
+              position: 'top',
+            })
+            resolve(true)
+          } catch (error) {
+            console.error('Error reopening task:', error)
+            Notify.create({
+              message: t('errors.status_update_err') || 'Error reopening task',
+              color: 'theme-red',
+              timeout: 3000,
+              position: 'top',
+            })
+            resolve(false)
+          }
+        }).onCancel(() => {
+          resolve(false)
+        })
+      })
+    },
+
+    async toggleTaskStatusWithConfirmation(taskKey, t) {
+      const task = this.getTaskByKey(taskKey)
+      if (!task) {
+        console.error('Task not found:', taskKey)
+        return false
+      }
+
+      const isClosing = task.status !== 'completed'
+      if (isClosing) {
+        return await this.completeTaskWithConfirmation(taskKey, t)
+      } else {
+        return await this.reopenTaskWithConfirmation(taskKey, t)
+      }
+    },
+
+    async refreshTaskData(taskKey) {
+      try {
+        const { data } = await api.get(`/task/${taskKey}`)
+        // Update the task in the local tasks array
         const taskIndex = this.tasks.findIndex(task => task._key === taskKey)
         if (taskIndex !== -1) {
-          this.tasks[taskIndex] = { ...this.tasks[taskIndex], ...updateData }
+          this.tasks[taskIndex] = data
         }
         return data
       } catch (error) {
-        console.error('Error updating task:', error)
+        console.error('Error refreshing task data:', error)
         throw error
       }
     },
@@ -125,6 +272,46 @@ export const useTaskStore = defineStore('task', {
         console.error('Error deleting task:', error)
         throw error
       }
+    },
+
+    // Task activation/deactivation methods
+    setActiveTask(taskKey) {
+      const oldTaskKey = this.activeTaskKey
+      this.activeTaskKey = taskKey
+
+      // Clear ignored entities when switching tasks
+      if (oldTaskKey !== taskKey) {
+        this.clearIgnoredEntities()
+      }
+    },
+
+    deactivateTask() {
+      this.activeTaskKey = null
+      this.clearIgnoredEntities()
+    },
+
+    // Ignored entities management
+    addIgnoredEntity(entityType, entityKey) {
+      const entityId = `${entityType}:${entityKey}`
+      if (!this.ignoredEntities.includes(entityId)) {
+        this.ignoredEntities.push(entityId)
+      }
+    },
+
+    removeIgnoredEntity(entityType, entityKey) {
+      const entityId = `${entityType}:${entityKey}`
+      const index = this.ignoredEntities.indexOf(entityId)
+      if (index > -1) {
+        this.ignoredEntities.splice(index, 1)
+      }
+    },
+
+    clearIgnoredEntities() {
+      this.ignoredEntities = []
+    },
+
+    getIgnoredEntities() {
+      return [...this.ignoredEntities]
     },
   },
 })

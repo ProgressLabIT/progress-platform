@@ -6,18 +6,35 @@
       @mouseleave="onMouseLeave"
     >
       <!-- Thin line that thickens in center -->
-      <div class="task-line">
+      <div
+        class="task-line"
+        :class="{ 'dragging': isDragging }"
+        :style="{ left: `${currentLeft}px` }"
+      >
         <!-- Center thick section with task code -->
-        <div class="task-line-center">
+        <div class="task-line-center" @mouseenter="onCenterHover" @mouseleave="onCenterLeave">
           <q-icon
             v-if="activeTask?.icon"
             :name="activeTask.icon"
             size="14px"
             class="task-icon"
           />
-          <span class="task-code">{{ activeTask?.code || t('task') }}</span>
+          <span
+            class="task-code hover-underline"
+            @click="router.push({ name: 'taskScreen', params: { taskKey: activeTask?._key } })">
+            {{ activeTask?.code || t('task') }}
+          </span>
+          <!-- Drag handle icon -->
+          <q-icon
+            v-show="showDragIcon"
+            name="mdi-drag"
+            size="14px"
+            class="drag-icon"
+            @mousedown="startDrag"
+            @touchstart="startDrag"
+          />
           <q-btn
-            v-if="isOwner"
+            v-if="showCompleteButton"
             icon="mdi-check"
             flat
             round
@@ -41,11 +58,13 @@
 </template>
 
 <script setup>
-import { useQuasar } from 'quasar'
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRouter } from 'vue-router'
 import { useStore } from 'vuex'
 import { useTaskStore } from '@/stores/task.js'
+
+const router = useRouter()
 
 
 // const props = defineProps({
@@ -60,10 +79,17 @@ import { useTaskStore } from '@/stores/task.js'
 const taskStore = useTaskStore()
 const store = useStore()
 const { t } = useI18n()
-const $q = useQuasar()
+
 
 // Reactive data
 const isExpanded = ref(false)
+const showDragIcon = ref(false)
+
+// Drag functionality state
+const isDragging = ref(false)
+const dragStartX = ref(0)
+const dragStartLeft = ref(0)
+const currentLeft = ref(0)
 
 // Computed properties
 const activeTask = computed(() => taskStore.getActiveTask)
@@ -73,6 +99,14 @@ const currentUser = computed(() => store.state.session.user)
 
 const isOwner = computed(() => {
   return activeTask.value?.owner_key === currentUser.value._key
+})
+
+const isTaskAdmin = computed(() => {
+  return store.getters.hasPermission('task')
+})
+
+const showCompleteButton = computed(() => {
+  return isTaskAdmin.value || isOwner.value
 })
 
 
@@ -88,51 +122,100 @@ const onMouseLeave = () => {
   }
 }
 
-const dismissTask = () => {
-  // Clear the active task
-  $q.dialog({
-    title: 'Dismiss Task',
-    message: 'Are you sure you want to dismiss this task? You will no longer see it in your active tasks.',
-    color: 'theme-orange',
-    confirm: 'Dismiss',
-    cancel: 'Cancel',
-  }).onOk(() => {
-      taskStore.activeTaskKey = null
-  })
+const onCenterHover = () => {
+  showDragIcon.value = true
 }
 
-
-const completeTask = () => {
-  $q.dialog({
-    title: 'Complete Task',
-    message: 'Are you sure you want to complete this task?',
-    color: 'theme-green',
-    confirm: 'Complete',
-    cancel: 'Cancel',
-  }).onOk(() => {
-    taskStore.completeTask(activeTask.value._key)
-  })
-}
-
-// Add body class when TaskBar is mounted
-onMounted(() => {
-  if (activeTask.value) {
-    document.body.classList.add('has-task-bar')
+const onCenterLeave = () => {
+  if (!isDragging.value) {
+    showDragIcon.value = false
   }
+}
+
+const dismissTask = async () => {
+  await taskStore.dismissTaskWithConfirmation(t)
+}
+
+const completeTask = async () => {
+  if (activeTask.value) {
+    await taskStore.completeTaskWithConfirmation(activeTask.value._key, t)
+  }
+}
+
+// Drag functionality
+const startDrag = (event) => {
+  // Handle both mouse and touch events
+  if (event.type === 'mousedown' && event.button !== 0) {
+    return // Only left mouse button
+  }
+
+  isDragging.value = true
+  const clientX = event.touches ? event.touches[0].clientX : event.clientX
+  dragStartX.value = clientX
+  dragStartLeft.value = currentLeft.value
+
+  // Add global event listeners for both mouse and touch
+  document.addEventListener('mousemove', onDrag)
+  document.addEventListener('mouseup', endDrag)
+  document.addEventListener('touchmove', onDrag, { passive: false })
+  document.addEventListener('touchend', endDrag)
+
+  // Prevent text selection during drag
+  event.preventDefault()
+}
+
+const onDrag = (event) => {
+  if (!isDragging.value) {
+    return
+  }
+
+  const clientX = event.touches ? event.touches[0].clientX : event.clientX
+  const deltaX = clientX - dragStartX.value
+  const newLeft = dragStartLeft.value + deltaX
+
+  // Calculate bounds to keep taskbar visible on screen
+  const screenWidth = window.innerWidth
+  const taskBarWidth = 200 // Approximate width of task bar center
+  const minLeft = -screenWidth / 2 + taskBarWidth / 2
+  const maxLeft = screenWidth / 2 - taskBarWidth / 2
+
+  // Apply bounds
+  currentLeft.value = Math.max(minLeft, Math.min(maxLeft, newLeft))
+
+  // Prevent scrolling on touch devices
+  if (event.touches) {
+    event.preventDefault()
+  }
+}
+
+const endDrag = () => {
+  isDragging.value = false
+  showDragIcon.value = false
+
+  // Save position to localStorage
+  localStorage.setItem('taskbar-position', currentLeft.value.toString())
+
+  // Remove global event listeners for both mouse and touch
+  document.removeEventListener('mousemove', onDrag)
+  document.removeEventListener('mouseup', endDrag)
+  document.removeEventListener('touchmove', onDrag)
+  document.removeEventListener('touchend', endDrag)
+}
+
+// Lifecycle hooks
+onMounted(() => {
+  // Load saved position from localStorage or default to center
+  const savedPosition = localStorage.getItem('taskbar-position')
+  currentLeft.value = savedPosition ? parseInt(savedPosition) : 0
 })
 
-// Watch for activeTask changes to manage body class and cleanup
-// watch(activeTask, (newTask, oldTask) => {
-//   if (newTask && !oldTask) {
-//     // TaskBar is being added
-//     document.body.classList.add('has-task-bar')
-//   } else if (!newTask && oldTask) {
-//     // TaskBar is being removed
-//     document.body.classList.remove('has-task-bar')
-//     document.body.classList.remove('task-bar-expanded')
-//     isExpanded.value = false
-//   }
-// }, { immediate: true })
+onBeforeUnmount(() => {
+  // Clean up event listeners if component unmounts during drag
+  document.removeEventListener('mousemove', onDrag)
+  document.removeEventListener('mouseup', endDrag)
+  document.removeEventListener('touchmove', onDrag)
+  document.removeEventListener('touchend', endDrag)
+})
 
 </script>
 
@@ -157,6 +240,8 @@ onMounted(() => {
     var(--theme-blue) 20%,
     var(--theme-blue) 80%,
     transparent 100%);
+  user-select: none;
+  transition: all 0.3s ease;
 
   &::before {
     content: '';
@@ -169,6 +254,12 @@ onMounted(() => {
     background: var(--theme-blue);
     border-radius: 0 0 20px 20px;
     z-index: 1;
+  }
+
+  &.dragging {
+    cursor: grabbing;
+    transition: none;
+    transform: scale(1.01);
   }
 }
 
@@ -197,6 +288,12 @@ onMounted(() => {
     padding: 10px 20px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
   }
+
+  .task-line.dragging & {
+    transition: none; /* Disable transition during drag for smooth movement */
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+    transform: translateX(-50%) scale(1.02);
+  }
 }
 
 .task-code {
@@ -221,6 +318,24 @@ onMounted(() => {
   &:hover {
     opacity: 1;
     background-color: rgba(255, 255, 255, 0.1);
+  }
+}
+
+.drag-icon {
+  color: white;
+  opacity: 0.6;
+  cursor: grab;
+  transition: opacity 0.2s ease;
+  padding: 2px;
+  border-radius: 4px;
+
+  &:hover {
+    opacity: 1;
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+
+  &:active {
+    cursor: grabbing;
   }
 }
 

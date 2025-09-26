@@ -39,6 +39,12 @@ const productionRoutes = [
             redirect: { name: 'workOrderJobs' },
             component: () => import('@/components/WorkOrderScreen.vue'),
             props: true,
+            meta: {
+              entity: {
+                type: 'work_order',
+                keyParam: 'wo_key'
+              }
+            },
             children: [
               {
                 path: 'job-list',

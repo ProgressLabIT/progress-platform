@@ -69,11 +69,12 @@
               {{ $t('unassigned') }}
             </div>
             <!-- EDIT ASSIGNMENT BUTTON -->
+
             <q-btn
               flat
-              icon="mdi-pencil-circle"
-              padding="0px"
-              class="q-ml-lg"
+              round
+              icon="mdi-pencil"
+              size="10px"
               @click="showAssignmentDialog = true"
             >
               <q-tooltip anchor="center right" self="center left" :delay="200">
@@ -82,7 +83,7 @@
             </q-btn>
           </div>
 
-          <div class="col-auto">
+          <div class="col-auto row items-center q-gutter-x-sm">
             <q-chip
               :color="taskStatusOptions[task.status]?.color || 'theme-grey'"
               :label="taskStatusOptions[task.status]?.label"
@@ -90,6 +91,19 @@
               size="10px"
               class="highlight text-uppercase"
               />
+            <!-- CLOSE/REOPEN BUTTON -->
+            <q-btn
+              :icon="task.status === 'completed' ? 'mdi-restore' : 'mdi-check'"
+              size="10px"
+              flat
+              round
+              :loading="togglingStatus"
+              @click="toggleTaskStatus"
+            >
+              <q-tooltip anchor="center right" self="center left" :delay="200">
+                {{ task.status === 'completed' ? $t('reopen_task') : $t('complete_task') }}
+              </q-tooltip>
+            </q-btn>
           </div>
         </div>
 
@@ -111,7 +125,18 @@
           <q-space />
           <!-- EDIT BUTTON -->
 
-          <div class="col-auto">
+          <div class="col-auto row q-gutter-md">
+            <!-- ACTIVATE BUTTON -->
+            <q-btn
+              v-if="!editMode && taskStore.activeTaskKey !== taskKey && task.status === 'open'"
+              :label="$t('activate')"
+              icon="mdi-play"
+              color="theme-green"
+              size="10px"
+              :loading="activating"
+              @click="activateTask"
+            />
+
             <q-btn
               v-if="!editMode"
               :label="$t('edit')"
@@ -207,7 +232,7 @@
                       <q-tooltip
                         anchor="center left"
                         self="center right"
-                        delay="200"
+                        :delay="200"
                         class="bg-theme-blue">
                         <div class="column q-gutter-y-xs text-right q-pa-sm" >
                           <div class="text-h5">
@@ -293,6 +318,7 @@
             <!-- LINKED ENTITIES -->
             <q-tab-panel name="linked_entities">
               <div class="column q-col-gutter-y-sm">
+                TEST
                 <div v-for="type in availableEntityTypes" :key="type" class="row items-center q-col-gutter-x-sm" style="min-height: 42px;">
                   <div class="text-h5 text-low text-uppercase col-2">
                     {{ $t(`linked_entities.${type}`) }}
@@ -378,6 +404,7 @@
           </template>
         </BaseConfirmationDialog>
 
+
       </div>
     </template>
   </BaseModalScreen>
@@ -385,25 +412,25 @@
 
 <script setup>
 import { cloneDeep } from 'lodash';
-import { Notify } from 'quasar';
+import { Notify, Dialog } from 'quasar';
 import { onMounted, onBeforeUnmount, ref, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter, useRoute } from 'vue-router';
 import { useStore } from 'vuex';
 import { api as $api } from '@/boot/axios';
 import { capitalize } from '@/boot/filters';
-import { sendEvent } from '@/composables/event.js';
-import { useTask } from '@/composables/task';
-import { formatDateTime } from '@/lib/TimeHandling';
-import { useQueryModel } from '@/lib/queryModelFactory';
-import { useTaskStore } from '@/stores/task';
-import BaseModalScreen from '@/components/BaseModalScreen.vue';
 import BaseConfirmationDialog from '@/components/BaseConfirmationDialog.vue';
+import BaseModalScreen from '@/components/BaseModalScreen.vue';
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue';
 import FormField from '@/components/FormField.vue';
 import LinkEntityDialog from '@/components/LinkEntityDialog.vue';
 import MessageThread from '@/components/MessageThread.vue';
 import TaskAssignmentDialog from '@/components/TaskAssignmentDialog.vue';
+import { sendEvent } from '@/composables/event.js';
+import { useTask } from '@/composables/task';
+import { formatDateTime } from '@/lib/TimeHandling';
+import { useQueryModel } from '@/lib/queryModelFactory';
+import { useTaskStore } from '@/stores/task';
 
 const props = defineProps({
   taskKey: {
@@ -427,6 +454,10 @@ const originalTaskData = ref(null);
 const history = ref([]);
 const events = ref(null);
 const messages = ref([]);
+
+// Status management state
+const togglingStatus = ref(false);
+const activating = ref(false);
 const showLinkDialog = ref(false);
 
 // Assignment dialog state
@@ -476,25 +507,27 @@ function exit() {
 }
 
 
+async function fetchTaskData() {
+  // Close any open dialogs
+  showAssignmentDialog.value = false;
+  showLinkDialog.value = false;
+  selectedEntityType.value = null;
 
+  // Reset edit mode
+  editMode.value = false;
+
+  // Fetch new task data
+  task.value = await taskStore.getTaskData(props.taskKey);
+  originalTaskData.value = cloneDeep(task.value);
+
+  // Reload history
+  getTaskHistory();
+}
 
 // Watch for taskKey changes to handle navigation to linked tasks
-watch(() => props.taskKey, async (newTaskKey, oldTaskKey) => {
-  if (newTaskKey && newTaskKey !== oldTaskKey) {
-    // Close any open dialogs
-    showAssignmentDialog.value = false;
-    showLinkDialog.value = false;
-    selectedEntityType.value = null;
-
-    // Reset edit mode
-    editMode.value = false;
-
-    // Fetch new task data
-    task.value = await taskStore.getTaskData(newTaskKey);
-    originalTaskData.value = cloneDeep(task.value);
-
-    // Reload history
-    getTaskHistory();
+watch(() => props.taskKey, async () => {
+  if (props.taskKey && props.taskKey !== task.value._key) {
+    fetchTaskData();
   }
 }, { immediate: false });
 
@@ -679,7 +712,7 @@ async function saveAssignments(newAssignments) {
     showAssignmentDialog.value = false;
 
     // Refresh task data to ensure consistency
-    task.value = await taskStore.getTaskData(props.taskKey);
+    await fetchTaskData();
 
     Notify.create({
       message: $t('assignment_updated_successfully') || 'Assignment updated successfully',
@@ -753,20 +786,78 @@ function goToEntity(link) {
     }
   };
 
-  try {
-    const route = entityRoutes[link.type];
+  const targetRoute = entityRoutes[link.type];
+  if (!targetRoute) {
+    console.warn(`Unknown entity type: ${link.type}`);
+    Notify.create({
+      message: $t('errors.unknown_entity_type') || 'Unknown entity type',
+      color: 'theme-orange',
+      timeout: 3000,
+      position: 'top',
+    });
+    return;
+  }
 
-    if (route) {
-      router.push(route);
-    } else {
-      console.warn(`Unknown entity type: ${link.type}`);
-      Notify.create({
-        message: $t('errors.unknown_entity_type') || 'Unknown entity type',
-        color: 'theme-orange',
-        timeout: 3000,
-        position: 'top',
-      });
-    }
+  // Check if we should prompt for task activation before navigating
+  const shouldPromptActivation =
+    task.value &&
+    task.value.status === 'open' &&
+    taskStore.activeTaskKey !== props.taskKey;
+
+  if (shouldPromptActivation) {
+    // Show activation prompt using programmatic dialog
+    Dialog.create({
+      title: $t('activate_task_before_leaving') || 'Activate Task Before Leaving?',
+      message: $t('activate_task_prompt_message') || 'Would you like to activate this task before navigating to the linked entity? This will help maintain task context.',
+      cancel: {
+        label: $t('navigate_without_activating') || 'No, just navigate',
+        color: 'theme-grey',
+        flat: true
+      },
+      ok: {
+        label: $t('activate_and_navigate') || 'Yes, activate and navigate',
+        color: 'theme-blue'
+      },
+      persistent: true
+    }).onOk(async () => {
+      // Activate the task first
+      try {
+        if (task.value.status === 'open' && taskStore.activeTaskKey !== props.taskKey) {
+          taskStore.setActiveTask(props.taskKey);
+
+          Notify.create({
+            message: $t('task_activated_successfully') || 'Task activated successfully',
+            color: 'theme-green',
+            timeout: 2000,
+            position: 'top',
+          });
+        }
+
+        // Then navigate to the entity
+        navigateToRoute(targetRoute);
+      } catch (error) {
+        console.error('Error activating task:', error);
+        Notify.create({
+          message: $t('errors.activation_err') || 'Error activating task',
+          color: 'theme-red',
+          timeout: 3000,
+          position: 'top',
+        });
+      }
+    }).onCancel(() => {
+      // Navigate without activating
+      navigateToRoute(targetRoute);
+    });
+  } else {
+    // Navigate directly
+    navigateToRoute(targetRoute);
+  }
+}
+
+// Helper function to perform the actual navigation
+function navigateToRoute(route) {
+  try {
+    router.push(route);
   } catch (error) {
     console.error('Error navigating to entity:', error);
     Notify.create({
@@ -777,6 +868,7 @@ function goToEntity(link) {
     });
   }
 }
+
 
 async function save() {
   saving.value = true;
@@ -829,7 +921,7 @@ async function save() {
     editMode.value = false;
 
     // Refresh task data
-    task.value = await taskStore.getTaskData(props.taskKey);
+    await fetchTaskData();
 
     Notify.create({
       message: $t('task_updated_successfully'),
@@ -892,7 +984,7 @@ async function removeLink() {
     linkToRemove.value = null;
 
     // Refresh task data to get updated links
-    task.value = await taskStore.getTaskData(props.taskKey);
+    await fetchTaskData();
 
     Notify.create({
       message: $t('link_removed_successfully') || 'Link removed successfully',
@@ -943,7 +1035,7 @@ async function saveLink(linkData) {
     showLinkDialog.value = false;
 
     // Refresh task data to get updated links
-    task.value = await taskStore.getTaskData(props.taskKey);
+    await fetchTaskData();
     console.log(task.value);
 
     Notify.create({
@@ -963,6 +1055,35 @@ async function saveLink(linkData) {
   } finally {
     savingLink.value = false;
   }
+}
+
+
+// Toggle task status between completed and open
+async function toggleTaskStatus() {
+  togglingStatus.value = true;
+  try {
+    const success = await taskStore.toggleTaskStatusWithConfirmation(props.taskKey, $t);
+    if (success) {
+      // Refresh task data to ensure consistency
+      await fetchTaskData();
+    }
+  } finally {
+    togglingStatus.value = false;
+  }
+}
+
+// Activate task
+async function activateTask() {
+  if (task.value.status === 'active' || task.value.status === 'completed') {
+    Notify.create({
+      message: $t('task_already_active_or_completed') || 'Task already active or completed',
+      color: 'theme-orange',
+      timeout: 2000,
+      position: 'top',
+    });
+    return;
+  }
+  taskStore.activeTaskKey = props.taskKey;
 }
 </script>
 

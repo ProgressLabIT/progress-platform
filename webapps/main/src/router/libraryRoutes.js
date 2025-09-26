@@ -23,6 +23,12 @@ const libraryRoutes = [
         redirect: { name: 'productHome' },
         component: () => import('@/components/ProductScreen.vue'),
         props: true,
+        meta: {
+          entity: {
+            type: 'product',
+            keyParam: 'product_key'
+          }
+        },
         children: [
           {
             path: 'home',
