@@ -58,39 +58,13 @@
             <!-- ISSUE EVENTS -->
             <q-tab-panel name="history">
               <q-list class="q-ml-lg q-px-xl col scroll q-pb-lg">
-                <q-item
+                <TimelineItem
                   v-for="(e, index) in history"
                   :key="e._key"
-                  class="q-mt-md relative-position row justify-between full-width items-baseline"
-                >
-                  <!-- TIMELINE DOT & LINE -->
-                  <div
-                    style="
-                      position: absolute;
-                      left: -30px;
-                      top: 13px;
-                      height: 100%;
-                      width: 32px;
-                    "
-                  >
-                    <div class="column full-height">
-                      <div class="dot"></div>
-                      <div v-if="index < history.length - 1" class="thread"></div>
-                    </div>
-                  </div>
-
-                  <!-- EVENT TYPE -->
-                  <q-item-section class="text-italic">
-                    {{ getHumanDate(e.timestamp) }}
-                  </q-item-section>
-                  <q-item-section class="text-h4 highlight text-uppercase">
-                    {{ $t(`events.${e.event_type}`) }}
-                  </q-item-section>
-                  <q-space />
-                  <q-item-section>
-                    <BaseUserAvatar name_first :user="getUserData(e)" />
-                  </q-item-section>
-                </q-item>
+                  :event="e"
+                  :show-thread="index < history.length - 1"
+                  :user-data="getUserData(e)"
+                />
               </q-list>
             </q-tab-panel>
 
@@ -223,10 +197,10 @@ import { useRouter } from 'vue-router';
 import { useStore } from 'vuex';
 import { api } from '@/boot/axios.js';
 import BaseDialog from '@/components/BaseDialog.vue';
-import BaseUserAvatar from '@/components/BaseUserAvatar.vue';
 import FormField from '@/components/FormField.vue';
 import IssueHeader from '@/components/IssueHeader.vue';
 import MessageThread from '@/components/MessageThread.vue';
+import TimelineItem from '@/components/TimelineItem.vue';
 import { sendEvent } from '@/composables/event.js';
 
 const props = defineProps({
@@ -321,21 +295,6 @@ function getUserData(event) {
     full_name: user.name + ' ' + user.surname,
     src: getAvatarSrc(user),
   };
-}
-
-function getHumanDate(timestamp) {
-  const config = {
-    year: '2-digit',
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-    second: '2-digit',
-    weekday: 'short',
-  };
-  return $q.lang.capitalize(
-    $q.date.formatDate(timestamp, config),
-  );
 }
 
 function notify({ message, color = 'theme-green' }) {
@@ -450,22 +409,3 @@ onMounted(() => {
   getHistory();
 });
 </script>
-
-<style lang="sass" scoped>
-.dot
-  height: 13px
-  width: 13px
-  border-radius: 100%
-  background-color: #888
-  border: 5px solid var(--surface-1)
-  box-sizing: content-box
-  z-index:99
-
-.thread
-  position: absolute
-  height: 100%
-  left: 11px
-  top: 20px
-  width: 1px
-  background-color: #fff3
-</style>
