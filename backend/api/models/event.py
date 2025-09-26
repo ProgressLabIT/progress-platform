@@ -95,6 +95,10 @@ class EventType(str, Enum):
   #Queue
   QUEUE_UPDATED = 'QUEUE_UPDATED'
 
+class EventContextType(str, Enum):
+  TASK = 'task'
+
+
 class EventInfoModel(BaseModel):
   """
   Event info model to be extended by the event class
@@ -105,7 +109,8 @@ class EventInfoModel(BaseModel):
   event_type: EventType
   event_group: str | None = None #
   primary: bool = True
-  task_key: str | None = None
+  context_type: str | None = None
+  context_key: str | None = None
   user_key: str | None = None
   user_session_key: str | None = None
   timestamp: datetime | None = Field(default_factory=timestamp)
@@ -117,6 +122,8 @@ class EventInfoModel(BaseModel):
     if exclude_extra is True:
       kwargs["exclude"] = list(kwargs.get("exclude", [])) + list(self.model_extra.keys())
     return super().model_dump(**kwargs)
+
+  # Context validation is done at the endpoint level once for the whole event chain
 
 class EventModel(BaseModel):
   model_config = ConfigDict(arbitrary_types_allowed=True, extra='allow')

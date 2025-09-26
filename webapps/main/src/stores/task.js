@@ -6,12 +6,17 @@ import { useStorePersistence } from '@/composables/reStore.js'
 export const useTaskStore = defineStore('task', {
   state: () => ({
     tasks: [],
+    activeTaskKey: null,
     loading: false,
   }),
 
   getters: {
     getTaskByKey: (state) => (key) => {
       return state.tasks.find((task) => task._key === key)
+    },
+
+    getActiveTask: (state) => {
+      return state.tasks.find((task) => task._key === state.activeTaskKey)
     },
 
     getTasksByStatus: (state) => (status) => {

@@ -3,7 +3,7 @@ import traceback
 from fastapi import APIRouter, HTTPException, Depends
 from utils import auth
 
-from models.event import EventInfoModel, EventType, EventModel
+from models.event import EventInfoModel, EventType, EventContextType
 from models.traceability import *
 
 from utils.exceptions import *
@@ -20,6 +20,11 @@ router = APIRouter()
 
 serials = db.collection('Serial')
 
+context_map = {
+  EventContextType.TASK.value: 'Task',
+}
+
+
 @router.post('/event',
     dependencies=[Depends(auth.verify_token)])
 async def record_event(event_data: EventInfoModel):
@@ -27,6 +32,17 @@ async def record_event(event_data: EventInfoModel):
   try:
     event_class = get_event_class(event_data.event_type)
     event = event_class(info=event_data.model_dump())
+
+    # Validate event context
+    if event.info.context_type is not None:
+      if event.info.context_type not in context_map:
+        raise HTTPException(status_code=422, detail=f'Invalid context type: {event.info.context_type}')
+      if event.info.context_key is None:
+        raise HTTPException(status_code=422, detail='Context key is required')
+      context_collection = context_map[event.info.context_type]
+      if not db.collection(context_collection).has(event.info.context_key):
+        raise HTTPException(status_code=422, detail=f'Context {event.info.context_type} with key {event.info.context_key} not found')
+
     event.save()
     return APIResponse(detail=event.response)
 
