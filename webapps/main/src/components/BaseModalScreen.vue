@@ -47,37 +47,33 @@
   </q-dialog>
 </template>
 
-<script>
+<script setup>
+import { useQuasar } from 'quasar';
+import { computed } from 'vue';
 import { useDrawer } from '@/composables/drawer';
-import CSSVars from '@/mixins/CSSVars.js';
+import { useCSSVars } from '@/composables/useCSSVars';
 
-export default {
-  name: 'BaseModalScreen',
-  mixins: [CSSVars],
-  props: {
-    show: {
-      type: Boolean,
-      required: true,
-    },
-    noEscDismiss: {
-      type: Boolean,
-      default: false,
-    },
+// Props
+defineProps({
+  show: {
+    type: Boolean,
+    required: true,
   },
-  emits: ['close'],
-
-  setup() {
-    const { drawerModel } = useDrawer();
-
-    return {
-      drawerModel,
-    };
+  noEscDismiss: {
+    type: Boolean,
+    default: false,
   },
+});
 
-  computed: {
-    card_height() {
-      return this.$q.screen.height - 52;
-    },
-  },
-};
+// Emits
+defineEmits(['close']);
+
+// Composables
+const $q = useQuasar();
+const { drawerModel } = useDrawer();
+const { CSSVars } = useCSSVars();
+
+const card_height = computed(() => {
+  return $q.screen.height - 52;
+});
 </script>

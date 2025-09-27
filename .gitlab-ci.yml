@@ -5,7 +5,7 @@ workflow:
     - when: never
 
 services:
-  - docker:dind    
+  - docker:dind
 
 # Just extract version info
 version-info:
@@ -14,9 +14,9 @@ version-info:
   before_script: []  # Override the default docker login since we don't need it (and alpine doesn't have docker)
   script:
     - |
-      # Extract version from tag
+      # Extract version from tag (e.g., v0.9.8 -> 0.9.8)
       echo "VERSION=${CI_COMMIT_TAG#v}" >> build.env
-      # Extract version from branch name (e.g., release/0.9 -> 0.9)
+      # Extract MAJOR.MINOR version from tag name (e.g., v0.9.8 -> 0.9)
       MAJOR_MINOR=$(echo ${CI_COMMIT_TAG#v} | cut -d'.' -f1,2)
       echo "BRANCH_VERSION=$MAJOR_MINOR" >> build.env
   artifacts:

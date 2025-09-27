@@ -35,6 +35,12 @@ const quality = {
         state.issues = issues;
       }
     },
+    UPDATE_ISSUE(state, updatedIssue) {
+      const issueIndex = state.issues.findIndex(issue => issue._key === updatedIssue._key);
+      if (issueIndex !== -1) {
+        state.issues[issueIndex] = updatedIssue;
+      }
+    },
   },
 
   actions: {
@@ -76,6 +82,12 @@ const quality = {
     async appendIssues({ commit }, search_params) {
       const { data } = await api.get('issue', { params: search_params });
       commit('APPEND_ISSUES', data);
+    },
+    async refreshIssueData({ commit }, issue_key) {
+      const { data } = await api.get('issue', { params: { issue_key, with_links: true } });
+      if (data && data.length > 0) {
+        commit('UPDATE_ISSUE', data[0]);
+      }
     },
   },
 };

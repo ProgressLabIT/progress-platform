@@ -31,7 +31,7 @@
       <q-item
         v-bind="scope.itemProps"
         :id="scope.opt._key"
-        :disable="(usedSerials || []).includes(scope.opt._key)"
+        :disable="disableKeys.includes(scope.opt._key)"
       >
         <q-item-section>
           <q-item-label class="highlight">
@@ -203,9 +203,9 @@ const props = defineProps({
     default: null,
   },
 
-  usedSerials: {
+  disableKeys: {
     type: Array,
-    default: null,
+    default: () => [],
   },
 
   hint: {

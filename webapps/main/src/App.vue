@@ -4,34 +4,38 @@
   </div>
 </template>
 
-<script>
+<script setup>
 import { DateTime as DT } from 'luxon';
-import { defineComponent } from 'vue';
-import CSSVars from '@/mixins/CSSVars.js';
+import { onMounted } from 'vue';
+import { useRoute } from 'vue-router';
+import { useStore } from 'vuex';
+import { useCSSVars } from '@/composables/useCSSVars.js';
+import { useTaskStorePersistence } from '@/stores/task.js';
 
-export default defineComponent({
-  name: 'App',
+const $store = useStore();
+const $route = useRoute();
 
-  mixins: [CSSVars],
-  computed: {
-    store() {
-      return this.$store.state;
-    },
-  },
+// Use the CSSVars composable
+const { CSSVars } = useCSSVars();
 
-  created() {
-    // Save vuex state in localStorage before refresh or tab close
-    window.addEventListener('beforeunload', async () => {
-      if (this.$route.name != 'login') {
-        localStorage.setItem(
-          'TEMP_SESSION',
-          JSON.stringify({
-            ...this.$store.state,
-            last_interaction: DT.utc().toMillis(),
-          }),
-        );
-      }
-    });
-  },
+// Set up task store persistence (automatically handles restore/save)
+useTaskStorePersistence();
+
+onMounted(() => {
+  // Task store persistence is automatically handled by useTaskStorePersistence
+  // It will restore on mount and save before unload
+
+  // Save vuex state in localStorage before refresh or tab close
+  window.addEventListener('beforeunload', async () => {
+    if ($route.name != 'login') {
+      localStorage.setItem(
+        'TEMP_SESSION',
+        JSON.stringify({
+          ...$store.state,
+          last_interaction: DT.utc().toMillis(),
+        }),
+      );
+    }
+  });
 });
 </script>

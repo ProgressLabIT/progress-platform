@@ -12,10 +12,16 @@ const qualityRoutes = [
         component: () => import('@/views/IssueOverview.vue'),
         children: [
           {
-            path: 'issues/:issueKey',
+            path: ':issueKey',
             name: 'issueDetail',
             component: () => import('@/components/IssueDetail.vue'),
             props: true,
+            meta: {
+              entity: {
+                type: 'issue',
+                keyParam: 'issueKey'
+              }
+            },
           },
         ],
       },

@@ -199,7 +199,12 @@
   </BaseDialog>
 </template>
 
-<script>
+<script setup>
+import { useQuasar } from 'quasar';
+import { ref, computed, watch, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { useStore } from 'vuex';
+import { api } from '@/boot/axios.js';
 import BaseAutocompleteIssueType from '@/components/BaseAutocompleteIssueType.vue';
 import BaseAutocompleteOperation from '@/components/BaseAutocompleteOperation.vue';
 import BaseAutocompleteProduct from '@/components/BaseAutocompleteProduct.vue';
@@ -209,448 +214,419 @@ import BaseAutocompleteWorkOrder from '@/components/BaseAutocompleteWorkOrder.vu
 import BaseDialog from '@/components/BaseDialog.vue';
 import FormField from '@/components/FormField.vue';
 import JobListItem from '@/components/JobListItem.vue';
-import { timestamp } from '@/lib/TimeHandling.js';
+import { sendEvent } from '@/composables/event.js';
 
-export default {
-  name: 'IssueForm',
-
-  components: {
-    BaseAutocompleteIssueType,
-    BaseAutocompleteOperation,
-    BaseAutocompleteProduct,
-    BaseAutocompleteUser,
-    BaseAutocompleteWorkOrder,
-    BaseAutocompleteSerial,
-    BaseDialog,
-    JobListItem,
-    FormField,
+const props = defineProps({
+  show: {
+    type: Boolean,
+    default: true,
   },
-
-  props: {
-    show: {
-      type: Boolean,
-      default: true,
-    },
-    mode: {
-      type: String,
-      default: 'new',
-    },
-    issue: {
-      type: Object,
-      default: undefined,
-    },
-    with_links: {
-      type: Boolean,
-      default: false,
-    },
-    auto_link_mode: {
-      type: String,
-      default: undefined,
-      validator: (value) => ['work_order', 'work_session'].includes(value),
-    },
-    auto_links: {
-      type: Object,
-      default: null,
-    },
+  mode: {
+    type: String,
+    default: 'new',
   },
-
-  emits: ['close', 'issueCreated'],
-
-  data() {
-    return {
-      critical_only: false,
-      saving: false,
-      initalized: false,
-      issue_type: null,
-      form_step: 'data',
-      /** @type {import('@/types/form').FormField[]} */
-      form_fields: [],
-      confirmed: false,
-      critical: false,
-      link_form: null,
-      phase_data: null,
-      phase_jobs: null,
-      links: {
-        product: null,
-        operation: null,
-        phase: null,
-        work_order: null,
-        user: null,
-        job: null,
-        serial: null,
-      },
-    };
+  issue: {
+    type: Object,
+    default: undefined,
   },
-
-  computed: {
-    job_data() {
-      return this.$store.state.traceability.working_job_data;
-    },
-
-    session_data() {
-      return this.$store.state.session;
-    },
-
-    link_form_options() {
-      return [
-        {
-          value: 'order',
-          label: this.$t('work_order.long'),
-        },
-        {
-          value: 'product',
-          label: this.$t('product.label'),
-        },
-        {
-          value: 'serial',
-          label: this.$t('serial'),
-        },
-        {
-          value: 'general',
-          label: this.$t('general'),
-        },
-      ];
-    },
+  with_links: {
+    type: Boolean,
+    default: false,
   },
-
-  watch: {
-    issue_type: {
-      deep: true,
-      handler: 'initFormData',
-    },
-    show: {
-      handler() {
-        this.initalized = false;
-        this.initFormData();
-        this.initLinks();
-        this.initalized = true;
-      },
-    },
-    phase_data() {
-      // The new list of phases will not contain the selected phase, so reset it
-      this.links.phase = null;
-    },
+  auto_link_mode: {
+    type: String,
+    default: undefined,
+    validator: (value) => ['work_order', 'work_session'].includes(value),
   },
-
-  created() {
-    this.initIssueType();
-    this.initFormData();
-    this.initLinks();
+  auto_links: {
+    type: Object,
+    default: null,
   },
+});
 
-  methods: {
-    updateLinkForm(value) {
-      this.link_form = value;
-      this.initLinks();
-    },
+const emit = defineEmits(['close', 'issueCreated', 'cancel']);
 
-    async initLinks() {
-      // Inser links step if required
-      if (this.mode == 'new' && this.with_links) {
-        this.form_step = 'links';
-      }
+// Composables
+const store = useStore();
+const { t } = useI18n();
+const $q = useQuasar();
 
-      // Reset links
-      if (this.with_links) {
-        Object.keys(this.links).forEach((l) => (this.links[l] = null));
-        this.phase_data = null;
-        this.phase_jobs = null;
-      }
+// Reactive data
+const critical_only = ref(false);
+const saving = ref(false);
+const initalized = ref(false);
+const issue_type = ref(null);
+const form_step = ref('data');
+/** @type {import('@/types/form').FormField[]} */
+const form_fields = ref([]);
+const critical = ref(false);
+const link_form = ref(null);
+const phase_data = ref(null);
+const phase_jobs = ref(null);
+const links = ref({
+  product: null,
+  operation: null,
+  phase: null,
+  work_order: null,
+  user: null,
+  job: null,
+  serial: null,
+});
 
-      // Set auto links if required
-      if (
-        this.auto_link_mode == 'work_order' &&
-        this.auto_links.work_order &&
-        !this.initalized
-      ) {
-        this.link_form = 'order';
-        await this.loadWorkOrder(this.auto_links.work_order);
-      }
+// Computed properties
+const job_data = computed(() => store.state.traceability.working_job_data);
+const session_data = computed(() => store.state.session);
+const link_form_options = computed(() => [
+  {
+    value: 'order',
+    label: t('work_order.long'),
+  },
+  {
+    value: 'product',
+    label: t('product.label'),
+  },
+  {
+    value: 'serial',
+    label: t('serial'),
+  },
+  {
+    value: 'general',
+    label: t('general'),
+  },
+]);
 
-      if (
-        this.auto_link_mode == 'work_session' &&
-        this.auto_links &&
-        !this.initalized
-      ) {
-        this.link_form = 'order';
-        await this.loadWorkOrder(this.auto_links.work_order_data);
-        if (this.phase_data) {
-          let phase = this.phase_data.find(
-            (ph) => ph._key === this.auto_links?.phase,
-          );
-          await this.loadPhase(phase);
-        }
-        if (this.phase_jobs) {
-          let job = this.phase_jobs.find(
-            (j) => j._key === this.auto_links?.job,
-          );
-          this.links.job = job;
-        }
-      }
-    },
+// Methods
+function updateLinkForm(value) {
+  link_form.value = value;
+  initLinks();
+}
 
-    initFormData() {
-      const form_template = this.issue_type?.form_template ?? [];
+async function initLinks() {
+  // Insert links step if required
+  if (props.mode == 'new' && props.with_links) {
+    form_step.value = 'links';
+  }
 
-      const use_clean_form =
-        this.mode === 'new' ||
-        this.issue_type?._key !== this.issue.issue_type_key;
-      if (use_clean_form) {
-        // Use fields from issue type template adding empty value
-        // If no template, force null, otherwise `undefined` will not be included in the api body and the issue data will not be updated
-        this.form_fields = form_template.map((field) => ({
-          ...field,
-          value: null,
-        }));
-        return;
-      }
+  // Reset links
+  if (props.with_links) {
+    Object.keys(links.value).forEach((l) => (links.value[l] = null));
+    phase_data.value = null;
+    phase_jobs.value = null;
+  }
 
-      this.form_fields = form_template.map((field) => ({
-        ...field,
-        value: this.issue.data.find(({ _key }) => _key === field._key)?.value,
-      }));
-    },
+  // Set auto links if required
+  if (
+    props.auto_link_mode == 'work_order' &&
+    props.auto_links.work_order &&
+    !initalized.value
+  ) {
+    link_form.value = 'order';
+    await loadWorkOrder(props.auto_links.work_order);
+  }
 
-    initIssueType() {
-      // Fetch issue type data if editing an existing issue
-      this.issue_type =
-        this.issue?.issue_type_key != null
-          ? this.$store.getters.getIssueType(this.issue.issue_type_key)
-          : null;
-    },
-
-    setIssueType(value) {
-      this.issue_type = value;
-      if (value?.critical) {
-        this.critical_only = true;
-      } else {
-        this.critical_only = false;
-      }
-    },
-
-    async loadSerial(serial) {
-      // Set work order data and initialize Phase options to select from
-      this.links.serial = serial;
-      if (serial?.wo_key) {
-        const { data: wo } = await this.$api.get(`work-order/${serial.wo_key}`);
-        this.loadWorkOrder(wo.detail);
-      } else {
-        this.loadProduct(serial.product_key);
-      }
-    },
-
-    async loadWorkOrder(wo) {
-      // Set work order data and initialize Phase options to select from
-      this.links.work_order = wo;
-      this.links.product = { _key: wo.product_key };
-
-      let params = new URLSearchParams();
-      this.links.work_order?.phase_sequence?.forEach((pk) =>
-        params.append('phase_key', pk),
+  if (
+    props.auto_link_mode == 'work_session' &&
+    props.auto_links &&
+    !initalized.value
+  ) {
+    link_form.value = 'order';
+    await loadWorkOrder(props.auto_links.work_order_data);
+    if (phase_data.value) {
+      let phase = phase_data.value.find(
+        (ph) => ph._key === props.auto_links?.phase,
       );
-
-      const { data } = await this.$api.get('phase', { params });
-      this.phase_data = data;
-    },
-
-    async loadProduct(product_key) {
-      // To avoid loading in advance a lot of unnecessary product data, the product list contains limited information.
-      // So, it is necessary to fetch the full product data first and then load the phases options.
-      const { data: product } = await this.$api.get(`product/${product_key}`);
-      this.links.product = product;
-
-      if (!product.process_phases) {
-        return;
-      }
-
-      const params = new URLSearchParams();
-      product.process_phases.forEach((phaseKey) =>
-        params.append('phase_key', phaseKey),
+      await loadPhase(phase);
+    }
+    if (phase_jobs.value) {
+      let job = phase_jobs.value.find(
+        (j) => j._key === props.auto_links?.job,
       );
-      const { data: phase } = await this.$api.get('phase', { params });
-      this.phase_data = phase;
+      links.value.job = job;
+    }
+  }
+}
+
+function initFormData() {
+  const form_template = issue_type.value?.form_template ?? [];
+
+  const use_clean_form =
+    props.mode === 'new' ||
+    issue_type.value?._key !== props.issue?.issue_type_key;
+  if (use_clean_form) {
+    // Use fields from issue type template adding empty value
+    // If no template, force null, otherwise `undefined` will not be included in the api body and the issue data will not be updated
+    form_fields.value = form_template.map((field) => ({
+      ...field,
+      value: null,
+    }));
+    return;
+  }
+
+  form_fields.value = form_template.map((field) => ({
+    ...field,
+    value: props.issue.data.find(({ _key }) => _key === field._key)?.value,
+  }));
+}
+
+function initIssueType() {
+  // Fetch issue type data if editing an existing issue
+  issue_type.value =
+    props.issue?.issue_type_key != null
+      ? store.getters.getIssueType(props.issue.issue_type_key)
+      : null;
+}
+
+function setIssueType(value) {
+  issue_type.value = value;
+  if (value?.critical) {
+    critical_only.value = true;
+  } else {
+    critical_only.value = false;
+  }
+}
+
+async function loadSerial(serial) {
+  // Set work order data and initialize Phase options to select from
+  links.value.serial = serial;
+  if (serial?.wo_key) {
+    const { data: wo } = await api.get(`work-order/${serial.wo_key}`);
+    loadWorkOrder(wo.detail);
+  } else {
+    loadProduct(serial.product_key);
+  }
+}
+
+async function loadWorkOrder(wo) {
+  // Set work order data and initialize Phase options to select from
+  links.value.work_order = wo;
+  links.value.product = { _key: wo.product_key };
+
+  let params = new URLSearchParams();
+  links.value.work_order?.phase_sequence?.forEach((pk) =>
+    params.append('phase_key', pk),
+  );
+
+  const { data } = await api.get('phase', { params });
+  phase_data.value = data;
+}
+
+async function loadProduct(product_key) {
+  // To avoid loading in advance a lot of unnecessary product data, the product list contains limited information.
+  // So, it is necessary to fetch the full product data first and then load the phases options.
+  const { data: product } = await api.get(`product/${product_key}`);
+  links.value.product = product;
+
+  if (!product.process_phases) {
+    return;
+  }
+
+  const params = new URLSearchParams();
+  product.process_phases.forEach((phaseKey) =>
+    params.append('phase_key', phaseKey),
+  );
+  const { data: phase } = await api.get('phase', { params });
+  phase_data.value = phase;
+}
+
+async function loadPhase(phase_data_param) {
+  links.value.phase = phase_data_param;
+  links.value.operation = { _key: phase_data_param.operation_key };
+
+  // Phase link exists for both order and product mode. Load jobs only in order mode
+  if (link_form.value !== 'order') {
+    return;
+  }
+
+  const { data } = await api.get('job', {
+    params: {
+      work_order_key: links.value.work_order._key,
+      phase_key: links.value.phase._key,
     },
+  });
+  phase_jobs.value = data.detail;
+}
 
-    async loadPhase(phase_data) {
-      this.links.phase = phase_data;
-      this.links.operation = { _key: phase_data.operation_key };
+function cancel() {
+  initIssueType();
+  initFormData();
+  initLinks();
+  form_step.value = 'links';
+  link_form.value = null;
+  critical_only.value = false;
+  emit('cancel');
+}
 
-      // Phase link exists for both order and product mode. Load jobs only in order mode
-      if (this.link_form !== 'order') {
-        return;
-      }
+/**
+ * @param {import('@/types/form').FormField} field
+ * @returns {string | undefined}
+ */
+function getFieldType(field) {
+  return store.getters.getCustomFieldByKey(field.custom_field_key)?.type;
+}
 
-      const { data } = await this.$api.get('job', {
-        params: {
-          work_order_key: this.links.work_order._key,
-          phase_key: this.links.phase._key,
-        },
+async function saveFiles(issue_key) {
+  const promises = form_fields.value
+    .filter((field) => getFieldType(field) === 'files')
+    .map(async (field) => {
+      const to_delete = [];
+      const to_add = [];
+
+      field.value?.forEach((file) => {
+        if (file.temp) {
+          to_add.push(file.content);
+        } else if (file.delete) {
+          to_delete.push(file.name);
+        }
       });
-      this.phase_jobs = data.detail;
-    },
 
-    cancel() {
-      this.initIssueType();
-      this.initFormData();
-      this.initLinks();
-      this.form_step = 'links';
-      this.link_form = null;
-      this.critical_only = false;
-      this.$emit('cancel');
-    },
+      const target = {
+        bucket: 'issue',
+        object_key: issue_key,
+        subfolder: field._key,
+      };
 
-    /**
-     * @param {import('@/types/form').FormField} field
-     * @returns {string | undefined}
-     */
-    getFieldType(field) {
-      return this.$store.getters.getCustomFieldByKey(field.custom_field_key)
-        ?.type;
-    },
+      // Upload new files
+      if (to_add.length) {
+        // Populate form data
+        const add_body = new FormData();
+        Object.entries(target).forEach(([k, v]) => add_body.append(k, v));
+        to_add.forEach((file) => add_body.append('contents', file));
+        // Post files
+        try {
+          await api.post('/files', add_body);
+        } catch (error) {
+          console.error(error);
+          window.alert(error);
+        }
+      }
 
-    async saveFiles(issue_key) {
-      const promises = this.form_fields
-        .filter((field) => this.getFieldType(field) === 'files')
-        .map(async (field) => {
-          const to_delete = [];
-          const to_add = [];
-
-          field.value?.forEach((file) => {
-            if (file.temp) {
-              to_add.push(file.content);
-            } else if (file.delete) {
-              to_delete.push(file.name);
-            }
+      // Delete files
+      if (to_delete.length) {
+        try {
+          await api.delete('/files', {
+            data: {
+              ...target,
+              filenames: to_delete,
+            },
           });
-
-          const target = {
-            bucket: 'issue',
-            object_key: issue_key,
-            subfolder: field._key,
-          };
-
-          // Upload new files
-          if (to_add.length) {
-            // Populate form data
-            const add_body = new FormData();
-            Object.entries(target).forEach(([k, v]) => add_body.append(k, v));
-            to_add.forEach((file) => add_body.append('contents', file));
-            // Post files
-            try {
-              await this.$api.post('/files', add_body);
-            } catch (error) {
-              console.error(error);
-              window.alert(error);
-            }
-          }
-
-          // Delete files
-          if (to_delete.length) {
-            try {
-              await this.$api.delete('/files', {
-                data: {
-                  ...target,
-                  filenames: to_delete,
-                },
-              });
-            } catch (error) {
-              console.error(error);
-              window.alert(error);
-            }
-          }
-        });
-
-      return Promise.all(promises);
-    },
-
-    async save() {
-      const has_missing_required_fields = this.form_fields
-        .filter((f) => f.mandatory)
-        .some((f) => {
-          const type = this.$store.getters.getCustomFieldByKey(
-            f.custom_field_key,
-          ).type;
-          return type == 'ternary' ? f.value == null : !!f.value == false;
-        });
-
-      if (has_missing_required_fields) {
-        window.alert(this.$t('fill_mandatory_fields'));
-        return;
+        } catch (error) {
+          console.error(error);
+          window.alert(error);
+        }
       }
+    });
 
-      this.saving = true;
+  return Promise.all(promises);
+}
 
-      const issue_data = {
-        issue_type_key: this.issue_type?._key || null,
-        critical: this.critical,
-        data: this.form_fields.map((field) => ({
-          form_field_key: field._key,
-          custom_field_key: field.custom_field_key,
-          value:
-            this.getFieldType(field) === 'files'
-              ? field.value
-                  ?.filter((file) => !file.delete)
-                  .map((file) => ({
-                    size: file.size,
-                    name: file.name,
-                  }))
-              : field.value,
-        })),
-      };
+async function save() {
+  const has_missing_required_fields = form_fields.value
+    .filter((f) => f.mandatory)
+    .some((f) => {
+      const type = store.getters.getCustomFieldByKey(f.custom_field_key).type;
+      return type == 'ternary' ? f.value == null : !!f.value == false;
+    });
 
-      const user = this.session_data.user._key;
+  if (has_missing_required_fields) {
+    window.alert(t('fill_mandatory_fields'));
+    return;
+  }
 
-      if (this.mode === 'new') {
-        // if link is active send data in the form e.g. { type: product, key: whatever }
-        issue_data.created_by = `User/${user}`; // temporarily hardcoding DB id
-        issue_data.close_within = this.issue_type?.close_within ?? 0;
+  saving.value = true;
 
-        // Map links to list of objects, including only populated properties
-        const links = [];
-        Object.entries(this.links).forEach(([key, value]) => {
-          if (value) {
-            links.push({ type: key, key: value._key });
-          }
-        });
-        issue_data.linked_to = links;
-      } else {
-        issue_data._key = this.issue._key;
+  const issue_data = {
+    issue_type_key: issue_type.value?._key || null,
+    critical: critical.value,
+    data: form_fields.value.map((field) => ({
+      form_field_key: field._key,
+      custom_field_key: field.custom_field_key,
+      value:
+        getFieldType(field) === 'files'
+          ? field.value
+              ?.filter((file) => !file.delete)
+              .map((file) => ({
+                size: file.size,
+                name: file.name,
+              }))
+          : field.value,
+    })),
+  };
+
+  if (props.mode === 'new') {
+    // if link is active send data in the form e.g. { type: product, key: whatever }
+    issue_data.created_by = `User/${session_data.value.user._key}`; // temporarily hardcoding DB id
+    issue_data.close_within = issue_type.value?.close_within ?? 0;
+
+    // Map links to list of objects, including only populated properties
+    const linksArray = [];
+    Object.entries(links.value).forEach(([key, value]) => {
+      if (value) {
+        linksArray.push({ type: key, key: value._key });
       }
+    });
+    issue_data.linked_to = linksArray;
+  } else {
+    issue_data._key = props.issue._key;
+  }
 
-      const event = {
-        event_type: this.mode === 'new' ? 'ISSUE_CREATED' : 'ISSUE_UPDATED',
-        user_key: user,
-        user_session_key: this.session_data.session_key,
-        timestamp: timestamp(),
-        issue_data,
-      };
+  const message =
+    props.mode === 'new' ? 'issue_new_success' : 'issue_update_success';
+  const { data } = await sendEvent({
+    event_type: props.mode === 'new' ? 'ISSUE_CREATED' : 'ISSUE_UPDATED',
+    event_data: { issue_data },
+  });
+  const issue_key =
+    props.mode === 'new' ? data.detail.issue_key : issue_data._key;
 
-      const message =
-        this.mode === 'new' ? 'issue_new_success' : 'issue_update_success';
-      const { data } = await this.$api.post('event', event);
-      const issue_key =
-        this.mode === 'new' ? data.detail.issue_key : issue_data._key;
+  // TODO: Find a way to revert issue creation if file saving doesn't work, or save everything at once via form
+  await saveFiles(issue_key);
 
-      // TODO: Find a way to revert issue creation if file saving doesn't work, or save everything at once via form
-      await this.saveFiles(issue_key);
+  // If from work session, fetch issues directly, otherwise signal the parent component to do so
+  if (!props.with_links) {
+    await store.dispatch('getIssues', {
+      work_order_key: job_data.value.wo_key,
+    });
+  } else {
+    emit('issueCreated');
+  }
+  cancel();
+  saving.value = false;
+  $q.notify({
+    message: t(message),
+    color: critical.value ? 'theme-red' : 'theme-orange',
+    timeout: 1500,
+    position: 'top',
+  });
+}
 
-      // If from work session, fetch issues directly, otherwise signal the parent component to do so
-      if (!this.with_links) {
-        await this.$store.dispatch('getIssues', {
-          work_order_key: this.job_data.wo_key,
-        });
-      } else {
-        this.$emit('issueCreated');
-      }
-      this.cancel();
-      this.saving = false;
-      this.$q.notify({
-        message: this.$t(message),
-        color: this.critical ? 'theme-red' : 'theme-orange',
-        timeout: 1500,
-        position: 'top',
-      });
-    },
+// Watchers
+watch(
+  issue_type,
+  () => {
+    initFormData();
   },
-};
+  { deep: true }
+);
+
+watch(
+  () => props.show,
+  () => {
+    initalized.value = false;
+    initFormData();
+    initLinks();
+    initalized.value = true;
+  }
+);
+
+watch(phase_data, () => {
+  // The new list of phases will not contain the selected phase, so reset it
+  links.value.phase = null;
+});
+
+// Lifecycle
+onMounted(() => {
+  initIssueType();
+  initFormData();
+  initLinks();
+});
 </script>

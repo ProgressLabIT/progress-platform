@@ -15,7 +15,7 @@
     :emit-value="keyOnly"
     :map-options="keyOnly"
     @filter="filter"
-    @update:model-value="(selection) => $emit('select', selection)"
+    @update:model-value="(selection) => emit('select', selection)"
   >
     <template #option="scope">
       <q-item v-bind="scope.itemProps">
@@ -34,130 +34,116 @@
   </q-select>
 </template>
 
-<script>
+<script setup>
+import { ref, computed, onMounted } from 'vue';
+import { useStore } from 'vuex';
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue';
 import multiMatch from '@/lib/MultiFieldSearch.js';
-export default {
-  name: 'BaseAutocompletUser',
 
-  components: {
-    BaseUserAvatar,
+// Props
+const props = defineProps({
+  value: {
+    type: [Object, String],
+    default: null,
   },
-
-  props: {
-    value: {
-      type: [Object, String],
-      default: null,
-    },
-
-    loadData: {
-      type: Boolean,
-      default: true,
-    },
-
-    label: {
-      type: String,
-      default: undefined,
-    },
-
-    keyOnly: {
-      type: Boolean,
-      default: false,
-    },
-
-    operatorOnly: {
-      type: Boolean,
-      default: true,
-    },
-
-    dense: {
-      type: Boolean,
-      default: false,
-    },
-
-    clearable: {
-      type: Boolean,
-      default: true,
-    },
-
-    placeholder: {
-      type: String,
-      default: '',
-    },
-
-    stackLabel: {
-      type: Boolean,
-      default: false,
-    },
-
-    showAvatar: {
-      type: Boolean,
-      default: true,
-    },
-
-    userKeys: {
-      type: Array,
-      default: undefined,
-    },
+  loadData: {
+    type: Boolean,
+    default: true,
   },
-
-  emits: ['select'],
-
-  data() {
-    return {
-      loading: false,
-      options: [],
-      search_fields: ['name', 'surname'],
-    };
+  label: {
+    type: String,
+    default: undefined,
   },
-
-  computed: {
-    origin_list() {
-      const baseList = this.operatorOnly
-        ? this.$store.getters.operator_list()
-        : this.$store.state.user?.user_list;
-
-      return this.userKeys
-        ? baseList.filter((user) => this.userKeys.includes(user._key))
-        : baseList;
-    },
-
-    placeholder_computed() {
-      return this.value ? null : this.placeholder;
-    },
+  keyOnly: {
+    type: Boolean,
+    default: false,
   },
-
-  created() {
-    if (this.loadData) {
-      this.loading = true;
-      this.$store.dispatch('loadUsers').then(() => {
-        this.initOptions();
-        this.loading = false;
-      });
-    }
+  operatorOnly: {
+    type: Boolean,
+    default: true,
   },
-
-  methods: {
-    initOptions() {
-      this.options = [...this.origin_list];
-    },
-
-    filter(value, update) {
-      if (value === '') {
-        update(() => {
-          this.initOptions();
-        });
-        return;
-      }
-      update(() => {
-        const needle = value.toLowerCase();
-        this.options = this.origin_list.filter((option) => {
-          return multiMatch(needle, option, this.search_fields);
-        });
-      });
-    },
+  dense: {
+    type: Boolean,
+    default: false,
   },
+  clearable: {
+    type: Boolean,
+    default: true,
+  },
+  placeholder: {
+    type: String,
+    default: '',
+  },
+  stackLabel: {
+    type: Boolean,
+    default: false,
+  },
+  showAvatar: {
+    type: Boolean,
+    default: true,
+  },
+  userKeys: {
+    type: Array,
+    default: undefined,
+  },
+});
+
+// Emits
+const emit = defineEmits(['select']);
+
+// Store
+const store = useStore();
+
+// Reactive data
+const loading = ref(false);
+const options = ref([]);
+const search_fields = ref(['name', 'surname']);
+
+// Computed properties
+const origin_list = computed(() => {
+  const baseList = props.operatorOnly
+    ? store.getters.operator_list()
+    : store.state.user?.user_list;
+
+  return props.userKeys
+    ? baseList.filter((user) => props.userKeys.includes(user._key))
+    : baseList;
+});
+
+const placeholder_computed = computed(() => {
+  return props.value ? null : props.placeholder;
+});
+
+// Methods
+const initOptions = () => {
+  options.value = [...origin_list.value];
 };
+
+const filter = (value, update) => {
+  if (value === '') {
+    update(() => {
+      initOptions();
+    });
+    return;
+  }
+  update(() => {
+    const needle = value.toLowerCase();
+    options.value = origin_list.value.filter((option) => {
+      return multiMatch(needle, option, search_fields.value);
+    });
+  });
+};
+
+// Lifecycle
+onMounted(() => {
+  if (props.loadData) {
+    loading.value = true;
+    store.dispatch('loadUsers').then(() => {
+      initOptions();
+      loading.value = false;
+    });
+  }
+});
 </script>
 
 <style lang="sass">

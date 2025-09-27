@@ -8,10 +8,12 @@
       </q-toolbar-title>
 
       <div class="row items-center cursor-pointer">
-        <div class="app-bar-user-name q-mr-sm">{{ username }}</div>
-        <q-avatar size="28px">
-          <q-img :src="avatarUrl"></q-img>
-        </q-avatar>
+        <BaseUserAvatar
+          :user="user"
+          :size="'28px'"
+          name_first
+          name_class="app-bar-user-name"
+        />
 
         <q-menu>
           <q-list separator style="min-width: 200px">
@@ -192,6 +194,7 @@ import { capitalize, capitalizeAll } from '@/boot/filters.js';
 import { useDrawer } from '@/composables/drawer';
 import { useTheme } from '@/composables/theme';
 import { useConfigStore } from '@/stores/config';
+import BaseUserAvatar from './BaseUserAvatar.vue';
 
 const store = useStore();
 const { drawerModel } = useDrawer();
@@ -200,14 +203,6 @@ const $q = useQuasar();
 const screenTitle = ref('PROGRESS');
 
 const user = computed(() => store.state.session.user);
-const username = computed(() => {
-  const { name, surname } = user.value;
-  return `${name} ${surname}`;
-});
-const avatarUrl = computed(() => {
-  const avatarName = username.value.replace(/\s+/g, '').toLowerCase();
-  return `/media/user/${avatarName}.jpg`;
-});
 
 const { t, locale, availableLocales } = useI18n();
 const route = useRoute();
@@ -251,6 +246,10 @@ const homePageOptions = computed(() => [
   {
     label: capitalizeAll(t('views.traceabilityRoot')),
     value: 'traceabilityRoot',
+  },
+  {
+    label: capitalizeAll(t('views.taskRoot')),
+    value: 'taskRoot',
   },
   {
     label: capitalizeAll(t('views.warehouseRoot')),

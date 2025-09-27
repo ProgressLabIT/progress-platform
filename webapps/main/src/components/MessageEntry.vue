@@ -86,87 +86,81 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { useStore } from 'vuex';
 import BasePrompt from '@/components/BasePrompt.vue';
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue';
-import event from '@/mixins/event.js';
+import { sendEvent } from '@/composables/event.js';
+import { formatDateTime } from '@/lib/TimeHandling';
+import { capitalize } from '@/boot/filters';
 
-export default {
-  name: 'MessageEntry',
-
-  components: {
-    BaseUserAvatar,
-    BasePrompt,
+const props = defineProps({
+  message: {
+    type: Object,
+    required: true,
   },
+});
 
-  mixins: [event],
+const emit = defineEmits(['change']);
 
-  props: {
-    message: {
-      type: Object,
-      required: true,
-    },
-  },
+// Composables
+const store = useStore();
+const { locale } = useI18n();
 
-  emits: ['change'],
+// Reactive data
+const show_update_prompt = ref(false);
+const show_delete = ref(false);
 
-  data() {
-    return {
-      show_update_prompt: false,
-      show_delete: false,
-    };
-  },
+// Computed properties
+const sender_key = computed(() => props.message._from.split('/')[1]);
 
-  computed: {
-    sender_key() {
-      return this.message._from.split('/')[1];
-    },
+const sender = computed(() => store.getters.user_data(sender_key.value));
 
-    sender() {
-      return this.$store.getters.user_data(this.sender_key);
-    },
+const datetime = computed(() => {
+  const config = {
+    year: '2-digit',
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    second: '2-digit',
+    weekday: 'short',
+  };
+  return capitalize(
+    formatDateTime(props.message.created, locale.value, config),
+  );
+});
 
-    datetime() {
-      const config = {
-        year: '2-digit',
-        month: 'short',
-        day: 'numeric',
-        hour: 'numeric',
-        minute: '2-digit',
-        second: '2-digit',
-        weekday: 'short',
-      };
-      return this.$capitalize(
-        this.$formatDateTime(this.message.created, this.$i18n.locale, config),
-      );
-    },
-  },
+// Methods
+async function updateMessage(content) {
+  try {
+    await sendEvent({
+      event_type: 'MESSAGE_UPDATED',
+      event_data: {
+        message_key: props.message._key,
+        content,
+      },
+    });
+    emit('change');
+  } finally {
+    show_update_prompt.value = false;
+  }
+}
 
-  methods: {
-    updateMessage(content) {
-      this.sendEvent({
-        event_type: 'MESSAGE_UPDATED',
-        event_data: {
-          message_key: this.message._key,
-          content,
-        },
-      }).then(() => {
-        this.$emit('change');
-      });
-      this.show_update_prompt = false;
-    },
-
-    deleteMessage() {
-      this.sendEvent({
-        event_type: 'MESSAGE_DELETED',
-        event_data: {
-          message_key: this.message._key,
-        },
-      }).then(() => {
-        this.$emit('change');
-        this.show_delete = false;
-      });
-    },
-  },
-};
+async function deleteMessage() {
+  try {
+    await sendEvent({
+      event_type: 'MESSAGE_DELETED',
+      event_data: {
+        message_key: props.message._key,
+      },
+    });
+    emit('change');
+    show_delete.value = false;
+  } catch (error) {
+    console.error('Error deleting message:', error);
+  }
+}
 </script>

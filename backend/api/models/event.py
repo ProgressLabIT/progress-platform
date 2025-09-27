@@ -22,7 +22,7 @@ class EventType(str, Enum):
   JOB_CLOSED = 'JOB_CLOSED'
 
 
-  # Issue Events
+  # Collaboration Events
   ISSUE_CREATED = 'ISSUE_CREATED'
   ISSUE_UPDATED = 'ISSUE_UPDATED'
   ISSUE_CLOSED = 'ISSUE_CLOSED'
@@ -31,6 +31,13 @@ class EventType(str, Enum):
   MESSAGE_POSTED = 'MESSAGE_POSTED'
   MESSAGE_UPDATED = 'MESSAGE_UPDATED'
   MESSAGE_DELETED = 'MESSAGE_DELETED'
+  TASK_CREATED = 'TASK_CREATED'
+  TASK_UPDATED = 'TASK_UPDATED'
+  TASK_COMPLETED = 'TASK_COMPLETED'
+  TASK_CANCELED = 'TASK_CANCELED'
+  TASK_REOPENED = 'TASK_REOPENED'
+  TASK_LINKED = 'TASK_LINKED'
+  TASK_UNLINKED = 'TASK_UNLINKED'
 
   # Admin Events
   # e.g. WorkSession time Forced, etc.
@@ -88,6 +95,10 @@ class EventType(str, Enum):
   #Queue
   QUEUE_UPDATED = 'QUEUE_UPDATED'
 
+class EventContextType(str, Enum):
+  TASK = 'task'
+
+
 class EventInfoModel(BaseModel):
   """
   Event info model to be extended by the event class
@@ -98,6 +109,8 @@ class EventInfoModel(BaseModel):
   event_type: EventType
   event_group: str | None = None #
   primary: bool = True
+  context_type: str | None = None
+  context_key: str | None = None
   user_key: str | None = None
   user_session_key: str | None = None
   timestamp: datetime | None = Field(default_factory=timestamp)
@@ -109,6 +122,8 @@ class EventInfoModel(BaseModel):
     if exclude_extra is True:
       kwargs["exclude"] = list(kwargs.get("exclude", [])) + list(self.model_extra.keys())
     return super().model_dump(**kwargs)
+
+  # Context validation is done at the endpoint level once for the whole event chain
 
 class EventModel(BaseModel):
   model_config = ConfigDict(arbitrary_types_allowed=True, extra='allow')

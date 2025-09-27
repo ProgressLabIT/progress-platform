@@ -1,6 +1,6 @@
 import traceback
 from datetime import datetime
-from typing import Dict, List, Union
+from typing import Annotated
 from base64 import b64decode
 import json
 
@@ -121,21 +121,21 @@ async def delete_issue_type(issue_type_key: str):
 @router.get('/issue',
     dependencies=[Depends(auth.verify_token)])
 async def search_issues(
-  issue_key: Union[List[str], None] = Query(default=None),
+  issue_key: list[str] | None = Query(default=None),
   issue_key_search: str | None = None,
-  issue_type_key: Union[List[str], None] = Query(default=None),
-  product_key: Union[List[str], None] = Query(default=None),
+  issue_type_key: list[str] | None = Query(default=None),
+  product_key: list[str] | None = Query(default=None),
   product_code_search: str | None = None,
-  work_order_key: Union[List[str], None] = Query(default=None),
+  work_order_key: list[str] | None = Query(default=None),
   work_order_code_search: str | None = None,
   serial_search: str | None = None,
   project_search: str | None = None,
-  job_key: Union[List[str], None] = Query(default=None),
-  phase_key: Union[List[str], None] = Query(default=None),
+  job_key: list[str] | None = Query(default=None),
+  phase_key: list[str] | None = Query(default=None),
   phase_alias_search: str | None = None,
-  operation_key: Union[List[str], None] = Query(default=None),
-  created_by: Union[List[str], None] = Query(default=None),
-  closed_by: Union[List[str], None] = Query(default=None),
+  operation_key: list[str] | None = Query(default=None),
+  created_by: list[str] | None = Query(default=None),
+  closed_by: list[str] | None = Query(default=None),
   time_created_from: datetime | None = None,
   time_created_to: datetime | None = None,
   time_closed_from: datetime | None = None,
@@ -217,3 +217,99 @@ async def get_messages(recipient_id: str):
         error=traceback.format_exc()
       )
     )
+
+# ---------------------------------------------
+# TASKS
+# ---------------------------------------------
+
+@router.get('/task', dependencies=[Depends(auth.verify_token)])
+async def search_tasks(params: Annotated[TaskSearchParameters, Query()]):
+  try:
+    results = db.aql.execute(Queries.FIND_TASKS, bind_vars=params.model_dump())
+    return [TaskSearchResult(**t) for t in results]
+  except Exception:
+    raise HTTPException(
+      status_code=500,
+      detail=traceback.format_exc()
+    )
+
+
+
+@router.get('/task/{task_key}', dependencies=[Depends(auth.verify_token)])
+async def get_task_data(task_key: str):
+  """
+  Returns the task data with links to the issue, work order, product, etc.
+  """
+  try:
+    task = db.aql.execute(Queries.GET_TASK_DATA, bind_vars=dict(task_key=task_key)).next()
+    return task
+  except Exception:
+    raise HTTPException(
+      status_code=500,
+      detail=traceback.format_exc()
+    )
+
+
+@router.get('/task-type', dependencies=[Depends(auth.verify_token)])
+async def get_task_types(
+    active_only: bool = True,
+    name: str | None = None
+):
+    """Get task types, optionally filtered by active status and name"""
+    try:
+        match = dict(
+            active_only=active_only,
+            name=name
+        )
+
+        cursor = db.aql.execute(Queries.FETCH_TASK_TYPES, bind_vars=match)
+        return [TaskTypeFull(**t) for t in cursor]
+    except Exception:
+        raise HTTPException(
+            status_code=500,
+            detail=traceback.format_exc()
+        )
+
+@router.post('/task-type', status_code=201, dependencies=[Depends(auth.verify_token)])
+async def create_task_type(task_type: TaskType):
+    """Create a new task type"""
+    try:
+        new_task_type = db.collection('TaskType').insert(
+            task_type.model_dump(by_alias=True),
+            return_new=True
+        )['new']
+        return TaskType(**new_task_type)
+    except Exception:
+        raise HTTPException(
+            status_code=500,
+            detail=traceback.format_exc()
+        )
+
+@router.put('/task-type/{type_key}', dependencies=[Depends(auth.verify_token)])
+async def update_task_type(type_key: str, task_type: TaskType):
+    """Update an existing task type"""
+    try:
+        task_type.key = type_key
+        updated_task_type = db.collection('TaskType').update(
+            # Use exclude_unset to avoid updating fields that are not provided
+            task_type.model_dump(by_alias=True, exclude_unset=True),
+            return_new=True,
+        )['new']
+        return APIResponse(message="Task type updated successfully", detail=updated_task_type)
+    except Exception:
+        raise HTTPException(
+            status_code=500,
+            detail=traceback.format_exc()
+        )
+
+@router.delete('/task-type/{type_key}', dependencies=[Depends(auth.verify_token)])
+async def delete_task_type(type_key: str):
+    """Delete a task type"""
+    try:
+        db.collection('TaskType').delete(type_key)
+        return APIResponse(message="Task type deleted successfully")
+    except Exception:
+        raise HTTPException(
+            status_code=500,
+            detail=traceback.format_exc()
+        )

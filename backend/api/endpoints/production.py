@@ -42,7 +42,8 @@ async def create_work_order(new_wo: WorkOrderNew):
   # 0.1 Generate automatic wo_code if not provided
   if not new_wo.wo_code:
     try:
-      new_wo.wo_code = _generate_counter(tx, 'default')
+      counter_key = tx.collection('Config').get('system_counters')['work_orders']
+      new_wo.wo_code = _generate_counter(tx, counter_key)
     except:
       tx.abort_transaction()
       status_code=500

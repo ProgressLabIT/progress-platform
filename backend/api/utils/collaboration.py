@@ -163,6 +163,32 @@ class Queries:
     return result
   """
 
+  FETCH_TASK_TYPES = """
+    FOR t IN TaskType
+    FILTER
+      @active_only ? t.active == @active_only : true
+      && @name ? t.name == @name : true
+
+    LET form_fields = (
+      FOR f IN t.form_fields
+      LET field_definition = FIRST(
+        FOR fdef IN CustomField
+        FILTER fdef._key == f.custom_field_key
+        RETURN fdef
+      )
+      FILTER field_definition
+      RETURN MERGE(f, { type: field_definition.type })
+    )
+
+    LET print_templates = (
+      FOR v IN 1..1 OUTBOUND t can_use_print_template
+      RETURN v
+    )
+
+    SORT t.name
+    RETURN MERGE(t, { form_fields, print_templates })
+  """
+
   CHECK_PRODUCTION_CRITICAL_STATUS = """
     // Find WorkOrder and Job related to Issue
     LET docs = (
@@ -181,4 +207,106 @@ class Queries:
       RETURN 1
     ))
     RETURN { _id: d, critical }
+  """
+
+
+  FIND_TASKS = """
+    FOR t IN Task
+    FILTER
+      @search ? CONTAINS(LOWER(CONCAT(t.code, ' ', t.title)), LOWER(@search)) : true
+      && (@task_type_key ? t.task_type_key == @task_type_key : true)
+      && (@status_open == false ? t.status != 'open' : true)
+      && (@status_completed == false ? t.status != 'completed' : true)
+      && (@status_canceled == false ? t.status != 'canceled' : true)
+      && (@owner_key ? t.owner_key == @owner_key : true)
+      && (@assigned_to ? @assigned_to ALL IN t.assigned_to[* RETURN CURRENT.user_key] : true)
+      && (@start_from ? t.start_from >= @start_from : true)
+      && (@due_by ? t.due_by <= @due_by : true)
+      && (@created_from ? t.created >= @created_from : true)
+      && (@created_to ? t.created <= @created_to : true)
+      && (@closed_from ? t.closed >= @closed_from : true)
+      && (@closed_to ? t.closed <= @closed_to : true)
+      && (@advanced_filters
+        ? LENGTH(
+            // This subquery returns match true/false for each filter
+            FOR advanced_filter IN NOT_NULL(@advanced_filters.filters, [])
+            FOR f IN t.form_fields
+            FILTER f.custom_field_key == advanced_filter._key
+            LET type = DOCUMENT(CustomField, f.custom_field_key).type
+            FILTER (
+              type == "text" ? CONTAINS(LOWER(f.value), LOWER(advanced_filter.value))
+              : type == "choice" ? f.value._key == advanced_filter.value._key
+              : type == "boolean" ? !!f.value
+              : type == "files" ? !!LENGTH(f.value)
+              : f.value == advanced_filter.value
+            )
+            RETURN 1
+          ) >= (@advanced_filters.operator == "OR" ? 1 : LENGTH(@advanced_filters.filters))
+        : true
+      )
+
+    LET type_data = FIRST(
+      FOR tt IN TaskType
+      FILTER tt._key == t.task_type_key
+      RETURN tt
+    )
+
+    SORT t.due_by
+    LIMIT @offset, @limit || null
+    RETURN MERGE(t, { icon: type_data.icon, task_type_name: type_data.name })
+  """
+
+  GET_TASK_DATA = """
+    FOR t IN Task
+    FILTER t._key == @task_key
+
+    LET task_type = FIRST(
+      FOR tt IN TaskType
+      FILTER tt._key == t.task_type_key
+      RETURN tt
+    )
+
+    LET work_sessions = (
+      FOR ws IN WorkSession
+      FILTER ws.task_key == t._key
+      RETURN ws
+    )
+
+    LET time_spent = (
+      LET now = DATE_NOW()
+      FOR user_key IN NOT_NULL(t.assigned_to, [])
+      LET active = work_sessions[? ANY FILTER CURRENT.active]
+      LET duration = SUM(
+        FOR ws IN work_sessions
+        FILTER ws.user_key == user_key
+        RETURN ws.active ? ws.duration : DATE_DIFF(ws.start, now, 'f')
+      )
+      RETURN { user_key, duration, active }
+    )
+
+    LET task_links = (
+      LET link_type = {
+        Issue: { type: 'issue', code: 'code' },
+        WorkOrder: { type: 'work_order', code: 'wo_code' },
+        Product: { type: 'product', code: 'code' },
+        Equipment: { type: 'equipment', code: 'code' },
+        Serial: { type: 'serial', code: 'code' },
+        Task: { type: 'task', code: 'code' }
+      }
+      FOR l IN 1..1 ANY t task_rel
+      LET meta = link_type[PARSE_IDENTIFIER(l._id).collection]
+      RETURN {
+        type: meta.type,
+        key: l._key,
+        code: l[meta.code]
+      }
+    )
+
+    RETURN MERGE(t, {
+      time_spent,
+      links: task_links,
+      icon: task_type.icon,
+      task_type_name: task_type.name,
+      allowed_linked_entities: task_type.link_settings[*].type
+    })
   """

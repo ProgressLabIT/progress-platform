@@ -153,404 +153,396 @@
   </BaseDialog>
 </template>
 
-<script>
+<script setup>
+import { useQuasar } from 'quasar';
+import { ref, watch, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { useStore } from 'vuex';
+import { api } from '@/boot/axios.js';
 import BaseAutocompleteProduct from '@/components/BaseAutocompleteProduct.vue';
 import BaseDialog from '@/components/BaseDialog.vue';
 import FormField from '@/components/FormField.vue';
-import { timestamp } from '@/lib/TimeHandling.js';
+import { sendEvent } from '@/composables/event.js';
 
-export default {
-  name: 'SerialForm',
-
-  components: {
-    BaseAutocompleteProduct,
-    BaseDialog,
-    FormField,
+const props = defineProps({
+  show: {
+    type: Boolean,
+    default: true,
   },
+  serial: {
+    type: Object,
+    default: undefined,
+  },
+  auto_link_product: {
+    type: String,
+    default: null,
+  },
+  force_serial_code: {
+    type: String,
+    default: null,
+  }
+});
 
-  props: {
-    show: {
-      type: Boolean,
-      default: true,
-    },
-    serial: {
-      type: Object,
-      default: undefined,
-    },
-    auto_link_product: {
-      type: String,
-      default: null,
-    },
-    force_serial_code: {
-      type: String,
-      default: null,
+const emit = defineEmits(['close', 'serialCreated']);
+
+// Composables
+const store = useStore();
+const { t } = useI18n();
+const $q = useQuasar();
+
+// Reactive data
+const phase_index = ref(0);
+const has_fields = ref(true);
+const step_index = ref(0);
+const saving = ref(false);
+const enableSave = ref(false);
+const form_step = ref('select_product');
+const phase_data = ref(null);
+const serial_code = ref(null);
+const counter_key = ref(null);
+const links = ref({
+  product: null,
+  user: null,
+});
+
+// Computed properties
+
+// Methods
+function initFormData() {
+  saving.value = false;
+  enableSave.value = false;
+  phase_index.value = 0;
+  step_index.value = 0;
+
+  links.value.product = null;
+
+  if (props.auto_link_product != null) {
+    loadProduct(props.auto_link_product);
+  }
+
+  serial_code.value = null;
+
+  if (props.force_serial_code) {
+    serial_code.value = props.force_serial_code;
+  }
+}
+
+function hasCustomField() {
+  try {
+    return (
+      phase_data.value[phase_index.value].steps[step_index.value].form_fields
+        .length > 0
+    );
+  } catch (error) {
+    return false;
+  }
+}
+
+function startSteps() {
+  form_step.value = 'fill_steps_data';
+  step_index.value = 0;
+  phase_index.value = 0;
+  enableSaveButton();
+}
+
+function nextTile() {
+  if (
+    step_index.value <
+    phase_data.value[phase_index.value].steps.length - 1
+  ) {
+    step_index.value++;
+  } else {
+    if (phase_index.value < phase_data.value.length - 1) {
+      step_index.value = 0;
+      phase_index.value++;
     }
-  },
+  }
 
-  emits: ['close', 'serialCreated'],
+  enableSaveButton();
+}
 
-  data() {
-    return {
-      phase_index: 0,
-      has_fields: true,
-      step_index: 0,
-      saving: false,
-      enableSave: false,
-      form_step: 'select_product',
-      confirmed: false,
-      phase_data: null,
-      serial_code: null,
-      counter_key: null,
-      links: {
-        product: null,
-        user: null,
-      },
-    };
-  },
+function enableSaveButton() {
+  enableSave.value =
+    step_index.value >= phase_data.value[phase_index.value].steps.length - 1 &&
+    phase_index.value >= phase_data.value.length - 1;
 
-  computed: {
-    session_data() {
-      return this.$store.state.session;
-    },
-  },
+  if (!enableSave.value && !hasCustomField()) {
+    nextTile();
+  }
+}
 
-  watch: {
-    show: {
-      handler() {
-        this.initFormData();
-      },
-    },
-  },
+function prevTile() {
+  enableSave.value = false;
+  if (step_index.value > 0) {
+    step_index.value--;
+  } else if (phase_index.value > 0) {
+    phase_index.value--;
+    step_index.value = phase_data.value[phase_index.value].steps.length - 1;
+  } else {
+    form_step.value = 'select_product';
+    enableSave.value = !phase_data.value;
+  }
 
-  async created() {
-    this.initFormData();
-  },
+  if (
+    phase_index.value > 0 &&
+    step_index.value > 0 &&
+    !hasCustomField()
+  ) {
+    prevTile();
+  }
+}
 
-  methods: {
-    initFormData() {
-      this.saving = false;
-      this.enableSave = false;
-      this.phase_index = 0;
-      this.step_index = 0;
+async function loadProduct(product_key) {
+  if (product_key === null) {
+    links.value.product = null;
+    return;
+  }
+  // To avoid loading in advance a lot of unnecessary product data, the product list contains limited information.
+  // So, it is necessary to fetch the full product data first and then load the stepss options.
+  const { data: product } = await api.get(`product/${product_key}`);
 
-      this.links.product = null;
+  links.value.product = product;
+  counter_key.value = product.counter_key;
 
-      if (this.auto_link_product != null) {
-        this.loadProduct(this.auto_link_product);
-      }
+  if (!product.process_phases) {
+    return;
+  }
 
-      this.serial_code = null;
+  const { data: steps } = await api.get(
+    `product/${product_key}/process`,
+  );
+  phase_data.value = steps;
 
-      if (this.force_serial_code) {
-        this.serial_code = this.force_serial_code;
-      }
-    },
+  let hasCustomField = false;
 
-    hasCustomField() {
-      try {
-        return (
-          this.phase_data[this.phase_index].steps[this.step_index].form_fields
-            .length > 0
-        );
-      } catch (error) {
-        return false;
-      }
-    },
-
-    startSteps() {
-      this.form_step = 'fill_steps_data';
-      this.step_index = 0;
-      this.phase_index = 0;
-      this.enableSaveButton();
-    },
-
-    nextTile() {
-      if (
-        this.step_index <
-        this.phase_data[this.phase_index].steps.length - 1
-      ) {
-        this.step_index++;
-      } else {
-        if (this.phase_index < this.phase_data.length - 1) {
-          this.step_index = 0;
-          this.phase_index++;
-        }
-      }
-
-      this.enableSaveButton();
-    },
-
-    enableSaveButton() {
-      this.enableSave =
-        this.step_index >= this.phase_data[this.phase_index].steps.length - 1 &&
-        this.phase_index >= this.phase_data.length - 1;
-
-      if (!this.enableSave && !this.hasCustomField()) {
-        this.nextTile();
-      }
-    },
-
-    prevTile() {
-      this.enableSave = false;
-      if (this.step_index > 0) {
-        this.step_index--;
-      } else if (this.phase_index > 0) {
-        this.phase_index--;
-        this.step_index = this.phase_data[this.phase_index].steps.length - 1;
-      } else {
-        this.form_step = 'select_product';
-        this.enableSave = !this.phase_data;
-      }
-
-      if (
-        this.phase_index > 0 &&
-        this.step_index > 0 &&
-        !this.hasCustomField()
-      ) {
-        this.prevTile();
-      }
-    },
-
-    async loadProduct(product_key) {
-      if (product_key === null) {
-        this.links.product = null;
-        return;
-      }
-      // To avoid loading in advance a lot of unnecessary product data, the product list contains limited information.
-      // So, it is necessary to fetch the full product data first and then load the stepss options.
-      const { data: product } = await this.$api.get(`product/${product_key}`);
-
-      this.links.product = product;
-      this.counter_key = product.counter_key;
-
-      if (!product.process_phases) {
-        return;
-      }
-
-      const { data: steps } = await this.$api.get(
-        `product/${product_key}/process`,
-      );
-      this.phase_data = steps;
-
-      let hasCustomField = false;
-
-      if (this.phase_data) {
-        this.phase_data.forEach((phase) => {
-          if (phase.steps) {
-            phase.steps.forEach((step) => {
-              if (!hasCustomField) {
-                hasCustomField = step.form_fields?.length > 0;
-              }
-            });
+  if (phase_data.value) {
+    phase_data.value.forEach((phase) => {
+      if (phase.steps) {
+        phase.steps.forEach((step) => {
+          if (!hasCustomField) {
+            hasCustomField = step.form_fields?.length > 0;
           }
         });
       }
+    });
+  }
 
-      this.has_fields = hasCustomField;
-      this.phase_index = 0;
-      this.step_index = 0;
-    },
+  has_fields.value = hasCustomField;
+  phase_index.value = 0;
+  step_index.value = 0;
+}
 
-    cancel() {
-      this.initFormData();
-      this.form_step = 'select_product';
-      this.$emit('close');
-    },
+function cancel() {
+  initFormData();
+  form_step.value = 'select_product';
+  emit('close');
+}
 
-    /**
-     * @param {import('@/types/form').FormField} field
-     * @returns {string | undefined}
-     */
-    getFieldType(field) {
-      return this.$store.getters.getCustomFieldByKey(field.custom_field_key)
-        ?.type;
-    },
+/**
+ * @param {import('@/types/form').FormField} field
+ * @returns {string | undefined}
+ */
+function getFieldType(field) {
+  return store.getters.getCustomFieldByKey(field.custom_field_key)?.type;
+}
 
-    getFormFieldValue(phase_key, step_key, fields) {
-      return fields.map((field) => ({
-        phase_key: phase_key,
-        step_key: step_key,
-        form_field_key: field._key,
-        custom_field_key: field.custom_field_key,
-        label: field.label,
-        hint: field.hint,
-        mandatory: field.mandatory,
-        value:
-          this.getFieldType(field) === 'files'
-            ? field.value
-                ?.filter((file) => !file.delete)
-                .map((file) => ({
-                  size: file.size,
-                  name: file.name,
-                }))
-            : field.value,
-      }));
-    },
+function getFormFieldValue(phase_key, step_key, fields) {
+  return fields.map((field) => ({
+    phase_key: phase_key,
+    step_key: step_key,
+    form_field_key: field._key,
+    custom_field_key: field.custom_field_key,
+    label: field.label,
+    hint: field.hint,
+    mandatory: field.mandatory,
+    value:
+      getFieldType(field) === 'files'
+        ? field.value
+            ?.filter((file) => !file.delete)
+            .map((file) => ({
+              size: file.size,
+              name: file.name,
+            }))
+        : field.value,
+  }));
+}
 
-    missingMandatoryValues(form_data) {
-      let missing_mandatory_fields = false;
-      if (!form_data) {
-        return missing_mandatory_fields;
+function missingMandatoryValues(form_data) {
+  let missing_mandatory_fields = false;
+  if (!form_data) {
+    return missing_mandatory_fields;
+  }
+  form_data.forEach((field) => {
+    let type = getFieldType(field);
+    if (
+      type !== 'ternary' &&
+      field.mandatory &&
+      (!field.value || field.value === null || field.value === '')
+    ) {
+      missing_mandatory_fields = true;
+    }
+  });
+  return missing_mandatory_fields;
+}
+
+async function saveFiles(serial_key) {
+  let form_fields = [];
+  if (phase_data.value) {
+    phase_data.value.forEach((phase) => {
+      if (phase.steps) {
+        phase.steps.forEach((step) => {
+          form_fields.push(...step.form_fields);
+        });
       }
-      form_data.forEach((field) => {
-        let type = this.getFieldType(field);
-        if (
-          type !== 'ternary' &&
-          field.mandatory &&
-          (!field.value || field.value === null || field.value === '')
-        ) {
-          missing_mandatory_fields = true;
+    });
+  }
+
+  const promises = form_fields
+    .filter((field) => getFieldType(field) === 'files')
+    .map(async (field) => {
+      const to_delete = [];
+      const to_add = [];
+
+      field.value?.forEach((file) => {
+        if (file.temp) {
+          to_add.push(file.content);
+        } else if (file.delete) {
+          to_delete.push(file.name);
         }
       });
-      return missing_mandatory_fields;
-    },
 
-    async saveFiles(serial_key) {
-      let form_fields = [];
-      if (this.phase_data) {
-        this.phase_data.forEach((phase) => {
-          if (phase.steps) {
-            phase.steps.forEach((step) => {
-              form_fields.push(...step.form_fields);
-            });
-          }
-        });
-      }
-
-      const promises = form_fields
-        .filter((field) => this.getFieldType(field) === 'files')
-        .map(async (field) => {
-          const to_delete = [];
-          const to_add = [];
-
-          field.value?.forEach((file) => {
-            if (file.temp) {
-              to_add.push(file.content);
-            } else if (file.delete) {
-              to_delete.push(file.name);
-            }
-          });
-
-          const target = {
-            bucket: 'serial',
-            object_key: serial_key,
-            subfolder: field._key,
-          };
-
-          // Upload new files
-          if (to_add.length) {
-            // Populate form data
-            const add_body = new FormData();
-            Object.entries(target).forEach(([k, v]) => add_body.append(k, v));
-            to_add.forEach((file) => add_body.append('contents', file));
-            // Post files
-            try {
-              await this.$api.post('/files', add_body);
-            } catch (error) {
-              console.error(error);
-              window.alert(error);
-            }
-          }
-
-          // Delete files
-          if (to_delete.length) {
-            try {
-              await this.$api.delete('/files', {
-                data: {
-                  ...target,
-                  filenames: to_delete,
-                },
-              });
-            } catch (error) {
-              console.error(error);
-              window.alert(error);
-            }
-          }
-        });
-
-      return Promise.all(promises);
-    },
-
-    async save() {
-      this.saving = true;
-
-      let missing_mandatory_fields = false;
-
-      if (this.phase_data) {
-        this.phase_data.forEach((phase) => {
-          if (phase.steps) {
-            phase.steps.forEach((step) => {
-              missing_mandatory_fields =
-                missing_mandatory_fields ||
-                this.missingMandatoryValues(step.form_fields);
-            });
-          }
-        });
-      }
-
-      if (missing_mandatory_fields) {
-        window.alert(this.$t('fill_mandatory_fields'));
-        this.saving = false;
-        return;
-      }
-
-      let data = [];
-      if (this.phase_data) {
-        this.phase_data.forEach((phase) => {
-          if (phase.steps) {
-            phase.steps.forEach((step) => {
-              data.push(...this.getFormFieldValue(
-                phase._key,
-                step._key,
-                step.form_fields ? step.form_fields : [],
-              ));
-            });
-          }
-        });
-      }
-
-      const event = {
-        event_type: 'SERIAL_CREATED',
-        user_key: this.session_data.user._key,
-        user_session_key: this.session_data.session_key,
-        timestamp: timestamp(),
-        product_key: this.links.product._key,
-        code: this.serial_code,
-        counter_key: this.counter_key,
-        data
+      const target = {
+        bucket: 'serial',
+        object_key: serial_key,
+        subfolder: field._key,
       };
 
-      this.$api.post('event', event).then((resp) => {
-        if (resp.status === 200) {
-          this.$emit('serialCreated');
-          this.saveFiles(resp?.data?.detail?.serial_key).then(() => {
-            this.cancel();
-            this.saving = false;
-          });
-        } else if (resp.response?.status === 422) {
-          let error_message = 'traceability.errors.EXCEPTION';
-          switch (resp.response?.data?.detail?.error_type) {
-            case 'SerialNotCreatedError':
-              error_message = 'traceability.errors.SERIAL_NEW_ERROR';
-              break;
-            case 'SerialCodeAlreadyPresent':
-              error_message = 'traceability.errors.SERIAL_NEW_ALREADY_PRESENT';
-              break;
-            default:
-              break;
-          }
-
-          this.$q.notify({
-            message: this.$t(error_message),
-            color: 'theme-red',
-            timeout: 1500,
-            position: 'top',
-          });
-          this.cancel();
-          this.saving = false;
+      // Upload new files
+      if (to_add.length) {
+        // Populate form data
+        const add_body = new FormData();
+        Object.entries(target).forEach(([k, v]) => add_body.append(k, v));
+        to_add.forEach((file) => add_body.append('contents', file));
+        // Post files
+        try {
+          await api.post('/files', add_body);
+        } catch (error) {
+          console.error(error);
+          window.alert(error);
         }
+      }
+
+      // Delete files
+      if (to_delete.length) {
+        try {
+          await api.delete('/files', {
+            data: {
+              ...target,
+              filenames: to_delete,
+            },
+          });
+        } catch (error) {
+          console.error(error);
+          window.alert(error);
+        }
+      }
+    });
+
+  return Promise.all(promises);
+}
+
+async function save() {
+  saving.value = true;
+
+  let missing_mandatory_fields = false;
+
+  if (phase_data.value) {
+    phase_data.value.forEach((phase) => {
+      if (phase.steps) {
+        phase.steps.forEach((step) => {
+          missing_mandatory_fields =
+            missing_mandatory_fields ||
+            missingMandatoryValues(step.form_fields);
+        });
+      }
+    });
+  }
+
+  if (missing_mandatory_fields) {
+    window.alert(t('fill_mandatory_fields'));
+    saving.value = false;
+    return;
+  }
+
+  let data = [];
+  if (phase_data.value) {
+    phase_data.value.forEach((phase) => {
+      if (phase.steps) {
+        phase.steps.forEach((step) => {
+          data.push(...getFormFieldValue(
+            phase._key,
+            step._key,
+            step.form_fields ? step.form_fields : [],
+          ));
+        });
+      }
+    });
+  }
+
+  try {
+    const { data: response } = await sendEvent({
+      event_type: 'SERIAL_CREATED',
+      event_data: {
+        product_key: links.value.product._key,
+        code: serial_code.value,
+        counter_key: counter_key.value,
+        data
+      }
+    });
+
+    emit('serialCreated');
+    await saveFiles(response?.detail?.serial_key);
+    cancel();
+  } catch (error) {
+    console.error('Error creating serial:', error);
+
+    // Handle specific serial creation errors
+    if (error.response?.status === 422) {
+      let error_message = 'traceability.errors.EXCEPTION';
+      switch (error.response?.data?.detail?.error_type) {
+        case 'SerialNotCreatedError':
+          error_message = 'traceability.errors.SERIAL_NEW_ERROR';
+          break;
+        case 'SerialCodeAlreadyPresent':
+          error_message = 'traceability.errors.SERIAL_NEW_ALREADY_PRESENT';
+          break;
+        default:
+          break;
+      }
+
+      $q.notify({
+        message: t(error_message),
+        color: 'theme-red',
+        timeout: 1500,
+        position: 'top',
       });
-    },
-  },
-};
+      cancel();
+    }
+  } finally {
+    saving.value = false;
+  }
+}
+
+// Watchers
+watch(
+  () => props.show,
+  () => {
+    initFormData();
+  }
+);
+
+// Lifecycle
+onMounted(() => {
+  initFormData();
+});
 </script>

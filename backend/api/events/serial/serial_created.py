@@ -26,10 +26,6 @@ class SerialCreatedEvent(BaseSerialEvent):
   def get_event_type(cls) -> EventType:
     return EventType.SERIAL_CREATED
 
-  @property
-  def event_first(self):
-    return True
-
   def apply(self):
     # Ensure serial code is available if provided
     if self.info.code != None and not self.verify_serial_code_free(None, self.info.product_key, self.info.code):

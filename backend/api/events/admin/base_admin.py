@@ -28,10 +28,6 @@ class Queries:
 
 class BaseAdmin(BaseProductionEvent):
 
-  @property
-  def event_first(self):
-    return True
-
   def post_processing(self):
     self.update_work_order()
     self.flag_job_as_forced()

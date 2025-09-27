@@ -5,6 +5,8 @@
     <!-- <template v-if="!session_locked"> -->
     <AppBar v-if="$q.screen.height > 400" />
 
+    <TaskBar v-if="taskStore.activeTaskKey" />
+
     <q-drawer
       id="menu"
       v-model="drawerModel"
@@ -56,74 +58,63 @@
   </q-layout>
 </template>
 
-<script>
+<script setup>
 import { useQuasar } from 'quasar';
+import { computed } from 'vue';
+import { useStore } from 'vuex';
 import AppBar from '@/components/AppBar.vue';
 import AppFooter from '@/components/AppFooter.vue';
 import { useDrawer } from '@/composables/drawer';
+import TaskBar from '@/components/TaskBar.vue';
+import { useTaskStore } from '@/stores/task.js';
 // import SessionLock from '@/views/SessionLock'
 
-export default {
-  name: 'MainLayout',
+const $q = useQuasar();
+const store = useStore();
+const { drawerModel } = useDrawer();
+const taskStore = useTaskStore();
 
-  components: {
-    AppBar,
-    AppFooter,
-    // SessionLock,
-  },
+const tab_routes = [
+  'adminPanel',
+  'libraryRoot',
+  'productionRoot',
+  'userJobs',
+  'qualityRoot',
+  'traceabilityRoot',
+  'taskRoot',
+  'warehouseRoot',
+  'reportRoot',
+];
 
-  setup() {
-    const { drawerModel } = useDrawer();
+// locale_index: null,
+// locale_list: this.$root.$i18n.availableLocales,
 
-    return {
-      drawerModel,
-    };
-  },
+// These computed properties are kept for future use when session lock functionality is enabled
+// eslint-disable-next-line no-unused-vars
+const user_key = computed(() => {
+  return store.state.session.user._key;
+});
 
-  data() {
-    return {
-      $q: useQuasar(),
-      tab_routes: [
-        'adminPanel',
-        'libraryRoot',
-        'productionRoot',
-        'userJobs',
-        'qualityRoot',
-        'traceabilityRoot',
-        'warehouseRoot',
-        'reportRoot',
-      ],
-      // locale_index: null,
-      // locale_list: this.$root.$i18n.availableLocales,
-    };
-  },
+// eslint-disable-next-line no-unused-vars
+const session_locked = computed(() => {
+  return store.state.session.session_locked;
+});
 
-  computed: {
-    user_key() {
-      return this.$store.state.session.user._key;
-    },
+// watch: {
+//   locale_index(new_locale_index) {
+//     this.$root.$i18n.locale = this.locale_list[new_locale_index]
+//     this.$store.state.locale = this.locale_list[new_locale_index]
+//   },
+// },
 
-    session_locked() {
-      return this.$store.state.session.session_locked;
-    },
-  },
-
-  watch: {
-    // locale_index(new_locale_index) {
-    //   this.$root.$i18n.locale = this.locale_list[new_locale_index]
-    //   this.$store.state.locale = this.locale_list[new_locale_index]
-    // },
-  },
-
-  // beforeMount() {
-  //   let locale = this.$root.$i18n.locale
-  //   const saved_locale = this.$store.state.locale
-  //   if (saved_locale) {
-  //     locale = this.$root.$i18n.locale = saved_locale
-  //   }
-  //   this.locale_index = this.locale_list.findIndex(loc => loc == locale)
-  // }
-};
+// beforeMount() {
+//   let locale = this.$root.$i18n.locale
+//   const saved_locale = this.$store.state.locale
+//   if (saved_locale) {
+//     locale = this.$root.$i18n.locale = saved_locale
+//   }
+//   this.locale_index = this.locale_list.findIndex(loc => loc == locale)
+// }
 </script>
 
 <style lang="sass">

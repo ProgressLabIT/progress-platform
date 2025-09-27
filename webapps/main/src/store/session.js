@@ -198,6 +198,8 @@ const session = {
           return 'warehouseRoot';
         case scopes.includes('reporting'):
           return 'reportRoot';
+        case scopes.includes('task'):
+          return 'taskRoot';
         default:
           return null
       }

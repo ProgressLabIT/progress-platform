@@ -23,11 +23,6 @@ class MovementReversedEvent(BaseInventoryEvent):
   def get_event_type(cls):
     return EventType.MOVEMENT_REVERSED
 
-  @property
-  def event_first(self):
-    return True
-
-
   # =====================================================================
   # MAIN LOGIC
   # =====================================================================

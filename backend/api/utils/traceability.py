@@ -8,11 +8,19 @@ class Queries:
       && @job_key ? e.job_key == @job_key : true
       && @issue_key ? e.issue_data._key == @issue_key : true
       && @serial_key ? e.serial_key == @serial_key : true
+      && @task_key ? e.task_key == @task_key : true
+      && @context_type ? e.context_type == @context_type : true
+      && @context_key ? e.context_key == @context_key : true
       && @time_from ? e.timestamp >= @time_from : true
       && @time_to ? e.timestamp <= @time_to : true
       && @type ? e.event_type == @type : true
+
+    LET task = e.context_key ? DOCUMENT(Task, e.context_key) : null // hard code the only context type for now
+    LET task_type = task ? DOCUMENT(TaskType, task.task_type_key) : null
+    LET context_name = task_type ? task_type.name : null
+    LET context_icon = task_type ? task_type.icon : null
     SORT e.timestamp
-    RETURN e
+    RETURN MERGE(e, { context_code: task.code, context_name, context_icon })
   """
 
   CLOSE_UNALLOWED_PARALLEL_WORK_SESSIONS = """

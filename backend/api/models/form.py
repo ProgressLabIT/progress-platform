@@ -14,6 +14,7 @@ class FileBucket(str, Enum):
   TRACEABILITY = 'traceability'
   USER = 'user'
   SERIAL = 'serial'
+  TASK = 'task'
 
 class FileTargetData(BaseModel):
   bucket: FileBucket
@@ -76,6 +77,17 @@ class FormFieldValue(BaseModel):
   # It can't be changed in FormField, so there is no risk of data inconsistency, at least for now.
   custom_field_key: str | None = None
   value: Any | None = None
+
+
+class TaskFormFieldValue(BaseModel):
+  form_field_key: str
+  custom_field_key: str
+  label: str
+  hint: str | None = None
+  mandatory: bool | None = False
+  value: Any | None = None
+  last_updated: str | None = None
+
 
 class SerialFormFieldValue(BaseModel):
   form_field_key: str | None = None

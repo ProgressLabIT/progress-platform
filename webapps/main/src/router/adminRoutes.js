@@ -136,6 +136,19 @@ const adminRoutes = [
         ],
       },
       {
+        path: 'task-types',
+        name: 'taskTypeLibrary',
+        component: () => import('@/views/TaskTypeLibrary.vue'),
+        children: [
+          {
+            path: ':taskTypeKey',
+            name: 'taskTypeDetail',
+            component: () => import('@/views/TaskTypeDetail.vue'),
+            props: true,
+          }
+        ],
+      },
+      {
         path: 'field',
         name: 'formFieldLibrary',
         component: () => import ('@/views/FormFieldLibrary.vue'),

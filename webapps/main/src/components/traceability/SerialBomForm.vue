@@ -49,7 +49,7 @@
                   :product_key="line.component_key"
                   :can_create="true"
                   :selection_qt="line.qt"
-                  :used-serials="usedSerialsKeys"
+                  :disable-keys="usedSerialsKeys"
                   :filter_used="true"
                   :inventory_only="line.manage_inventory"
                   :inventory_in_position_key="line.consumption_options?.consumption_position_key"

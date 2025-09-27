@@ -40,121 +40,110 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
+import { useStore } from 'vuex';
+import { api } from '@/boot/axios.js';
 import MessageEntry from '@/components/MessageEntry.vue';
-import event from '@/mixins/event.js';
+import { sendEvent } from '@/composables/event.js';
 
-export default {
-  name: 'MessageThread',
-
-  components: {
-    MessageEntry,
+const props = defineProps({
+  context: {
+    type: String,
+    required: true
   },
-
-  mixins: [event],
-
-  props: {
-    context: {
-      type: String,
-      default: undefined,
-      validator: (value) =>
-        value || ['issue', 'work_order', 'job'].includes(value),
-    },
-    context_key: {
-      type: String,
-      default: undefined,
-    },
+  context_key: {
+    type: String,
+    default: undefined,
   },
+});
 
-  data() {
-    return {
-      recipient_prefix_map: {
-        issue: 'Issue/',
-        work_order: 'WorkOrder/',
-        serial: 'Serial/',
-      },
-      messages: [],
-      new_message: '',
-      events: undefined,
-      loading: false,
-    };
-  },
+const store = useStore();
 
-  computed: {
-    recipient_id() {
-      if (!this.context) {
-        return;
-      }
-      if (this.context === 'job') {
-        return (
-          'WorkOrder/' + this.$store.state.traceability.working_job_data.wo_key
-        );
-      } else {
-        return this.recipient_prefix_map[this.context] + this.context_key;
-      }
-    },
-  },
+// Reactive data
+const recipient_prefix_map = ref({
+  issue: 'Issue/',
+  work_order: 'WorkOrder/',
+  serial: 'Serial/',
+  task: 'Task/',
+});
+const messages = ref([]);
+const new_message = ref('');
+const events = ref(undefined);
+const loading = ref(false);
 
-  watch: {
-    context_key: {
-      handler() {
-        this.getMessages();
-      },
-    },
-  },
-  created() {
-    this.loading = true;
-    this.$store.dispatch('loadUsers');
-    this.loading = false;
-  },
+// Computed properties
+const recipient_id = computed(() => {
+  if (!props.context) {
+    return;
+  }
+  if (props.context === 'job') {
+    return (
+      'WorkOrder/' + store.state.traceability.working_job_data.wo_key
+    );
+  } else {
+    return recipient_prefix_map.value[props.context] + props.context_key;
+  }
+});
 
-  mounted() {
-    this.getMessages();
-    let eventURL =
-      this.$api.defaults.baseURL + '/notification/global-notification';
-    this.events = new EventSource(eventURL, {
-      withCredentials: false,
+// Methods
+function handleMessage(message) {
+  let event = JSON.parse(message.data);
+  if (event.notification === 'REFRESH') {
+    getMessages();
+  }
+}
+
+function getMessages() {
+  api
+    .get('message', { params: { recipient_id: recipient_id.value } })
+    .then((resp) => (messages.value = resp.data));
+}
+
+async function postMessage() {
+  const message_data = {
+    sender: `User/${store.state.session.user._key}`,
+    recipient: recipient_id.value,
+    content: new_message.value,
+  };
+  loading.value = true;
+
+  try {
+    await sendEvent({
+      event_type: 'MESSAGE_POSTED',
+      event_data: { ...message_data },
     });
-    this.events.addEventListener('global-notification', (event) => {
-      this.handleMessage(event);
-    });
-  },
-  unmounted() {
-    if (this.events) {
-      this.events.close();
-    }
-  },
+    getMessages();
+    new_message.value = '';
+  } finally {
+    loading.value = false;
+  }
+}
 
-  methods: {
-    handleMessage(message) {
-      let event = JSON.parse(message.data);
-      if (event.notification === 'REFRESH') {
-        this.getMessages();
-      }
-    },
+// Watchers
+watch(() => props.context_key, () => {
+  getMessages();
+});
 
-    getMessages() {
-      this.$api
-        .get('message', { params: { recipient_id: this.recipient_id } })
-        .then((resp) => (this.messages = resp.data));
-    },
+// Lifecycle
+onMounted(() => {
+  loading.value = true;
+  store.dispatch('loadUsers');
+  loading.value = false;
 
-    postMessage() {
-      const message_data = {
-        sender: `User/${this.$store.state.session.user._key}`,
-        recipient: this.recipient_id,
-        content: this.new_message,
-      };
-      this.loading = true;
-      this.sendEvent({
-        event_type: 'MESSAGE_POSTED',
-        event_data: { ...message_data },
-      }).then(() => {
-        this.getMessages();
-        this.new_message = '';
-        this.loading = false;
-      });
-    },
-  },
-};
+  getMessages();
+  let eventURL = api.defaults.baseURL + '/notification/global-notification';
+  events.value = new EventSource(eventURL, {
+    withCredentials: false,
+  });
+  events.value.addEventListener('global-notification', (event) => {
+    handleMessage(event);
+  });
+});
+
+onUnmounted(() => {
+  if (events.value) {
+    events.value.close();
+  }
+});
 </script>

@@ -1,0 +1,61 @@
+from datetime import date
+
+from events.base_event import BaseEvent, EventInfoModel
+from models.event import EventType
+from models.form import TaskFormFieldValue
+from models.collaboration import Task, TaskAssignment
+from utils.counter import _generate_counter
+
+
+class TaskCreatedEvent(BaseEvent):
+
+  class InfoModel(EventInfoModel):
+    task_type_key: str
+    code: str | None = None
+    title: str | None = None
+    description: str | None = None
+    assigned_to: list[TaskAssignment] | None = []
+    start_from: date | None = None
+    due_by: date | None = None
+
+  @classmethod
+  def get_tx_collections(self):
+    return ['Task', 'Counter']
+
+  @classmethod
+  def get_event_type(self):
+    return EventType.TASK_CREATED
+
+
+  def apply(self):
+    # prepare task data
+    task_data = Task(**self.info.model_dump())
+
+    # generate task code if not provided
+    if self.info.code is None:
+      counter_key = self.tx.collection('Config').get('system_counters').get('tasks', 'default')
+      task_data.code = _generate_counter(self.tx, counter_key)
+
+    # Prepare form fields
+    task_type = self.tx.collection('TaskType').get(self.info.task_type_key)
+    task_data.form_fields = [
+      TaskFormFieldValue(
+        **f,
+        form_field_key=f['_key'],
+        value=None
+      ) for f in task_type['form_fields']
+    ]
+
+    # set created and created_by
+    task_data.created = self.info.timestamp
+    task_data.created_by = self.info.user_key
+
+    # insert task
+    task_key = self.tx.collection('Task').insert(task_data.model_dump())['_key']
+    self.info.task_key = task_key
+
+    # return response
+    self.response = dict(
+      message=f"Task {task_key} created successfully with code {task_data.code}",
+      task_key=task_key
+    )

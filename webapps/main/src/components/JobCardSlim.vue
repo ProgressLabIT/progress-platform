@@ -78,9 +78,8 @@
 
 <script setup>
 import { useStore } from 'vuex';
-import { api } from '@/boot/axios.js';
 import BaseProgressBar from '@/components/BaseProgressBar.vue';
-import { timestamp } from '@/lib/TimeHandling.js';
+import { sendEvent } from '@/composables/event.js';
 
 const props = defineProps({
   job: {
@@ -99,15 +98,12 @@ async function toggleJob() {
       ? 'JOB_STARTED'
       : 'JOB_RESUMED';
 
-  const event_data = {
-    timestamp: timestamp(),
-    job_key: props.job._key,
-    user_session_key: store.state.session._key,
-    user_key,
+  await sendEvent({
     event_type,
-  };
-
-  await api.post('event', event_data);
+    event_data: {
+      job_key: props.job._key,
+    }
+  });
   await store.dispatch('loadJobAssignments', user_key);
 }
 </script>

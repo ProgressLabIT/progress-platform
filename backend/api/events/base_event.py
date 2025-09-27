@@ -47,14 +47,20 @@ class BaseEvent(ABC):
     return cls.InfoModel
 
   @classmethod
-  def create_as_child(cls, context: EventModel, new_event_data: 'cls.InfoModel') -> Self:
+  def create_as_child(cls, parent_event: EventModel, new_event_data: 'cls.InfoModel') -> Self:
     """
     Create a child event from an existing event, passing event group id, transaction, and user/session data.
     """
-    info = context.info.model_dump()
+    info = parent_event.info.model_dump()
     info['primary'] = False
     info.update(dict(**new_event_data, event_type = cls.get_event_type()))
-    new_event = cls(tx = context.tx, info = info)
+
+    # Create child event (gets UUID key immediately in __init__)
+    new_event = cls(tx = parent_event.tx, info = info)
+
+    # Create edge immediately since both events have keys
+    new_event.store_event_source(parent_event.event_key)
+
     new_event.save()
     return new_event.response
 
@@ -108,13 +114,6 @@ class BaseEvent(ABC):
     if commit:
       tx.commit_transaction()
 
-  @property
-  def event_first(self) -> bool:
-    """
-    Can be overridden by subclasses to determine if the event must be stored in the database before being processed.
-    """
-    # TODO: Consider always storing events in the database first, and then processing them to remove the need for this property and dual logic
-    return False
 
   # ================================
   # INITIALIZATION METHOD
@@ -122,6 +121,9 @@ class BaseEvent(ABC):
   def __init__(self, info, tx: TransactionDatabase | None = None):
     self.tx = tx
     self.response = None
+
+    # Generate UUID for event key immediately
+    self.event_key = str(uuid.uuid4())
 
     # Validate general event properties
     has_tx_or_event_group = tx is not None or info['event_group'] is not None
@@ -152,18 +154,27 @@ class BaseEvent(ABC):
     pass
 
   # ================================
-  # STORE EVENT METHOD
+  # STORE EVENT DATA
   # ================================
   def store_event(self):
     """
-    Store the event in the database. If the event has been stored before, it will be overwritten with the new data.
+    Store the event in the database using the pre-generated UUID key.
     """
     record = self.info.model_dump(exclude_extra=True, by_alias=True)
-    # update with data modified through the apply method
-    if hasattr(self, 'event_key'):
-      record.update(dict(_key=self.event_key))
+    record['_key'] = self.event_key  # Use pre-generated UUID
 
-    self.event_key = self.tx.collection('Event').insert(record, overwrite=True)['_key']
+    # Insert with specific key (no overwrite needed since key is unique)
+    self.tx.collection('Event').insert(record)
+
+  def store_event_source(self, parent_event_key: str):
+    """
+    Store the event source relationship in the database.
+    Creates an edge from parent event to this child event.
+    """
+    self.tx.collection('event_source').insert(dict(
+      _from=f'Event/{parent_event_key}',
+      _to=f'Event/{self.event_key}'
+    ))
 
   # ================================
   # SAVE EVENT METHOD
@@ -172,15 +183,12 @@ class BaseEvent(ABC):
     """
     Save the event to the database and handle transaction.
     """
-    collections = self.get_tx_collections() + ['Event']
+    collections = self.get_tx_collections() + ['Event', 'event_source']
 
     try:
       if self.info.primary:
         self.tx = db.begin_transaction(write=collections)
         self.info.event_group = str(uuid.uuid4())
-
-      if self.event_first:
-        self.store_event()
 
       # Perform any pre-processing steps
       self.pre_processing()
@@ -191,7 +199,7 @@ class BaseEvent(ABC):
       # Perform any post-processing steps
       self.post_processing()
 
-      # Re-save event with new data added
+      # Store event with all final data
       self.store_event()
 
       # Commit transaction
