@@ -239,9 +239,16 @@ const workingTemplate = ref();
 let designer;
 function initDesigner() {
   const container = document.getElementById('pdf-designer');
+  // Create a clean, cloneable version of the template
+  const cleanTemplate = {
+    basePdf: workingTemplate.value.template.basePdf,
+    schemas: JSON.parse(JSON.stringify(workingTemplate.value.template.schemas || [])),
+    columns: workingTemplate.value.template.columns ? [...workingTemplate.value.template.columns] : []
+  };
+
   designer = new Designer({
     domContainer: container,
-    template: workingTemplate.value.template,
+    template: cleanTemplate,
     options: { lang: locale.value },
   });
   designer.onChangeTemplate((template) => {
@@ -272,6 +279,10 @@ async function uploadPdf(file) {
   reader.readAsDataURL(file);
   reader.onload = () => {
     workingTemplate.value.template.basePdf = reader.result;
+    // Destroy the existing designer before creating a new one
+    if (designer) {
+      designer.destroy();
+    }
     initDesigner();
   };
 }
