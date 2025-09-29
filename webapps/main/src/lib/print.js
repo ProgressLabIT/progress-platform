@@ -24,8 +24,10 @@ export function usePrintDialog({ context: contextType, contextData }) {
   );
 
   async function open() {
-    // Start with a clean state
-    context.resetState();
+    // Clear only transient serial selection when a serial picker is used
+    if (context?.serialSource) {
+      context.setSelectedSerial(null);
+    }
 
     // Open the dialog
     return Dialog.create({
