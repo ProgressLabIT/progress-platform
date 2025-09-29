@@ -313,31 +313,38 @@ class ProgressOverrideRequestedEvent(BaseAdmin, BaseProductionEvent):
 
     else:  # quantity_change < 0
       # Reopen job if it was closed
-      if self.job.stage == WorkStatus.CLOSED:
+      was_closed = self.job.stage == WorkStatus.CLOSED
+      if was_closed:
         self.job_update['stage'] = WorkStatus.STARTED
         self.job_update['end'] = None
-        # Readd job to queue and reorder
-        self.tx.aql.execute(
-          ProductionQueries.ADD_JOB_TO_QUEUE,
-          bind_vars=dict(
-            job_key=self.job.key,
-            target_key=self.job.assigned_to
-          )
-        )
-        self.tx.aql.execute(
-          ProductionQueries.REORDER_JOB_QUEUES,
-          bind_vars=dict(
-            site_key='0',
-            target_key=self.job.assigned_to
-          )
-        )
 
       # Reset to created if quantity is 0
       if self.info.new_job_qt_completed == 0:
         self.job_update['stage'] = WorkStatus.CREATED
 
-    # Update job status
+      # Update job status
     self.tx.collection('Job').update(self.job_update)
+
+
+    if self.info.quantity_change < 0 and was_closed:
+      # Readd job to queue and reorder
+      # Must be done after job update to avoid the removal of the job
+      # during reordering
+      self.tx.aql.execute(
+        ProductionQueries.ADD_JOB_TO_QUEUE,
+        bind_vars=dict(
+          job_key=self.job.key,
+          target_key=self.job.assigned_to
+        )
+      )
+
+      self.tx.aql.execute(
+        ProductionQueries.REORDER_JOB_QUEUES,
+        bind_vars=dict(
+          site_key='0',
+          target_key=self.job.assigned_to
+        )
+      )
 
 
   # =================================================================================================
