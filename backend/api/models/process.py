@@ -2,7 +2,7 @@ from datetime import datetime
 from enum import Enum
 from typing import List, Optional
 
-from pydantic import Field
+from pydantic import Field, BaseModel
 
 from models.print import PrintTemplateRecord
 from models.form import FormFieldDefinition
@@ -96,3 +96,10 @@ class ProcessUpdate(FlexModel):
   deleted_phases: List[str]
   phase_data: list[PhaseRecord] | None = None
   step_data: list[Step] | None = None
+
+class ProcessTaskDefinition(BaseModel):
+  task_type_key: str
+  task_name: str
+  task_description: str | None = None
+  before_phase: str | None = None
+  after_phase: str | None = None
