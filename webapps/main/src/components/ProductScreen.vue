@@ -78,6 +78,10 @@ export default {
           title: this.$t('product.tabs.process'),
         },
         {
+          name: 'processTasks',
+          title: this.$t('product.tabs.tasks'),
+        },
+        {
           name: 'bom',
           title: this.$t('product.tabs.bom'),
         },

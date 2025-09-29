@@ -707,6 +707,7 @@ export default {
       bom: 'bom',
       home: 'parameters',
       process: 'process',
+      tasks: 'tasks',
     },
     technical_batch: 'technical batch',
     update_image: 'update image',

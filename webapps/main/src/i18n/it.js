@@ -717,6 +717,7 @@ export default {
       bom: 'distinta',
       home: 'parametri',
       process: 'processo',
+      tasks: 'compiti',
     },
     technical_batch: 'lotto tecnico',
     update_image: 'modifica immagine',

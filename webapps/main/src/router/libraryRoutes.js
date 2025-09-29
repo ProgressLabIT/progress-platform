@@ -41,6 +41,11 @@ const libraryRoutes = [
             component: () => import('@/views/ProductionProcess.vue'),
           },
           {
+            path: 'tasks',
+            name: 'processTasks',
+            component: () => import('@/views/ProcessTasks.vue'),
+          },
+          {
             path: 'bom',
             name: 'bom',
             component: () => import('@/views/ProductBom.vue'),
