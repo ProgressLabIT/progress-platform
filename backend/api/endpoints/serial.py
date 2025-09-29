@@ -1,5 +1,6 @@
 import traceback
 import json
+import re
 
 from base64 import b64decode
 from fastapi import APIRouter, HTTPException, Query, Depends
@@ -16,6 +17,20 @@ from utils.dhr import generate_dhr_for_serial
 from pypdf import PdfReader, PdfWriter
 
 router = APIRouter()
+
+
+def sanitize_filename(filename):
+  """
+  Sanitize filename for use in HTTP headers by removing or replacing invalid characters
+  """
+  # Remove or replace characters that are not allowed in HTTP headers
+  # Keep only alphanumeric, spaces, hyphens, underscores, and dots
+  sanitized = re.sub(r'[^\w\s\-_.]', '_', filename)
+  # Replace multiple consecutive spaces/underscores with single underscore
+  sanitized = re.sub(r'[\s_]+', '_', sanitized)
+  # Remove leading/trailing underscores
+  sanitized = sanitized.strip('_')
+  return sanitized
 
 
 @router.get('/serial-field',
@@ -353,7 +368,9 @@ def get_device_history_record(serial_key: str, include_attachments: bool = False
     main_serial_data = db.collection('Serial').get(serial_key)
     serial_code = main_serial_data['code'] if main_serial_data else None
 
-    filename = f"DHR_{serial_code or serial_key}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+    raw_filename = f"DHR_{serial_code or serial_key}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+    filename = sanitize_filename(raw_filename)
+
     return Response(
         content=output.getvalue(),
         media_type='application/pdf',
