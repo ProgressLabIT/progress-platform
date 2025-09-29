@@ -42,7 +42,8 @@ export default boot(({ app, store }) => {
     },
     (error) => {
       if (error) {
-        if (error.response.status === 401) {
+        // Check if error.response exists before accessing its properties
+        if (error.response && error.response.status === 401) {
           // Do not trigger logout if the request is to whoami or session endpoints
           if (
             error.config.url !== 'whoami' &&
