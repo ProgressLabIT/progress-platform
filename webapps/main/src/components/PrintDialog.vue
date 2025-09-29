@@ -197,7 +197,7 @@
 <script setup>
 import { generate } from '@pdfme/generator';
 import { useDialogPluginComponent } from 'quasar';
-import { nextTick, ref, reactive } from 'vue';
+import { nextTick, ref, reactive, toRaw } from 'vue';
 import VuePdfEmbed from 'vue-pdf-embed';
 import { api } from '@/boot/axios';
 import BaseDialog from '@/components/BaseDialog.vue';
@@ -559,8 +559,14 @@ async function goToPreview() {
     console.log('Template:', template);
     console.log('Inputs:', inputs);
 
+    const cleanTemplate = {
+      basePdf: template.basePdf,
+      schemas: toRaw(template.schemas || []),
+      columns: toRaw(template.columns ? [...template.columns] : []),
+    };
+
     previewSrc.value = await generate({
-      template,
+      template: cleanTemplate,
       inputs,
     });
   } catch (error) {

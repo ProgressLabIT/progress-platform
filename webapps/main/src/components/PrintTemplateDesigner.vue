@@ -124,7 +124,7 @@
 import { BLANK_PDF } from '@pdfme/common';
 import { Designer } from '@pdfme/ui';
 import { cloneDeep } from 'lodash';
-import { computed, ref, watch } from 'vue';
+import { computed, ref, watch, toRaw } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useStore } from 'vuex';
 import { api } from '@/boot/axios';
@@ -242,8 +242,8 @@ function initDesigner() {
   // Create a clean, cloneable version of the template
   const cleanTemplate = {
     basePdf: workingTemplate.value.template.basePdf,
-    schemas: JSON.parse(JSON.stringify(workingTemplate.value.template.schemas || [])),
-    columns: workingTemplate.value.template.columns ? [...workingTemplate.value.template.columns] : []
+    schemas: toRaw(workingTemplate.value.template.schemas || []),
+    columns: toRaw(workingTemplate.value.template.columns ? [...workingTemplate.value.template.columns] : [])
   };
 
   designer = new Designer({
