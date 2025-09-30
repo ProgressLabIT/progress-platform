@@ -47,7 +47,7 @@ class BaseEvent(ABC):
     return cls.InfoModel
 
   @classmethod
-  def create_as_child(cls, parent_event: EventModel, new_event_data: 'cls.InfoModel') -> Self:
+  def create_as_child(cls, parent_event: EventModel, new_event_data: EventInfoModel | dict) -> Self:
     """
     Create a child event from an existing event, passing event group id, transaction, and user/session data.
     """
@@ -70,7 +70,7 @@ class BaseEvent(ABC):
     shared_data: EventInfoModel,
     event_data: list[dict],
     tx: TransactionDatabase | None = None,
-    ) -> None:
+    ) -> list:
     """
     Generate multiple events from a list of event data sharing the same transaction and group id
     without the need to have a single primary event.
@@ -90,12 +90,15 @@ class BaseEvent(ABC):
       try:
         event_classes = [get_event_class(data.get('event_type')) for data in event_data]
         collections = set(sum((event_class.get_tx_collections() for event_class in event_classes), []))
+        # Ensure event collections are included since each event will store its Event record
+        collections.update({'Event', 'event_source'})
       except KeyError:
         raise ValueError('Event type is required')
 
       tx = db.begin_transaction(write=collections)
 
     # Create and process each event
+    created_events = []
     for data in event_data:
       try:
         event_type = data.get('event_type')
@@ -107,12 +110,19 @@ class BaseEvent(ABC):
       except KeyError:
         raise ValueError(f'Invalid event type: {event_type}')
 
-      context = EventModel(tx=tx, info=shared_data)
-      event = event_class.create_as_child(context=context, new_event_data=data)
+      # Build child event info using shared_data and override with specific event data
+      info_data = shared_data.model_dump()
+      info_data['primary'] = False
+      info_data.update(data)
+
+      event = event_class(info=info_data, tx=tx)
       event.save()
+      created_events.append(event)
 
     if commit:
       tx.commit_transaction()
+
+    return created_events
 
 
   # ================================

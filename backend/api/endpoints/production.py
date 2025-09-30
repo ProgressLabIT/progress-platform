@@ -22,6 +22,10 @@ from utils.production import (
   update_target_queue
 )
 from utils.traceability import _update_job_progress, Queries as TraceabilityQueries
+from events.collaboration.task_created import TaskCreatedEvent
+from events.collaboration.task_linked import TaskLinkedEvent
+from models.event import EventInfoModel, EventType
+from events.base_event import BaseEvent
 
 
 router = APIRouter()
@@ -31,10 +35,13 @@ router = APIRouter()
 
 @router.post('/work-order',
     dependencies=[Depends(auth.verify_token)])
-async def create_work_order(new_wo: WorkOrderNew):
+async def create_work_order(new_wo: WorkOrderNew, token: auth.TokenData = Depends(auth.verify_token)):
 
   # Initialize transaction
-  tx = db.begin_transaction(write=['WorkOrder', 'Job', 'Queue', 'Counter'], read=['Phase', 'Product', 'Config'])
+  tx = db.begin_transaction(
+    write=['WorkOrder', 'Job', 'Queue', 'Counter', 'Task', 'task_rel', 'Event'],
+    read=['Phase', 'Product', 'Config', 'TaskType']
+  )
   wo_coll = tx.collection('WorkOrder')
   product_coll = tx.collection('Product')
 
@@ -101,6 +108,77 @@ async def create_work_order(new_wo: WorkOrderNew):
       new_wo.serial_code_on_creation = product_data.serial_code_on_creation
 
     new_wo_record = create_wo_record(tx, new_wo)
+
+    # 1.b Create process-related collaboration tasks if defined on product
+    try:
+      task_sequence: list[WorkOrderTaskDefinition] = []
+
+      if product_data.process_tasks:
+        # Build creation events
+        shared_info = EventInfoModel(
+          event_type=EventType.TASK_CREATED,
+          primary=False,
+          user_key=token.consumer_key,
+          user_session_key=token.token_key
+        )
+
+        creation_events = []
+        for tdef in product_data.process_tasks:
+          creation_events.append(dict(
+            event_type = EventType.TASK_CREATED,
+            task_type_key = tdef.task_type_key,
+            title = tdef.task_name,
+            description = tdef.task_description,
+            start_from = new_wo.start_from,
+            due_by = new_wo.due_by,
+          ))
+
+        created = BaseEvent.spawn_multiple(shared_data=shared_info, event_data=creation_events, tx=tx)
+
+        # Collect keys and prepare links + task_sequence
+        link_events = []
+        for idx, created_event in enumerate(created or []):
+          created_task_key = created_event.info.task_key
+          tdef = product_data.process_tasks[idx]
+
+          task_sequence.append(WorkOrderTaskDefinition(
+            task_key=created_task_key,
+            before_phase=tdef.before_phase,
+            after_phase=tdef.after_phase
+          ))
+
+          link_events.append(dict(
+            event_type = EventType.TASK_LINKED,
+            task_key = created_task_key,
+            link_type = 'work_order',
+            link_key = new_wo_record.key,
+          ))
+
+        # Spawn link events
+        if link_events:
+          BaseEvent.spawn_multiple(shared_data=shared_info, event_data=link_events, tx=tx)
+
+        # Merge with any client-provided task_sequence (append by default)
+        if new_wo.task_sequence:
+          task_sequence = list(new_wo.task_sequence) + task_sequence
+
+        # Persist on WorkOrder
+        tx.collection('WorkOrder').update(dict(
+          _key=new_wo_record.key,
+          task_sequence=[t.model_dump() for t in task_sequence]
+        ))
+    except Exception:
+      tx.abort_transaction()
+      status_code=500
+      response = dict(
+        status=status_code,
+        message="There was a problem creating process-related tasks",
+        error=traceback.format_exc()
+      )
+      raise HTTPException(
+        status_code=status_code,
+        detail=response
+      )
 
   except StopIteration:
     tx.abort_transaction()

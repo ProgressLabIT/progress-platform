@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 
 from events.base_event import BaseEvent, EventInfoModel
 from models.event import EventType
@@ -15,8 +15,8 @@ class TaskCreatedEvent(BaseEvent):
     title: str | None = None
     description: str | None = None
     assigned_to: list[TaskAssignment] | None = []
-    start_from: date | None = None
-    due_by: date | None = None
+    start_from: date | datetime | None = None
+    due_by: date | datetime | None = None
 
   @classmethod
   def get_tx_collections(self):
