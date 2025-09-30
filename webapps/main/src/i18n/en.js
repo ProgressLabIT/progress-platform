@@ -860,6 +860,11 @@ export default {
   task_type: 'Task type | Task types',
   task_type_delete_question: 'Are you sure you want to delete this task type?',
   task_type_new: 'New task type',
+  processTasks: {
+    new_task: 'New task',
+    before_phase: 'Before phase',
+    after_phase: 'After phase',
+  },
   edit_assignments: 'Edit assignments',
   no_assignees: 'No assignees',
   add_user: 'Add user',

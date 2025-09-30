@@ -870,6 +870,11 @@ export default {
   task_type: 'tipo di compito | tipi di compito',
   task_type_delete_question: 'Sei sicuro di voler eliminare questo tipo di compito?',
   task_type_new: 'Nuovo tipo di compito',
+  processTasks: {
+    new_task: 'Nuovo compito',
+    before_phase: 'Prima della fase',
+    after_phase: 'Dopo la fase',
+  },
   task_reopen: 'Riapri compito',
   task_reopen_confirmation: 'Sei sicuro di voler riaprire questo compito?',
   task_reopen_success: 'Compito riaperto con successo',

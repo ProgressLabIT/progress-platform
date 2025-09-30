@@ -13,7 +13,7 @@
 
       <div class="q-px-lg">
         <q-btn color="theme-blue" @click="showNewTaskDialog = true">
-          {{ $t('processTasks.newTask') }}
+          {{ $t('processTasks.new_task') }}
         </q-btn>
       </div>
     </div>
@@ -21,31 +21,32 @@
     <BaseDialog :show="showNewTaskDialog" @close.stop="cancelNewTaskDialog">
       <q-card class="surface1 column">
         <q-card-section class="display text-h3 col-auto">
-          {{ $t('processTasks.title') }}
+          {{ $t('create_task') }}
         </q-card-section>
         <q-card-section class="column q-gutter-y-md">
          <BaseAutocompleteTaskType
           v-model="newTask.task_type_key"
-          :label="$t('processTasks.taskType')"
+          :label="$t('task_type')"
           filled
           clearable
          />
           <q-input
             v-model="newTask.name"
-            :label="$t('processTasks.name')"
+            :label="$t('name')"
             filled
             clearable
           />
           <q-input
             v-model="newTask.description"
-            :label="$t('processTasks.description')"
+            :label="$t('description')"
             filled
             clearable
           />
           <q-select
             v-model="newTask.before_phase"
-            :label="$t('processTasks.beforePhase')"
+            :label="$t('processTasks.before_phase')"
             :options="filteredBeforePhases"
+            :disable="filteredBeforePhases.length === 0"
             option-value="_key"
             option-label="alias"
             filled
@@ -55,8 +56,9 @@
           />
           <q-select
             v-model="newTask.after_phase"
-            :label="$t('processTasks.afterPhase')"
+            :label="$t('processTasks.after_phase')"
             :options="filteredAfterPhases"
+            :disable="filteredAfterPhases.length === 0"
             option-value="_key"
             option-label="alias"
             filled
@@ -67,10 +69,10 @@
         </q-card-section>
         <q-card-section>
           <q-btn color="theme-grey" @click="cancelNewTaskDialog">
-            {{ $t('processTasks.cancel') }}
+            {{ $t('cancel') }}
           </q-btn>
           <q-btn color="theme-blue" @click="createTask">
-            {{ $t('processTasks.createTask') }}
+            {{ $t('create_task') }}
           </q-btn>
         </q-card-section>
       </q-card>
