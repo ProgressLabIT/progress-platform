@@ -3,7 +3,7 @@ from enum import Enum
 from random import randrange, uniform
 from typing import Any
 
-from pydantic import BaseModel, ByteSize, Field
+from pydantic import BaseModel, ByteSize, Field, model_validator
 
 from models.base_models import FlexModel
 from models.process import ProcessTaskDefinition
@@ -75,6 +75,33 @@ class ProductDetails(ProductBaseData):
   kpi_window_type: KPIWindowType | None = KPIWindowType.COUNT
 
   metadata: list[ProductMetadataField] | None = None
+
+
+  @model_validator(mode='after')
+  def validate_process_tasks(self):
+    """Validate that process tasks reference valid phases and define valid intervals"""
+    if not self.process_tasks:
+      return self
+
+    process = self.process_phases
+    valid_phase_keys = set(process)
+
+    for task in self.process_tasks:
+      if task.before_phase and task.before_phase not in valid_phase_keys:
+        raise ValueError(f"Phase {task.before_phase} not found in product process")
+      if task.after_phase and task.after_phase not in valid_phase_keys:
+        raise ValueError(f"Phase {task.after_phase} not found in product process")
+
+      # Ensure after_phase and before_phase define a valid interval in the production process
+      # such as task should be executed in the range (after_phase, before_phase)
+      # phases are not included in the range
+      if task.before_phase is not None and task.after_phase is not None:
+        # We already checked that after_phase and before_phase are in the process
+        after_index = process.index(task.after_phase)
+        before_index = process.index(task.before_phase)
+        if before_index <= after_index:
+          raise ValueError("Before and after phase must define a valid interval for the execution of the task. You have provided an invalid interval where before_phase is before after_phase.")
+    return self
 
 class ProductDoc(FlexModel):
   name: str

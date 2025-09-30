@@ -9,7 +9,7 @@ from utils import auth
 from fastapi.encoders import jsonable_encoder
 
 from models.process import *
-from models.product import ProductBaseData
+from models.product import ProductBaseData, ProductDetails
 from utils import dt
 from utils.api import APIResponse
 from utils.db import db
@@ -711,3 +711,67 @@ async def delete_step_media(
       status_code = status_code,
       detail = response
     )
+
+
+# ===========================================================================
+
+@router.put('/product/{product_key}/process/tasks',
+    dependencies=[Depends(auth.verify_token)])
+async def update_process_tasks(
+    product_key: str,
+    tasks: list[ProcessTaskDefinition]
+):
+  """
+  Update the task definitions for a product's process.
+  Validation of task/phase relationships happens in the ProductDetails model.
+  """
+
+  try:
+    # Validate that product exists
+    product_data = db.collection('Product').get(product_key)
+    if product_data is None:
+      raise HTTPError(404, "Product not found")
+
+    # Validate that referenced task types exist
+    if tasks:
+      valid_task_type_keys = set(db.aql.execute("FOR t IN TaskType RETURN t._key"))
+      for task in tasks:
+        if task.task_type_key not in valid_task_type_keys:
+          raise HTTPError(400, f"Task type '{task.task_type_key}' not found")
+
+    # Create a model instance with updated tasks to trigger validation
+    # This validates that tasks reference valid phases and define valid intervals
+    updated_data = {
+      **product_data,
+      'process_tasks': [task.model_dump() for task in tasks]
+    }
+    validated_product = ProductDetails(**updated_data)
+
+    # Update product with VALIDATED tasks
+    updated_product = db.collection('Product').update(dict(
+      _key=product_key,
+      process_tasks=jsonable_encoder(validated_product.process_tasks)
+    ), return_new=True)['new']
+
+    return APIResponse(
+      message="Process tasks updated successfully",
+      detail=updated_product['process_tasks']
+    )
+
+  except ValidationError as e:
+    # Pydantic validation failed - convert to user-friendly HTTP error
+    error_messages = []
+    for error in e.errors():
+      # Extract the actual error message
+      error_messages.append(error.get('msg', str(error)))
+
+    raise HTTPError(422, f"Validation failed: {'; '.join(error_messages)}")
+
+  except HTTPError:
+    # Re-raise our custom HTTP errors (404, 400)
+    raise
+
+  except Exception as e:
+    # Catch any other unexpected errors
+    error_str = traceback.format_exc()
+    raise HTTPError(500, f"Could not update process tasks: {error_str}")
