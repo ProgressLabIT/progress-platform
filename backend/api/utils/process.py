@@ -60,6 +60,22 @@ class Queries:
   """
 
 
+  GET_PROCESS_TASKS = """
+    FOR p IN Product
+    FILTER p._key == @product_key
+    FOR t IN NOT_NULL(p.process_tasks, [])
+    LET task_type = FIRST(
+      FOR tt IN TaskType
+      FILTER tt._key == t.task_type_key
+      RETURN tt
+    )
+    RETURN MERGE(t, {
+      task_type_name: task_type.name,
+      task_type_icon: task_type.icon
+    })
+  """
+
+
 
 def delete_phase(tx: TransactionDatabase, phase_key: str):
   current_time = timestamp()

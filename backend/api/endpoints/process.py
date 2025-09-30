@@ -715,6 +715,18 @@ async def delete_step_media(
 
 # ===========================================================================
 
+
+
+@router.get('/product/{product_key}/process/tasks',
+    dependencies=[Depends(auth.verify_token)])
+async def get_process_tasks(product_key: str):
+  return list(db.aql.execute(
+    Queries.GET_PROCESS_TASKS,
+    bind_vars=dict(product_key=product_key)
+  ))
+
+
+
 @router.put('/product/{product_key}/process/tasks',
     dependencies=[Depends(auth.verify_token)])
 async def update_process_tasks(
