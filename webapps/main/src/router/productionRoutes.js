@@ -52,6 +52,12 @@ const productionRoutes = [
                 component: () => import('@/views/WorkOrderJobs.vue'),
               },
               {
+                path: 'tasks',
+                name: 'workOrderTasks',
+                component: () => import('../views/WorkOrderTasks.vue'),
+                props: true,
+              },
+              {
                 path: 'bom',
                 name: 'workOrderBom',
                 component: () => import('@/views/WorkOrderBom.vue'),

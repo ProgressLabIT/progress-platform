@@ -65,12 +65,22 @@ class Queries:
         RETURN MERGE(b, { manage_inventory })
       )
 
+      LET tasks = (
+        FOR t IN wo.tasks
+        LET task = FIRST(FOR task in Task FILTER task._key == t.task_key RETURN task)
+        LET task_type = FIRST(FOR tt IN TaskType FILTER tt._key == task.task_type_key RETURN tt)
+        RETURN MERGE(t, task, {
+          task_type_name: task_type.name,
+          task_type_icon: task_type.icon
+        })
+      )
+
       LET processing_time = SUM(jobs[*].processing_time)
       LET processing_cost = SUM(jobs[*].processing_cost)
       LET total_cost = processing_cost + wo.material_cost
 
       // Return enriched wo data
-      RETURN MERGE(wo, { jobs, processing_time, processing_cost, total_cost, wo_bom })
+      RETURN MERGE(wo, { jobs, processing_time, processing_cost, total_cost, wo_bom, tasks })
   """
 
   GET_WORK_ORDER_TRACEABILITY_DATA = """

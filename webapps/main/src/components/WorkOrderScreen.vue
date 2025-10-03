@@ -79,6 +79,7 @@ export default {
       show_modal: true,
       tabs: [
         'workOrderJobs',
+        'workOrderTasks',
         'workOrderBom',
         'workOrderIssues',
         'workOrderNotes',

@@ -1084,6 +1084,7 @@ export default {
       workOrderHistory: 'storico',
       workOrderJobs: 'lavori',
       workOrderIssues: 'segnalazioni',
+      workOrderTasks: 'compiti',
       workOrderNotes: 'Note',
       workOrderMessages: 'Messaggi',
       workOrderTraceability: 'Tracciabilità',

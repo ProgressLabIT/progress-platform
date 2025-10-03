@@ -1070,6 +1070,7 @@ export default {
       workOrderHistory: 'history',
       workOrderJobs: 'jobs',
       workOrderIssues: 'issues',
+      workOrderTasks: 'tasks',
       workOrderNotes: 'Notes',
       workOrderMessages: 'Messages',
       workOrderTraceability: 'Traceability',
