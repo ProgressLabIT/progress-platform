@@ -1,7 +1,7 @@
 <template>
   <div ref="ganttContainer" class="col q-my-lg" :style="{ '--gantt-height': containerHeight, '--column-height': columnHeight }">
-    <q-scroll-area :style="{ height: containerHeight }">
-      <div class="gantt-wrapper" :style="{ border: '1px solid grey', height: containerHeight }">
+    <q-scroll-area :style="{ height: containerHeight, border: '1px solid grey' }">
+      <div class="gantt-wrapper" :style="{ height: containerHeight }">
         <!-- PHASES HEADER -->
         <div class="gantt-header" :style="ganttGridStyle">
           <div class="spacer-label"></div>
@@ -142,7 +142,7 @@ function getTaskGridStyle(task, taskIndex) {
   return {
     gridColumn: `${startCol} / ${endCol + 1}`,
     gridRow: rowNum,
-    backgroundColor: getTaskType(task.task_type_key)?.color || 'var(--q-primary)',
+    backgroundColor: 'var(--theme-blue)',
     borderRadius: '4px',
     padding: '0 8px',
     height: '40px',
