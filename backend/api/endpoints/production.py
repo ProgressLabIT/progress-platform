@@ -127,8 +127,8 @@ async def create_work_order(new_wo: WorkOrderNew, token: auth.TokenData = Depend
           creation_events.append(dict(
             event_type = EventType.TASK_CREATED,
             task_type_key = tdef.task_type_key,
-            title = tdef.task_name,
-            description = tdef.task_description,
+            title = tdef.title,
+            description = tdef.description,
             start_from = new_wo.start_from,
             due_by = new_wo.due_by,
           ))

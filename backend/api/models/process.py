@@ -99,7 +99,7 @@ class ProcessUpdate(FlexModel):
 
 class ProcessTaskDefinition(BaseModel):
   task_type_key: str
-  task_name: str
-  task_description: str | None = None
+  title: str
+  description: str | None = None
   before_phase: str | None = None
   after_phase: str | None = None

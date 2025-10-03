@@ -2,12 +2,12 @@
   <div class="column full-height q-pa-md">
 
     <!-- PRODUCTT CODE AND DESCRIPTION -->
-      <div class="text-h1 display highlight">
-        {{ productData.code }}
-      </div>
-      <div class="text-body1">
-        {{ productData.description }}
-      </div>
+    <div class="text-h1 display highlight">
+      {{ productData.code }}
+    </div>
+    <div class="text-body1">
+      {{ productData.description }}
+    </div>
 
     <!-- GANTT CHART -->
     <ProcessTasksViewer
@@ -44,7 +44,7 @@
       <q-card-section class="row items-center q-pb-none">
         <q-icon v-if="dialogMode === 'edit'" :name="getTaskType(currentTask.task_type_key)?.icon" class="q-mr-md" />
         <div class="text-h3">
-          {{ dialogMode === 'create' ? $t('create_task') : currentTask.name }}
+          {{ dialogMode === 'create' ? $t('create_task') : currentTask.title }}
         </div>
         <q-space />
         <q-btn icon="mdi-close" flat round dense @click="cancelTaskDialog" />
@@ -59,13 +59,13 @@
           key-only
         />
         <q-input
-          v-model="currentTask.task_name"
+          v-model="currentTask.title"
           :label="$t('name')"
           filled
           clearable
         />
         <q-input
-          v-model="currentTask.task_description"
+          v-model="currentTask.description"
           :label="$t('description')"
           filled
           clearable
@@ -140,8 +140,8 @@ const currentTask = reactive({});
 const setEmptyTaskData = () => {
   Object.assign(currentTask, {
     task_type_key: null,
-    task_name: '',
-    task_description: '',
+    title: '',
+    description: '',
     before_phase: null,
     after_phase: null,
   })
@@ -187,8 +187,8 @@ function openEditTaskDialog(task) {
   // Copy task data to currentTask
   Object.assign(currentTask, {
     task_type_key: task.task_type_key,
-    task_name: task.task_name,
-    task_description: task.task_description,
+    title: task.title,
+    description: task.description,
     before_phase: task.before_phase,
     after_phase: task.after_phase,
   });
@@ -212,8 +212,8 @@ function updateTask() {
     if (editingTaskIndex.value !== -1) {
       Object.assign(processTasks.value[editingTaskIndex.value], {
         task_type_key: currentTask.task_type_key,
-        task_name: currentTask.task_name,
-        task_description: currentTask.task_description,
+        title: currentTask.title,
+        description: currentTask.description,
         before_phase: currentTask.before_phase,
         after_phase: currentTask.after_phase,
       });

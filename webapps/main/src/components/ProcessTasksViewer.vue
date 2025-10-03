@@ -27,14 +27,14 @@
           <!-- Task items -->
           <div
             v-for="(task, taskIndex) in sortedTasks"
-            :key="task._key || `${task.task_name}-${taskIndex}`"
+            :key="task._key || `${task.title}-${taskIndex}`"
             class="gantt-task"
             :class="{ 'selected': selectedTask && selectedTask._key === task._key }"
             :style="getTaskGridStyle(task, taskIndex)"
             @click="$emit('taskClick', task)"
           >
-            <q-icon :name="getTaskType(task.task_type_key)?.icon" class="task-icon" />
-            <span class="task-name">{{ task.task_name }}</span>
+            <q-icon :name="task.task_type_icon" class="task-icon" />
+            <span class="task-name">{{ task.title }}</span>
           </div>
         </div>
       </div>
@@ -44,7 +44,6 @@
 
 <script setup>
 import { computed, ref, onMounted, nextTick } from 'vue';
-import { useTaskTypeStore } from '@/stores/taskType';
 
 const props = defineProps({
   processPhases: {
@@ -63,12 +62,6 @@ const props = defineProps({
 });
 
 defineEmits(['taskClick']);
-
-const taskTypeStore = useTaskTypeStore();
-
-function getTaskType(task_type_key) {
-  return taskTypeStore.getTaskTypeByKey(task_type_key);
-}
 
 // Get container height
 const ganttContainer = ref(null);
