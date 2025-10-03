@@ -1,16 +1,15 @@
 import traceback
+import uuid
 from datetime import datetime
 from typing import List
 
 from fastapi import APIRouter, Body, HTTPException, Query, Depends
 from utils import auth
-from fastapi.encoders import jsonable_encoder
 
 from models.bom import WOBomLine
 from models.product import ProductDetails
 from models.production import *
 from utils.api import APIResponse
-from utils.bom import define_bom_line_for_db
 from utils.counter import _generate_counter
 from utils.db import db
 from utils.dt import timestamp
@@ -22,8 +21,6 @@ from utils.production import (
   update_target_queue
 )
 from utils.traceability import _update_job_progress, Queries as TraceabilityQueries
-from events.collaboration.task_created import TaskCreatedEvent
-from events.collaboration.task_linked import TaskLinkedEvent
 from models.event import EventInfoModel, EventType
 from events.base_event import BaseEvent
 
@@ -107,11 +104,12 @@ async def create_work_order(new_wo: WorkOrderNew, token: auth.TokenData = Depend
     if product_data.serial_code_on_creation:
       new_wo.serial_code_on_creation = product_data.serial_code_on_creation
 
-    new_wo_record = create_wo_record(tx, new_wo)
-
     # 1.b Create process-related collaboration tasks if defined on product
     try:
-      task_sequence: list[WorkOrderTaskDefinition] = []
+      process_tasks: list[WorkOrderTaskDefinition] = []
+      link_events = []
+      event_group=str(uuid.uuid4())
+
 
       if product_data.process_tasks:
         # Build creation events
@@ -119,7 +117,8 @@ async def create_work_order(new_wo: WorkOrderNew, token: auth.TokenData = Depend
           event_type=EventType.TASK_CREATED,
           primary=False,
           user_key=token.consumer_key,
-          user_session_key=token.token_key
+          user_session_key=token.token_key,
+          event_group=event_group
         )
 
         creation_events = []
@@ -133,40 +132,54 @@ async def create_work_order(new_wo: WorkOrderNew, token: auth.TokenData = Depend
             due_by = new_wo.due_by,
           ))
 
+
         created = BaseEvent.spawn_multiple(shared_data=shared_info, event_data=creation_events, tx=tx)
 
-        # Collect keys and prepare links + task_sequence
-        link_events = []
+        # Collect created tasks
         for idx, created_event in enumerate(created or []):
           created_task_key = created_event.info.task_key
           tdef = product_data.process_tasks[idx]
 
-          task_sequence.append(WorkOrderTaskDefinition(
+          process_tasks.append(WorkOrderTaskDefinition(
             task_key=created_task_key,
             before_phase=tdef.before_phase,
             after_phase=tdef.after_phase
           ))
 
+          # Prepare link events for later
           link_events.append(dict(
             event_type = EventType.TASK_LINKED,
             task_key = created_task_key,
             link_type = 'work_order',
-            link_key = new_wo_record.key,
+            link_key = None,  # Will be updated after WO creation
           ))
 
-        # Spawn link events
-        if link_events:
-          BaseEvent.spawn_multiple(shared_data=shared_info, event_data=link_events, tx=tx)
+      # Merge all tasks: client-provided + process tasks
+      all_tasks = [_ for _ in getattr(new_wo, 'tasks', [])]
+      all_tasks.extend(process_tasks)
 
-        # Merge with any client-provided task_sequence (append by default)
-        if new_wo.task_sequence:
-          task_sequence = list(new_wo.task_sequence) + task_sequence
+      # Update new_wo with all tasks
+      if all_tasks:
+        new_wo.tasks = all_tasks
 
-        # Persist on WorkOrder
-        tx.collection('WorkOrder').update(dict(
-          _key=new_wo_record.key,
-          task_sequence=[t.model_dump() for t in task_sequence]
-        ))
+      # Create work order record once with all tasks included
+      new_wo_record = create_wo_record(tx, new_wo)
+
+      # Spawn link events if we created process tasks
+      if link_events:
+        # Update link events with the actual work order key
+        for event in link_events:
+          event['link_key'] = new_wo_record.key
+
+        shared_info = EventInfoModel(
+          event_type=EventType.TASK_LINKED,
+          primary=False,
+          user_key=token.consumer_key,
+          user_session_key=token.token_key,
+          event_group=event_group
+        )
+        BaseEvent.spawn_multiple(shared_data=shared_info, event_data=link_events, tx=tx)
+
     except Exception:
       tx.abort_transaction()
       status_code=500

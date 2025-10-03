@@ -52,7 +52,7 @@ class WorkOrderNew(BaseModel):
   product_code: str | None = None
   product_description: str | None = None
   phase_sequence: list[str] | None = []
-  task_sequence: list[WorkOrderTaskDefinition] | None = []
+  tasks: list[WorkOrderTaskDefinition] | None = []
   qt_planned: PositiveFloat
   priority: bool | None = False
   project_code: str | None = None
