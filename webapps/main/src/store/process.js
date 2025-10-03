@@ -25,6 +25,19 @@ const process = {
       state.temp = _cloneDeep(process);
     },
 
+    SET_STEP_MEDIA(state, { stepKey, media }) {
+      function setOnSteps(steps) {
+        steps?.forEach((step) => {
+          if (step._key === stepKey) {
+            step.media = media;
+          }
+        });
+      }
+
+      state.temp?.forEach((phase) => setOnSteps(phase.steps));
+      state.saved?.forEach((phase) => setOnSteps(phase.steps));
+    },
+
     ADD_TEMP_PHASE_TEMPLATE(state, { phase_index, template }) {
       state.temp[phase_index].print_templates.push({ ...template, temp: true });
     },
@@ -126,42 +139,26 @@ const process = {
     },
 
     async getProcess({ commit }, product_key) {
-      async function loadStepMedia(step) {
-        const { data } = await api.get(`step/${step._key}/media`);
-        step.media = data.map((filename) => ({
-          filename,
-          src: `/media/step/${step._key}/${filename}`,
-          temp: false,
-          trash: false,
-        }));
-      }
-
-      async function loadStepPrintTemplates(step) {
-        const { data } = await api.get('print-template', {
-          params: { context: 'step', context_key: step._key },
-        });
-        step.print_templates = data.map((template) => ({
-          ...template,
-          temp: false,
-          trash: false,
-        }));
-      }
-
       const { data: phases } = await api.get(`product/${product_key}/process`);
-      const promises = [];
-      phases.forEach((phase) => {
-        phase.steps.forEach((step) => {
-          if (step.type === 'instruction') {
-            promises.push(loadStepMedia(step));
-          }
-
-          if (step.type === 'form') {
-            promises.push(loadStepPrintTemplates(step));
-          }
-        });
-      });
-      await Promise.all(promises);
+      // Backend now includes print_templates; we just commit phases as-is
       commit('LOAD_SAVED_PROCESS', phases);
+    },
+
+    async loadStepMedia({ commit }, stepKey) {
+      if (!stepKey) {
+        return false;
+      }
+
+      const { data } = await api.get(`step/${stepKey}/media`);
+      const media = data.map((filename) => ({
+        filename,
+        src: `/media/step/${stepKey}/${encodeURIComponent(filename)}`,
+        temp: false,
+        trash: false,
+      }));
+
+      commit('SET_STEP_MEDIA', { stepKey, media });
+      return true;
     },
 
     async saveTempProcess({ dispatch }, data) {

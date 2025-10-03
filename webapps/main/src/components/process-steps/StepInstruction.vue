@@ -5,7 +5,7 @@
 
   <div class="row q-col-gutter-md q-mt-md">
     <div
-      v-for="(media, index) in stepModel.media"
+      v-for="(media, index) in (stepModel.media || [])"
       :key="index"
       class="col-3 items-center column"
       :class="{ undraggable: !editMode }"
