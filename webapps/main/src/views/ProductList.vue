@@ -159,27 +159,14 @@ export default {
   },
 
   watch: {
-    search_string: {
+    filters: {
       immediate: true,
-      handler: 'fetchProducts',
-    },
-
-    active_only: {
-      immediate: true,
-      handler: 'fetchProducts',
-    },
-
-    tag_search: {
-      immediate: true,
+      deep: true,
       handler: 'fetchProducts',
     },
   },
 
-  created() {
-    this.fetchProducts().then(() => {
-      this.vuex_ready = true;
-    });
-  },
+  created() {},
 
   methods: {
     fetchProducts() {
@@ -188,6 +175,7 @@ export default {
         this.offset = 0;
         this.$store.dispatch('loadProductList', this.filters).then(() => {
           setTimeout(() => (this.loading = false), 2000);
+          this.vuex_ready = true;
           resolve();
         });
       });
