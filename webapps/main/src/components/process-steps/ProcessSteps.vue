@@ -213,6 +213,7 @@ watch(
 );
 onMounted(() => {
   initSortable();
+  maybeLoadMediaForCurrentStep();
 });
 function initSortable() {
   const container = document.querySelector('#steps');
@@ -261,6 +262,7 @@ watch(stepsModel, (steps) => {
 function handleStepClick(index) {
   currentStepIndex.value = index;
   isConfirmingDelete.value = false;
+  maybeLoadMediaForCurrentStep();
 }
 
 function addStep(type) {
@@ -285,6 +287,31 @@ const activeStepComponent = computed(() => {
 
   return stepTypeToComponentMap[currentStep.type];
 });
+
+watch(currentStepIndex, () => {
+  maybeLoadMediaForCurrentStep();
+});
+
+function maybeLoadMediaForCurrentStep() {
+  const currentStep = stepsModel.value[currentStepIndex.value];
+  if (!currentStep) {
+    return;
+  }
+
+  if (currentStep.type === 'instruction') {
+    // Backend does not include media list; we fetch only if media not yet set
+    if (Array.isArray(currentStep.media)) {
+      return;
+    }
+    store.dispatch('loadStepMedia', currentStep._key);
+    return;
+  }
+
+  if (currentStep.type === 'form') {
+    // Print templates are now included in the initial process payload
+    return;
+  }
+}
 
 function deleteStep(stepIndex) {
   // If deleting the last step, move the current step index back by one

@@ -22,7 +22,11 @@ class Queries:
 
       LET steps = (
         FOR step_key IN phase.step_sequence
-        RETURN UNSET(DOCUMENT(Step, step_key), '_id', '_rev')
+        LET print_templates = (
+          FOR t IN 1..1 OUTBOUND CONCAT('Step/', step_key) can_use_print_template
+          RETURN KEEP(t, '_key', 'name', 'description')
+        )
+        RETURN MERGE(UNSET(DOCUMENT(Step, step_key), '_id', '_rev'), { print_templates })
       )
 
       LET print_templates = (
