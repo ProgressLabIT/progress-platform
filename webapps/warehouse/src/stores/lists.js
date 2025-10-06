@@ -114,7 +114,7 @@ export const useListsStore = defineStore('lists', {
           // fetch movements and group them by list and product
           const params = new URLSearchParams()
           this.headers.forEach(l => params.append('list_key', l._key))
-          params.append('limit', 0)
+          params.append('limit', 100000)
           const movement_data = (await api.get('/movement', { params })).data.filter(m => m.type != 'reversal' && !m.inverse_movement_key)
           const productKeys = [...new Set(movement_data.map(m => m.product_key))]
           const traceabilityPromises = productKeys.map(async productKey => {
