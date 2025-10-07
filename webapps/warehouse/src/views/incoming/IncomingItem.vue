@@ -96,13 +96,11 @@ import IncomingItemPosition from 'app/src/components/lists/IncomingItemPosition.
 import IncomingItemConfirmation from 'app/src/components/lists/IncomingItemConfirmation.vue';
 import { printProductLabel } from 'app/src/lib/print';
 import { useListsStore } from 'stores/lists';
-import { useStore } from 'vuex';
-import { sendEvent } from '@/composables/event';
+import { sendEventsBulk } from '@/composables/bulkEvent';
 import { timestamp } from '@/lib/TimeHandling';
 import { Notify } from 'quasar';
 import { useRouter } from 'vue-router';
 
-const store = useStore();
 const lists = useListsStore();
 const { t: $t } = useI18n();
 const router = useRouter();
@@ -173,49 +171,35 @@ function prepareMovementUpdates() {
   return updates
 }
 
-function confirm() {
-  // Send events
-  let now = timestamp()
-  const session_data = store.state.session;
+async function confirm() {
+  const now = timestamp();
 
-  for (const update of prepareMovementUpdates()) {
-    sendEvent({
-      event_type: 'MOVEMENT_UPDATED',
-      timestamp: now,
-      event_data: {
-        user_key: session_data.user._key,
-        ...update,
-        start: now,
-        end: update.qt_confirmed === update.qt_planned ? now : null,
-      }
-    })
-    .then(() => {
-      Notify.create({
-        message: 'Movimenti registrati',
-        position: 'top',
-        color: 'theme-green',
-        timeout: 1500,
-      });
-    })
-    .catch((err) => {
-      Notify.create({
-        position: 'top',
-        timeout: 0,
-        message: err,
-        color: 'theme-orange',
-        actions: [
-          { label: 'Close', textColor: 'white', handler: () => undefined }
-        ]
-      });
+  // Build events array with just event-specific data
+  const events = prepareMovementUpdates().map(update => ({
+    event_type: 'MOVEMENT_UPDATED',
+    ...update,
+    start: now,
+    end: update.qt_confirmed === update.qt_planned ? now : null,
+  }));
+
+  try {
+    await sendEventsBulk(events, now);
+    Notify.create({
+      message: 'Movimenti registrati',
+      position: 'top',
+      color: 'theme-green',
+      timeout: 1500,
     });
+    // Back to list
+    router.push({ name: 'IncomingList', params: { listKey: router.currentRoute.value.params.listKey }})
+    // Refresh list movements
+    lists.loadListMovements(router.currentRoute.value.params.listKey);
+    // reset selection data in lists store (but keep headers and movements)
+    lists.selectedItem = undefined;
+    lists.tempQuantity = 0;
+    lists.tempSerials = [];
+  } catch (err) {
+    // Error already shown by sendEventsBulk
   }
-  // Back to list
-  router.push({ name: 'IncomingList', params: { listKey: router.currentRoute.value.params.listKey }})
-  // Refresh list movements
-  lists.loadListMovements(router.currentRoute.value.params.listKey);
-  // reset selection data in lists store (but keep headers and movements)
-  lists.selectedItem = undefined;
-  lists.tempQuantity = 0;
-  lists.tempSerials = [];
 }
 </script>

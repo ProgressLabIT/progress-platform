@@ -52,19 +52,16 @@
 
 <script setup>
 import { Notify } from 'quasar';
-import { useStore } from 'vuex';
 import { useTransferStore } from '@/stores/transfer';
-import { sendEvent } from 'app/src/composables/event.js';
+import { sendEventsBulk } from 'app/src/composables/bulkEvent.js';
 import { timestamp } from 'app/src/lib/TimeHandling';
 import ContentChip from '../ContentChip.vue';
 
 const transfer = useTransferStore();
-const store = useStore();
 
-function saveTransfer() {
+async function saveTransfer() {
   let movements = [];
-  const now = timestamp()
-  const session_data = store.state.session;
+  const now = timestamp();
 
   for (const item of transfer.contents) {
     const position_from_key = item.type === 'position' ? item.position_key : (transfer.startPosition?._key ?? item.path.slice(-1)[0].position_key);
@@ -85,40 +82,28 @@ function saveTransfer() {
       qt_confirmed: item.type === 'product' ? item.quantity : 1,
       status: 'completed',
       movement_type: 'transfer',
-      user_key: session_data.user._key,
       start: now,
       end: now,
     });
   }
 
-  for (const movement of movements) {
-    sendEvent({
-      event_type: 'MOVEMENT_COMPLETED',
-      event_data: {...movement},
-    })
-    .then(() => {
-      Notify.create({
-        message: 'Movimenti registrati',
-        position: 'top',
-        color: 'theme-green',
-        timeout: 1500,
-      });
-      transfer.$reset();
-    })
-    .catch(err => {
-      Notify.create({
-        message: err,
-        position: 'top',
-        color: 'theme-orange',
-        timeout: 0,
-        actions: [
-          {
-            label: 'Close', color: 'white', handler: () => undefined
-          }
-        ]
+  // Build events array with just event-specific data
+  const events = movements.map(movement => ({
+    event_type: 'MOVEMENT_COMPLETED',
+    ...movement,
+  }));
 
-      })
+  try {
+    await sendEventsBulk(events, now);
+    Notify.create({
+      message: 'Movimenti registrati',
+      position: 'top',
+      color: 'theme-green',
+      timeout: 1500,
     });
+    transfer.$reset();
+  } catch (err) {
+    // Error already shown by sendEventsBulk
   }
 }
 </script>
