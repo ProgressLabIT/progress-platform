@@ -153,9 +153,26 @@ function confirm() {
         timeout: 1500,
       });
     })
-    router.push({ name: 'ShipmentList', params: { listKey: router.currentRoute.value.params.listKey }})
-    lists.loadLists('shipment');
-    shipment.$reset()
+    .catch((err) => {
+      Notify.create({
+        position: 'top',
+        timeout: 0,
+        message: err,
+        color: 'theme-orange',
+        actions: [
+          { label: 'Close', textColor: 'white', handler: () => undefined }
+        ]
+      });
+    });
   }
+  // Back to list
+  router.push({ name: 'ShipmentList', params: { listKey: router.currentRoute.value.params.listKey }})
+  // Refresh list movements
+  lists.loadListMovements(router.currentRoute.value.params.listKey);
+  // reset selection data in stores (but keep headers and movements in lists store)
+  lists.selectedItem = undefined;
+  lists.tempQuantity = 0;
+  lists.tempSerials = [];
+  shipment.$reset()
 }
 </script>

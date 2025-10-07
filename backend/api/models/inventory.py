@@ -373,6 +373,10 @@ class MovementList(ArangoDocument):
   type: InventoryMovementType
 
 
+class MovementListWithCounts(MovementList):
+  counts: dict[MovementStatus, int]
+
+
 class MovementListNew(MovementList):
   movements: list[InventoryMovementNew]
   by_code: bool | None = False

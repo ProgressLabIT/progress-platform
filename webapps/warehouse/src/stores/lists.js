@@ -8,11 +8,11 @@ const nav = useNavStore();
 export const useListsStore = defineStore('lists', {
   state: () => ({
     headers: [],
-    movements: [],
+    listMovements: [],
     selectedItem: undefined,
     tempQuantity: 0,
     tempSerials: [],
-    productTraceabilityMap: {}
+    productTraceabilityMap: {} // Acts as cache across multiple loadListMovements calls
   }),
   getters: {
     byDateAndPartner: (state) => {
@@ -51,44 +51,52 @@ export const useListsStore = defineStore('lists', {
           return [date, sortedPartners];
         });
     },
-    movementsByListAndItem: (state) => {
-      return state.headers.reduce((result, list) => {
-        const listMovementsByItem = Object.groupBy(state.movements.filter(m => m.movement_list_key == list._key), m => m.movement_list_item)
-        const listItems = Object.entries(listMovementsByItem).map(([item, movements]) => {
-          const qt_planned = movements.reduce((sum, mov) => sum += mov.qt_planned, 0)
-          const qt_confirmed = movements.reduce((sum, mov) => sum += mov.qt_confirmed, 0)
-          const type = movements[0].use_serials ? 'serial' : 'quantity'
+    listMovementsByItem: (state) => {
+      // Group movements by item - all movements belong to a single list
+      if (state.listMovements.length === 0) {
+        return [];
+      }
 
-          const plannedMovements = movements.filter(m => m.status == 'planned')
-          const serialsProvided = plannedMovements.length > 0 && plannedMovements.every(m => m.serial_code !== null)
+      // Get the list header for reference
+      const listKey = state.listMovements[0].movement_list_key;
+      const list = state.headers.find(l => l._key === listKey);
+      if (!list) {
+        return [];
+      }
 
-          return {
-            item,
-            product_code: movements[0].product_code,
-            product_description: movements[0].product_description,
-            product_key: movements[0].product_key,
-            references: movements[0].references,
-            listKey: movements[0].movement_list_key,
-            reference: list.type == 'receipt' ? movements[0].references.purchase_doc : movements[0].references.sales_doc,
-            type,
-            serialsProvided,
-            qt_planned,
-            qt_confirmed,
-            movements
-          };
-        })
-        result[list._key] = listItems
-        return result
-      }, {})
+      const movementsByItem = Object.groupBy(state.listMovements, m => m.movement_list_item);
+      return Object.entries(movementsByItem).map(([item, movements]) => {
+        const qt_planned = movements.reduce((sum, mov) => sum += mov.qt_planned, 0)
+        const qt_confirmed = movements.reduce((sum, mov) => sum += mov.qt_confirmed, 0)
+        const type = movements[0].use_serials ? 'serial' : 'quantity'
+
+        const plannedMovements = movements.filter(m => m.status == 'planned')
+        const serialsProvided = plannedMovements.length > 0 && plannedMovements.every(m => m.serial_code !== null)
+
+        return {
+          item,
+          product_code: movements[0].product_code,
+          product_description: movements[0].product_description,
+          product_key: movements[0].product_key,
+          references: movements[0].references,
+          listKey: movements[0].movement_list_key,
+          reference: list.type == 'receipt' ? movements[0].references.purchase_doc : movements[0].references.sales_doc,
+          type,
+          serialsProvided,
+          qt_planned,
+          qt_confirmed,
+          movements
+        };
+      })
     },
     getMovementByKey: (state) => {
       return (movementKey) => {
-        return state.movements.find(m => m._key == movementKey)
+        return state.listMovements.find(m => m._key == movementKey)
       }
     },
     getMovementBySerial: (state) => {
       return ({ serialCode, productCode }) => {
-        return state.movements.find(m => m.serial_code === serialCode && m.product_code === productCode)
+        return state.listMovements.find(m => m.serial_code === serialCode && m.product_code === productCode)
       }
     },
     itemSerials: (state) => {
@@ -109,23 +117,6 @@ export const useListsStore = defineStore('lists', {
       try {
         // fetch lists
         this.headers = (await api.get('/movement-list', { params: { type, open_only: true }})).data
-
-        if (this.headers.length) {
-          // fetch movements and group them by list and product
-          const params = new URLSearchParams()
-          this.headers.forEach(l => params.append('list_key', l._key))
-          const movement_data = (await api.get('/movement', { params })).data.filter(m => m.type != 'reversal' && !m.inverse_movement_key)
-          const productKeys = [...new Set(movement_data.map(m => m.product_key))]
-          const traceabilityPromises = productKeys.map(async productKey => {
-            const { data: product } = await api.get(`/product/${productKey}`)
-            return [productKey, !!product.traceability_level]
-          })
-          this.productTraceabilityMap = Object.fromEntries(await Promise.all(traceabilityPromises))
-          this.movements = movement_data.map(m => ({
-            ...m,
-            use_serials: this.productTraceabilityMap[m.product_key]
-          }))
-        }
         nav.loading = false;
       }
       catch (err) {
@@ -141,8 +132,29 @@ export const useListsStore = defineStore('lists', {
         })
       }
     },
+    async ensureProductTraceability(productKey) {
+      // Check if product is already cached
+      if (!(productKey in this.productTraceabilityMap)) {
+        const { data: product } = await api.get(`/product/${productKey}`)
+        this.productTraceabilityMap[productKey] = !!product.traceability_level
+      }
+    },
+    async loadListMovements(listKey) {
+      const { data } = await api.get(`/movement`, { params: { list_key: listKey, limit: 100000 } })
+      const movement_data = data.filter(m => m.type != 'reversal' && !m.inverse_movement_key)
+
+      const productKeys = [...new Set(movement_data.map(m => m.product_key))]
+
+      // Ensure all product traceability data is loaded (in parallel)
+      await Promise.all(productKeys.map(key => this.ensureProductTraceability(key)))
+
+      this.listMovements = movement_data.map(m => ({
+        ...m,
+        use_serials: this.productTraceabilityMap[m.product_key]
+      }))
+    },
     update(movementUpdate) {
-      const movement = this.movements.find(m => m._key == movementUpdate._key)
+      const movement = this.listMovements.find(m => m._key == movementUpdate._key)
       movement.qt_confirmed = movementUpdate.qt_confirmed
     }
   }

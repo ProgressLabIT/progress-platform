@@ -42,7 +42,7 @@
               {{ list.code  }}
             </div>
             <div>
-              {{ getListCounts(list._key).completed }} / {{ getListCounts(list._key).total }}
+              {{ list.counts.completed }} / {{ list.counts.completed + list.counts.planned }}
             </div>
           </q-card>
         </template>
@@ -65,13 +65,6 @@
 import { useListsStore } from 'stores/lists'
 const lists = useListsStore();
 const today = new Date().toISOString().slice(0,10);
-function getListCounts(listKey) {
-  const listItems = lists.movementsByListAndItem[listKey]
-  return {
-    completed: listItems.filter(i => i.qt_confirmed === i.qt_planned).length,
-    total: listItems.length
-  }
-}
 </script>
 
 <style scoped lang="sass">

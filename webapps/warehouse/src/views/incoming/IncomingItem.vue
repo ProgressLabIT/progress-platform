@@ -196,8 +196,6 @@ function confirm() {
         color: 'theme-green',
         timeout: 1500,
       });
-      router.push({ name: 'IncomingList', params: { listKey: router.currentRoute.value.params.listKey }})
-      lists.loadLists('receipt');
     })
     .catch((err) => {
       Notify.create({
@@ -211,5 +209,13 @@ function confirm() {
       });
     });
   }
+  // Back to list
+  router.push({ name: 'IncomingList', params: { listKey: router.currentRoute.value.params.listKey }})
+  // Refresh list movements
+  lists.loadListMovements(router.currentRoute.value.params.listKey);
+  // reset selection data in lists store (but keep headers and movements)
+  lists.selectedItem = undefined;
+  lists.tempQuantity = 0;
+  lists.tempSerials = [];
 }
 </script>
