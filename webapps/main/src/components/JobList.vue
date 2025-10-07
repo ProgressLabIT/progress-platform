@@ -303,13 +303,22 @@
                   </template>
 
                   <template v-else-if="field.name === 'ready'">
-                    <q-icon
-                      :name="jobIcon(props.row).name"
-                      :color="jobIcon(props.row).color"
-                      size="xs"
-                    >
-                      <!-- calendar-clock check-circle cube-off/toybrick-remove-->
-                    </q-icon>
+                    <template v-if="jobReady(props.row)">
+                      <q-icon
+                        name="mdi-check-circle"
+                        color="theme-blue"
+                        size="xs"
+                      />
+                    </template>
+                    <template v-else>
+                      <q-icon
+                        v-for="icon in jobNotReadyIcons(props.row)"
+                        :key="icon.name"
+                        :name="icon.name"
+                        :color="icon.color"
+                        size="xs"
+                      />
+                    </template>
                   </template>
 
                   <div
@@ -743,7 +752,7 @@ export default {
       return this.unassigned_jobs.filter(this.matchJobToFilters).map((job) => {
         return {
           ...job,
-          ready: this.isReleased(job) && job.next_batch_available,
+          ready: this.isReleased(job) && job.next_batch_available && job.phase_ready !== false, // explicitly check for backward compatibility
           wo_sequence: this.wo_map[job.wo_key].sequence,
         };
       });
@@ -827,11 +836,36 @@ export default {
     },
 
     jobIcon(job) {
-      return !this.isReleased(job)
-        ? { name: 'mdi-calendar-clock', color: 'grey-backdrop' }
-        : job.next_batch_available
-          ? { name: 'mdi-check-circle', color: 'theme-blue' }
-          : { name: 'mdi-cube-off', color: 'orange-backdrop' };
+      // Deprecated: kept for backward compatibility if referenced elsewhere
+      const icons = this.jobNotReadyIcons(job);
+      if (icons.length === 0) {
+        return { name: 'mdi-check-circle', color: 'theme-blue' };
+      }
+      return icons[0];
+    },
+
+    jobReady(job) {
+      // Ready when released, materials/batches available, and phase is not explicitly blocked
+      return (
+        this.isReleased(job) &&
+        job.next_batch_available &&
+        job.phase_ready !== false
+      );
+    },
+
+    jobNotReadyIcons(job) {
+      const icons = [];
+      if (!this.isReleased(job)) {
+        icons.push({ name: 'mdi-calendar-clock', color: 'grey-backdrop' });
+      }
+      // explicitly check for backward compatibility: only false means not ready
+      if (job.phase_ready === false) {
+        icons.push({ name: 'mdi-clipboard-check-multiple-outline', color: 'orange-backdrop' });
+      }
+      if (!job.next_batch_available) {
+        icons.push({ name: 'mdi-cube-off', color: 'orange-backdrop' });
+      }
+      return icons;
     },
 
     userJobsModel(filtered_jobs) {
@@ -944,7 +978,7 @@ export default {
             break;
 
           case 'ready':
-            if (!value && this.isReleased(job) && job.next_batch_available) {
+            if (!value && this.isReleased(job) && job.next_batch_available && job.phase_ready) {
               match = false;
             }
             break;
@@ -952,7 +986,7 @@ export default {
           case 'not_ready':
             if (
               !value &&
-              (!this.isReleased(job) || !job.next_batch_available)
+              (!this.isReleased(job) || !job.next_batch_available || !job.phase_ready)
             ) {
               match = false;
             }
