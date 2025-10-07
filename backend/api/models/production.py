@@ -148,6 +148,8 @@ class Job(FlexModel):
   active_batch_qt: float = 0
   next_batch_available: bool | None = None # WIP ONLY: This does not consider Production Items and subassemblies from other work orders
 
+  phase_ready: bool | None = True # Default to true for backward compatibility
+
   traceability_level: str | None = None
   serial_code_on_creation: bool | None = False
   # current_step: int | None = None
