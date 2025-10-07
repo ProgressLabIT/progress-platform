@@ -70,20 +70,18 @@
 
 <script setup>
 import { Notify } from 'quasar';
-import { useStore } from 'vuex';
-import { sendEvent } from 'app/src/composables/event.js';
+import { sendEventsBulk } from 'app/src/composables/bulkEvent.js';
 import { timestamp } from 'app/src/lib/TimeHandling';
 import { useIncomingStore } from 'app/src/stores/incoming';
 import PositionQuantityDistribution from 'components/PositionQuantityDistribution.vue';
 
-const store = useStore();
 const incoming = useIncomingStore();
 
 
-function confirm() {
+async function confirm() {
   let movements = [];
-  let now = timestamp()
-  const session_data = store.state.session;
+  const now = timestamp();
+
   if (incoming.product.traceability_level) {
     for (const serialCode of incoming.serials) {
       movements.push({
@@ -103,40 +101,30 @@ function confirm() {
       });
     }
   }
-  for (const movement of movements) {
-    sendEvent({
-      event_type: 'MOVEMENT_COMPLETED',
-      event_data: {
-          ...movement,
-          product_key: incoming.product._key,
-          position_from: 'OUT',
-          status: 'completed',
-          movement_type: 'receipt',
-          user_key: session_data.user._key,
-          start: now,
-          end: now
-      },
-    })
-    .then(() => {
-      Notify.create({
-        message: 'Movimenti registrati',
-        position: 'top',
-        color: 'theme-green',
-        timeout: 1500,
-      });
-      incoming.$reset();
-    })
-    .catch((err) => {
-      Notify.create({
-        position: 'top',
-        timeout: 0,
-        message: err,
-        color: 'theme-orange',
-        actions: [
-          { label: 'Close', textColor: 'white', handler: () => undefined }
-        ]
-      });
+
+  // Build events array with just event-specific data
+  const events = movements.map(movement => ({
+    event_type: 'MOVEMENT_COMPLETED',
+    ...movement,
+    product_key: incoming.product._key,
+    position_from: 'OUT',
+    status: 'completed',
+    movement_type: 'receipt',
+    start: now,
+    end: now
+  }));
+
+  try {
+    await sendEventsBulk(events, now);
+    Notify.create({
+      message: 'Movimenti registrati',
+      position: 'top',
+      color: 'theme-green',
+      timeout: 1500,
     });
+    incoming.$reset();
+  } catch (err) {
+    // Error already shown by sendEventsBulk
   }
 }
 

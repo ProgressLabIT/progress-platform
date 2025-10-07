@@ -1,7 +1,7 @@
 import { defineStore } from "pinia";
 import { api } from '@/boot/axios';
 import { Loading, Notify } from 'quasar';
-import { sendEvent } from '@/composables/event';
+import { sendEventsBulk } from '@/composables/bulkEvent';
 import { timestamp } from '@/lib/TimeHandling';
 
 export const useShipmentStore = defineStore('shipment', {
@@ -49,40 +49,30 @@ export const useShipmentStore = defineStore('shipment', {
         });
       }
 
-      // Send movement events one by one
-      for (const movement of movements) {
-        try {
-          await sendEvent({
-            event_type: 'MOVEMENT_COMPLETED',
-            event_data: {
-              ...movement,
-              position_to: 'OUT',
-              status: 'completed',
-              movement_type: 'shipment',
-              start: now,
-              end: now
-            },
-          });
-          Notify.create({
-            message: 'Movimenti registrati',
-            position: 'top',
-            color: 'theme-green',
-            timeout: 1500,
-          });
-        } catch (err) {
-          Notify.create({
-            position: 'top',
-            timeout: 0,
-            message: err,
-            color: 'theme-orange',
-            actions: [
-              { label: 'Close', textColor: 'white', handler: () => undefined }
-            ]
-          });
-          return false;
-        }
+      // Build events array with just event-specific data
+      const events = movements.map(movement => ({
+        event_type: 'MOVEMENT_COMPLETED',
+        ...movement,
+        position_to: 'OUT',
+        status: 'completed',
+        movement_type: 'shipment',
+        start: now,
+        end: now
+      }));
+
+      try {
+        await sendEventsBulk(events, now);
+        Notify.create({
+          message: 'Movimenti registrati',
+          position: 'top',
+          color: 'theme-green',
+          timeout: 1500,
+        });
+        return true;
+      } catch (err) {
+        // Error already shown by sendEventsBulk
+        return false;
       }
-      return true;
     }
   }
 })
