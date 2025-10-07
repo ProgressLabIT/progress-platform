@@ -116,6 +116,12 @@ class EventModel(BaseModel):
   info: Any # model to be set at the event class level as a subclass of EventInfoModel
 
 
+class BulkEventRequest(BaseModel):
+  """Request model for bulk event creation. All events must be of the same type."""
+  shared_data: EventInfoModel
+  events: list[dict]
+
+
 # class SerialNotificationEventModel(ArangoDocument):
 #   event_type: str | EventType | None = None #
 #   user_key: str | None = None #
