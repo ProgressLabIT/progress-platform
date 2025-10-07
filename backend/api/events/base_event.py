@@ -70,46 +70,49 @@ class BaseEvent(ABC):
     shared_data: EventInfoModel,
     event_data: list[dict],
     tx: TransactionDatabase | None = None,
-    ) -> None:
+    ) -> list:
     """
-    Generate multiple events from a list of event data sharing the same transaction and group id
-    without the need to have a single primary event.
+    Generate multiple events from a list of event data sharing the same transaction and group id.
+    All events must be of the same type (specified in shared_data.event_type).
     """
 
     if not event_data:
-      return
+      return []
+
+    if tx is None:
+      # If spawn multiple is used without a transaction, it means that events are triggered by the user, so they are primary.
+      _primary_events = True
 
     # All events must share the same event group
     if shared_data.event_group is None:
       shared_data.event_group = str(uuid.uuid4())
 
-    # If no transaction is provided, create one with the collections of all event types
+    # Get event type from shared data (all events are of the same type)
+    try:
+      event_type = shared_data.event_type
+      event_class = get_event_class(event_type)
+    except (AttributeError, KeyError):
+      raise ValueError('Event type is required in shared_data')
+
+    # If no transaction is provided, create one with the collections for this event type
     commit = False
     if tx is None:
       commit = True
-      try:
-        event_classes = [get_event_class(data.get('event_type')) for data in event_data]
-        collections = set(sum((event_class.get_tx_collections() for event_class in event_classes), []))
-      except KeyError:
-        raise ValueError('Event type is required')
-
+      collections = set(event_class.get_tx_collections())
+      collections.add('Event')  # Ensure Event collection is included
       tx = db.begin_transaction(write=collections)
 
     # Create and process each event
+    created_events = []
     for data in event_data:
-      try:
-        event_type = data.get('event_type')
-      except KeyError:
-        raise ValueError('Event type is required')
+      # Build child event info using shared_data and override with specific event data
+      info_data = shared_data.model_dump()
+      info_data['primary'] = _primary_events
+      info_data.update(data)
 
-      try:
-        event_class = get_event_class(event_type)
-      except KeyError:
-        raise ValueError(f'Invalid event type: {event_type}')
-
-      context = EventModel(tx=tx, info=shared_data)
-      event = event_class.create_as_child(context=context, new_event_data=data)
+      event = event_class(info=info_data, tx=tx)
       event.save()
+      created_events.append(event)
 
     if commit:
       tx.commit_transaction()
@@ -120,20 +123,17 @@ class BaseEvent(ABC):
   # ================================
   def __init__(self, info, tx: TransactionDatabase | None = None):
     self.tx = tx
+    self._owns_transaction = (tx is None)
     self.response = None
 
     # Generate UUID for event key immediately
     self.event_key = str(uuid.uuid4())
 
     # Validate general event properties
-    has_tx_or_event_group = tx is not None or info['event_group'] is not None
-    has_tx_and_event_group = tx is not None and info['event_group'] is not None
-
-    if (info['primary'] and has_tx_or_event_group):
-      raise ValueError('Primary events cannot be initialized with existing transaction or event group')
-
-    if not info['primary'] and not has_tx_and_event_group:
-      raise ValueError('Secondary events cannot be initialized without a transaction and event group')
+    # Secondary events must have both transaction and event_group
+    if not info['primary']:
+      if tx is None or info['event_group'] is None:
+        raise ValueError('Secondary events must be initialized with a transaction and event_group')
 
     # Validate and store event specific data. Will raise ValueError if validation fails
     self.info = self.get_event_model()(**info)
@@ -186,8 +186,12 @@ class BaseEvent(ABC):
     collections = self.get_tx_collections() + ['Event', 'event_source']
 
     try:
-      if self.info.primary:
+      # Create transaction if this event owns it
+      if self._owns_transaction:
         self.tx = db.begin_transaction(write=collections)
+
+      # Initialize event group for primary events if not already set
+      if self.info.primary and self.info.event_group is None:
         self.info.event_group = str(uuid.uuid4())
 
       # Perform any pre-processing steps
@@ -202,8 +206,8 @@ class BaseEvent(ABC):
       # Store event with all final data
       self.store_event()
 
-      # Commit transaction
-      if self.info.primary:
+      # Commit transaction only if this event owns it
+      if self._owns_transaction:
         self.tx.commit_transaction()
 
       # Return any required value
@@ -211,5 +215,5 @@ class BaseEvent(ABC):
 
     # In case of exceptions abort transaction without catching them if transaction is still open
     finally:
-      if self.info.primary and self.tx.transaction_status() == 'running': # See transaction statuses in the HTTP API of ArangoDB
+      if self._owns_transaction and self.tx.transaction_status() == 'running': # See transaction statuses in the HTTP API of ArangoDB
         self.tx.abort_transaction()

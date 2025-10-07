@@ -3,7 +3,7 @@ import traceback
 from fastapi import APIRouter, HTTPException, Depends
 from utils import auth
 
-from models.event import EventInfoModel, EventType, EventContextType
+from models.event import EventInfoModel, EventType, EventContextType, BulkEventRequest
 from models.traceability import *
 
 from utils.exceptions import *
@@ -15,6 +15,7 @@ from utils.dt import timestamp
 from utils.event import get_event_class
 from utils.serial import Queries as SerialQueries
 from utils.traceability import Queries
+from events.base_event import BaseEvent
 
 router = APIRouter()
 
@@ -84,6 +85,69 @@ async def record_event(event_data: EventInfoModel):
       detail=response
     )
 
+
+@router.post('/event/bulk',
+    dependencies=[Depends(auth.verify_token)])
+async def record_events_bulk(request: BulkEventRequest):
+  """
+  Record multiple events atomically in a single transaction.
+  All events succeed or all fail together.
+
+  The shared_data contains common fields (event_type, user_key, user_session_key, timestamp).
+  All events must be of the same type (specified in shared_data.event_type).
+  The events list contains event-specific data for each event.
+  """
+  try:
+    if not request.events:
+      raise HTTPException(status_code=422, detail="No events provided")
+
+    # Process all events in one transaction using spawn_multiple
+    BaseEvent.spawn_multiple(
+      shared_data=request.shared_data,
+      event_data=request.events
+    )
+
+    return APIResponse(
+      message=f"{len(request.events)} events recorded successfully",
+      detail={"event_count": len(request.events)}
+    )
+
+  except (
+    JobIsActiveError,
+    JobHasActiveBatchError,
+    JobHasNoAssigneeError,
+    JobHasNoActiveBatchError,
+    ValueError,
+    WipNotAvailableError,
+    SerialNotDeletedError,
+    SerialNotUpdatedError,
+    SerialNotLinkedError,
+    SerialNotCreatedError,
+    SerialCodeAlreadyPresent,
+    InventoryMovementException
+  ) as e:
+    print(e)
+    raise HTTPException(
+      status_code=422,
+      detail=dict(
+        error_type=e.__class__.__name__,
+        message=str(e) if str(e) else (len(e.args) > 0 and e.args[0] or None),
+        total_events=len(request.events)
+      )
+    )
+
+  except Exception as e:
+    status_code = 500
+    error_str = traceback.format_exc()
+    print(error_str)
+    raise HTTPException(
+      status_code=status_code,
+      detail=dict(
+        message="There was a problem saving events in the db",
+        error=error_str,
+        total_events=len(request.events)
+      )
+    )
 
 
 @router.get('/event',
