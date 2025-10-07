@@ -114,7 +114,7 @@
 </template>
 
 <script setup>
-import { Dialog, Notify } from 'quasar';
+import { Dialog, Notify, Loading } from 'quasar';
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router';
@@ -147,6 +147,11 @@ if (list === undefined) {
 
 const productSearch = ref('');
 
+// Load movements for this specific list
+Loading.show()
+lists.loadListMovements(props.listKey)
+Loading.hide()
+
 nav.dynamicBreadcrumb = [list?.code]
 onBeforeRouteLeave(() => {
   nav.dynamicBreadcrumb = []
@@ -154,7 +159,7 @@ onBeforeRouteLeave(() => {
 
 const listItems = computed(() => {
   // Sort items placing completed ones at the end
-  const items = lists.movementsByListAndItem[props.listKey] ?? [];
+  const items = lists.listMovementsByItem ?? [];
   const openItems = items.filter(i => i.qt_planned > i.qt_confirmed);
   const closedItems = items.filter(i => i.qt_planned <= i.qt_confirmed);
   return [...openItems, ...closedItems]

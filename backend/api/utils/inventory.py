@@ -369,19 +369,26 @@ class Queries:
 
 
   SEARCH_MOVEMENT_LISTS = """
-    FOR m IN MovementList
+    FOR ml IN MovementList
     FILTER
-      (@search ? CONTAINS(LOWER(m.code), LOWER(@search)) : true)
-      && (@list_key ? m.movement_list_key IN @list_key : true)
-      && (@includes_product_key ? @includes_product_key IN m.movements[*].product_key : true)
-      && (@includes_product_code ? @includes_product_code IN m.movements[* RETURN DOCUMENT(Product, CURRENT.product_key).code] : true)
-      && (@due_by_min ? m.due_by >= @due_by_min : true)
-      && (@due_by_max ? m.due_by <= @due_by_max : true)
-      && (@open_only ? m.status IN ['planned', 'started'] : true)
-      && (@status ? m.status IN @status : true)
-      && (@type ? m.type == @type : true)
+      (@search ? CONTAINS(LOWER(ml.code), LOWER(@search)) : true)
+      && (@list_key ? ml.movement_list_key IN @list_key : true)
+      && (@due_by_min ? ml.due_by >= @due_by_min : true)
+      && (@due_by_max ? ml.due_by <= @due_by_max : true)
+      && (@open_only ? ml.status IN ['planned', 'started'] : true)
+      && (@status ? ml.status IN @status : true)
+      && (@type ? ml.type == @type : true)
     LIMIT @offset, @limit || null
-    RETURN m
+
+    LET movements = (FOR m IN movement FILTER m.movement_list_key == ml._key RETURN m)
+
+    FILTER
+      (@includes_product_key ? @includes_product_key IN movements[*].product_key : true)
+      && (@includes_product_code ? @includes_product_code IN movements[* RETURN DOCUMENT(Product, CURRENT.product_key).code] : true)
+
+    LET planned = COUNT(movements[* FILTER CURRENT.status == 'planned'])
+    LET completed = COUNT(movements[* FILTER CURRENT.status == 'completed'])
+    RETURN MERGE(ml, { counts: { planned, completed } })
   """
 
   UPDATE_MOVEMENT_LIST = """

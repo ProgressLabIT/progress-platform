@@ -330,7 +330,7 @@ async def search_movement_lists(
       offset=offset
     )
     results = db.aql.execute(Queries.SEARCH_MOVEMENT_LISTS, bind_vars=bind_vars)
-    return [MovementList(**m) for m in results]
+    return [MovementListWithCounts(**m) for m in results]
 
   except Exception as e:
     raise HTTPException(
