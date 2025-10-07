@@ -66,7 +66,7 @@ class Queries:
       )
 
       LET tasks = (
-        FOR t IN wo.tasks
+        FOR t IN NOT_NULL(wo.tasks, [])
         LET task = FIRST(FOR task in Task FILTER task._key == t.task_key RETURN task)
         LET task_type = FIRST(FOR tt IN TaskType FILTER tt._key == task.task_type_key RETURN tt)
         RETURN MERGE(t, task, {
