@@ -518,6 +518,7 @@ def create_job_record(
   tx,
   wo_data: WorkOrderFull,
   phase_key: str,
+  phase_ready: bool,
   qt_planned: float,
   assigned_to: str | None = None,
   **kwargs
@@ -545,6 +546,7 @@ def create_job_record(
     operation_key = phase.operation_key,
     parameters = phase.params,
     qt_planned = qt_planned,
+    phase_ready = phase_ready,
     next_batch_available = True if first_phase else False,
     step_sequence = _get_procedure_for_new_job(tx, phase_key),
     job_docs = wo_data.wo_docs,

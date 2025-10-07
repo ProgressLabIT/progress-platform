@@ -7,6 +7,8 @@ from fastapi import APIRouter, Body, HTTPException, Query, Depends
 from utils import auth
 
 from models.bom import WOBomLine
+from models.collaboration import TaskStatus
+from models.event import EventInfoModel, EventType
 from models.product import ProductDetails
 from models.production import *
 from utils.api import APIResponse
@@ -21,7 +23,6 @@ from utils.production import (
   update_target_queue
 )
 from utils.traceability import _update_job_progress, Queries as TraceabilityQueries
-from models.event import EventInfoModel, EventType
 from events.base_event import BaseEvent
 
 
@@ -127,6 +128,7 @@ async def create_work_order(new_wo: WorkOrderNew, token: auth.TokenData = Depend
             event_type = EventType.TASK_CREATED,
             task_type_key = tdef.task_type_key,
             title = tdef.title,
+            status = TaskStatus.OPEN if tdef.after_phase is None else TaskStatus.PENDING,
             description = tdef.description,
             start_from = new_wo.start_from,
             due_by = new_wo.due_by,
@@ -220,9 +222,15 @@ async def create_work_order(new_wo: WorkOrderNew, token: auth.TokenData = Depend
 
   # 2. Create Jobs
   try:
-    new_job_records = [create_job_record(tx, new_wo_record, phase_key, new_wo.qt_planned) for phase_key in new_wo_record.phase_sequence]
+    new_job_records = [create_job_record(
+      tx,
+      wo_data = new_wo_record,
+      phase_key = phase_key,
+      phase_ready = not any(task.before_phase == phase_key for task in new_wo_record.tasks),
+      qt_planned = new_wo_record.qt_planned
+    ) for phase_key in new_wo_record.phase_sequence]
 
-  except:
+  except Exception:
     tx.abort_transaction()
     status_code=500
     response = dict(
