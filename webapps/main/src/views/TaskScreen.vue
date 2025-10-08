@@ -93,7 +93,8 @@
               />
             <!-- CLOSE/REOPEN BUTTON -->
             <q-btn
-              :icon="task.status === 'completed' ? 'mdi-restore' : 'mdi-check'"
+              v-if="task.status !== 'pending'"
+              :icon="task.status === 'open' ? 'mdi-check' : 'mdi-restore'"
               size="10px"
               flat
               round
@@ -101,7 +102,21 @@
               @click="toggleTaskStatus"
             >
               <q-tooltip anchor="center right" self="center left" :delay="200">
-                {{ task.status === 'completed' ? $t('reopen_task') : $t('complete_task') }}
+                {{ task.status === 'open' ? $t('complete_task') : $t('reopen_task') }}
+              </q-tooltip>
+            </q-btn>
+
+            <!-- CANCEL BUTTON -->
+            <q-btn
+              v-if="['pending', 'open'].includes(task.status)"
+              size="10px"
+              flat
+              icon="mdi-close"
+              round
+              @click="cancelTask"
+            >
+              <q-tooltip anchor="center right" self="center left" :delay="200">
+                {{ $t('cancel_task') }}
               </q-tooltip>
             </q-btn>
           </div>
@@ -803,7 +818,7 @@ function goToEntity(link) {
         }
 
         // Then navigate to the entity
-        navigateToRoute(targetRoute);
+        router.push(targetRoute);
       } catch (error) {
         console.error('Error activating task:', error);
         Notify.create({
@@ -815,29 +830,13 @@ function goToEntity(link) {
       }
     }).onCancel(() => {
       // Navigate without activating
-      navigateToRoute(targetRoute);
+      router.push(targetRoute);
     });
   } else {
     // Navigate directly
-    navigateToRoute(targetRoute);
+    router.push(targetRoute);
   }
 }
-
-// Helper function to perform the actual navigation
-function navigateToRoute(route) {
-  try {
-    router.push(route);
-  } catch (error) {
-    console.error('Error navigating to entity:', error);
-    Notify.create({
-      message: $t('errors.navigation_err') || 'Error navigating to entity',
-      color: 'theme-red',
-      timeout: 3000,
-      position: 'top',
-    });
-  }
-}
-
 
 async function save() {
   saving.value = true;
@@ -911,6 +910,20 @@ async function save() {
   }
 }
 
+
+// #########################################################
+// LINK MANAGEMENT
+// #########################################################
+
+// Group links by entity type
+const linksByEntityType = computed(() => {
+  return task.value.links.reduce((acc, link) => {
+    acc[link.type] = [...(acc[link.type] || []), link];
+    return acc;
+  }, {});
+});
+
+
 // Link dialog functions
 function openLinkDialog(entityType) {
   selectedEntityType.value = entityType;
@@ -932,6 +945,47 @@ function cancelRemoveLink() {
   showRemoveConfirmation.value = false;
   linkToRemove.value = null;
 }
+
+
+async function saveLink(linkData) {
+  savingLink.value = true;
+  try {
+    // TODO: Implement the actual API call to link the entity to the task
+    // This would depend on your backend API structure
+    sendEvent({
+      event_type: 'TASK_LINKED',
+      event_data: {
+        task_key: props.taskKey,
+        link_type: linkData.entityType,
+        link_key: linkData.entity._key || linkData.entity,
+      }
+    });
+
+    // For now, we'll just close the dialog and show a success message
+    showLinkDialog.value = false;
+
+    // Refresh task data to get updated links
+    await fetchTaskData();
+
+    Notify.create({
+      message: $t('entity_linked_successfully') || 'Entity linked successfully',
+      color: 'theme-green',
+      timeout: 2000,
+      position: 'top',
+    });
+  } catch (error) {
+    console.error('Error linking entity:', error);
+    Notify.create({
+      message: $t('errors.link_err') || 'Error linking entity',
+      color: 'theme-red',
+      timeout: 3000,
+      position: 'top',
+    });
+  } finally {
+    savingLink.value = false;
+  }
+}
+
 
 async function removeLink() {
   if (!linkToRemove.value) {
@@ -973,65 +1027,12 @@ async function removeLink() {
 }
 
 
-// #########################################################
-// LINK MANAGEMENT
-// #########################################################
-
-// Group links by entity type
-const linksByEntityType = computed(() => {
-  return task.value.links.reduce((acc, link) => {
-    acc[link.type] = [...(acc[link.type] || []), link];
-    return acc;
-  }, {});
-});
-
-
-async function saveLink(linkData) {
-  savingLink.value = true;
-  try {
-    // TODO: Implement the actual API call to link the entity to the task
-    // This would depend on your backend API structure
-    sendEvent({
-      event_type: 'TASK_LINKED',
-      event_data: {
-        task_key: props.taskKey,
-        link_type: linkData.entityType,
-        link_key: linkData.entity._key || linkData.entity,
-      }
-    });
-
-    // For now, we'll just close the dialog and show a success message
-    showLinkDialog.value = false;
-
-    // Refresh task data to get updated links
-    await fetchTaskData();
-    console.log(task.value);
-
-    Notify.create({
-      message: $t('entity_linked_successfully') || 'Entity linked successfully',
-      color: 'theme-green',
-      timeout: 2000,
-      position: 'top',
-    });
-  } catch (error) {
-    console.error('Error linking entity:', error);
-    Notify.create({
-      message: $t('errors.link_err') || 'Error linking entity',
-      color: 'theme-red',
-      timeout: 3000,
-      position: 'top',
-    });
-  } finally {
-    savingLink.value = false;
-  }
-}
-
 
 // Toggle task status between completed and open
 async function toggleTaskStatus() {
   togglingStatus.value = true;
   try {
-    const success = await taskStore.toggleTaskStatusWithConfirmation(props.taskKey, $t);
+    const success = await taskStore.toggleTaskStatusWithConfirmation(task.value, $t);
     if (success) {
       // Refresh task data to ensure consistency
       await fetchTaskData();
@@ -1039,6 +1040,11 @@ async function toggleTaskStatus() {
   } finally {
     togglingStatus.value = false;
   }
+}
+
+async function cancelTask() {
+  await taskStore.cancelTaskWithConfirmation(props.taskKey, $t);
+  await fetchTaskData();
 }
 
 // Activate task

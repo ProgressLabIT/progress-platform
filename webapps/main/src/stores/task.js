@@ -54,25 +54,6 @@ export const useTaskStore = defineStore('task', {
       }
     },
 
-    async appendTasks(searchParams = {}) {
-      try {
-        const { data } = await api.get('/task', {
-          params: searchParams
-        })
-        // Append new tasks, avoiding duplicates
-        data.forEach(newTask => {
-          const existingIndex = this.tasks.findIndex(task => task._key === newTask._key)
-          if (existingIndex === -1) {
-            this.tasks.push(newTask)
-          }
-        })
-        return data
-      } catch (error) {
-        console.error('Error appending tasks:', error)
-        throw error
-      }
-    },
-
     async getTaskData(taskKey) {
       try {
         const { data } = await api.get(`/task/${taskKey}`)
@@ -128,7 +109,6 @@ export const useTaskStore = defineStore('task', {
         if (this.activeTaskKey === taskKey) {
           this.deactivateTask()
         }
-        this.fetchTasks()
       }
     },
 
@@ -205,8 +185,6 @@ export const useTaskStore = defineStore('task', {
               }
             })
 
-            await this.refreshTaskData(taskKey)
-
             Notify.create({
               message: t('task_reopen_success') || 'Task reopened successfully',
               color: 'theme-green',
@@ -230,18 +208,49 @@ export const useTaskStore = defineStore('task', {
       })
     },
 
-    async toggleTaskStatusWithConfirmation(taskKey, t) {
-      const task = this.getTaskByKey(taskKey)
-      if (!task) {
-        console.error('Task not found:', taskKey)
-        return false
-      }
+    async cancelTaskWithConfirmation(taskKey, t) {
+      return new Promise((resolve) => {
+        Dialog.create({
+          title: t('task_cancel'),
+          message: t('task_cancel_confirmation'),
+        }).onOk(async () => {
+          try {
+            await sendEvent({
+              event_type: 'TASK_CANCELED',
+              event_data: {
+                task_key: taskKey,
+              }
+            })
 
-      const isClosing = task.status !== 'completed'
+            Notify.create({
+              message: t('task_cancel_success') || 'Task cancelled successfully',
+              color: 'theme-green',
+              timeout: 2000,
+              position: 'top',
+            })
+            resolve(true)
+          } catch (error) {
+            console.error('Error cancelling task:', error)
+            Notify.create({
+              message: t('errors.cancel_err') || 'Error cancelling task',
+              color: 'theme-red',
+              timeout: 3000,
+              position: 'top',
+            })
+            resolve(false)
+          }
+        }).onCancel(() => {
+          resolve(false)
+        })
+      })
+    },
+
+    async toggleTaskStatusWithConfirmation(task, t) {
+      const isClosing = task.status === 'open'
       if (isClosing) {
-        return await this.completeTaskWithConfirmation(taskKey, t)
+        return await this.completeTaskWithConfirmation(task._key, t)
       } else {
-        return await this.reopenTaskWithConfirmation(taskKey, t)
+        return await this.reopenTaskWithConfirmation(task._key, t)
       }
     },
 

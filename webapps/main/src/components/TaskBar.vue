@@ -44,11 +44,11 @@
             @click="completeTask"
           />
           <q-btn
-            icon="mdi-close"
+            icon="mdi-power"
             flat
             round
             padding="2px"
-            size="12px"
+            size="10px"
             class="dismiss-btn"
             @click="dismissTask"
           />
