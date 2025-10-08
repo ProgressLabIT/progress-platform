@@ -27,8 +27,8 @@ export const useProcessTasksStore = defineStore('processTasks', {
     async saveTempProcessTasks(product_key, tasks) {
       try {
         const response = await api.put(`/product/${product_key}/process/tasks`, tasks);
-        this.saved = response.data;
-        this.temp = response.data;
+        this.saved = response.data.detail;
+        this.temp = response.data.detail;
         Notify.create({
           message: 'Process tasks saved successfully',
           color: 'theme-green',
