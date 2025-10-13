@@ -5,7 +5,9 @@
     :loading="loading"
     :label-slot="!!label"
     :dense="dense"
-    :hint="$t('work_order_autocomplete_hint')"
+    :hint="hintComputed"
+    :error="error"
+    :error-message="errorMessage"
     :placeholder="placeholder_computed"
     :clearable="clearable"
     :options="options"
@@ -15,6 +17,7 @@
     input-debounce="500"
     :emit-value="keyOnly"
     :map-options="keyOnly"
+    :hide-bottom-space="!hintComputed && !error"
     @filter="filter"
     @update:model-value="(selection) => $emit('select', selection)"
   >
@@ -105,6 +108,18 @@ export default {
       type: Array,
       default: () => [],
     },
+    hint: {
+      type: String,
+      default: undefined,
+    },
+    error: {
+      type: Boolean,
+      default: false,
+    },
+    errorMessage: {
+      type: String,
+      default: undefined,
+    },
   },
 
   emits: ['select'],
@@ -120,6 +135,16 @@ export default {
   computed: {
     placeholder_computed() {
       return this.value ? null : this.placeholder;
+    },
+    hintComputed() {
+      // Keep default hint when hint is undefined; ignore empty strings
+      if (this.hint === undefined) {
+        return this.$t('work_order_autocomplete_hint');
+      }
+      if (typeof this.hint === 'string' && this.hint.trim() === '') {
+        return undefined;
+      }
+      return this.hint;
     },
   },
 

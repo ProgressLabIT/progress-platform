@@ -8,6 +8,9 @@
     :clearable="clearable"
     :dense="dense"
     :hint="hint"
+    :error="error"
+    :error-message="errorMessage"
+    :hide-bottom-space="!hint && !error"
     :label-slot="!!label"
     :loading="loading"
     :map-options="keyOnly"
@@ -210,7 +213,17 @@ const props = defineProps({
 
   hint: {
     type: String,
-    default: '',
+    default: undefined,
+  },
+
+  error: {
+    type: Boolean,
+    default: false,
+  },
+
+  errorMessage: {
+    type: String,
+    default: undefined,
   },
 
   minChars: {

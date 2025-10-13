@@ -2,6 +2,10 @@
   <q-select
     use-input
     filled
+    :hint="hint"
+    :error="error"
+    :error-message="errorMessage"
+    :hide-bottom-space="!hint && !error"
     :label="label"
     :stack-label="stackLabel"
     :dense="dense"
@@ -51,6 +55,18 @@ const props = defineProps({
     default: true,
   },
   label: {
+    type: String,
+    default: undefined,
+  },
+  hint: {
+    type: String,
+    default: undefined,
+  },
+  error: {
+    type: Boolean,
+    default: false,
+  },
+  errorMessage: {
     type: String,
     default: undefined,
   },
