@@ -173,7 +173,7 @@
               <template v-else-if="column.name === 'status'">
                 <q-icon
                   size="16px"
-                  :color="taskStatusOptions[props.row.status]?.color || 'grey'"
+                  :color="taskStatusOptions[props.row.status]?.color || 'theme-grey'"
                   :name="taskStatusOptions[props.row.status]?.icon || 'mdi-circle-outline'"
                 />
               </template>
@@ -726,10 +726,7 @@ function handleKeyPress(event) {
 
 // Lifecycle
 onMounted(async () => {
-  await Promise.all([
-    taskStore.fetchTasks(),
-    store.dispatch('loadUsers')
-  ]);
+  await store.dispatch('loadUsers');
   initUserOptions();
 
   // Add keyboard event listener

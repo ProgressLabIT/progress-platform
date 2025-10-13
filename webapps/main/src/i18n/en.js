@@ -768,6 +768,7 @@ export default {
   revert_movement: 'revert movement {key}',
   movement_reverted_by: 'movement reverted by {key}',
   movement_revert_reason_help: 'Explain the reason for reverting the movement',
+  pending: 'pending',
   resume: 'resume',
   save: 'save',
   save_or_cancel_before_change: 'Save or cancel changes before',

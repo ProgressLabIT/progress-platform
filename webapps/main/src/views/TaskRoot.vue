@@ -81,7 +81,7 @@
       <div class="q-mb-md">
         <div class="text-h5 text-low q-mb-sm">{{ $capitalize($t('status')) }}</div>
         <div class="row q-col-gutter-xs capitalize justify-between">
-          <div v-for="status in statusFilters" :key="status.value" class="col-auto">
+          <div v-for="status in statusFilters" :key="status.value" class="col-6">
             <q-checkbox
               v-model="status.queryModel.value"
               size="sm"
@@ -379,6 +379,56 @@
         :value="assigned_to"
         @select="(selection) => (assigned_to = selection)"
       />
+
+      <!-- LINK FILTERS -->
+      <div class="text-h5 text-low q-mb-sm">{{ $t('links') }}</div>
+
+      <BaseAutocompleteIssue
+        dense
+        key-only
+        class="q-mb-md"
+        :label="$t('issue')"
+        :value="issue_key"
+        @select="(selection) => (issue_key = selection)"
+      />
+
+      <BaseAutocompleteWorkOrder
+        dense
+        key-only
+        class="q-mb-md"
+        hint=""
+        :label="$t('work_order.long')"
+        :value="work_order_key"
+        @select="(selection) => (work_order_key = selection)"
+      />
+
+      <BaseAutocompleteProduct
+        :load-data="false"
+        dense
+        key-only
+        class="q-mb-md"
+        :label="$t('product.label')"
+        :value="product_key"
+        @select="(selection) => (product_key = selection)"
+      />
+
+      <BaseAutocompleteSerial
+        dense
+        key-only
+        class="q-mb-md"
+        :label="$t('serial')"
+        :value="serial_key"
+        @select="(selection) => (serial_key = selection)"
+      />
+
+      <BaseAutocompleteTask
+        dense
+        key-only
+        class="q-mb-md"
+        :label="$t('task')"
+        :value="linked_task_key"
+        @select="(selection) => (linked_task_key = selection)"
+      />
     </FilterDrawer>
   </q-page-container>
 </template>
@@ -388,6 +438,11 @@ import { ref, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import BaseAutocompleteTaskType from '@/components/BaseAutocompleteTaskType.vue';
+import BaseAutocompleteIssue from '@/components/BaseAutocompleteIssue.vue';
+import BaseAutocompleteWorkOrder from '@/components/BaseAutocompleteWorkOrder.vue';
+import BaseAutocompleteProduct from '@/components/BaseAutocompleteProduct.vue';
+import BaseAutocompleteSerial from '@/components/BaseAutocompleteSerial.vue';
+import BaseAutocompleteTask from '@/components/BaseAutocompleteTask.vue';
 import BaseAutocompleteUser from '@/components/BaseAutocompleteUser.vue';
 import FilterDrawer from '@/components/FilterDrawer.vue';
 import TaskNew from '@/components/TaskNew.vue';
@@ -411,9 +466,14 @@ const task_type_key = useQueryModel(String, 'task_type', null);
 const status_open = useQueryModel(Boolean, 'status_open', true);
 const status_completed = useQueryModel(Boolean, 'status_completed', true);
 const status_canceled = useQueryModel(Boolean, 'status_canceled', true);
+const status_pending = useQueryModel(Boolean, 'status_pending', true);
 
 // Map status options to their query models for easy iteration
 const statusFilters = computed(() => [
+  {
+    ...taskStatusOptions.pending,
+    queryModel: status_pending,
+  },
   {
     ...taskStatusOptions.open,
     queryModel: status_open,
@@ -438,6 +498,12 @@ const closed_from = useQueryModel(String, 'closed_from', null);
 const closed_to = useQueryModel(String, 'closed_to', null);
 const owner_key = useQueryModel(String, 'owner_key', null);
 const assigned_to = useQueryModel(Array, 'assigned_to', null);
+// Linked entity filters
+const issue_key = useQueryModel(String, 'issue_key', null);
+const work_order_key = useQueryModel(String, 'work_order_key', null);
+const product_key = useQueryModel(String, 'product_key', null);
+const serial_key = useQueryModel(String, 'serial_key', null);
+const linked_task_key = useQueryModel(String, 'linked_task_key', null);
 
 
 // Computed filters object and active filter count
@@ -455,6 +521,11 @@ const filters_active = computed(() => {
     closed_to,
     owner_key,
     assigned_to,
+    issue_key,
+    work_order_key,
+    product_key,
+    serial_key,
+    linked_task_key,
   };
 
   // Count status filters as active only if they are false
@@ -492,6 +563,22 @@ const filters = computed(() => {
   }
   if (owner_key.value) {
     filters_object.owner_key = owner_key.value;
+  }
+  // Linked entity filters (send arrays as backend expects lists)
+  if (issue_key.value) {
+    filters_object.issue_key = issue_key.value;
+  }
+  if (work_order_key.value) {
+    filters_object.work_order_key = work_order_key.value;
+  }
+  if (product_key.value) {
+    filters_object.product_key = product_key.value;
+  }
+  if (serial_key.value) {
+    filters_object.serial_key = serial_key.value;
+  }
+  if (linked_task_key.value) {
+    filters_object.linked_task_key = linked_task_key.value;
   }
 
   // Date filters

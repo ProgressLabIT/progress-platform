@@ -778,6 +778,7 @@ export default {
   revert_movement: 'annulla movimento {key}',
   movement_reverted_by: 'movimento annullato da {key}',
   movement_revert_reason_help: "Spiega la ragione dell'annullamento",
+  pending: 'in attesa',
   resume: 'riprendi',
   save: 'salva',
   save_or_cancel_before_change: 'Salva o annulla le modifiche prima',
