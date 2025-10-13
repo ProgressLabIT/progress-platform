@@ -211,26 +211,58 @@ class Queries:
 
 
   FIND_TASKS = """
+    LET link_type = {
+      Issue: { type: 'issue', code: 'code' },
+      WorkOrder: { type: 'work_order', code: 'wo_code' },
+      Product: { type: 'product', code: 'code' },
+      Equipment: { type: 'equipment', code: 'code' },
+      Serial: { type: 'serial', code: 'code' },
+      Task: { type: 'task', code: 'code' }
+    }
     FOR t IN Task
     FILTER
       @search ? CONTAINS(LOWER(CONCAT(t.code, ' ', t.title)), LOWER(@search)) : true
       && (@task_type_key ? t.task_type_key == @task_type_key : true)
+      && (@status_pending == false ? t.status != 'pending' : true)
       && (@status_open == false ? t.status != 'open' : true)
       && (@status_completed == false ? t.status != 'completed' : true)
       && (@status_canceled == false ? t.status != 'canceled' : true)
       && (@owner_key ? t.owner_key == @owner_key : true)
       && (@assigned_to ? @assigned_to ALL IN t.assigned_to[* RETURN CURRENT.user_key] : true)
+      // Gather all links once (ANY direction on task_rel)
+
+
       && (@start_from ? t.start_from >= @start_from : true)
       && (@due_by ? t.due_by <= @due_by : true)
       && (@created_from ? t.created >= @created_from : true)
       && (@created_to ? t.created <= @created_to : true)
       && (@closed_from ? t.closed >= @closed_from : true)
       && (@closed_to ? t.closed <= @closed_to : true)
+
+      // LINK FILTERS using precomputed links
+      LET links = (
+        FOR l IN 1..1 ANY t task_rel
+        LET meta = link_type[PARSE_IDENTIFIER(l._id).collection]
+        RETURN {
+          type: meta.type,
+          key: l._key,
+          code: l[meta.code]
+        }
+      )
+
+      FILTER
+      (@issue_key ? links[? ANY FILTER CURRENT.type == 'issue' && CURRENT.key == @issue_key] : true)
+      && (@work_order_key ? links[? ANY FILTER CURRENT.type == 'work_order' && CURRENT.key == @work_order_key] : true)
+      && (@product_key ? links[? ANY FILTER CURRENT.type == 'product' && CURRENT.key == @product_key] : true)
+      && (@serial_key ? links[? ANY FILTER CURRENT.type == 'serial' && CURRENT.key == @serial_key] : true)
+      && (@linked_task_key ? links[? ANY FILTER CURRENT.type == 'task' && CURRENT.key == @linked_task_key] : true)
+
+      // ADVANCED FILTERS
       && (@advanced_filters
         ? LENGTH(
             // This subquery returns match true/false for each filter
             FOR advanced_filter IN NOT_NULL(@advanced_filters.filters, [])
-            FOR f IN t.form_fields
+            FOR f IN NOT_NULL(t.form_fields, [])
             FILTER f.custom_field_key == advanced_filter._key
             LET type = DOCUMENT(CustomField, f.custom_field_key).type
             FILTER (
@@ -253,7 +285,7 @@ class Queries:
 
     SORT t.due_by
     LIMIT @offset, @limit || null
-    RETURN MERGE(t, { icon: type_data.icon, task_type_name: type_data.name })
+    RETURN MERGE(t, { icon: type_data.icon, task_type_name: type_data.name, links })
   """
 
   GET_TASK_DATA = """

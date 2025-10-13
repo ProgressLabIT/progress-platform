@@ -6,7 +6,7 @@ export function useTask() {
   const { t } = useI18n();
 
   const taskStatusOptions = {
-    pending: { label: t('pending'), value: 'pending', color: 'transparent', icon: 'mdi-clock-outline' },
+    pending: { label: t('pending'), value: 'pending', color: 'theme-grey', icon: 'mdi-clock-outline' },
     open: { label: t('open'), value: 'open', color: 'theme-blue', icon: 'mdi-circle-outline' },
     completed: { label: t('completed'), value: 'completed', color: 'theme-green', icon: 'mdi-check-circle' },
     canceled: { label: t('canceled'), value: 'canceled', color: 'theme-grey', icon: 'mdi-close-circle' }

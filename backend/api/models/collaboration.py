@@ -219,6 +219,7 @@ class TaskLink(ArangoEdge):
 class TaskSearchParameters(BaseModel):
   search: str | None = None
   task_type_key: str | None = None
+  status_pending: bool | None = None
   status_open: bool | None = None
   status_completed: bool | None = None
   status_canceled: bool | None = None
@@ -231,10 +232,18 @@ class TaskSearchParameters(BaseModel):
   closed_from: date | None = None
   closed_to: date | None = None
   advanced_filters: dict | None = None
+
+  # Linked entity filters
+  issue_key: str | None = None
+  work_order_key: str | None = None
+  product_key: str | None = None
+  serial_key: str | None = None
+  linked_task_key: str | None = None
+
   limit: int | None = 200
   offset: int | None = 0
 
-  @field_validator('advanced_filters', 'assigned_to', mode='before')
+  @field_validator('advanced_filters', mode='before')
   @classmethod
   def deserialize_base64(cls, value: str | None) -> dict | list[str] | None:
     if isinstance(value, str):
