@@ -2,13 +2,14 @@ from events.base_event import BaseEvent
 from models.event import EventInfoModel
 from models.production import Job, WorkStatus
 from utils.production import Queries as ProductionQueries
-from utils.traceability import Queries as TraceabilityQueries
+from utils.traceability import Queries as TraceabilityQueries, update_work_order_tasks_status
 
 
 class JobClosedEvent(BaseEvent):
   class InfoModel(EventInfoModel):
     job_key: str
     completed_qt: float
+    notes: str | None = None
 
   @classmethod
   def get_event_type(cls):
@@ -16,13 +17,13 @@ class JobClosedEvent(BaseEvent):
 
   @classmethod
   def get_tx_collections(cls):
-    return ['Job', 'Queue', 'WorkOrder']
+    return ['Job', 'Queue', 'WorkOrder', 'Task']
 
   def apply(self):
     bind_vars=dict(
       job_key=self.info.job_key,
       stage=WorkStatus.CLOSED,
-      notes="Job closed",
+      notes=self.info.notes or "Job closed",
       qt_completed=self.info.completed_qt,
       end=self.info.timestamp,
     )

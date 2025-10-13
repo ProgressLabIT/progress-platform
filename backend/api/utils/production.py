@@ -551,3 +551,44 @@ def create_job_record(
     update_target_queue(new_job_record.key, assigned_to, 'add', tx)
 
   return new_job_record
+
+def close_job_and_update_queues(tx, job: Job, notes: str | None = None) -> Job:
+  """Close the provided job via JobClosedEvent (removes from queues within the event)."""
+  # Fetch fresh job state to ensure we pass the correct completed quantity
+  current_job_data = tx.collection('Job').get(job.key)
+  current_job = Job(**current_job_data)
+
+  # Build secondary event info to run inside existing transaction
+  event_info = dict(
+    event_type = EventType.JOB_CLOSED,
+    primary = False,
+    event_group = str(uuid.uuid4()),
+    job_key = current_job.key,
+    completed_qt = current_job.qt_completed,
+    notes = notes if notes is not None else current_job.notes,
+  )
+
+  # Lazy import to avoid circular dependency
+  from events.production.job_closed import JobClosedEvent
+  event = JobClosedEvent(info=event_info, tx=tx)
+  closed_job = event.save()
+  return closed_job
+
+
+def reassign_job_in_queues(tx, job_key: str, old_assignee: str | None, new_assignee: str | None) -> None:
+  """Move job between operator queues based on reassignment."""
+  if old_assignee:
+    update_target_queue(
+      job_key=job_key,
+      target_key=old_assignee,
+      action='remove',
+      tx=tx
+    )
+
+  if new_assignee:
+    update_target_queue(
+      job_key=job_key,
+      target_key=new_assignee,
+      action='add',
+      tx=tx
+    )
