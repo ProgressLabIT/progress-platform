@@ -13,21 +13,18 @@
     :label-slot="!!label"
     :loading="loading"
     :map-options="keyOnly"
+    :emit-value="keyOnly"
     :max-values="selection_qt || 1"
     :model-value="value"
     :multiple="multiple"
     :options="options"
-    option-value="_key"
-    option-label="title"
+    :option-value="keyOnly ? '_key' : null"
+    option-label="_key"
     :placeholder="placeholder_computed"
     :use-chips="multiple"
     @filter="filter"
     @remove="remove"
-    @update:model-value="
-      (selection) => {
-        emit('select', selection);
-      }
-    "
+    @update:model-value="(selection) => emit('select', selection)"
   >
     <template #option="scope">
       <q-item
