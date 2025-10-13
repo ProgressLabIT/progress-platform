@@ -2,6 +2,10 @@
   <q-select
     use-input
     filled
+    :hint="hint"
+    :error="error"
+    :error-message="errorMessage"
+    :hide-bottom-space="!hint && !error"
     label-slot
     :label="$capitalize(t('task_type'))"
     :dense="dense"
@@ -73,6 +77,19 @@ const props = defineProps({
   mandatory: {
     type: Boolean,
     default: false,
+  },
+
+  hint: {
+    type: String,
+    default: undefined,
+  },
+  error: {
+    type: Boolean,
+    default: false,
+  },
+  errorMessage: {
+    type: String,
+    default: undefined,
   },
 });
 

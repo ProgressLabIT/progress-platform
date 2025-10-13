@@ -3,6 +3,9 @@
     use-input
     :dense="dense"
     :hint="hint"
+    :error="error"
+    :error-message="errorMessage"
+    :hide-bottom-space="!hint && !error"
     :loading="loading"
     :filled="filled"
     clearable
@@ -82,6 +85,14 @@ export default {
       default: undefined,
     },
     hint: {
+      type: String,
+      default: undefined,
+    },
+    error: {
+      type: Boolean,
+      default: false,
+    },
+    errorMessage: {
       type: String,
       default: undefined,
     },
