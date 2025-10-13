@@ -38,7 +38,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { api } from '@/boot/axios';
 
 const props = defineProps({
@@ -49,6 +49,10 @@ const props = defineProps({
   label: {
     type: String,
     default: '',
+  },
+  loadData: {
+    type: Boolean,
+    default: true,
   },
   keyOnly: {
     type: Boolean,
@@ -82,10 +86,11 @@ const placeholder_computed = computed(() => {
   return props.value ? null : props.placeholder;
 });
 
-if (props.loadData) {
-  loadPositions();
-}
-
+onMounted(() => {
+  if (props.loadData) {
+    loadPositions();
+  }
+});
 
 const loadPositions = (search_value) => {
   loading.value = true;

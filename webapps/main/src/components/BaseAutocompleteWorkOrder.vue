@@ -13,6 +13,7 @@
     :options="options"
     :display-value="value?.wo_code"
     :option-value="keyOnly ? '_key' : null"
+    option-label="wo_code"
     :model-value="value"
     input-debounce="500"
     :emit-value="keyOnly"

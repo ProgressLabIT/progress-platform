@@ -14,6 +14,7 @@
     :label-slot="!!label"
     :loading="loading"
     :map-options="keyOnly"
+    :emit-value="keyOnly"
     :max-values="selection_qt || 1"
     :model-value="value"
     :multiple="multiple"
@@ -24,11 +25,7 @@
     :use-chips="multiple"
     @filter="filter"
     @remove="remove"
-    @update:model-value="
-      (selection) => {
-        emit('select', selection);
-      }
-    "
+    @update:model-value="(selection) => emit('select', selection)"
   >
     <template #option="scope">
       <q-item
