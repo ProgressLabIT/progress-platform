@@ -21,6 +21,8 @@ from utils.production import (
   create_job_record,
   create_wo_record,
   update_target_queue
+  close_job_and_update_queues,
+  reassign_job_in_queues
 )
 from utils.traceability import _update_job_progress, Queries as TraceabilityQueries
 from events.base_event import BaseEvent
@@ -352,12 +354,10 @@ async def update_work_order_quantities(
 
     for update in job_updates:
       if 'qt_planned' not in update.data:
-        tx.abort_transaction()
         raise HTTPError(422, "Please provide a planned quantity for each job update")
 
       if update.action == JobUpdateType.INSERT:
         if 'phase_key' not in update.data:
-          tx.abort_transaction()
           raise HTTPError(422, "Please provide a phase key for each new job")
 
         create_job_record(
@@ -368,35 +368,22 @@ async def update_work_order_quantities(
 
       elif update.action == JobUpdateType.UPDATE:
         if '_key' not in update.data:
-          tx.abort_transaction()
           raise HTTPError(422, "Please provide a job key for each update")
 
-        result = tx.collection('Job').update(update.data, return_new=True)
+        result = tx.collection('Job').update(update.data, return_new=True, return_old=True)
         job = Job(**result['new'])
 
         _update_job_progress(db=tx, job_key=job.key)
 
         if job.qt_completed >= job.qt_planned:
-          tx.aql.execute(
-            Queries.CLOSE_JOB,
-            bind_vars=dict(
-              job_key=job.key,
-              stage=WorkStatus.CLOSED,
-              end=timestamp(),
-              notes=job.notes
-            ),
-          )
-          # Remove closed job from assigned user's queue
-          if job.assigned_to:
-            tx.aql.execute(
-              Queries.REMOVE_JOB_FROM_QUEUE,
-              bind_vars=dict(
-                job_key=job.key,
-                target_key=job.assigned_to
-              )
-            )
+          close_job_and_update_queues(tx, Job(**result['old']))
+
+      elif update.action == JobUpdateType.CLOSE:
+        if '_key' not in update.data:
+          raise HTTPError(422, "Please provide a job key for each close action")
+        current_job = Job(**tx.collection('Job').get(update.data['_key']))
+        close_job_and_update_queues(tx, current_job, notes=update.data.get('notes'))
       else:
-        tx.abort_transaction()
         raise HTTPError(422, "Invalid job update action")
 
     updated_wo_data = tx.collection('WorkOrder').update(
@@ -429,9 +416,16 @@ async def update_work_order_quantities(
     tx.commit_transaction()
     return APIResponse(detail=updated_wo_data)
 
-  except Exception:
-    tx.abort_transaction()
-    raise HTTPError(500, "There was a problem updating the work order quantities")
+  except Exception as e:
+    if isinstance(e, HTTPError):
+      raise e
+
+    else:
+      raise HTTPError(500, "There was a problem updating the work order quantities")
+
+  finally:
+    if tx.transaction_status() == 'running': # See transaction statuses in the HTTP API of ArangoDB
+      tx.abort_transaction()
 
 
 # ----------------------------------------------------------------------
@@ -852,6 +846,18 @@ async def update_jobs(job_updates:List[JobUpdate]):
   results = []
 
   try:
+    # Enforce single Work Order per request
+    wo_keys = set()
+    for u in job_updates:
+      if u.action == JobUpdateType.INSERT:
+        wo_keys.add(u.data['work_order_key'])
+      elif u.action in [JobUpdateType.UPDATE, JobUpdateType.CLOSE]:
+        job_key = u.data['_key']
+        job_doc = job_db.get(job_key)
+        wo_keys.add(job_doc['wo_key'])
+    if len(wo_keys) != 1:
+      raise HTTPError(422, 'Please provide updates for a single work order per request')
+
     for u in job_updates:
 
       if u.action == JobUpdateType.INSERT:
@@ -881,33 +887,10 @@ async def update_jobs(job_updates:List[JobUpdate]):
           _update_job_progress(db=tx, job_key=new_job_data.key)
 
           if new_job_data.qt_completed >= new_job_data.qt_planned:
-            bind_vars = dict(
-              job_key=new_job_data.key,
-              stage=WorkStatus.CLOSED,
-              end=timestamp(),
-              notes=new_job_data.notes
-            )
-
-            new_job_data = Job(**tx.aql.execute(
-              Queries.CLOSE_JOB,
-              bind_vars=bind_vars,
-            ).next())
+            new_job_data = close_job_and_update_queues(tx, old_job_data)
 
         if 'assigned_to' in u.data:
-          if hasattr(old_job_data, 'assigned_to'):
-            update_target_queue(
-              job_key=u.data['_key'],
-              target_key=old_job_data.assigned_to,
-              action='remove',
-              tx=tx
-            )
-
-          update_target_queue(
-            job_key=u.data['_key'],
-            target_key=u.data['assigned_to'],
-            action='add',
-            tx=tx
-          )
+          reassign_job_in_queues(tx, job_key=u.data['_key'], old_assignee=getattr(old_job_data, 'assigned_to', None), new_assignee=u.data['assigned_to'])
 
         results.append(new_job_data)
 
@@ -923,47 +906,13 @@ async def update_jobs(job_updates:List[JobUpdate]):
           results.append(current_job_data)
 
         else:
-          bind_vars = dict(
-            job_key = job_key,
-            stage = WorkStatus.CLOSED,
-            end = timestamp(),
-            notes = u.data['notes']
-          )
-
-          new_job_data = Job(**tx.aql.execute(
-            Queries.CLOSE_JOB,
-            bind_vars = bind_vars,
-          ).next())
-
-          update_target_queue(
-            job_key = job_key,
-            target_key = current_job_data.assigned_to,
-            action = 'remove',
-            tx = tx
-          )
+          new_job_data = close_job_and_update_queues(tx, current_job_data, notes=u.data.get('notes'))
 
           results.append(new_job_data)
-
-        if 'assigned_to' in current_job_data:
-          update_target_queue(
-            job_key = job_key,
-            target_key = current_job_data.assigned_to,
-            action = 'remove',
-            tx = tx
-          )
 
 
     wo_key = results[0].wo_key
     work_order_data = tx.collection('WorkOrder').get(wo_key)
-
-    # Update next_batch_available throughout the work order
-    tx.aql.execute(
-      TraceabilityQueries.UPDATE_NEXT_BATCH_AVAILABLE_STATE_FOR_JOBS_IN_PHASES,
-      bind_vars = dict(
-        wo_key = work_order_data['_key'],
-        phase_keys = work_order_data['phase_sequence']
-      )
-    )
 
     # Update work order
     updated_wo_data = tx.aql.execute(
@@ -987,18 +936,12 @@ async def update_jobs(job_updates:List[JobUpdate]):
     tx.commit_transaction()
     return APIResponse(detail=results, message="Jobs updated successfully")
 
-  except:
-    tx.abort_transaction()
-    status_code = 500
-    error_str = traceback.format_exc()
+  except Exception:
+    return HTTPError(500, "There was an error saving the updates")
 
-    response=dict(
-      status_code=status_code,
-      message="There was an error saving the updates",
-      error=error_str
-    )
-
-    raise HTTPException(status_code=status_code, detail=response)
+  finally:
+    if tx.transaction_status() == 'running':
+      tx.abort_transaction()
 
 @router.get("/job/{job_key}/time",
     dependencies=[Depends(auth.verify_token)])
