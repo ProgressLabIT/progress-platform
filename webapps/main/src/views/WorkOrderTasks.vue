@@ -4,14 +4,17 @@
       :process-phases="processPhases"
       :tasks="processTasks"
       :selected-task="null"
-      @task-click="noop"
+      @task-click="goToTask"
     />
   </div>
-  </template>
+</template>
 
 <script setup>
 import { computed } from 'vue'
 import ProcessTasksViewer from '@/components/ProcessTasksViewer.vue'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
 
 const props = defineProps({
   wo_data: {
@@ -41,7 +44,9 @@ const processPhases = computed(() => {
 
 const processTasks = computed(() => props.wo_data.tasks || [])
 
-function noop() {}
+function goToTask(task) {
+  router.push({ name: 'taskScreen', params: { taskKey: task._key } })
+}
 </script>
 
 
