@@ -63,6 +63,16 @@ class SerialUpdatedEvent(BaseSerialEvent):
       ):
         raise SerialNotUpdatedError(f'Changing serial code is not allowed')
 
+      product_key = self.original['product_key']
+      serial_code_free = (self.tx.collection('Serial')
+                          .find(dict(
+                            code=self.info.serial_code,
+                            product_key=product_key
+                          ))
+                          .count()) == 0
+      if not serial_code_free:
+        raise SerialNotUpdatedError(f'Serial code {self.info.serial_code} is already in use')
+
       serial_update['code'] = self.info.serial_code
 
     # Update data if provided

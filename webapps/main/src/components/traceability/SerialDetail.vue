@@ -122,7 +122,7 @@ import BaseModalScreen from '@/components/BaseModalScreen.vue';
 import MessageThread from '@/components/MessageThread.vue';
 import SerialDetailForm from '@/components/traceability/SerialDetailForm.vue';
 import SerialTree from '@/components/traceability/SerialTree.vue';
-import { timestamp } from '@/lib/TimeHandling.js';
+import { sendEvent } from '@/composables/event.js';
 import { useConfigStore } from '../../stores/config';
 
 export default {
@@ -316,22 +316,25 @@ export default {
 
       serial_data.updated_by = `User/${user}`; // temporarily hardcoding DB id
 
-      const event = {
-        event_type: 'SERIAL_UPDATED',
-        user_key: user,
-        user_session_key: this.session_data.session_key,
-        timestamp: timestamp(),
-        serial_key: serial_data._key,
-        serial_code: serial_data.code,
-        serial_data: serial_data.data
-      };
-
       await this.saveFiles(serial_data._key);
-      await this.$api.post('event', event);
-      this.refreshSerial();
 
-      this.editMode = false;
-      this.saving = false;
+      try {
+        await sendEvent({
+          event_type: 'SERIAL_UPDATED',
+          event_data: {
+            serial_key: serial_data._key,
+            serial_code: serial_data.code,
+            serial_data: serial_data.data
+          }
+        });
+        this.refreshSerial();
+        this.editMode = false;
+      } catch (error) {
+        // Error is already handled by sendEvent with notification
+        console.error('Failed to update serial:', error);
+      } finally {
+        this.saving = false;
+      }
     },
 
     refreshSerial() {
@@ -384,24 +387,25 @@ export default {
           },
         })
         .onOk(async (delete_children) => {
-          const user = this.session_data.user._key;
-          const event = {
-            event_type: 'SERIAL_DELETED',
-            user_key: user,
-            user_session_key: this.session_data.session_key,
-            timestamp: timestamp(),
-            delete_children: delete_children,
-            serial_key: this.serial._key,
-          };
-
-          await this.$api.post('event', event);
-          await this.$store.dispatch('loadSerials');
-          this.$q.notify({
-            message: this.$t(`Seriale ${this.serial.code} eliminato`),
-            color: 'theme-orange',
-            position: 'top',
-          });
-          this.exit();
+          try {
+            await sendEvent({
+              event_type: 'SERIAL_DELETED',
+              event_data: {
+                delete_children: delete_children,
+                serial_key: this.serial._key,
+              }
+            });
+            await this.$store.dispatch('loadSerials');
+            this.$q.notify({
+              message: this.$t(`Seriale ${this.serial.code} eliminato`),
+              color: 'theme-orange',
+              position: 'top',
+            });
+            this.exit();
+          } catch (error) {
+            // Error is already handled by sendEvent with notification
+            console.error('Failed to delete serial:', error);
+          }
         });
     },
 
