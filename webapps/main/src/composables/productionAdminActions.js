@@ -8,6 +8,56 @@ import { sendEvent } from '@/composables/event'
 import store from '@/store'
 
 /* ================================================
+ * UTILITY FUNCTIONS
+ * ================================================ */
+
+/**
+ * Compute phase data from a full work order object with jobs
+ * @param {Object} wo - Work order object with jobs array and phase_sequence
+ * @returns {Array} Array of phase objects with aggregated job data
+ */
+export function computePhaseData(wo) {
+  if (!wo.phase_sequence) {
+    return []
+  }
+
+  return wo.phase_sequence.map((phase_key) => {
+    const jobs = (wo.jobs || []).filter((j) => j.phase_key === phase_key)
+    const params = jobs[0]?.parameters
+    const phase_alias = jobs[0]?.phase_alias
+
+    const total_completed = jobs.reduce(
+      (sum, job) => sum + job.qt_completed,
+      0,
+    )
+    const total_active = jobs.reduce(
+      (sum, job) => sum + job.active_batch_qt,
+      0,
+    )
+    const total_remaining = jobs.reduce((sum, job) => {
+      return sum + job.qt_planned - job.qt_completed - job.active_batch_qt
+    }, 0)
+    const total_progress = Math.floor(
+      jobs.reduce((sum, job) => sum + job.progress * job.qt_planned, 0) /
+        Math.max(wo.qt_planned, 1),
+    )
+    const active = jobs.reduce((count, job) => count + (job.active ? 1 : 0), 0)
+
+    return {
+      jobs,
+      phase_key,
+      phase_alias,
+      active,
+      ...params,
+      qt_completed: total_completed,
+      qt_remaining: total_remaining,
+      active_batch_qt: total_active,
+      progress: total_progress,
+    }
+  })
+}
+
+/* ================================================
  * JOB ACTIONS
  * ================================================ */
 export function useJobActions() {
@@ -590,43 +640,6 @@ export function useWorkOrderActions() {
       woModals[modalType].show = false
       woModals[modalType].data = {}
     }
-  }
-
-  // Helper function to compute phase data (from old WorkOrderDataColumn)
-  const computePhaseData = (woData) => {
-    return woData.phase_sequence.map((phase_key) => {
-      const jobs = woData.jobs.filter((j) => j.phase_key === phase_key)
-      const params = jobs[0].parameters
-      const phase_alias = jobs[0].phase_alias
-      const total_completed = jobs.reduce(
-        (sum, job) => sum + job.qt_completed,
-        0,
-      )
-      const total_active = jobs.reduce(
-        (sum, job) => sum + job.active_batch_qt,
-        0,
-      )
-      const total_remaining = jobs.reduce((sum, job) => {
-        return sum + job.qt_planned - job.qt_completed - job.active_batch_qt
-      }, 0)
-      const total_progress = Math.floor(
-        jobs.reduce((sum, job) => sum + job.progress * job.qt_planned, 0) /
-          woData.qt_planned,
-      )
-      const active = jobs.reduce((count, job) => count + job.active, 0)
-
-      return {
-        jobs,
-        phase_key,
-        phase_alias,
-        active,
-        ...params,
-        qt_completed: total_completed,
-        qt_remaining: total_remaining,
-        active_batch_qt: total_active,
-        progress: total_progress,
-      }
-    })
   }
 
   // Modal save handlers

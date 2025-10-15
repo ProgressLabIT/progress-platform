@@ -290,6 +290,7 @@
         </q-card-actions>
       </template>
 
+      <!-- UPDATE QUANTITY DIALOG -->
       <template v-else-if="dialog === 'update_quantity'">
         <q-card-section>
           <div class="text-h4 display highlight text-uppercase">
@@ -323,6 +324,7 @@
       </template>
 
 
+      <!-- QUANTITY REBALANCE DIALOG -->
       <WorkOrderJobQtRebalance
         v-else-if="dialog === 'assign_quantity'"
         :new_wo_qt="tempData.newQt"
@@ -359,18 +361,19 @@
 </template>
 
 <script setup>
-import { reactive, ref, computed, watch } from 'vue'
-import BaseDialog from '@/components/BaseDialog.vue'
-import BaseConfirmationDialog from '@/components/BaseConfirmationDialog.vue'
-import { sendEvent } from '@/composables/event'
-import { useI18n } from 'vue-i18n'
 import { Duration } from 'luxon'
-import { api } from '@/boot/axios'
-import { useStore } from 'vuex'
 import { Notify } from 'quasar'
+import { reactive, ref, computed, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
+import { useStore } from 'vuex'
+import { api } from '@/boot/axios'
 import { capitalize } from '@/boot/filters'
+import BaseConfirmationDialog from '@/components/BaseConfirmationDialog.vue'
+import BaseDialog from '@/components/BaseDialog.vue'
 import WorkOrderJobQtRebalance from '@/components/WorkOrderJobQtRebalance.vue'
+import { sendEvent } from '@/composables/event'
+import { computePhaseData } from '@/composables/productionAdminActions'
 
 const { t } = useI18n()
 const store = useStore()
@@ -488,48 +491,7 @@ const canForceProgress = computed(() => !(
 ))
 
 // Phase data for job quantity rebalance
-const phaseData = computed(() => {
-  if (!woData.phase_sequence) {
-    return []
-  }
-
-  return woData.phase_sequence.map((phase_key) => {
-    const jobs = woData.jobs?.filter((j) => j.phase_key === phase_key) || [];
-    const params = jobs[0]?.parameters;
-    const phase_alias = jobs[0]?.phase_alias;
-    const total_completed = jobs.reduce(
-      (sum, job) => sum + job.qt_completed,
-      0,
-    );
-    const total_active = jobs.reduce(
-      (sum, job) => sum + job.active_batch_qt,
-      0,
-    );
-    // const total_released = jobs.reduce( (sum, job) => sum + job.qt_released, 0 )
-    const total_remaining = jobs.reduce((sum, job) => {
-      return sum + job.qt_planned - job.qt_completed - job.active_batch_qt;
-    }, 0);
-    const total_progress = Math.floor(
-      jobs.reduce((sum, job) => sum + job.progress * job.qt_planned, 0) /
-        woData.qt_planned,
-    );
-    const active = jobs.reduce((count, job) => count + job.active, 0);
-
-    // const assignments = jobs.map( job => job.assigned_to )
-    return {
-      jobs,
-      phase_key,
-      phase_alias,
-      active,
-      ...params,
-      // qt_released: total_released,
-      qt_completed: total_completed,
-      qt_remaining: total_remaining,
-      active_batch_qt: total_active,
-      progress: total_progress,
-    };
-  });
-})
+const phaseData = computed(() => computePhaseData(woData))
 
 
 /* ===============================

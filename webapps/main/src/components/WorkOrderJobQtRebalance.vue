@@ -9,7 +9,7 @@
       </q-card-section>
 
       <q-card-section class="scroll col">
-        <div v-for="(phase, index) in phase_data" :key="phase.phase_key">
+        <div v-for="(phase, index) in effectivePhaseData" :key="phase.phase_key">
           <q-separator v-if="index !== 0" class="q-my-md" />
 
           <!-- PHASE HEADER -->
@@ -113,6 +113,7 @@
 <script>
 import BaseDialog from '@/components/BaseDialog.vue';
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue';
+import { computePhaseData } from '@/composables/productionAdminActions';
 
 export default {
   name: 'WorkOrderJobQtRebalance',
@@ -125,7 +126,8 @@ export default {
   props: {
     phase_data: {
       type: Array,
-      required: true,
+      required: false,
+      default: () => [],
     },
     new_wo_qt: {
       type: Number,
@@ -147,13 +149,20 @@ export default {
     return {
       job_updates: {}, // job_key => qt
       saving: false,
+      effectivePhaseData: [],
     };
   },
 
   computed: {
     phases_delta() {
       const deltas = {};
-      this.phase_data.forEach((phase) => {
+      this.effectivePhaseData.forEach((phase) => {
+        // Guard: job_updates might not be initialized yet during async created()
+        if (!this.job_updates[phase.phase_key]) {
+          deltas[phase.phase_key] = 0;
+          return;
+        }
+
         if (phase.qt_completed >= this.new_wo_qt) {
           deltas[phase.phase_key] = 0;
         } else {
@@ -175,56 +184,77 @@ export default {
     },
   },
 
-  created() {
-    /*
-    for each phase
-      check remaining quantity
-      if any
-        get open jobs
-      else (if increase)
-        add new job
-    */
-    this.job_updates = this.phase_data.reduce((obj, phase) => {
-      obj[phase.phase_key] = [];
-      const delta = this.new_wo_qt - (phase.qt_completed + phase.qt_remaining);
-
-      if (phase.qt_completed >= this.new_wo_qt) {
-        phase.jobs.forEach((j) => {
-          const update =
-            j.stage != 'closed'
-              ? { ...j, new_remaining: 0 }
-              : { _key: 'NA', new_remaining: 0 };
-
-          obj[phase.phase_key].push(update);
-        });
-      } else if (phase.qt_remaining) {
-        const open_jobs = phase.jobs.filter((j) => j.stage != 'closed');
-        open_jobs.forEach((j) => {
-          obj[phase.phase_key].push({
-            ...j,
-            new_remaining: j.qt_planned - j.qt_completed - j.active_batch_qt,
-          });
-        });
-      } else {
-        const job_data =
-          delta > 0
-            ? {
-                _key: 'NEW',
-                phase_key: phase.phase_key,
-                qt_completed: 0,
-                active_batch_qt: 0,
-                new_remaining: delta,
-              }
-            : { _key: 'NA', new_remaining: 0 };
-
-        obj[phase.phase_key].push(job_data);
-      }
-
-      return obj;
-    }, {});
+  async created() {
+    await this.initPhaseData();
+    this.buildJobUpdates();
   },
 
   methods: {
+    async initPhaseData() {
+      // Check if phase_data is incomplete or missing jobs
+      const needsFetch = !this.phase_data ||
+                         this.phase_data.length === 0 ||
+                         this.phase_data.some(p => !Array.isArray(p.jobs) || p.jobs.length === 0);
+
+      if (needsFetch) {
+        // Fetch full work order data and store it in Vuex
+        await this.$store.dispatch('loadWorkOrderData', this.wo_key);
+        // Compute phase data from the store state
+        this.effectivePhaseData = computePhaseData(this.$store.state.workorder.wo_data);
+      } else {
+        this.effectivePhaseData = this.phase_data;
+      }
+    },
+
+    buildJobUpdates() {
+      /*
+      for each phase
+        check remaining quantity
+        if any
+          get open jobs
+        else (if increase)
+          add new job
+      */
+      this.job_updates = this.effectivePhaseData.reduce((obj, phase) => {
+        obj[phase.phase_key] = [];
+        const delta = this.new_wo_qt - (phase.qt_completed + phase.qt_remaining);
+
+        if (phase.qt_completed >= this.new_wo_qt) {
+          phase.jobs.forEach((j) => {
+            const update =
+              j.stage != 'closed'
+                ? { ...j, new_remaining: 0 }
+                : { _key: 'NA', new_remaining: 0 };
+
+            obj[phase.phase_key].push(update);
+          });
+        } else if (phase.qt_remaining) {
+          const open_jobs = phase.jobs.filter((j) => j.stage != 'closed');
+          open_jobs.forEach((j) => {
+            obj[phase.phase_key].push({
+              ...j,
+              new_remaining: j.qt_planned - j.qt_completed - j.active_batch_qt,
+            });
+          });
+        } else {
+          const job_data =
+            delta > 0
+              ? {
+                  _key: 'NEW',
+                  phase_key: phase.phase_key,
+                  qt_completed: 0,
+                  active_batch_qt: 0,
+                  new_remaining: delta,
+                }
+              : { _key: 'NA', new_remaining: 0 };
+
+          obj[phase.phase_key].push(job_data);
+        }
+
+        return obj;
+      }, {});
+    },
+
     spreadRemaining() {
       Object.entries(this.job_updates).forEach(([phase_key, phase_jobs]) => {
         const delta = this.phases_delta[phase_key];

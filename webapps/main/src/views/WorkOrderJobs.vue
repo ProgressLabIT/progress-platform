@@ -258,9 +258,10 @@
 import BaseProgressBar from '@/components/BaseProgressBar.vue';
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue';
 import JobRebalanceActionCard from '@/components/JobRebalanceActionCard.vue';
+import ProductionAdminMenu from '@/components/ProductionAdminMenu.vue';
+import { computePhaseData } from '@/composables/productionAdminActions';
 import { formatDateTime } from '@/lib/TimeHandling';
 import sendEvent from '@/mixins/event.js';
-import ProductionAdminMenu from '@/components/ProductionAdminMenu.vue';
 
 export default {
   name: 'WorkOrderJobs',
@@ -368,33 +369,23 @@ export default {
     },
 
     phase_data() {
-      return this.wo_data.phase_sequence.map((phase_key) => {
-        const jobs = this.wo_data.jobs
-          .filter((job) => job.phase_key === phase_key)
-          .sort((a, b) => (a._key > b._key ? -1 : a._key < b._key ? 1 : 0));
-        const params = jobs[0].parameters;
-        const phase_alias = jobs[0].phase_alias;
-        const issue_count = jobs.reduce((sum, job) => sum + job.issue_count, 0);
-        const total_completed = jobs.reduce(
-          (sum, job) => sum + job.qt_completed,
-          0,
-        );
-        const total_active = jobs.reduce(
-          (sum, job) => sum + job.active_batch_qt,
-          0,
-        );
-        // const total_released = jobs.reduce( (sum, job) => sum + job.qt_released, 0 )
-        const total_remaining = jobs.reduce((sum, job) => {
-          return sum + job.qt_planned - job.qt_completed - job.active_batch_qt;
-        }, 0);
-        const total_progress = Math.floor(
-          jobs.reduce((sum, job) => sum + job.progress * job.qt_planned, 0) /
-            this.wo_data.qt_planned,
-        );
-        const critical = jobs.some((job) => job.critical);
+      // Use the helper function for phase data computation
+      const basePhaseData = computePhaseData(this.wo_data);
 
-        const total_processing_time = jobs.reduce(
-          (sum, job) => sum + job.processing_time,
+      // Add view-specific computed fields
+      return basePhaseData.map((phase) => {
+        // Sort jobs for this view
+        const sortedJobs = [...phase.jobs].sort((a, b) =>
+          a._key > b._key ? -1 : a._key < b._key ? 1 : 0
+        );
+
+        // Compute view-specific fields
+        const issue_count = phase.jobs.reduce((sum, job) => sum + (job.issue_count || 0), 0);
+        const critical = phase.jobs.some((job) => job.critical);
+        const editing = phase.jobs.some((job) => this.selected_jobs.includes(job._key));
+
+        const total_processing_time = phase.jobs.reduce(
+          (sum, job) => sum + (job.processing_time || 0),
           0,
         );
         const processing_time_string =
@@ -403,27 +394,13 @@ export default {
             : this.$durationFromMillisec(total_processing_time, {
                 precision: 'm',
               }) || '< 1m';
-        const active = !!jobs.reduce((count, job) => count + job.active, 0);
-        const editing = jobs.some((job) =>
-          this.selected_jobs.includes(job._key),
-        );
-
-        // const assignments = jobs.map( job => job.assigned_to )
 
         return {
-          jobs,
-          phase_key,
-          phase_alias,
+          ...phase,
+          jobs: sortedJobs,
           editing,
-          active,
           critical,
           issue_count,
-          ...params,
-          // qt_released: total_released,
-          qt_completed: total_completed,
-          qt_remaining: total_remaining,
-          active_batch_qt: total_active,
-          progress: total_progress,
           processing_time: processing_time_string,
         };
       });
