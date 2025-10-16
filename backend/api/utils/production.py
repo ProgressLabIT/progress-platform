@@ -476,14 +476,14 @@ def _define_serial_fields(tx, product_key: str):
   phase_data = list(tx.aql.execute(ProcessQueries.GET_PRODUCTION_PROCESS, bind_vars=dict(product_key=product_key)))
   serial_fields = []
   for phase in phase_data:
-    for step in phase['steps']:
+    for step in phase.get('steps', []):
       for field in step.get('form_fields', []):
         serial_fields.append(SerialFormFieldValue(
           form_field_key = field['_key'],
           custom_field_key = field['custom_field_key'],
-          label = field['label'],
-          hint = field['hint'],
-          mandatory = field['mandatory'],
+          label = field.get('label', ''),
+          hint = field.get('hint', ''),
+          mandatory = field.get('mandatory', False),
           phase_key = phase['_key'],
           step_key = step['_key']
         ))
