@@ -53,21 +53,21 @@ class SerialUpdatedEvent(BaseSerialEvent):
     # UPDATE SCENARIOS
     # ===================================================================
 
-    # Update code if provided
-    if self.info.serial_code:
+    # Update code if provided and different from the original code, otherwise skip.
+    if self.info.serial_code not in [None, self.original['code']]:
       # Prevent code change if it's protected. Not applicable if serial hasn't been assigned a code yet
-      if (
-        self.original['code'] is not None and
-        self.original['code'] != self.info.serial_code and
-        not self.tx.collection('Config').get('allow_serial_code_edit').get('value', True)
-      ):
-        raise SerialNotUpdatedError(f'Changing serial code is not allowed')
+      if self.original['code'] is not None:
+        can_edit_code = self.tx.collection('Config').get('allow_serial_code_edit').get('value', True) # Default to True if not set
+        if not can_edit_code:
+          raise SerialNotUpdatedError(f'Changing serial code is not allowed')
 
+      # Check no other serial of the same product is using the new code
       product_key = self.original['product_key']
       serial_code_free = (self.tx.collection('Serial')
                           .find(dict(
                             code=self.info.serial_code,
-                            product_key=product_key
+                            product_key=product_key,
+                            deleted=False
                           ))
                           .count()) == 0
       if not serial_code_free:
