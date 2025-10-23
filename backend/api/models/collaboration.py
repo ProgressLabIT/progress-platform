@@ -166,6 +166,7 @@ class TaskTypeFull(TaskType):
 
 
 class TaskStatus(str, Enum):
+  PENDING = "pending"
   OPEN = "open"
   COMPLETED = "completed"
   CANCELED = "canceled"
