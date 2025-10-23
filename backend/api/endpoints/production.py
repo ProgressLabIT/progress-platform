@@ -4,22 +4,19 @@ from typing import List
 
 from fastapi import APIRouter, Body, HTTPException, Query, Depends
 from utils import auth
-from fastapi.encoders import jsonable_encoder
 
 from models.bom import WOBomLine
 from models.product import ProductDetails
 from models.production import *
 from utils.api import APIResponse
-from utils.bom import define_bom_line_for_db
 from utils.counter import _generate_counter
 from utils.db import db
-from utils.dt import timestamp
 from utils.exceptions import HTTPError
 from utils.production import (
   Queries,
   create_job_record,
   create_wo_record,
-  update_target_queue
+  update_target_queue,
   close_job_and_update_queues,
   reassign_job_in_queues
 )

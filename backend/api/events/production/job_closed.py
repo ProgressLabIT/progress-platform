@@ -2,7 +2,7 @@ from events.base_event import BaseEvent
 from models.event import EventInfoModel
 from models.production import Job, WorkStatus
 from utils.production import Queries as ProductionQueries
-from utils.traceability import Queries as TraceabilityQueries, update_work_order_tasks_status
+from utils.traceability import Queries as TraceabilityQueries
 
 
 class JobClosedEvent(BaseEvent):
