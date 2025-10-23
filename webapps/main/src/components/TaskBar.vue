@@ -139,6 +139,9 @@ const dismissTask = async () => {
 const completeTask = async () => {
   if (activeTask.value) {
     await taskStore.completeTaskWithConfirmation(activeTask.value._key, t)
+    // Refresh the page - temporary hack waiting for notification system to be implemented
+    window.location.reload();
+
   }
 }
 
