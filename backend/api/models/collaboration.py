@@ -144,7 +144,7 @@ def set_default_task_linked_entity_settings():
     TaskLinkedEntitySettings(type=TaskLinkType.ISSUE),
     TaskLinkedEntitySettings(type=TaskLinkType.WORK_ORDER),
     TaskLinkedEntitySettings(type=TaskLinkType.PRODUCT),
-    TaskLinkedEntitySettings(type=TaskLinkType.EQUIPMENT),
+    # TaskLinkedEntitySettings(type=TaskLinkType.EQUIPMENT),
     TaskLinkedEntitySettings(type=TaskLinkType.SERIAL),
     TaskLinkedEntitySettings(type=TaskLinkType.TASK)
   ]
