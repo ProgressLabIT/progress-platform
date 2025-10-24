@@ -895,6 +895,7 @@ export default {
     equipment: 'Equipaggiamento',
     serial: 'Matricola',
     task: 'Compito',
+    no_linkable_entities: 'Nessuna entità collegabile',
   },
   task_link_settings_title: 'Entità collegabili consentite',
   task_link_settings_description: 'Seleziona quali tipi di entità possono essere collegate ai compiti di questo tipo',

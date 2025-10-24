@@ -872,6 +872,7 @@ export default {
     equipment: 'Equipment',
     serial: 'Serial',
     task: 'Task',
+    no_linkable_entities: 'No linkable entities',
   },
   task_link_settings_title: 'Allowed linked entities',
   task_link_settings_description: 'Select which entity types can be linked to tasks of this type',

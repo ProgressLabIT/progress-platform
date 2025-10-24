@@ -301,7 +301,9 @@
             <!-- LINKED ENTITIES -->
             <q-tab-panel name="linked_entities">
               <div class="column q-col-gutter-y-sm">
-                TEST
+                <div v-if="availableEntityTypes.length === 0" class="text-italic">
+                  {{ $t('linked_entities.no_linkable_entities') }}
+                </div>
                 <div v-for="type in availableEntityTypes" :key="type" class="row items-center q-col-gutter-x-sm" style="min-height: 42px;">
                   <div class="text-h5 text-low text-uppercase col-2">
                     {{ $t(`linked_entities.${type}`) }}
@@ -952,7 +954,7 @@ async function saveLink(linkData) {
   try {
     // TODO: Implement the actual API call to link the entity to the task
     // This would depend on your backend API structure
-    sendEvent({
+    await sendEvent({
       event_type: 'TASK_LINKED',
       event_data: {
         task_key: props.taskKey,
