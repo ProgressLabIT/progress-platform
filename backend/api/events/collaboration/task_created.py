@@ -10,6 +10,7 @@ from utils.counter import _generate_counter
 class TaskCreatedEvent(BaseEvent):
 
   class InfoModel(EventInfoModel):
+    task_key: str | None = None
     task_type_key: str
     code: str | None = None
     title: str | None = None
