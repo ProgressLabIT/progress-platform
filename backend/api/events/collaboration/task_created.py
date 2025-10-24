@@ -34,7 +34,10 @@ class TaskCreatedEvent(BaseEvent):
     # generate task code if not provided
     if self.info.code is None:
       counter_key = self.tx.collection('Config').get('system_counters').get('tasks', 'default')
-      task_data.code = _generate_counter(self.tx, counter_key)
+      try:
+        task_data.code = _generate_counter(self.tx, counter_key)
+      except Exception as e:
+        raise Exception("Cannot generate task code. Please check if the counter is configured correctly.") from e
 
     # Prepare form fields
     task_type = self.tx.collection('TaskType').get(self.info.task_type_key)
