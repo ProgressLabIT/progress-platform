@@ -225,12 +225,14 @@ class TaskSearchParameters(BaseModel):
   status_canceled: bool | None = None
   owner_key: str | None = None # Owner is a special case of participant.
   assigned_to: list[str] | None = None
-  start_from: date | None = None
-  due_by: date | None = None
-  created_from: date | None = None
-  created_to: date | None = None
-  closed_from: date | None = None
-  closed_to: date | None = None
+  start_from_min: date | None = None
+  start_from_max: date | None = None
+  due_by_min: date | None = None
+  due_by_max: date | None = None
+  created_min: date | None = None
+  created_max: date | None = None
+  closed_min: date | None = None
+  closed_max: date | None = None
   advanced_filters: dict | None = None
 
   # Linked entity filters
