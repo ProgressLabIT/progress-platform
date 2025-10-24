@@ -418,6 +418,8 @@
         class="q-mb-md"
         :label="$t('serial')"
         :value="serial_key"
+        :show-link-status="false"
+        :show-inventory-status="false"
         @select="(selection) => (serial_key = selection)"
       />
 
