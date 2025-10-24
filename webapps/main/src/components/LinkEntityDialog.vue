@@ -51,6 +51,8 @@
             include_unreleased
             :show-link-status="false"
             :show-inventory-status="false"
+            show-product-code
+            show-product-description
             :label="$t('serial')"
             :disable-keys="excludeLinkKeys('serial')"
             @select="onEntitySelect"

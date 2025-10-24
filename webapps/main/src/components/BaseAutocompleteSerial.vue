@@ -39,13 +39,19 @@
       >
         <q-item-section>
           <q-item-label class="highlight">
-            {{
-              scope.opt.code || '(' + $t('serial_code_to_be_assigned') + ')'
-            }}
+            {{ scope.opt.code || $t('serial_code_to_be_assigned') }}
           </q-item-label>
-          <q-item-label caption lines="2">
-            {{ 'ID ' + scope.opt._key }}
+          <q-item-label lines="2" caption class="text-low" style="max-width: 300px;">
+            <span v-if="showProductDescription">
+              {{ scope.opt.product_code }}
+            </span>
+            <span v-if="showProductDescription" class="q-ml-sm">
+              {{ scope.opt.product_description }}
+            </span>
           </q-item-label>
+        </q-item-section>
+        <q-item-section side class="text-low smaller">
+          {{ 'ID ' + scope.opt._key }}
         </q-item-section>
         <q-item-section v-if="!props.inventory_only" side>
           <div class="row items-center q-gutter-x-sm">
@@ -241,6 +247,16 @@ const props = defineProps({
     type: Boolean,
     default: true,
   },
+
+  showProductCode: {
+    type: Boolean,
+    default: false,
+  },
+
+  showProductDescription: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 
@@ -302,6 +318,8 @@ function loadOptions(search_value) {
             code: item.serial_code || item.code,
             used: item.used,
             available: item.available,
+            product_code: item.product_code,
+            product_description: item.product_description,
           }));
           loading.value = false;
         });
@@ -313,6 +331,8 @@ function loadOptions(search_value) {
         code: item.serial_code || item.code,
         used: item.used,
         available: item.available,
+        product_code: item.product_code,
+        product_description: item.product_description,
       }));
       loading.value = false;
     });

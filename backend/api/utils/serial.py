@@ -176,7 +176,18 @@ class Queries:
 
     SORT s.code
     LIMIT @limit
-    RETURN merge(s, { used, available })
+    LET product = FIRST(
+      FOR product IN Product
+      FILTER product._key == s.product_key
+      RETURN product
+    )
+    FILTER product != null
+    RETURN merge(s, {
+      used,
+      available,
+      product_code: product.code,
+      product_description: product.description
+    })
   """
 
   GET_SERIALS_IN_PRODUCT = """
