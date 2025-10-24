@@ -1,5 +1,5 @@
 <template>
-  <BaseDialog :show="props.show" @close="handleClose">
+  <BaseDialog :show="props.show" @close.stop="handleClose">
     <q-card class="surface1 q-pa-md">
       <q-card-section>
         <div class="text-h6 display highlight">{{ $t('link_entity') }}</div>
