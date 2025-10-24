@@ -221,7 +221,7 @@ class Queries:
     }
     FOR t IN Task
     FILTER
-      @search ? CONTAINS(LOWER(CONCAT(t.code, ' ', t.title)), LOWER(@search)) : true
+      (@search ? CONTAINS(LOWER(CONCAT(t.code, ' ', t.title)), LOWER(@search)) : true)
       && (@task_type_key ? t.task_type_key == @task_type_key : true)
       && (@status_pending == false ? t.status != 'pending' : true)
       && (@status_open == false ? t.status != 'open' : true)
@@ -232,12 +232,14 @@ class Queries:
       // Gather all links once (ANY direction on task_rel)
 
 
-      && (@start_from ? t.start_from >= @start_from : true)
-      && (@due_by ? t.due_by <= @due_by : true)
-      && (@created_from ? t.created >= @created_from : true)
-      && (@created_to ? t.created <= @created_to : true)
-      && (@closed_from ? t.closed >= @closed_from : true)
-      && (@closed_to ? t.closed <= @closed_to : true)
+      && (@start_from_min ? LEFT(t.start_from, 10) >= LEFT(@start_from_min, 10) : true)
+      && (@start_from_max ? LEFT(t.start_from, 10) <= LEFT(@start_from_max, 10) : true)
+      && (@due_by_min ? LEFT(t.due_by, 10) >= LEFT(@due_by_min, 10) : true)
+      && (@due_by_max ? LEFT(t.due_by, 10) <= LEFT(@due_by_max, 10) : true)
+      && (@created_min ? LEFT(t.created, 10) >= LEFT(@created_min, 10) : true)
+      && (@created_max ? LEFT(t.created, 10) <= LEFT(@created_max, 10) : true)
+      && (@closed_min ? LEFT(t.closed, 10) >= LEFT(@closed_min, 10) : true)
+      && (@closed_max ? LEFT(t.closed, 10) <= LEFT(@closed_max, 10) : true)
 
       // LINK FILTERS using precomputed links
       LET links = (

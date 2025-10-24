@@ -48,16 +48,16 @@
             class="q-ml-sm"
             size="sm"
             round
-            :color="filters_active ? 'theme-blue' : 'theme-grey'"
+            :color="activeFiltersCount ? 'theme-blue' : 'theme-grey'"
             icon="mdi-filter"
             @click="showFilterDrawer = true"
           >
             <q-badge
-              v-if="filters_active"
+              v-if="activeFiltersCount"
               floating
               rounded
               color="theme-red"
-              :label="filters_active"
+              :label="activeFiltersCount"
               size="4px"
               style="font-family: 'Red Hat Text'; font-size: 8px"
             />
@@ -73,7 +73,7 @@
 
     <FilterDrawer
       v-model="showFilterDrawer"
-      :active-filters="filters_active"
+      :active-filters="activeFiltersCount"
       :min-width="400"
       @reset="resetFilters"
     >
@@ -81,14 +81,14 @@
       <div class="q-mb-md">
         <div class="text-h5 text-low q-mb-sm">{{ $capitalize($t('status')) }}</div>
         <div class="row q-col-gutter-xs capitalize justify-between">
-          <div v-for="status in statusFilters" :key="status.value" class="col-6">
+          <div v-for="statusName in Object.keys(statusFilters)" :key="statusName" class="col-6">
             <q-checkbox
-              v-model="status.queryModel.value"
+              v-model="statusFilters[statusName].value"
               size="sm"
               dense
             >
-            {{ status.label }}
-              <q-icon :name="status.icon" :color="status.color" />
+              {{ taskStatusOptions[statusName].label }}
+              <q-icon :name="taskStatusOptions[statusName].icon" :color="taskStatusOptions[statusName].color" />
             </q-checkbox>
           </div>
         </div>
@@ -131,7 +131,7 @@
             dense
             clearable
             debounce="1000"
-            mask="date"
+            mask="####-##-##"
             :label="$capitalize($t('start_from_min'))"
           >
             <template #append>
@@ -157,7 +157,7 @@
             filled
             dense
             clearable
-            mask="date"
+            mask="####-##-##"
             debounce="1000"
             :label="$capitalize($t('start_from_max'))"
           >
@@ -189,7 +189,7 @@
             dense
             clearable
             debounce="1000"
-            mask="date"
+            mask="####-##-##"
             :label="$capitalize($t('due_by_min'))"
           >
             <template #append>
@@ -215,7 +215,7 @@
             filled
             dense
             clearable
-            mask="date"
+            mask="####-##-##"
             debounce="1000"
             :label="$capitalize($t('due_by_max'))"
           >
@@ -242,12 +242,12 @@
       <div class="row q-col-gutter-sm q-mb-md">
         <div class="col">
           <q-input
-            v-model="created_from"
+            v-model="created_min"
             filled
             dense
             clearable
             debounce="1000"
-            mask="date"
+            mask="####-##-##"
             :label="$t('created_min')"
           >
             <template #append>
@@ -257,7 +257,7 @@
                   transition-show="scale"
                   transition-hide="scale"
                 >
-                  <q-date v-model="created_from" minimal>
+                  <q-date v-model="created_min" minimal>
                     <div class="row items-center justify-end">
                       <q-btn v-close-popup label="Close" color="primary" flat />
                     </div>
@@ -269,11 +269,11 @@
         </div>
         <div class="col">
           <q-input
-            v-model="created_to"
+            v-model="created_max"
             filled
             dense
             clearable
-            mask="date"
+            mask="####-##-##"
             debounce="1000"
             :label="$t('created_max')"
           >
@@ -284,7 +284,7 @@
                   transition-show="scale"
                   transition-hide="scale"
                 >
-                  <q-date v-model="created_to" minimal>
+                  <q-date v-model="created_max" minimal>
                     <div class="row items-center justify-end">
                       <q-btn v-close-popup label="Close" color="primary" flat />
                     </div>
@@ -300,12 +300,12 @@
       <div class="row q-col-gutter-sm q-mb-md">
         <div class="col">
           <q-input
-            v-model="closed_from"
+            v-model="closed_min"
             filled
             dense
             clearable
             debounce="1000"
-            mask="date"
+            mask="####-##-##"
             :label="$t('closed_min')"
           >
             <template #append>
@@ -315,7 +315,7 @@
                   transition-show="scale"
                   transition-hide="scale"
                 >
-                  <q-date v-model="closed_from" minimal>
+                  <q-date v-model="closed_min" minimal>
                     <div class="row items-center justify-end">
                       <q-btn v-close-popup label="Close" color="primary" flat />
                     </div>
@@ -327,11 +327,11 @@
         </div>
         <div class="col">
           <q-input
-            v-model="closed_to"
+            v-model="closed_max"
             filled
             dense
             clearable
-            mask="date"
+            mask="####-##-##"
             debounce="1000"
             :label="$t('closed_max')"
           >
@@ -342,7 +342,7 @@
                   transition-show="scale"
                   transition-hide="scale"
                 >
-                  <q-date v-model="closed_to" minimal>
+                  <q-date v-model="closed_max" minimal>
                     <div class="row items-center justify-end">
                       <q-btn v-close-popup label="Close" color="primary" flat />
                     </div>
@@ -436,7 +436,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import BaseAutocompleteTaskType from '@/components/BaseAutocompleteTaskType.vue';
 import BaseAutocompleteIssue from '@/components/BaseAutocompleteIssue.vue';
 import BaseAutocompleteWorkOrder from '@/components/BaseAutocompleteWorkOrder.vue';
@@ -452,6 +452,7 @@ import { useTaskStore } from '@/stores/task.js';
 
 const { t: $t } = useI18n();
 const router = useRouter();
+const route = useRoute();
 const taskStore = useTaskStore();
 const { taskStatusOptions } = useTask();
 
@@ -462,43 +463,19 @@ const views = [{ component: 'TaskOverview', route_name: 'taskOverview' }];
 const show_task_form = ref(false);
 
 // Filter query models
-const task_type_key = useQueryModel(String, 'task_type', null);
-const status_open = useQueryModel(Boolean, 'status_open', true);
-const status_completed = useQueryModel(Boolean, 'status_completed', true);
-const status_canceled = useQueryModel(Boolean, 'status_canceled', true);
-const status_pending = useQueryModel(Boolean, 'status_pending', true);
 
-// Map status options to their query models for easy iteration
-const statusFilters = computed(() => [
-  {
-    ...taskStatusOptions.pending,
-    queryModel: status_pending,
-  },
-  {
-    ...taskStatusOptions.open,
-    queryModel: status_open,
-  },
-  {
-    ...taskStatusOptions.completed,
-    queryModel: status_completed,
-  },
-  {
-    ...taskStatusOptions.canceled,
-    queryModel: status_canceled,
-  },
-]);
-const text_search = useQueryModel(String, 'search', null);
 const start_from_min = useQueryModel(String, 'start_from_min', null);
 const start_from_max = useQueryModel(String, 'start_from_max', null);
 const due_by_min = useQueryModel(String, 'due_by_min', null);
 const due_by_max = useQueryModel(String, 'due_by_max', null);
-const created_from = useQueryModel(String, 'created_from', null);
-const created_to = useQueryModel(String, 'created_to', null);
-const closed_from = useQueryModel(String, 'closed_from', null);
-const closed_to = useQueryModel(String, 'closed_to', null);
+const created_min = useQueryModel(String, 'created_min', null);
+const created_max = useQueryModel(String, 'created_max', null);
+const closed_min = useQueryModel(String, 'closed_min', null);
+const closed_max = useQueryModel(String, 'closed_max', null);
+const task_type_key = useQueryModel(String, 'task_type_key', null);
+const text_search = useQueryModel(String, 'search', null);
 const owner_key = useQueryModel(String, 'owner_key', null);
-const assigned_to = useQueryModel(Array, 'assigned_to', null);
-// Linked entity filters
+const assigned_to = useQueryModel(String, 'assigned_to', null);
 const issue_key = useQueryModel(String, 'issue_key', null);
 const work_order_key = useQueryModel(String, 'work_order_key', null);
 const product_key = useQueryModel(String, 'product_key', null);
@@ -506,109 +483,39 @@ const serial_key = useQueryModel(String, 'serial_key', null);
 const linked_task_key = useQueryModel(String, 'linked_task_key', null);
 
 
+const statusFilters = {
+  pending: useQueryModel(Boolean, 'status_pending', true),
+  open: useQueryModel(Boolean, 'status_open', true),
+  completed: useQueryModel(Boolean, 'status_completed', true),
+  canceled: useQueryModel(Boolean, 'status_canceled', true),
+}
+
+const filters = {
+  ...statusFilters,
+  start_from_min,
+  start_from_max,
+  due_by_min,
+  due_by_max,
+  created_min,
+  created_max,
+  closed_min,
+  closed_max,
+  task_type_key,
+  text_search,
+  owner_key,
+  assigned_to,
+  issue_key,
+  work_order_key,
+  product_key,
+  serial_key,
+  linked_task_key,
+}
 // Computed filters object and active filter count
-const filters_active = computed(() => {
-  const filterRefs = {
-    task_type_key,
-    text_search,
-    start_from_min,
-    start_from_max,
-    due_by_min,
-    due_by_max,
-    created_from,
-    created_to,
-    closed_from,
-    closed_to,
-    owner_key,
-    assigned_to,
-    issue_key,
-    work_order_key,
-    product_key,
-    serial_key,
-    linked_task_key,
-  };
-
-  // Count status filters as active only if they are false
-  const status_filters_active = [
-    status_open.value,
-    status_completed.value,
-    status_canceled.value,
-  ].filter((f) => f === false).length;
-
-  return Object.entries(filterRefs).filter(([_, {value}]) => {
-    return value !== null && value !== undefined && value !== '';
-  }).length + status_filters_active;
-});
-
-const filters = computed(() => {
-  let filters_object = {};
-
-  if (task_type_key.value) {
-    filters_object.task_type_key = task_type_key.value;
-  }
-  if (status_open.value !== null) {
-    filters_object.status_open = status_open.value;
-  }
-  if (status_completed.value !== null) {
-    filters_object.status_completed = status_completed.value;
-  }
-  if (status_canceled.value !== null) {
-    filters_object.status_canceled = status_canceled.value;
-  }
-  if (assigned_to.value) {
-    filters_object.assigned_to = assigned_to.value;
-  }
-  if (text_search.value) {
-    filters_object.search = text_search.value;
-  }
-  if (owner_key.value) {
-    filters_object.owner_key = owner_key.value;
-  }
-  // Linked entity filters (send arrays as backend expects lists)
-  if (issue_key.value) {
-    filters_object.issue_key = issue_key.value;
-  }
-  if (work_order_key.value) {
-    filters_object.work_order_key = work_order_key.value;
-  }
-  if (product_key.value) {
-    filters_object.product_key = product_key.value;
-  }
-  if (serial_key.value) {
-    filters_object.serial_key = serial_key.value;
-  }
-  if (linked_task_key.value) {
-    filters_object.linked_task_key = linked_task_key.value;
-  }
-
-  // Date filters
-  if (start_from_min.value) {
-    filters_object.start_from = start_from_min.value;
-  }
-  if (start_from_max.value) {
-    filters_object.start_to = start_from_max.value;
-  }
-  if (due_by_min.value) {
-    filters_object.due_from = due_by_min.value;
-  }
-  if (due_by_max.value) {
-    filters_object.due_to = due_by_max.value;
-  }
-  if (created_from.value) {
-    filters_object.created_from = created_from.value;
-  }
-  if (created_to.value) {
-    filters_object.created_to = created_to.value;
-  }
-  if (closed_from.value) {
-    filters_object.closed_from = closed_from.value;
-  }
-  if (closed_to.value) {
-    filters_object.closed_to = closed_to.value;
-  }
-
-  return filters_object;
-});
+const activeFiltersCount = computed(() => {
+  return Object.values(filters).filter((f) => {
+    return [null, undefined, '', true].includes(f.value ?? undefined) ? false : true;
+  }).length
+})
 
 function onTaskCreated() {
   show_task_form.value = false;
@@ -620,10 +527,10 @@ async function resetFilters() {
 }
 
 // Watch filters and fetch tasks when they change
-watch(filters, (newFilters) => {
-  taskStore.fetchTasks(newFilters);
+watch(() => route.query, () => {
+  taskStore.fetchTasks(route.query);
 }, { deep: true });
 
 // Initial load of tasks
-taskStore.fetchTasks(filters.value);
+taskStore.fetchTasks(route.query);
 </script>
