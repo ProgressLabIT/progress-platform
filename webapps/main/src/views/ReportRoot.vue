@@ -16,7 +16,7 @@ const src = computed(() => {
   const sessionData = store.state.session;
   const sessionDataStr = JSON.stringify(sessionData);
   const encodedSession = btoa(sessionDataStr);
-  return `${protocol}//reporting.${domain}?session=${encodedSession}`;
+  return `${protocol}//${domain}:8501?session=${encodedSession}`;
 });
 
 
