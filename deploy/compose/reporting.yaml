@@ -36,12 +36,16 @@ services:
     deploy:
       replicas: 1
       labels:
+        # Main config
         - "traefik.enable=true"
         - "traefik.docker.network=progress"
         - "traefik.http.services.reporting.loadbalancer.server.port=8501"
-        - "traefik.http.routers.reporting.entrypoints=websecure"
-        - "traefik.http.routers.reporting.rule=Host(`reporting.${SUBDOMAIN}.${DOMAIN}`)"
-        - "traefik.http.routers.reporting.tls.certresolver=letsencrypt"
+        # Routing
+        - "traefik.http.routers.reporting.rule=Host(`${SUBDOMAIN}.${DOMAIN}`) && PathPrefix(`/reporting`)"
+        - "traefik.http.routers.reporting.service=reporting"
+        - "traefik.http.routers.reporting.middlewares=strip-reporting-prefix"
+        - "traefik.http.middlewares.strip-reporting-prefix.stripprefix.prefixes=/reporting"
+        - "traefik.http.middlewares.strip-reporting-prefix.stripprefix.forceslash=false"
         # Ensure access is only via iframe from main sub.domain url
         - "traefik.http.routers.reporting.middlewares=embed-only,reporting-embed"
         - "traefik.http.middlewares.reporting-embed.headers.framedeny=false"
@@ -49,3 +53,6 @@ services:
         - "traefik.http.middlewares.reporting-embed.headers.customresponseheaders.Content-Security-Policy=frame-ancestors 'self' https://${SUBDOMAIN}.${DOMAIN}"
         # Prevents direct access to the app
         - "traefik.http.middlewares.embed-only.headers.customrequestheaders.X-Forwarded-Host=${SUBDOMAIN}.${DOMAIN}"
+        # TLS
+        - "traefik.http.routers.reporting.entrypoints=websecure"
+        - "traefik.http.routers.reporting.tls.certresolver=letsencrypt"

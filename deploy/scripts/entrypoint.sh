@@ -11,10 +11,11 @@ pip install streamlit
 
 echo "Starting Streamlit application..."
 exec streamlit run /app/main.py \
-  --server.port=8501 \
   --server.address=0.0.0.0 \
+  --server.port=8501 \
   --server.headless=true \
   --server.trust_xheaders=True \
   --server.enableCORS=False \
   --server.enableXsrfProtection=False \
-  --browser.serverAddress=reporting.$SUBDOMAIN.$DOMAIN
+  --browser.serverAddress=${SUBDOMAIN}.${DOMAIN} \
+  --server.baseUrlPath=/reports

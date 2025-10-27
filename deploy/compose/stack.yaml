@@ -24,22 +24,22 @@ volumes:
 services:
   router:
     command:
-      - --providers.docker.swarmMode
-      - --providers.docker.exposedbydefault=false
-      - --accesslog
-      - --api.dashboard
-      - --api.debug
-      - --api.insecure
-      - --log.level=INFO
-      - --entrypoints.web.address=:80
-      - --entrypoints.websecure.address=:443
-      - --entrypoints.web.http.redirections.entrypoint.to=websecure
-      - --entrypoints.web.http.redirections.entrypoint.scheme=https
-      - --certificatesresolvers.letsencrypt.acme.dnschallenge=true
-      - --certificatesresolvers.letsencrypt.acme.dnschallenge.provider=${DNS_PROVIDER}
-      - --certificatesresolvers.letsencrypt.acme.dnschallenge.delaybeforecheck=${DNS_DELAY}
-      - --certificatesresolvers.letsencrypt.acme.email=${DNS_EMAIL}
-      - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
+      - "--providers.docker.swarmMode"
+      - "--providers.docker.exposedbydefault=false"
+      - "--accesslog"
+      - "--api.dashboard"
+      - "--api.debug"
+      - "--api.insecure"
+      - "--log.level=INFO"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      # HTTPS Configuration
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge=true"
+      - "--certificatesresolvers.letsencrypt.acme.email=admin@progresslab.it"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
     ports:
       - target: 80
         published: 80
@@ -53,12 +53,6 @@ services:
       - letsencrypt:/letsencrypt
     networks:
       - progress
-    secrets:
-      - dns_api_key
-      - dns_api_secret
-    env_file:
-      # Includes DNS_API_KEY_FILE and DNS_API_SECRET_FILE for the appropriate DNS provider
-      - /opt/progress/config/progress.env
     deploy:
       labels:
         - "traefik.enable=false"
@@ -85,6 +79,7 @@ services:
         - "traefik.http.routers.db.middlewares=db_root"
         - "traefik.http.middlewares.db_root.replacepathregex.regex=^/_db/?$$"
         - "traefik.http.middlewares.db_root.replacepathregex.replacement=/"
+        - "traefik.http.routers.db.entrypoints=websecure"
         - "traefik.http.routers.db.tls.certresolver=letsencrypt"
 
   broker:
@@ -127,6 +122,7 @@ services:
         - "traefik.docker.network=progress"
         - "traefik.http.services.api.loadbalancer.server.port=8000"
         - "traefik.http.routers.api.rule=Host(`${SUBDOMAIN}.${DOMAIN:-progresslab.it}`) && PathPrefix(`/api`)"
+        - "traefik.http.routers.api.entrypoints=websecure"
         - "traefik.http.routers.api.tls.certresolver=letsencrypt"
         - "traefik.http.routers.api.middlewares=strip_api_prefix"
         - "traefik.http.middlewares.strip_api_prefix.stripprefix.prefixes=/api"
@@ -151,6 +147,7 @@ services:
         - "traefik.docker.network=progress"
         - "traefik.http.services.app.loadbalancer.server.port=80"
         - "traefik.http.routers.app.rule=Host(`${SUBDOMAIN}.${DOMAIN:-progresslab.it}`)"
+        - "traefik.http.routers.app.entrypoints=websecure"
         - "traefik.http.routers.app.tls.certresolver=letsencrypt"
 
   # warehouse:

@@ -1,5 +1,4 @@
 {% for var in public_env_vars %}
 {{ var }}={{ progress_env_vars[var] }}
 {% endfor %}
-{{ progress_env_vars['DNS_API_KEY_VAR'] }}_FILE=/run/secrets/dns_api_key
-{{ progress_env_vars['DNS_API_SECRET_VAR'] }}_FILE=/run/secrets/dns_api_secret
+
