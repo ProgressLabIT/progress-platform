@@ -99,7 +99,7 @@ class BaseEvent(ABC):
     if tx is None:
       commit = True
       collections = set(event_class.get_tx_collections())
-      collections.add('Event')  # Ensure Event collection is included
+      collections.update(['Event', 'event_source'])  # Ensure Event and event_source collections are included
       tx = db.begin_transaction(write=collections)
 
     # Create and process each event
