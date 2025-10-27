@@ -98,9 +98,18 @@
             </div>
           </template>
         </QuantitySelector>
-        <q-btn color="theme-blue" outline class="q-mt-md" label="Reimposta" @click="inventoryItemTempQuantity = cardItem.quantity" />
-        <q-btn color="theme-blue" class="q-mt-md" label="Aggiorna quantità" @click="confirmQuantity" />
 
+        <q-btn color="theme-blue" outline class="q-mt-md" label="Reimposta" @click="inventoryItemTempQuantity = cardItem.quantity" />
+        <q-btn color="theme-blue" class="q-mt-md" label="Aggiorna quantità" @click="showReasonInput = true" />
+
+      </SlideUpCard>
+
+      <SlideUpCard v-model="showReasonInput" @hide="resetReason">
+        <q-input v-model="reason" :label="$t('movement_reason')" autogrow filled stack-label/>
+        <div class="row justify-between">
+          <q-btn color="theme-grey" class="q-mt-md" :label="$t('cancel')" @click="showReasonInput = false" />
+          <q-btn color="theme-blue" class="q-mt-md" :label="$t('confirm')" @click="confirmQuantity" />
+        </div>
       </SlideUpCard>
     </template>
 
@@ -127,6 +136,8 @@ const inventoryItemTempQuantity = ref(1);
 const positionFilter = ref(null);
 const serialFilter = ref(null);
 const selectedProduct = ref(null);
+const reason = ref('');
+const showReasonInput = ref(false);
 
 
 
@@ -176,6 +187,7 @@ function confirmQuantity() {
       movement_type: 'adjustment',
       start: now,
       end: now,
+      reason: reason.value
     }
   })
   .then(() => {
@@ -187,6 +199,14 @@ function confirmQuantity() {
       position: 'top',
     });
   })
+  .finally(() => {
+    resetReason();
+  });
+}
+
+function resetReason() {
+  reason.value = '';
+  showReasonInput.value = false;
 }
 </script>
 

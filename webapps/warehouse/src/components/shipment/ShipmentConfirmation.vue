@@ -69,7 +69,11 @@
     </div>
 
     <q-space></q-space>
-    <div class="row q-col-gutter-x-sm">
+
+    <!-- // -->
+    <q-input v-model="shipment.reason" :label="$t('movement_reason')" autogrow filled stack-label/>
+
+    <div class="row q-col-gutter-x-sm q-mt-md">
       <div class="col-6">
         <q-btn
           color="theme-grey"
@@ -97,7 +101,6 @@ import { useShipmentStore } from '@/stores/shipment';
 
 const router = useRouter();
 const shipment = useShipmentStore();
-
 const serialItems = computed(() =>
   shipment.selectedInventory
     .filter(item => shipment.inventory.find(i => i._key === item._key)?.serial_key)

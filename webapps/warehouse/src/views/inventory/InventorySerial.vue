@@ -50,7 +50,7 @@
             color="theme-grey"
           />
           <q-btn
-            @click="deleteSelected"
+            @click="deleteDialogShow = true"
             size="11px"
             padding="xs sm"
             :label="$t('delete')"
@@ -82,21 +82,51 @@
         </q-card>
     </q-scroll-area>
 
+    <!-- DELETE DIALOG -->
+    <SlideUpCard v-model="deleteDialogShow" >
+      <div class="column q-gutter-y-md">
+        <div class="text-h3">
+          {{ $t('serial_remove_confirm') }}
+        </div>
+
+        <ul class="text-body1">
+          <li v-for="serial in selectedSerials" :key="serial._key">
+            {{ serial.product_code }} - {{ serial.serial_code }}
+          </li>
+        </ul>
+
+        <q-space />
+
+        <!-- Reason input -->
+        <q-input v-model="deleteReason" :label="$t('movement_reason')" autogrow filled stack-label/>
+
+        <div class="row justify-between">
+          <q-btn :label="$t('cancel')" color="theme-grey" @click="deleteDialogShow = false" />
+          <q-btn :label="$t('confirm')" color="theme-red" @click="deleteSelected" />
+        </div>
+      </div>
+
+    </SlideUpCard>
+
   </div>
 </template>
 
 <script setup>
-import { Notify, Dialog } from 'quasar';
+import { Notify } from 'quasar';
+import { sendEventsBulk } from '@/composables/bulkEvent';
 import { ref, computed } from 'vue';
 import SearchOrScan from '@/components/SearchOrScan.vue';
 import { api } from 'app/src/boot/axios';
 import { useI18n } from 'vue-i18n';
+import SlideUpCard from '@/components/SlideUpCard.vue';
 
 const { t: $t } = useI18n();
 const serialCodeFilter = ref('');
 const productCodeFilter = ref('');
 const results = ref([]);
 const editMode = ref(false);
+const deleteDialogShow = ref(false);
+const deleteReason = ref('');
 
 const serialList = computed(() => {
   return results.value.filter(s => s.product_code.includes(productCodeFilter.value));
@@ -136,48 +166,34 @@ const exitEditMode = () => {
   selectedSerials.value = [];
 }
 
-const deleteSelected = () => {
-  Dialog.create({
-    message: $t('serial_removed_confirm', selectedSerials.value.length),
-    actions: [
-      {
-        label: $t('cancel'),
-        color: 'theme-grey',
-      },
-      {
-        label: $t('confirm'),
-        color: 'theme-red',
-      }
-    ]
-  }).onOk(() => {
-    const baseEvent = {
-      event_type: 'MOVEMENT_COMPLETED',
-      movement_type: 'adjustment',
-      qt_planned: -1,
-      qt_confirmed: -1
+const deleteSelected = async () => {
+  const baseEvent = {
+    event_type: 'MOVEMENT_COMPLETED',
+    movement_type: 'adjustment',
+    qt_planned: -1,
+    qt_confirmed: -1
+  }
+  const events = selectedSerials.value.map(serial => {
+    const position_key = [...serial.path].pop().position_key
+    return {
+      ...baseEvent,
+      position_from: position_key,
+      position_to: position_key,
+      product_key: serial.product_key,
+      serial_key: serial.serial_key,
+      reason: deleteReason.value
     }
-    const events = selectedSerials.value.map(serial => {
-      const position_key = [...serial.path].pop().position_key
-      return {
-        ...baseEvent,
-        position_from: position_key,
-        position_to: position_key,
-        product_key: serial.product_key,
-        serial_key: serial.serial_key
-      }
-    })
-    Promise.all(events.map(event => api.post('event', event)))
-    .then(() => {
-      const serial_codes = selectedSerials.value.map(s => s.serial_code).join(', ')
-      selectedSerials.value = [];
-      search();
-      Notify.create({
-        message: $t('serial_removed', { serials: serial_codes }),
-        position: 'top',
-        color: 'theme-green',
-      });
-    })
   })
+  const serial_codes = selectedSerials.value.map(s => s.serial_code).join(', ')
+  await sendEventsBulk(events)
+  selectedSerials.value = [];
+  search();
+  Notify.create({
+    message: $t('serial_removed', { serials: serial_codes }),
+    position: 'top',
+    color: 'theme-green',
+  });
+  deleteDialogShow.value = false;
 };
 
 </script>

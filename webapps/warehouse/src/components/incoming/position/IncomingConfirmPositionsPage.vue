@@ -47,7 +47,9 @@
     />
 
     <q-space />
-    <div class="row q-col-gutter-x-sm">
+    <q-input v-model="reason" :label="$t('movement_reason')" autogrow filled stack-label/>
+
+    <div class="row q-col-gutter-x-sm q-mt-md">
       <div class="col-6">
         <q-btn
           color="theme-grey"
@@ -69,6 +71,7 @@
 </template>
 
 <script setup>
+import { ref } from 'vue';
 import { Notify } from 'quasar';
 import { sendEventsBulk } from 'app/src/composables/bulkEvent.js';
 import { timestamp } from 'app/src/lib/TimeHandling';
@@ -76,7 +79,7 @@ import { useIncomingStore } from 'app/src/stores/incoming';
 import PositionQuantityDistribution from 'components/PositionQuantityDistribution.vue';
 
 const incoming = useIncomingStore();
-
+const reason = ref('');
 
 async function confirm() {
   let movements = [];
@@ -111,7 +114,8 @@ async function confirm() {
     status: 'completed',
     movement_type: 'receipt',
     start: now,
-    end: now
+    end: now,
+    reason: reason.value,
   }));
 
   try {

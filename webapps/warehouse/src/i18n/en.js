@@ -28,6 +28,7 @@ export default {
     not_authorized: 'User not authorized for this page',
   },
   logout: 'Logout',
+  movement_reason: 'Reason',
   new: 'New',
   new_password: 'Insert new password',
   new_password_repeat: 'Repeat new password',
@@ -52,8 +53,8 @@ export default {
   select_copies_title: 'Select copies',
   serial: 'Serial',
   serial_added: 'Serial added',
+  serial_remove_confirm: 'Are you sure you want to remove the following serials from the warehouse?',
   serial_removed: 'Serials removed: {serials}',
-  serial_removed_confirm: 'Are you sure you want to remove {count} serial(s) from the warehouse?',
   start_from_position: 'Select start position',
   start_from_serial: 'Select serials',
   views: {

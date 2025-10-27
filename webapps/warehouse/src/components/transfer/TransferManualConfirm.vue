@@ -28,6 +28,8 @@
 
     <q-space />
 
+    <q-input v-model="reason" :label="$t('movement_reason')" autogrow filled stack-label/>
+
     <!-- Action Buttons -->
     <div class="row q-col-gutter-sm col-auto">
       <div class="col-6">
@@ -51,6 +53,7 @@
 </template>
 
 <script setup>
+import { ref } from 'vue';
 import { Notify } from 'quasar';
 import { useTransferStore } from '@/stores/transfer';
 import { sendEventsBulk } from 'app/src/composables/bulkEvent.js';
@@ -58,7 +61,7 @@ import { timestamp } from 'app/src/lib/TimeHandling';
 import ContentChip from '../ContentChip.vue';
 
 const transfer = useTransferStore();
-
+const reason = ref('');
 async function saveTransfer() {
   let movements = [];
   const now = timestamp();
@@ -84,6 +87,7 @@ async function saveTransfer() {
       movement_type: 'transfer',
       start: now,
       end: now,
+      reason: reason.value,
     });
   }
 

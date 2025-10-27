@@ -11,6 +11,7 @@ export const useShipmentStore = defineStore('shipment', {
     inventory: [],
     selectedInventory: [],
     stage: 'product',
+    reason: '',
   }),
   getters: {
     inventorySelectedQt: (state) => {
@@ -57,7 +58,8 @@ export const useShipmentStore = defineStore('shipment', {
         status: 'completed',
         movement_type: 'shipment',
         start: now,
-        end: now
+        end: now,
+        reason: this.reason,
       }));
 
       try {
