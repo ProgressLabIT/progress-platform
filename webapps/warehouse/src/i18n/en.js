@@ -52,7 +52,7 @@ export default {
   select_copies_title: 'Select copies',
   serial: 'Serial',
   serial_added: 'Serial added',
-  serial_removed: 'Serial removed | Serials removed',
+  serial_removed: 'Serials removed: {serials}',
   serial_removed_confirm: 'Are you sure you want to remove {count} serial(s) from the warehouse?',
   start_from_position: 'Select start position',
   start_from_serial: 'Select serials',

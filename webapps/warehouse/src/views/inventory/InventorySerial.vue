@@ -168,10 +168,11 @@ const deleteSelected = () => {
     })
     Promise.all(events.map(event => api.post('event', event)))
     .then(() => {
+      const serial_codes = selectedSerials.value.map(s => s.serial_code).join(', ')
       selectedSerials.value = [];
       search();
       Notify.create({
-        message: $t('serial_removed', selectedSerials.value.length),
+        message: $t('serial_removed', { serials: serial_codes }),
         position: 'top',
         color: 'theme-green',
       });

@@ -69,7 +69,7 @@ export default {
   select_root_position: 'Seleziona posizione globale',
   serial: 'Seriale | Seriali',
   serial_added: 'Seriale aggiunto',
-  serial_removed: 'Seriale rimosso | Seriali rimossi',
+  serial_removed: 'Seriali rimossi: {serials}',
   serial_removed_confirm: 'Sei sicuro di voler rimuovere {count} seriali dal magazzino?',
   session_start: 'Inizia sessione',
   start_from_position: 'Seleziona posizione',
