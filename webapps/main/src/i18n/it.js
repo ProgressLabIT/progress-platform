@@ -819,6 +819,7 @@ export default {
     defaultConsumptionPosition: 'Posizione consumo di default',
     productLabelTemplate: 'Etichetta prodotto',
     positionLabelTemplate: 'Etichetta posizione',
+    mandatoryReasonForMovementTypes: 'Rendi motivo obbligatorio per i seguenti movimenti manuali',
   },
   session: {
     alerts: {
@@ -1205,6 +1206,14 @@ export default {
       movement_type: 'Tipo di movimento',
       status: 'Stato',
       label: 'Movimento | Movimenti',
+      reason: 'Motivo',
+      receipt: 'Ricezione',
+      shipment: 'Spedizione',
+      transfer: 'Trasferimento',
+      adjustment: 'Rettifica',
+      consumption: 'Consumo',
+      production: 'Produzione',
+      reversal: 'Annullamento',
     },
     inventory: {
       position: 'Posizione',

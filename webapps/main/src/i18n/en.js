@@ -809,6 +809,7 @@ export default {
     defaultConsumptionPosition: 'Default consumption position',
     productLabelTemplate: 'Product label template',
     positionLabelTemplate: 'Position label template',
+    mandatoryReasonForMovementTypes: 'Make reason mandatory for the following manual movements',
   },
   session: {
     alerts: {
@@ -1189,6 +1190,14 @@ export default {
       revert_success: 'Movement reverted successfully',
       revert_error: 'Error reverting movement',
       label: 'Movement',
+      reason: 'Reason',
+      receipt: 'Receipt',
+      shipment: 'Shipment',
+      transfer: 'Transfer',
+      adjustment: 'Adjustment',
+      consumption: 'Consumption',
+      production: 'Production',
+      reversal: 'Reversal',
     },
     inventory: {
       position: 'Position',

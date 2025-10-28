@@ -25,6 +25,7 @@ export const useConfigStore = defineStore('config', () => {
     enableInventoryManagement: false,
     defaultProductionPosition: 'IN',
     defaultConsumptionPosition: 'IN',
+    mandatoryReasonForMovementTypes: [],
     productLabelTemplate: null,
     positionLabelTemplate: null,
     allowSerialCodeEdit: false,
@@ -41,6 +42,7 @@ export const useConfigStore = defineStore('config', () => {
     const { data } = await api.get('config');
     const appConfig = data.detail;
 
+    // Handle special cases that don't need type checking
     if (appConfig.company_name) {
       config.companyName = appConfig.company_name;
     }
@@ -56,38 +58,68 @@ export const useConfigStore = defineStore('config', () => {
     if (appConfig.printers) {
       config.printers = appConfig.printers;
     }
-    if (typeof appConfig.operator_cost === 'number') {
-      config.operatorCost = appConfig.operator_cost;
-    }
-    if (typeof appConfig.show_unassigned_jobs_to_operators === 'boolean') {
-      config.allowUnassignedJobs = appConfig.show_unassigned_jobs_to_operators;
-    }
-    if (
-      typeof appConfig.allow_independent_reordering_of_job_queues === 'boolean'
-    ) {
-      config.allowIndependentReorderingOfJobQueues =
-        appConfig.allow_independent_reordering_of_job_queues;
-    }
-    if (typeof appConfig.allow_serial_delete === 'boolean') {
-      config.allowSerialDelete = appConfig.allow_serial_delete;
-    }
-    if (typeof appConfig.enable_inventory_management === 'boolean') {
-      config.enableInventoryManagement = appConfig.enable_inventory_management;
-    }
-    if (typeof appConfig.default_production_position === 'string') {
-      config.defaultProductionPosition = appConfig.default_production_position;
-    }
-    if (typeof appConfig.default_consumption_position === 'string') {
-      config.defaultConsumptionPosition = appConfig.default_consumption_position;
-    }
-    if (typeof appConfig.product_label_template === 'string') {
-      config.productLabelTemplate = appConfig.product_label_template;
-    }
-    if (typeof appConfig.position_label_template === 'string') {
-      config.positionLabelTemplate = appConfig.position_label_template;
-    }
-    if (typeof appConfig.allow_serial_code_edit === 'boolean') {
-      config.allowSerialCodeEdit = appConfig.allow_serial_code_edit;
+
+    // Define a mapping of API field names to config properties with type validation
+    const configMappings = [
+      { apiField: 'operator_cost', target: 'operatorCost', type: 'number' },
+      {
+        apiField: 'show_unassigned_jobs_to_operators',
+        target: 'allowUnassignedJobs',
+        type: 'boolean',
+      },
+      {
+        apiField: 'allow_independent_reordering_of_job_queues',
+        target: 'allowIndependentReorderingOfJobQueues',
+        type: 'boolean',
+      },
+      {
+        apiField: 'allow_serial_delete',
+        target: 'allowSerialDelete',
+        type: 'boolean',
+      },
+      {
+        apiField: 'enable_inventory_management',
+        target: 'enableInventoryManagement',
+        type: 'boolean',
+      },
+      {
+        apiField: 'default_production_position',
+        target: 'defaultProductionPosition',
+        type: 'string',
+      },
+      {
+        apiField: 'default_consumption_position',
+        target: 'defaultConsumptionPosition',
+        type: 'string',
+      },
+      {
+        apiField: 'product_label_template',
+        target: 'productLabelTemplate',
+        type: 'string',
+      },
+      {
+        apiField: 'position_label_template',
+        target: 'positionLabelTemplate',
+        type: 'string',
+      },
+      {
+        apiField: 'allow_serial_code_edit',
+        target: 'allowSerialCodeEdit',
+        type: 'boolean',
+      },
+      {
+        apiField: 'mandatory_reason_for_movement_types',
+        target: 'mandatoryReasonForMovementTypes',
+        type: 'object',
+      }
+    ];
+
+    // Apply mappings with type checking
+    for (const { apiField, target, type } of configMappings) {
+      const value = appConfig[apiField];
+      if (value !== undefined && typeof value === type) {
+        config[target] = value;
+      }
     }
   }
   void (async () => {
@@ -130,6 +162,7 @@ export const useConfigStore = defineStore('config', () => {
       default_consumption_position: configToUpdate.defaultConsumptionPosition,
       product_label_template: configToUpdate.productLabelTemplate,
       position_label_template: configToUpdate.positionLabelTemplate,
+      mandatory_reason_for_movement_types: configToUpdate.mandatoryReasonForMovementTypes,
     });
 
     Object.assign(config, configToUpdate);

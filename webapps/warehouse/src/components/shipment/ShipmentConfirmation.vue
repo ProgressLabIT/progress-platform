@@ -71,7 +71,19 @@
     <q-space></q-space>
 
     <!-- // -->
-    <q-input v-model="shipment.reason" :label="$t('movement_reason')" autogrow filled stack-label/>
+    <q-input
+      v-model="shipment.reason"
+      :label="$t('movement_reason')"
+      autogrow
+      filled
+      stack-label
+      label-slot
+    >
+      <template #label>
+        {{ $t('movement_reason') }}
+        <span v-if="config.mandatoryReasonForMovementTypes?.includes('shipment')" class="text-theme-red"> * </span>
+      </template>
+    </q-input>
 
     <div class="row q-col-gutter-x-sm q-mt-md">
       <div class="col-6">
@@ -87,6 +99,7 @@
           color="theme-blue"
           class="full-width"
           :label="$t('confirm')"
+          :disabled="mandatoryReasonNotSet"
           @click="confirm"
         />
       </div>
@@ -98,9 +111,11 @@
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useShipmentStore } from '@/stores/shipment';
+import { useConfigStore } from '@/stores/config';
 
 const router = useRouter();
 const shipment = useShipmentStore();
+const { config } = useConfigStore();
 const serialItems = computed(() =>
   shipment.selectedInventory
     .filter(item => shipment.inventory.find(i => i._key === item._key)?.serial_key)
@@ -123,6 +138,10 @@ const nonSerialItems = computed(() =>
 
 const totalQuantity = computed(() => {
   return shipment.selectedInventory.reduce((total, item) => total + item.selected, 0);
+});
+
+const mandatoryReasonNotSet = computed(() => {
+  return config.mandatoryReasonForMovementTypes?.includes('shipment') && (!shipment.reason || shipment.reason.length === 0);
 });
 
 function getPositionPath(item) {

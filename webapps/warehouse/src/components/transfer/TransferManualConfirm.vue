@@ -28,7 +28,19 @@
 
     <q-space />
 
-    <q-input v-model="reason" :label="$t('movement_reason')" autogrow filled stack-label/>
+    <q-input
+      v-model="reason"
+      :label="$t('movement_reason')"
+      autogrow
+      filled
+      stack-label
+      label-slot
+    >
+      <template #label>
+        {{ $t('movement_reason') }}
+        <span v-if="config.mandatoryReasonForMovementTypes?.includes('transfer')" class="text-theme-red"> * </span>
+      </template>
+    </q-input>
 
     <!-- Action Buttons -->
     <div class="row q-col-gutter-sm col-auto">
@@ -45,6 +57,7 @@
           color="primary"
           :label="$t('confirm')"
           class="full-width"
+          :disabled="mandatoryReasonNotSet"
           @click="saveTransfer"
         />
       </div>
@@ -53,15 +66,20 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { Notify } from 'quasar';
 import { useTransferStore } from '@/stores/transfer';
 import { sendEventsBulk } from 'app/src/composables/bulkEvent.js';
 import { timestamp } from 'app/src/lib/TimeHandling';
 import ContentChip from '../ContentChip.vue';
+import { useConfigStore } from 'app/src/stores/config';
 
 const transfer = useTransferStore();
 const reason = ref('');
+const { config } = useConfigStore();
+const mandatoryReasonNotSet = computed(() => {
+  return config.mandatoryReasonForMovementTypes?.includes('transfer') && reason.value.length === 0;
+});
 async function saveTransfer() {
   let movements = [];
   const now = timestamp();

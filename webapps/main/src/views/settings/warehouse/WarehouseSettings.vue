@@ -33,6 +33,24 @@
         :disable="!editMode"
         @select="(position) => (configModel.defaultConsumptionPosition = position)"
       />
+
+
+      <div class="text-body1 q-mt-xl">
+        {{ $t('settings.mandatoryReasonForMovementTypes') }}
+      </div>
+      <div class="row q-gutter-x-lg">
+        <div
+          v-for="movement in ['receipt', 'shipment', 'transfer', 'adjustment']"
+          :key="movement"
+          class="col-auto">
+          <q-checkbox
+            :model-value="(configModel.mandatoryReasonForMovementTypes ?? []).includes(movement)"
+            :label="$t(`warehouse.movement.${movement}`)"
+            :disable="!editMode"
+            @update:model-value="updateMandatoryReasonForMovementTypes(movement)"
+          />
+        </div>
+      </div>
       <!-- Product label template -->
       <!-- <BaseAutocompleteTemplate
         :label="$t('settings.productLabelTemplate')"
@@ -75,13 +93,27 @@ function cancel() {
 }
 
 async function save() {
-  await updateAppConfig({
+  const update = {
     enableInventoryManagement: configModel.value.enableInventoryManagement,
     defaultProductionPosition: configModel.value.defaultProductionPosition,
     defaultConsumptionPosition: configModel.value.defaultConsumptionPosition,
     productLabelTemplate: configModel.value.productLabelTemplate,
     positionLabelTemplate: configModel.value.positionLabelTemplate,
-  });
+    mandatoryReasonForMovementTypes: configModel.value.mandatoryReasonForMovementTypes,
+  }
+  console.log(update);
+  await updateAppConfig(update);
 }
 
+function updateMandatoryReasonForMovementTypes(movement) {
+  if (!configModel.value.mandatoryReasonForMovementTypes) {
+    configModel.value.mandatoryReasonForMovementTypes = [];
+  }
+  if (configModel.value.mandatoryReasonForMovementTypes.includes(movement)) {
+    configModel.value.mandatoryReasonForMovementTypes.splice(configModel.value.mandatoryReasonForMovementTypes.indexOf(movement), 1);
+  } else {
+    configModel.value.mandatoryReasonForMovementTypes.push(movement);
+  }
+  console.log(configModel.value.mandatoryReasonForMovementTypes);
+}
 </script>

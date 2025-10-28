@@ -16,13 +16,19 @@ export const useConfigStore = defineStore('config', () => {
       auto_new_batch: true,
       unsupervised_work_allowed: false,
       std_processing_time: 60,
-      printers: [],
     },
     serialFields: [],
     operatorCost: 0,
     allowUnassignedJobs: true,
     allowIndependentReorderingOfJobQueues: false,
     allowSerialDelete: false,
+    mandatoryReasonForMovementTypes: [],
+    enableInventoryManagement: false,
+    defaultProductionPosition: null,
+    defaultConsumptionPosition: null,
+    productLabelTemplate: null,
+    positionLabelTemplate: null,
+    printers: [],
   };
 
   const isLoading = ref(true);
@@ -34,6 +40,7 @@ export const useConfigStore = defineStore('config', () => {
     const { data } = await api.get('config');
     const appConfig = data.detail;
 
+    // Handle fields that don't need strict type checks
     if (appConfig.company_name) {
       config.companyName = appConfig.company_name;
     }
@@ -49,20 +56,26 @@ export const useConfigStore = defineStore('config', () => {
     if (appConfig.printers) {
       config.printers = appConfig.printers;
     }
-    if (typeof appConfig.operator_cost === 'number') {
-      config.operatorCost = appConfig.operator_cost;
-    }
-    if (typeof appConfig.show_unassigned_jobs_to_operators === 'boolean') {
-      config.allowUnassignedJobs = appConfig.show_unassigned_jobs_to_operators;
-    }
-    if (
-      typeof appConfig.allow_independent_reordering_of_job_queues === 'boolean'
-    ) {
-      config.allowIndependentReorderingOfJobQueues =
-        appConfig.allow_independent_reordering_of_job_queues;
-    }
-    if (typeof appConfig.allow_serial_delete === 'boolean') {
-      config.allowSerialDelete = appConfig.allow_serial_delete;
+
+    // Map API fields to config properties with type validation
+    const configMappings = [
+      { apiField: 'operator_cost', target: 'operatorCost', type: 'number' },
+      { apiField: 'show_unassigned_jobs_to_operators', target: 'allowUnassignedJobs', type: 'boolean' },
+      { apiField: 'allow_independent_reordering_of_job_queues', target: 'allowIndependentReorderingOfJobQueues', type: 'boolean' },
+      { apiField: 'allow_serial_delete', target: 'allowSerialDelete', type: 'boolean' },
+      { apiField: 'mandatory_reason_for_movement_types', target: 'mandatoryReasonForMovementTypes', type: 'object' },
+      { apiField: 'enable_inventory_management', target: 'enableInventoryManagement', type: 'boolean' },
+      { apiField: 'default_production_position', target: 'defaultProductionPosition', type: 'string' },
+      { apiField: 'default_consumption_position', target: 'defaultConsumptionPosition', type: 'string' },
+      { apiField: 'product_label_template', target: 'productLabelTemplate', type: 'string' },
+      { apiField: 'position_label_template', target: 'positionLabelTemplate', type: 'string' },
+    ];
+
+    for (const { apiField, target, type } of configMappings) {
+      const value = appConfig[apiField];
+      if (value !== undefined && typeof value === type) {
+        config[target] = value;
+      }
     }
   }
   void (async () => {

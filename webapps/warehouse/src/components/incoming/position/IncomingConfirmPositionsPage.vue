@@ -47,7 +47,21 @@
     />
 
     <q-space />
-    <q-input v-model="reason" :label="$t('movement_reason')" autogrow filled stack-label/>
+
+    <q-input
+      v-model="reason"
+      :label="$t('movement_reason')"
+      autogrow
+      filled
+      stack-label
+      label-slot
+    >
+      <template #label>
+        {{ $t('movement_reason') }}
+        <span v-if="config.mandatoryReasonForMovementTypes?.includes('receipt')" class="text-theme-red"> * </span>
+      </template>
+    </q-input>
+
 
     <div class="row q-col-gutter-x-sm q-mt-md">
       <div class="col-6">
@@ -58,12 +72,13 @@
           @click="incoming.stage = 'position'"
         />
       </div>
-    <div class="col-6">
+      <div class="col-6">
         <q-btn
           color="theme-blue"
           class="full-width"
           :label="$t('confirm')"
-        @click="confirm"
+          :disabled="mandatoryReasonNotSet"
+          @click="confirm"
         />
       </div>
     </div>
@@ -71,15 +86,22 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { Notify } from 'quasar';
 import { sendEventsBulk } from 'app/src/composables/bulkEvent.js';
 import { timestamp } from 'app/src/lib/TimeHandling';
 import { useIncomingStore } from 'app/src/stores/incoming';
 import PositionQuantityDistribution from 'components/PositionQuantityDistribution.vue';
+import { useConfigStore } from 'app/src/stores/config';
 
 const incoming = useIncomingStore();
+const { config } = useConfigStore();
 const reason = ref('');
+
+const mandatoryReasonNotSet = computed(() => {
+  // Disable button only if reason is mandatory and reason is empty
+  return config.mandatoryReasonForMovementTypes?.includes('receipt') && reason.value.length === 0;
+});
 
 async function confirm() {
   let movements = [];

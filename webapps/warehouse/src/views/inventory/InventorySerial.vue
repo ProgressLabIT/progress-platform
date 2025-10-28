@@ -98,11 +98,23 @@
         <q-space />
 
         <!-- Reason input -->
-        <q-input v-model="deleteReason" :label="$t('movement_reason')" autogrow filled stack-label/>
+        <q-input
+          v-model="deleteReason"
+          :label="$t('movement_reason')"
+          autogrow
+          filled
+          stack-label
+          label-slot
+        >
+          <template #label>
+            {{ $t('movement_reason') }}
+            <span v-if="config.mandatoryReasonForMovementTypes?.includes('adjustment')" class="text-theme-red"> * </span>
+          </template>
+        </q-input>
 
         <div class="row justify-between">
           <q-btn :label="$t('cancel')" color="theme-grey" @click="deleteDialogShow = false" />
-          <q-btn :label="$t('confirm')" color="theme-red" @click="deleteSelected" />
+          <q-btn :label="$t('confirm')" color="theme-red" :disabled="mandatoryReasonNotSet" @click="deleteSelected" />
         </div>
       </div>
 
@@ -119,8 +131,10 @@ import SearchOrScan from '@/components/SearchOrScan.vue';
 import { api } from 'app/src/boot/axios';
 import { useI18n } from 'vue-i18n';
 import SlideUpCard from '@/components/SlideUpCard.vue';
+import { useConfigStore } from '@/stores/config';
 
 const { t: $t } = useI18n();
+const { config } = useConfigStore();
 const serialCodeFilter = ref('');
 const productCodeFilter = ref('');
 const results = ref([]);
@@ -195,6 +209,10 @@ const deleteSelected = async () => {
   });
   deleteDialogShow.value = false;
 };
+
+const mandatoryReasonNotSet = computed(() => {
+  return config.mandatoryReasonForMovementTypes?.includes('adjustment') && deleteReason.value.length === 0;
+});
 
 </script>
 

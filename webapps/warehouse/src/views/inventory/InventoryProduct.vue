@@ -105,10 +105,22 @@
       </SlideUpCard>
 
       <SlideUpCard v-model="showReasonInput" @hide="resetReason">
-        <q-input v-model="reason" :label="$t('movement_reason')" autogrow filled stack-label/>
+        <q-input
+          v-model="reason"
+          :label="$t('movement_reason')"
+          autogrow
+          filled
+          stack-label
+          label-slot
+        >
+          <template #label>
+            {{ $t('movement_reason') }}
+            <span v-if="config.mandatoryReasonForMovementTypes?.includes('adjustment')" class="text-theme-red"> * </span>
+          </template>
+        </q-input>
         <div class="row justify-between">
           <q-btn color="theme-grey" class="q-mt-md" :label="$t('cancel')" @click="showReasonInput = false" />
-          <q-btn color="theme-blue" class="q-mt-md" :label="$t('confirm')" @click="confirmQuantity" />
+          <q-btn color="theme-blue" class="q-mt-md" :label="$t('confirm')" :disabled="mandatoryReasonNotSet" @click="confirmQuantity" />
         </div>
       </SlideUpCard>
     </template>
@@ -126,8 +138,10 @@ import { sendEvent } from '@/composables/event';
 // import { useI18n } from 'vue-i18n';
 import { ref, computed } from 'vue';
 import { useInventoryStore } from '@/stores/inventory';
+import { useConfigStore } from '@/stores/config';
 
 const inventory = useInventoryStore();
+const { config } = useConfigStore();
 
 // const { t } = useI18n();
 
@@ -208,6 +222,10 @@ function resetReason() {
   reason.value = '';
   showReasonInput.value = false;
 }
+
+const mandatoryReasonNotSet = computed(() => {
+  return config.mandatoryReasonForMovementTypes?.includes('adjustment') && reason.value.length === 0;
+});
 </script>
 
 <style lang="scss" scoped>
