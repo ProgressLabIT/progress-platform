@@ -1,4 +1,5 @@
 import traceback
+import uuid
 
 from fastapi import HTTPException
 from fastapi.encoders import jsonable_encoder
@@ -9,6 +10,7 @@ from models.production import Job, WorkOrderNew, WorkOrderFull
 from utils.bom import get_bom_from_db
 from utils.process import search_step_media, Queries as ProcessQueries
 from utils.product import get_product_docs
+from models.event import EventType
 
 
 class Queries:
@@ -565,6 +567,7 @@ def close_job_and_update_queues(tx, job: Job, notes: str | None = None) -> Job:
     event_group = str(uuid.uuid4()),
     job_key = current_job.key,
     completed_qt = current_job.qt_completed,
+    update_planned_qt = True,
     notes = notes if notes is not None else current_job.notes,
   )
 

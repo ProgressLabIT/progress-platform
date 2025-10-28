@@ -99,6 +99,7 @@ class Queries:
   COMPLETE_JOB = """
     FOR j IN Job
     FILTER j._key == @job_key
+    LET qt_planned = @update_planned_qt ? @qt_completed : j.qt_planned
     UPDATE j WITH {
       active: false,
       stage: @stage,
@@ -106,9 +107,10 @@ class Queries:
       active_batch_qt: 0,
       qt_completed: @qt_completed,
       qt_released: @qt_completed,
+      qt_planned,
       qt_next_batch: null,
       next_batch_available: null,
-      progress: ROUND(100 * @qt_completed / j.qt_planned),
+      progress: ROUND(100 * @qt_completed / qt_planned),
       end: @end,
       notes: @notes
     } IN Job

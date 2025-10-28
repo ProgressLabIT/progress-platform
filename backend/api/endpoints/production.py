@@ -738,7 +738,7 @@ async def get_active_work_session_for_job(job_key: str):
     dependencies=[Depends(auth.verify_token)])
 async def update_jobs(job_updates:List[JobUpdate]):
 
-  tx = db.begin_transaction(write=['Job', 'Queue', 'WorkOrder'])
+  tx = db.begin_transaction(write=['Job', 'Queue', 'WorkOrder', 'Event', 'event_source'])
   job_db = tx.collection('Job')
 
   results = []
@@ -835,7 +835,7 @@ async def update_jobs(job_updates:List[JobUpdate]):
     return APIResponse(detail=results, message="Jobs updated successfully")
 
   except Exception:
-    return HTTPError(500, "There was an error saving the updates")
+    raise HTTPError(500, "There was an error saving the updates")
 
   finally:
     if tx.transaction_status() == 'running':

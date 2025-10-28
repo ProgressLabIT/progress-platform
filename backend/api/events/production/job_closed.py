@@ -9,6 +9,7 @@ class JobClosedEvent(BaseEvent):
   class InfoModel(EventInfoModel):
     job_key: str
     completed_qt: float
+    update_planned_qt: bool = False
     notes: str | None = None
 
   @classmethod
@@ -25,6 +26,7 @@ class JobClosedEvent(BaseEvent):
       stage=WorkStatus.CLOSED,
       notes=self.info.notes or "Job closed",
       qt_completed=self.info.completed_qt,
+      update_planned_qt=self.info.update_planned_qt or False,
       end=self.info.timestamp,
     )
     completed_job = Job(**self.tx.aql.execute(
