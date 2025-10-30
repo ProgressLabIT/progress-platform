@@ -983,11 +983,11 @@ async function saveLink(linkData) {
       }
     });
 
-    // For now, we'll just close the dialog and show a success message
-    showLinkDialog.value = false;
 
     // Refresh task data to get updated links
     await fetchTaskData();
+
+    closeLinkDialog();
 
     Notify.create({
       message: $t('entity_linked_successfully') || 'Entity linked successfully',
@@ -997,12 +997,6 @@ async function saveLink(linkData) {
     });
   } catch (error) {
     console.error('Error linking entity:', error);
-    Notify.create({
-      message: $t('errors.link_err') || 'Error linking entity',
-      color: 'theme-red',
-      timeout: 3000,
-      position: 'top',
-    });
   } finally {
     savingLink.value = false;
   }
