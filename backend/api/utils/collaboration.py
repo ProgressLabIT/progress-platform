@@ -291,6 +291,15 @@ class Queries:
   """
 
   GET_TASK_DATA = """
+    LET link_type = {
+      Issue: { type: 'issue', code: 'code' },
+      WorkOrder: { type: 'work_order', code: 'wo_code' },
+      Product: { type: 'product', code: 'code' },
+      Equipment: { type: 'equipment', code: 'code' },
+      Serial: { type: 'serial', code: 'code' },
+      Task: { type: 'task', code: 'code' }
+    }
+
     FOR t IN Task
     FILTER t._key == @task_key
 
@@ -319,20 +328,13 @@ class Queries:
     )
 
     LET task_links = (
-      LET link_type = {
-        Issue: { type: 'issue', code: 'code' },
-        WorkOrder: { type: 'work_order', code: 'wo_code' },
-        Product: { type: 'product', code: 'code' },
-        Equipment: { type: 'equipment', code: 'code' },
-        Serial: { type: 'serial', code: 'code' },
-        Task: { type: 'task', code: 'code' }
-      }
       FOR l IN 1..1 ANY t task_rel
       LET meta = link_type[PARSE_IDENTIFIER(l._id).collection]
       RETURN {
         type: meta.type,
         key: l._key,
-        code: l[meta.code]
+        code: l[meta.code],
+        l
       }
     )
 
@@ -341,6 +343,6 @@ class Queries:
       links: task_links,
       icon: task_type.icon,
       task_type_name: task_type.name,
-      allowed_linked_entities: task_type.link_settings[*].type
+      link_settings: NOT_NULL(task_type.link_settings, [])
     })
   """

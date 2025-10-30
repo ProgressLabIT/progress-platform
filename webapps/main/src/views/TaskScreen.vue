@@ -301,20 +301,22 @@
             <!-- LINKED ENTITIES -->
             <q-tab-panel name="linked_entities">
               <div class="column q-col-gutter-y-sm">
-                <div v-if="availableEntityTypes.length === 0" class="text-italic">
+                <div v-if="allowedEntityTypes.length === 0" class="text-italic">
                   {{ $t('linked_entities.no_linkable_entities') }}
                 </div>
-                <div v-for="type in availableEntityTypes" :key="type" class="row items-center q-col-gutter-x-sm" style="min-height: 42px;">
+                <div v-for="type in allowedEntityTypes" :key="type" class="row items-center q-col-gutter-x-sm" style="min-height: 42px;">
                   <div class="text-h5 text-low text-uppercase col-2">
                     {{ $t(`linked_entities.${type}`) }}
                   </div>
 
-                  <div class="col-auto q-pr-md">
-                  <q-btn
-                    color="theme-blue"
-                    round
-                    icon="mdi-plus"
-                    size="8px"
+                  <div
+                    v-if="canAddLink(type)"
+                    class="col-auto q-pr-md">
+                    <q-btn
+                      color="theme-blue"
+                      round
+                      icon="mdi-plus"
+                      size="8px"
                       padding="2px"
                       @click="openLinkDialog(type)"
                     />
@@ -363,6 +365,7 @@
 
         <!-- LINK ENTITY DIALOG -->
         <LinkEntityDialog
+          :allowed-entity-types="allowedEntityTypes"
           v-model:selected-entity-type="selectedEntityType"
           :show="showLinkDialog"
           :saving="savingLink"
@@ -475,9 +478,18 @@ const hasAdminAccess = computed(() => {
 });
 
 // Available entity types for linking
-const availableEntityTypes = computed(() => {
-  return task.value?.allowed_linked_entities || [];
+const allowedEntityTypes = computed(() => {
+  return task.value?.link_settings.filter(setting => setting.enabled).map(setting => setting.type) || [];
 });
+
+function canAddLink(type) {
+  const taskStatusCheck = ['open', 'pending'].includes(task.value.status)
+  const linkTypeSetting = task.value.link_settings.filter(setting => setting.type === type)[0]
+  const linkEnabled = linkTypeSetting?.enabled || false
+  const linkMultipleAllowed = linkTypeSetting?.allow_multiple || false
+  const currentLinksOfType = task.value.links.filter(link => link.type === type).length
+  return taskStatusCheck && linkEnabled && (linkMultipleAllowed || currentLinksOfType === 0);
+}
 
 
 function exit() {

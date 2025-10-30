@@ -16,6 +16,7 @@
             map-options
             :label="$t('entity_type')"
             :placeholder="$t('select_entity_type')"
+            :disable="allowedEntityTypes.length <= 1"
             color="theme-blue"
             filled
             class="full-width"
@@ -122,6 +123,10 @@ const props = defineProps({
     type: Array,
     default: () => [],
   },
+  allowedEntityTypes: {
+    type: Array,
+    default: () => [],
+  },
 });
 
 const selectedEntityType = defineModel('selectedEntityType', {
@@ -135,13 +140,13 @@ const { t: $t } = useI18n();
 const route = useRoute();
 const selectedEntity = ref(null);
 
-const entityTypeOptions = computed(() => [
+const entityTypeOptions = computed(() => ([
   { label: $t('work_order.long'), value: 'work_order' },
-  { label: $t('issue'), value: 'issue' },
-  { label: $t('serial'), value: 'serial' },
-  { label: $t('product.label'), value: 'product' },
-  { label: $t('task'), value: 'task' },
-]);
+    { label: $t('issue'), value: 'issue' },
+    { label: $t('serial'), value: 'serial' },
+    { label: $t('product.label'), value: 'product' },
+    { label: $t('task'), value: 'task' },
+  ].filter(option => props.allowedEntityTypes.includes(option.value))));
 
 function onEntitySelect(entity) {
   selectedEntity.value = entity;
