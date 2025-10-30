@@ -30,6 +30,7 @@ class FieldType(str, Enum):
   DATE = 'date'
   TIME = 'time'
   FILES = 'files'
+  SEPARATOR = 'separator'
 
 field_type_map = {
   FieldType.TEXT.value: str,

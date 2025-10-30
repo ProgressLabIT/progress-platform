@@ -225,7 +225,15 @@ collections = [
       reset_date = datetime.today().replace(year=datetime.today().year + 1, month=1, day=1, hour=0, minute=0, second=0, microsecond=0).isoformat() # Midnight of Jan 1st of the next year
     )
   ]),
-  Collection(name='CustomField'),
+  Collection(name='CustomField', default_records=[
+    dict(
+      _key = 'separator',
+      name = 'Separator',
+      type = 'separator',
+      default_label = None,
+      default_hint = None
+    )
+  ]),
   Collection(name='CustomListValue', indexes=[
     DBIndex(fields=['field_key'], name='clv-field')
   ]),

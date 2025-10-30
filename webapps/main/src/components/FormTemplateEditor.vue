@@ -42,7 +42,7 @@
         />
       </div>
 
-      <div class="col-auto">
+      <div class="col-auto" v-if="field.custom_field_key !== 'separator'">
         <q-toggle
           v-model="field.mandatory"
           :disable="!editMode"
@@ -64,7 +64,7 @@
     </div>
   </div>
 
-  <div class="row">
+  <div class="row q-gutter-x-md">
     <q-btn
       v-if="editMode"
       size="sm"
@@ -73,6 +73,15 @@
       :label="$t('field_add')"
       class="q-mt-lg"
       @click="addField"
+    />
+    <q-btn
+      v-if="editMode"
+      size="sm"
+      color="theme-blue"
+      icon="mdi-ab-testing"
+      :label="$t('separator_add')"
+      class="q-mt-lg"
+      @click="addSeparator"
     />
   </div>
 </template>
@@ -149,6 +158,9 @@ watch(
 function addField() {
   Dialog.create({
     component: AddCustomFieldDialog,
+    componentProps: {
+      excludeKeys: ['separator']
+    }
   }).onOk((customField) => {
     fieldsModel.value.push({
       _key: uid(),
@@ -162,5 +174,15 @@ function addField() {
 
 function deleteField(index) {
   fieldsModel.value.splice(index, 1);
+}
+
+function addSeparator() {
+  fieldsModel.value.push({
+    _key: uid(),
+    custom_field_key: 'separator',
+    label: null,
+    hint: null,
+    mandatory: false,
+  });
 }
 </script>

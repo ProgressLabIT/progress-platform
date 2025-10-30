@@ -36,6 +36,11 @@ export function useFormFields() {
       label: t('field_type_files'),
       icon: 'mdi-folder-outline',
     },
+    {
+      value: 'separator',
+      label: t('field_type_separator'),
+      icon: 'mdi-ab-testing',
+    }
   ]);
   const typeToIndexMap = fields.value.reduce((result, { value }, index) => {
     result[value] = index;

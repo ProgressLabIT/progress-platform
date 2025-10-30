@@ -250,6 +250,7 @@ export default {
     'Il token verrà eliminato. Non sarà più possibile utilizzarlo nelle integrazioni.',
   field: 'campo | campi',
   field_add: 'Aggiungi campo',
+  separator_add: 'Aggiungi separatore',
   field_delete: 'Elimina campo',
   field_delete_success: 'Campo eliminato',
   field_delete_text:
@@ -266,6 +267,7 @@ export default {
   field_type_choice: 'Scelta',
   field_type_date: 'Data',
   field_type_number: 'Numero',
+  field_type_separator: 'Separatore',
   field_type_text: 'Testo',
   field_type_ternary: 'Vero/Falso/NA',
   field_type_time: 'Ora',

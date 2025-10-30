@@ -245,6 +245,7 @@ export default {
     'The token will be deleted. It will not be possible to use it for integrations anymore',
   field: 'field | fields',
   field_add: 'Add field',
+  separator_add: 'Add separator',
   field_delete: 'Delete field',
   field_delete_success: 'Field deleted',
   field_delete_text:
@@ -261,6 +262,7 @@ export default {
   field_type_choice: 'Choice',
   field_type_date: 'Date',
   field_type_number: 'Number',
+  field_type_separator: 'Separator',
   field_type_text: 'Text',
   field_type_ternary: 'True/False/NA',
   field_type_time: 'Time',

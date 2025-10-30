@@ -1,5 +1,13 @@
 <template>
   <div>
+    <div v-if="fieldType === 'separator'" class="q-mt-lg q-mb-md">
+      <div class="text-h6">{{ field.label ?? field.default_label }}</div>
+      <q-separator class="q-my-sm"/>
+      <div class="smaller text-low">
+        {{ field.hint ?? field.default_hint }}
+      </div>
+    </div>
+
     <!-- TEXT -->
     <q-input
       v-if="fieldType === 'text'"
@@ -246,7 +254,7 @@
       />
     </div>
 
-    <div class="smaller q-px-sm q-mt-xs">
+    <div class="smaller q-px-sm q-mt-xs" v-if="fieldType !== 'separator'">
       {{ field.hint ?? field.default_hint }}
     </div>
   </div>
