@@ -420,6 +420,8 @@
         :value="serial_key"
         :show-link-status="false"
         :show-inventory-status="false"
+        show-product-code
+        show-product-description
         @select="(selection) => (serial_key = selection)"
       />
 
