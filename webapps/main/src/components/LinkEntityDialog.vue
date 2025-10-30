@@ -158,6 +158,7 @@ function handleSave() {
       entityType: selectedEntityType.value,
       entity: selectedEntity.value,
     });
+    selectedEntity.value = null;
   }
 }
 
