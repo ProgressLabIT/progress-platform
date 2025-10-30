@@ -19,391 +19,395 @@
     </template>
 
     <template #content>
-      <q-skeleton v-if="!task" type="text" />
+      <q-splitter
+        v-model="taskColumnWidth"
+        class="fit"
+        separator-class="text-disabled"
+      >
+         <!-- MESSAGES -->
+        <template #after>
+          <MessageThread
+            :messages="messages"
+            context="task"
+            :context_key="taskKey"
+          >
+            <template #header>
+              <div class="display low-text text-h5 col-auto q-pb-md">
+                {{ $t('message', 2) }}
+              </div>
+              <q-separator></q-separator>
+            </template>
+          </MessageThread>
+        </template>
+        <template #before>
+          <q-skeleton v-if="!task" type="text" />
 
-      <div v-else class="q-pa-md full-height column">
-        <div class="row items-center text-low q-col-gutter-x-xl">
-          <!-- CREATED BY -->
-          <div class="col-auto row q-gutter-x-md items-center">
-            <div class="text-h5 uppercase text-low">{{ $t('created_date') }}</div>
-            <div class="text-caption text-low">
-              {{ new Date(task.created).toLocaleString() }}
-            </div>
-            <BaseUserAvatar
-              :user="getUserByKey(task.created_by)"
-              :size="'24px'"
-            />
-          </div>
-
-          <!-- ASSIGNED TO -->
-          <div class="col-auto row q-col-gutter-x-md items-center">
-            <div class="text-h5 uppercase text-low">{{ $t('assigned_to') }}</div>
-            <div v-if="task.assigned_to?.length" class="row items-center no-wrap">
-              <!-- OWNER FIRST WITH CROWN OVERLAY -->
-              <template v-if="ownerAssignment">
+          <div v-else class="q-pa-md full-height column">
+            <div class="row items-center text-low q-col-gutter-x-xl">
+              <!-- CREATED BY -->
+              <div class="col-auto row q-gutter-x-md items-center">
+                <div class="text-h5 uppercase text-low">{{ $t('created_date') }}</div>
+                <div class="text-caption text-low">
+                  {{ new Date(task.created).toLocaleString() }}
+                </div>
                 <BaseUserAvatar
-                  :user="getUserByKey(ownerAssignment.user_key)"
+                  :user="getUserByKey(task.created_by)"
                   :size="'24px'"
-                  :show_name="false"
-                  avatar-color-class="bg-theme-blue"
-                  dense
-                />
-              </template>
-
-              <!-- SLASH SEPARATOR IF THERE ARE OTHER ASSIGNEES -->
-              <div v-if="ownerAssignment && otherAssignments.length" class="q-mx-sm text-h5 text-low">/</div>
-
-              <!-- OTHER ASSIGNEES -->
-              <div v-if="otherAssignments.length" class="row q-col-gutter-x-xs items-center">
-                <BaseUserAvatar
-                  v-for="assignment in otherAssignments"
-                  :key="assignment.user_key"
-                  :user="getUserByKey(assignment.user_key)"
-                  :size="'24px'"
-                  :show_name="false"
-                  dense
                 />
               </div>
-            </div>
-            <div v-else class="text-italic">
-              {{ $t('unassigned') }}
-            </div>
-            <!-- EDIT ASSIGNMENT BUTTON -->
 
-            <div class="col-auto">
-            <q-btn
-              flat
-              round
-              icon="mdi-pencil"
-              size="10px"
-              :disabled="!['pending', 'open'].includes(task.status)"
-              @click="showAssignmentDialog = true"
-            >
-              <q-tooltip anchor="center right" self="center left" :delay="200">
-                {{ $t('edit_assignments') }}
-              </q-tooltip>
-            </q-btn>
-            </div>
-          </div>
-
-          <div class="col-auto row items-center q-gutter-x-sm">
-            <q-chip
-              :color="taskStatusOptions[task.status]?.color || 'theme-grey'"
-              :label="taskStatusOptions[task.status]?.label"
-              :icon="taskStatusOptions[task.status]?.icon || 'mdi-circle-outline'"
-              size="10px"
-              class="highlight text-uppercase"
-              />
-            <!-- CLOSE/REOPEN BUTTON -->
-            <q-btn
-              v-if="task.status !== 'pending'"
-              :icon="task.status === 'open' ? 'mdi-check' : 'mdi-restore'"
-              size="10px"
-              flat
-              round
-              :loading="togglingStatus"
-              @click="toggleTaskStatus"
-            >
-              <q-tooltip anchor="center right" self="center left" :delay="200">
-                {{ task.status === 'open' ? $t('complete_task') : $t('reopen_task') }}
-              </q-tooltip>
-            </q-btn>
-
-            <!-- CANCEL BUTTON -->
-            <q-btn
-              v-if="['pending', 'open'].includes(task.status)"
-              size="10px"
-              flat
-              icon="mdi-close"
-              round
-              @click="cancelTask"
-            >
-              <q-tooltip anchor="center right" self="center left" :delay="200">
-                {{ $t('cancel_task') }}
-              </q-tooltip>
-            </q-btn>
-          </div>
-        </div>
-
-        <!-- TITLE -->
-        <div class="row items-center q-col-gutter-x-xl q-mt-lg">
-          <div class="col">
-            <div v-if="!editMode" class="text-h2 highlight">
-              {{ task.title }}
-            </div>
-            <q-input
-              v-else
-              v-model="task.title"
-              outlined
-              autogrow
-              :placeholder="$t('title') || 'Title'"
-              input-style="font-size: 1.5rem; font-weight: bold; line-height: 1.2;"
-            />
-          </div>
-          <q-space />
-          <!-- EDIT BUTTON -->
-
-          <div class="col-auto row q-gutter-md">
-            <!-- ACTIVATE BUTTON -->
-            <q-btn
-              v-if="!editMode && taskStore.activeTaskKey !== taskKey && task.status === 'open'"
-              :label="$t('activate')"
-              icon="mdi-play"
-              color="theme-green"
-              size="10px"
-              :loading="activating"
-              @click="activateTask"
-            />
-
-            <q-btn
-              v-if="!editMode"
-              :disabled="task.status !== 'open'"
-              :label="$t('edit')"
-              icon="mdi-pencil"
-              color="theme-blue"
-              size="10px"
-              @click="editMode = true"
-            >
-              <q-tooltip v-if="task.status !== 'open'" anchor="center right" self="center left" :delay="200">
-                {{ $t('task_must_be_open_to_edit') }}
-              </q-tooltip>
-            </q-btn>
-            <!-- SAVE/CANCEL BUTTONS -->
-            <div v-else class="row q-gutter-md">
-              <q-btn
-              size="12px"
-              color="theme-blue"
-              :loading="saving"
-              :label="$t('save')"
-              @click="save"
-              />
-              <q-btn
-              size="12px"
-              color="theme-grey"
-              :label="$t('cancel')"
-              @click="cancel"
-              />
-            </div>
-          </div>
-        </div>
-
-
-        <!-- DESCRIPTION -->
-        <div class="q-mt-md">
-          <div v-if="!editMode">
-            <div v-if="task.description" class="text-body1" style="white-space: pre-wrap;">
-              {{ task.description }}
-            </div>
-          </div>
-          <q-input
-            v-else
-            v-model="task.description"
-            type="textarea"
-            autogrow
-            outlined
-            :placeholder="$t('description') || 'Description'"
-            class="text-body1"
-          />
-        </div>
-
-        <q-separator class="q-mt-md" />
-
-
-        <!-- TABS -->
-        <q-tabs
-          v-model="tab"
-          dense
-          class="q-mt-lg text-low"
-          content-class="text-h5"
-          indicator-color="theme-blue"
-          align="left"
-          active-class="text-high weight-bold"
-        >
-          <q-tab name="form" :label="$t('form')" class="text-left" />
-          <q-tab name="history" :label="$t('history')" />
-          <q-tab name="messages" :label="$t('message', 2)" />
-          <q-tab name="linked_entities" :label="$t('link', 2)" />
-        </q-tabs>
-
-
-        <q-card square class="col surface2 scroll">
-          <q-tab-panels v-model="tab" class="transparent">
-                <!-- TASK FORM DATA -->
-            <q-tab-panel name="form">
-              <template v-if="task?.form_fields?.length > 0">
-                <div class="column col scroll q-pt-sm q-gutter-y-md">
-                  <div
-                    v-for="field in task?.form_fields"
-                    :key="field?.form_field_key"
-                    class="row q-col-gutter-x-md items-center"
-                  >
-                    <FormField
-                      :field="field"
-                      :root-path="`/media/task/${taskKey}/${field?.form_field_key}`"
-                      :disable="!editMode"
-                      class="col"
+              <!-- ASSIGNED TO -->
+              <div class="col-auto row q-col-gutter-x-md items-center">
+                <div class="text-h5 uppercase text-low">{{ $t('assigned_to') }}</div>
+                <div v-if="task.assigned_to?.length" class="row items-center no-wrap">
+                  <!-- OWNER FIRST WITH CROWN OVERLAY -->
+                  <template v-if="ownerAssignment">
+                    <BaseUserAvatar
+                      :user="getUserByKey(ownerAssignment.user_key)"
+                      :size="'24px'"
+                      :show_name="false"
+                      avatar-color-class="bg-theme-blue"
                       dense
-                      @update="field.value = $event"
                     />
-                    <q-icon
-                      v-if="field.last_updated"
-                      class="col-auto"
-                      name="mdi-information-outline"
-                      color="theme-grey"
-                      size="24px"
-                    >
-                      <q-tooltip
-                        anchor="center left"
-                        self="center right"
-                        :delay="200"
-                        class="bg-theme-blue">
-                        <div class="column q-gutter-y-xs text-right q-pa-sm" >
-                          <div class="text-h5">
-                            {{ $t('last_update') }}
-                          </div>
-                          <BaseUserAvatar
-                            :user="getFieldUser(field)"
-                            size="24px"
-                          />
-                          <div class="text-h6 text-low">{{ getFieldTimestamp(field) }}</div>
-                        </div>
-                      </q-tooltip>
-                    </q-icon>
-                  </div>
-                </div>
-              </template>
-              <div v-else class="col-auto text-italic">No form data</div>
-            </q-tab-panel>
+                  </template>
 
+                  <!-- SLASH SEPARATOR IF THERE ARE OTHER ASSIGNEES -->
+                  <div v-if="ownerAssignment && otherAssignments.length" class="q-mx-sm text-h5 text-low">/</div>
 
-
-            <!-- HISTORY -->
-            <q-tab-panel name="history">
-              <q-list class="col q-pb-lg">
-                <TimelineItem
-                  v-for="(e, index) in history"
-                  :key="e._key"
-                  :event="e"
-                  :show-thread="index < history.length - 1"
-                  :user-data="getEventUserData(e)"
-                />
-              </q-list>
-            </q-tab-panel>
-
-            <!-- MESSAGES -->
-            <q-tab-panel name="messages">
-              <MessageThread
-                :messages="messages"
-                context="task"
-                :context_key="taskKey"
-              >
-                <template #header>
-                  <div class="display low-text text-h5 col-auto q-pb-md">
-                    {{ $t('message', 2) }}
-                  </div>
-                  <q-separator></q-separator>
-                </template>
-              </MessageThread>
-            </q-tab-panel>
-
-            <!-- LINKED ENTITIES -->
-            <q-tab-panel name="linked_entities">
-              <div class="column q-col-gutter-y-sm">
-                <div v-if="allowedEntityTypes.length === 0" class="text-italic">
-                  {{ $t('linked_entities.no_linkable_entities') }}
-                </div>
-                <div v-for="type in allowedEntityTypes" :key="type" class="row items-center q-col-gutter-x-sm" style="min-height: 42px;">
-                  <div class="text-h5 text-low text-uppercase col-2">
-                    {{ $t(`linked_entities.${type}`) }}
-                  </div>
-
-                  <div
-                    v-if="canAddLink(type)"
-                    class="col-auto q-pr-md">
-                    <q-btn
-                      color="theme-blue"
-                      round
-                      icon="mdi-plus"
-                      size="8px"
-                      padding="2px"
-                      @click="openLinkDialog(type)"
+                  <!-- OTHER ASSIGNEES -->
+                  <div v-if="otherAssignments.length" class="row q-col-gutter-x-xs items-center">
+                    <BaseUserAvatar
+                      v-for="assignment in otherAssignments"
+                      :key="assignment.user_key"
+                      :user="getUserByKey(assignment.user_key)"
+                      :size="'24px'"
+                      :show_name="false"
+                      dense
                     />
                   </div>
+                </div>
+                <div v-else class="text-italic">
+                  {{ $t('unassigned') }}
+                </div>
+                <!-- EDIT ASSIGNMENT BUTTON -->
 
-                  <div
-                    v-for="link in linksByEntityType[type] || []"
-                    :key="link.key"
-                    class="col-auto">
-                    <q-chip
-                      clickable
-                      square
-                      style="border-radius: 4px;"
-                      outline
-                      size="12px"
-                      padding="2px 12px"
-                      @click="goToEntity(link)">
-                      <div class="text-uppercase" :class="{ 'text-italic': !link?.code }">
-                        <template v-if="link?.code">{{ link?.code }}</template>
-                        <template v-else>({{ $t('id') }} {{ link?.key || '-' }})</template>
-                      </div>
-                      <q-icon
-                        name="mdi-close"
-                        size="14px"
-                        class="q-ml-xs cursor-pointer"
-                        color="theme-grey"
-                        @click.stop="confirmRemoveLink(link)"
-                      />
-                    </q-chip>
-                  </div>
+                <div class="col-auto">
+                <q-btn
+                  flat
+                  round
+                  icon="mdi-pencil"
+                  size="10px"
+                  :disabled="!['pending', 'open'].includes(task.status)"
+                  @click="showAssignmentDialog = true"
+                >
+                  <q-tooltip anchor="center right" self="center left" :delay="200">
+                    {{ $t('edit_assignments') }}
+                  </q-tooltip>
+                </q-btn>
                 </div>
               </div>
-            </q-tab-panel>
-          </q-tab-panels>
-        </q-card>
 
+              <div class="col-auto row items-center q-gutter-x-sm">
+                <q-chip
+                  :color="taskStatusOptions[task.status]?.color || 'theme-grey'"
+                  :label="taskStatusOptions[task.status]?.label"
+                  :icon="taskStatusOptions[task.status]?.icon || 'mdi-circle-outline'"
+                  size="10px"
+                  class="highlight text-uppercase"
+                  />
+                <!-- CLOSE/REOPEN BUTTON -->
+                <q-btn
+                  v-if="task.status !== 'pending'"
+                  :icon="task.status === 'open' ? 'mdi-check' : 'mdi-restore'"
+                  size="10px"
+                  flat
+                  round
+                  :loading="togglingStatus"
+                  @click="toggleTaskStatus"
+                >
+                  <q-tooltip anchor="center right" self="center left" :delay="200">
+                    {{ task.status === 'open' ? $t('complete_task') : $t('reopen_task') }}
+                  </q-tooltip>
+                </q-btn>
 
-        <!-- ASSIGNMENT DIALOG -->
-        <TaskAssignmentDialog
-          :show="showAssignmentDialog"
-          :loading="savingAssignment"
-          :assignments="task.assigned_to"
-          @save="saveAssignments"
-          @cancel="cancelAssignment"
-        />
-
-        <!-- LINK ENTITY DIALOG -->
-        <LinkEntityDialog
-          :allowed-entity-types="allowedEntityTypes"
-          v-model:selected-entity-type="selectedEntityType"
-          :show="showLinkDialog"
-          :saving="savingLink"
-          :existing-links="task.links"
-          @save="saveLink"
-          @close="closeLinkDialog"
-        />
-
-        <!-- REMOVE LINK CONFIRMATION DIALOG -->
-        <BaseConfirmationDialog
-          :show="showRemoveConfirmation"
-          :confirm-color="'theme-red'"
-          :confirm-prompt="$t('remove')"
-          @confirm="removeLink"
-          @close="cancelRemoveLink"
-        >
-          <template #default>
-            <div class="text-center">
-              {{ $t('confirm_remove_link') || 'Are you sure you want to remove this link?' }}
-              <div v-if="linkToRemove" class="text-h5 q-mt-sm text-low">
-                {{ linkToRemove.code || linkToRemove.key }}
+                <!-- CANCEL BUTTON -->
+                <q-btn
+                  v-if="['pending', 'open'].includes(task.status)"
+                  size="10px"
+                  flat
+                  icon="mdi-close"
+                  round
+                  @click="cancelTask"
+                >
+                  <q-tooltip anchor="center right" self="center left" :delay="200">
+                    {{ $t('cancel_task') }}
+                  </q-tooltip>
+                </q-btn>
               </div>
             </div>
-          </template>
-        </BaseConfirmationDialog>
+
+            <!-- TITLE -->
+            <div class="row items-center q-col-gutter-x-xl q-mt-lg">
+              <div class="col">
+                <div v-if="!editMode" class="text-h2 highlight">
+                  {{ task.title }}
+                </div>
+                <q-input
+                  v-else
+                  v-model="task.title"
+                  outlined
+                  autogrow
+                  :placeholder="$t('title') || 'Title'"
+                  input-style="font-size: 1.5rem; font-weight: bold; line-height: 1.2;"
+                />
+              </div>
+              <q-space />
+              <!-- EDIT BUTTON -->
+
+              <div class="col-auto row q-gutter-md">
+                <!-- ACTIVATE BUTTON -->
+                <q-btn
+                  v-if="!editMode && taskStore.activeTaskKey !== taskKey && task.status === 'open'"
+                  :label="$t('activate')"
+                  icon="mdi-play"
+                  color="theme-green"
+                  size="10px"
+                  :loading="activating"
+                  @click="activateTask"
+                />
+
+                <q-btn
+                  v-if="!editMode"
+                  :disabled="task.status !== 'open'"
+                  :label="$t('edit')"
+                  icon="mdi-pencil"
+                  color="theme-blue"
+                  size="10px"
+                  @click="editMode = true"
+                >
+                  <q-tooltip v-if="task.status !== 'open'" anchor="center right" self="center left" :delay="200">
+                    {{ $t('task_must_be_open_to_edit') }}
+                  </q-tooltip>
+                </q-btn>
+                <!-- SAVE/CANCEL BUTTONS -->
+                <div v-else class="row q-gutter-md">
+                  <q-btn
+                  size="12px"
+                  color="theme-blue"
+                  :loading="saving"
+                  :label="$t('save')"
+                  @click="save"
+                  />
+                  <q-btn
+                  size="12px"
+                  color="theme-grey"
+                  :label="$t('cancel')"
+                  @click="cancel"
+                  />
+                </div>
+              </div>
+            </div>
 
 
-      </div>
+            <!-- DESCRIPTION -->
+            <div class="q-mt-md">
+              <div v-if="!editMode">
+                <div v-if="task.description" class="text-body1" style="white-space: pre-wrap;">
+                  {{ task.description }}
+                </div>
+              </div>
+              <q-input
+                v-else
+                v-model="task.description"
+                type="textarea"
+                autogrow
+                outlined
+                :placeholder="$t('description') || 'Description'"
+                class="text-body1"
+              />
+            </div>
+
+            <q-separator class="q-mt-md" />
+
+
+            <!-- TABS -->
+            <q-tabs
+              v-model="tab"
+              dense
+              class="q-mt-lg text-low"
+              content-class="text-h5"
+              indicator-color="theme-blue"
+              align="left"
+              active-class="text-high weight-bold"
+            >
+              <q-tab name="form" :label="$t('form')" class="text-left" />
+              <q-tab name="history" :label="$t('history')" />
+              <q-tab name="linked_entities" :label="$t('link', 2)" />
+            </q-tabs>
+
+
+            <q-card square class="col surface2 scroll">
+              <q-tab-panels v-model="tab" class="transparent">
+                    <!-- TASK FORM DATA -->
+                <q-tab-panel name="form">
+                  <template v-if="task?.form_fields?.length > 0">
+                    <div class="column col scroll q-pt-sm q-gutter-y-md">
+                      <div
+                        v-for="field in task?.form_fields"
+                        :key="field?.form_field_key"
+                        class="row q-col-gutter-x-md items-center"
+                      >
+                        <FormField
+                          :field="field"
+                          :root-path="`/media/task/${taskKey}/${field?.form_field_key}`"
+                          :disable="!editMode"
+                          class="col"
+                          dense
+                          @update="field.value = $event"
+                        />
+                        <q-icon
+                          v-if="field.last_updated"
+                          class="col-auto"
+                          name="mdi-information-outline"
+                          color="theme-grey"
+                          size="24px"
+                        >
+                          <q-tooltip
+                            anchor="center left"
+                            self="center right"
+                            :delay="200"
+                            class="bg-theme-blue">
+                            <div class="column q-gutter-y-xs text-right q-pa-sm" >
+                              <div class="text-h5">
+                                {{ $t('last_update') }}
+                              </div>
+                              <BaseUserAvatar
+                                :user="getFieldUser(field)"
+                                size="24px"
+                              />
+                              <div class="text-h6 text-low">{{ getFieldTimestamp(field) }}</div>
+                            </div>
+                          </q-tooltip>
+                        </q-icon>
+                      </div>
+                    </div>
+                  </template>
+                  <div v-else class="col-auto text-italic">No form data</div>
+                </q-tab-panel>
+
+
+
+                <!-- HISTORY -->
+                <q-tab-panel name="history">
+                  <q-list class="col q-pb-lg">
+                    <TimelineItem
+                      v-for="(e, index) in history"
+                      :key="e._key"
+                      :event="e"
+                      :show-thread="index < history.length - 1"
+                      :user-data="getEventUserData(e)"
+                    />
+                  </q-list>
+                </q-tab-panel>
+
+                <!-- LINKED ENTITIES -->
+                <q-tab-panel name="linked_entities">
+                  <div class="column q-col-gutter-y-sm">
+                    <div v-if="allowedEntityTypes.length === 0" class="text-italic">
+                      {{ $t('linked_entities.no_linkable_entities') }}
+                    </div>
+                    <div v-for="type in allowedEntityTypes" :key="type" class="row items-center q-col-gutter-x-sm" style="min-height: 42px;">
+                      <div class="text-h5 text-low text-uppercase col-2">
+                        {{ $t(`linked_entities.${type}`) }}
+                      </div>
+
+                      <div
+                        v-if="canAddLink(type)"
+                        class="col-auto q-pr-md">
+                        <q-btn
+                          color="theme-blue"
+                          round
+                          icon="mdi-plus"
+                          size="8px"
+                          padding="2px"
+                          @click="openLinkDialog(type)"
+                        />
+                      </div>
+
+                      <div
+                        v-for="link in linksByEntityType[type] || []"
+                        :key="link.key"
+                        class="col-auto">
+                        <q-chip
+                          clickable
+                          square
+                          style="border-radius: 4px;"
+                          outline
+                          size="12px"
+                          padding="2px 12px"
+                          @click="goToEntity(link)">
+                          <div class="text-uppercase" :class="{ 'text-italic': !link?.code }">
+                            <template v-if="link?.code">{{ link?.code }}</template>
+                            <template v-else>({{ $t('id') }} {{ link?.key || '-' }})</template>
+                          </div>
+                          <q-icon
+                            name="mdi-close"
+                            size="14px"
+                            class="q-ml-xs cursor-pointer"
+                            color="theme-grey"
+                            @click.stop="confirmRemoveLink(link)"
+                          />
+                        </q-chip>
+                      </div>
+                    </div>
+                  </div>
+                </q-tab-panel>
+              </q-tab-panels>
+            </q-card>
+          </div>
+        </template>
+      </q-splitter>
     </template>
   </BaseModalScreen>
+
+
+  <!-- ASSIGNMENT DIALOG -->
+  <TaskAssignmentDialog
+    :show="showAssignmentDialog"
+    :loading="savingAssignment"
+    :assignments="task?.assigned_to"
+    @save="saveAssignments"
+    @cancel="cancelAssignment"
+  />
+
+  <!-- LINK ENTITY DIALOG -->
+  <LinkEntityDialog
+    :allowed-entity-types="allowedEntityTypes"
+    v-model:selected-entity-type="selectedEntityType"
+    :show="showLinkDialog"
+    :saving="savingLink"
+    :existing-links="task?.links"
+    @save="saveLink"
+    @close="closeLinkDialog"
+  />
+
+  <!-- REMOVE LINK CONFIRMATION DIALOG -->
+  <BaseConfirmationDialog
+    :show="showRemoveConfirmation"
+    :confirm-color="'theme-red'"
+    :confirm-prompt="$t('remove')"
+    @confirm="removeLink"
+    @close="cancelRemoveLink"
+  >
+    <template #default>
+      <div class="text-center">
+        {{ $t('confirm_remove_link') || 'Are you sure you want to remove this link?' }}
+        <div v-if="linkToRemove" class="text-h5 q-mt-sm text-low">
+          {{ linkToRemove.code || linkToRemove.key }}
+        </div>
+      </div>
+    </template>
+  </BaseConfirmationDialog>
 </template>
 
 <script setup>
@@ -445,6 +449,7 @@ const { t: $t, locale } = useI18n();
 
 const task = ref(null);
 const tab = useQueryModel(String, 'tab', 'form');
+const taskColumnWidth = ref(70);
 const editMode = ref(false);
 const saving = ref(false);
 const originalTaskData = ref(null);
