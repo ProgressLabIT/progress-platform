@@ -70,17 +70,20 @@
             </div>
             <!-- EDIT ASSIGNMENT BUTTON -->
 
+            <div class="col-auto">
             <q-btn
               flat
               round
               icon="mdi-pencil"
               size="10px"
+              :disabled="!['pending', 'open'].includes(task.status)"
               @click="showAssignmentDialog = true"
             >
               <q-tooltip anchor="center right" self="center left" :delay="200">
                 {{ $t('edit_assignments') }}
               </q-tooltip>
             </q-btn>
+            </div>
           </div>
 
           <div class="col-auto row items-center q-gutter-x-sm">
@@ -154,12 +157,17 @@
 
             <q-btn
               v-if="!editMode"
+              :disabled="task.status !== 'open'"
               :label="$t('edit')"
               icon="mdi-pencil"
               color="theme-blue"
               size="10px"
               @click="editMode = true"
-            />
+            >
+              <q-tooltip v-if="task.status !== 'open'" anchor="center right" self="center left" :delay="200">
+                {{ $t('task_must_be_open_to_edit') }}
+              </q-tooltip>
+            </q-btn>
             <!-- SAVE/CANCEL BUTTONS -->
             <div v-else class="row q-gutter-md">
               <q-btn

@@ -879,6 +879,7 @@ export default {
   task_complete_confirmation: 'Sei sicuro di voler completare questo compito?',
   task_complete_success: 'Compito completato con successo',
   task_complete_error: 'Errore nel completare il compito',
+  task_must_be_open_to_edit: 'Il compito deve essere aperto per essere modificato',
   activate_task_before_leaving: 'Attivare il Compito Prima di Uscire?',
   activate_task_prompt_message: 'Vuoi attivare questo compito prima di navigare verso l\'entità collegata? Questo aiuterà a mantenere il contesto del compito.',
   navigate_without_activating: 'No, naviga solamente',

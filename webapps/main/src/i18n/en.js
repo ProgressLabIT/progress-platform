@@ -885,6 +885,7 @@ export default {
   task_complete_confirmation: 'Are you sure you want to complete this task?',
   task_complete_success: 'Task completed successfully',
   task_complete_error: 'Error completing task',
+  task_must_be_open_to_edit: 'Task must be open to be edited',
   activate_task_before_leaving: 'Activate Task Before Leaving?',
   activate_task_prompt_message: 'Would you like to activate this task before navigating to the linked entity? This will help maintain task context.',
   navigate_without_activating: 'No, just navigate',
