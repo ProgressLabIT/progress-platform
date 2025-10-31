@@ -180,7 +180,7 @@ export default {
   },
 
   created() {
-    this.$store.dispatch('loadProductList');
+    this.$store.dispatch('loadProductList', { limit: 100 });
     this.addLine();
   },
 

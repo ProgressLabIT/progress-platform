@@ -5,6 +5,7 @@
     :options="options"
     option-label="name"
     option-value="_key"
+    :dense="props.dense"
     multiple
     use-input
     use-chips
@@ -94,8 +95,14 @@ import { ref } from 'vue';
 import { api } from '@/boot/axios';
 import multiMatch from '@/lib/MultiFieldSearch';
 
-const model = defineModel({ type: Array });
+const props = defineProps({
+  dense: {
+    type: Boolean,
+    default: false,
+  },
+});
 
+const model = defineModel({ type: Array });
 const isLoading = ref(false);
 const tags = ref([]);
 (async () => {

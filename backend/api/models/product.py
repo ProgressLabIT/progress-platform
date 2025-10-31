@@ -1,13 +1,15 @@
 from datetime import datetime
 from enum import Enum
 from random import randrange, uniform
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Literal
+import re
 
-from pydantic import BaseModel, ByteSize, Field
+from pydantic import BaseModel, ByteSize, Field, field_validator
 
 from models.base_models import FlexModel
 from models.tag import Tag
 from models.counter import Counter
+from utils.search import wildcard_to_regex
 
 
 
@@ -82,3 +84,25 @@ class ProductFull(ProductDetails):
   docs: List[ProductDoc] = []
   img_name: str | None = None
   counter: Counter | None = None
+
+
+class ProductSearchParams(BaseModel):
+  search_string: str | None = None
+  search_description: bool = False
+  tag_key: str | None = None
+  include_text: str | None = None
+  exclude_text: str | None = None
+  include_tags: list[str] | None = None
+  exclude_tags: list[str] | None = None
+  include_tags_operator: Literal["ALL", "ANY"] = "ALL"
+  exclude_tags_operator: Literal["ALL", "ANY"] = "ANY"
+  has_operation_key: str | None = None
+  active_only: bool = True
+  traceability_only: bool = False
+  details: bool = False
+  limit: None | int = None
+  offset: int = 0
+
+  @field_validator('search_string', 'include_text', 'exclude_text', mode='after')
+  def convert_wildcard_to_regex(cls, v):
+    return wildcard_to_regex(v)

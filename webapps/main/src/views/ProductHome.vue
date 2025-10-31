@@ -610,7 +610,7 @@ export default {
             excludeProductKey: sourceProduct._key,
           },
           defaultFilters: {
-            tagsToInclude: sourceProduct.tags,
+            includeTags: sourceProduct.tags,
           },
         },
       }).onOk(async (selectedProducts) => {

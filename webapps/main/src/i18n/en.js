@@ -782,6 +782,8 @@ export default {
   select_entity_type: 'Select entity type',
   entity_type: 'Entity type',
   search: 'search',
+  search_text: 'Text search',
+  search_tags: 'Tag search',
   select: 'select',
   select_all: 'select all',
   send: 'Send',

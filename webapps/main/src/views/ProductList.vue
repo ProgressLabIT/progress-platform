@@ -27,24 +27,27 @@
             dense
             key-only
             :label="$t('tag')"
-            :value="tag_search"
-            @select="(selection) => (tag_search = selection)"
+            :value="tag_key"
+            @select="(selection) => (tag_key = selection)"
           />
         </div>
 
         <!-- View controls -->
         <q-checkbox
+          v-model="search_description"
+          class="col-auto text-body1 low-text"
+          :label="$capitalize($t('product.filters.search_description'))"
+        />
+        <q-checkbox
           v-model="active_only"
           class="col-auto text-body1 low-text"
           :label="$capitalize($t('product.filters.active_only'))"
-        >
-        </q-checkbox>
+        />
         <q-checkbox
           v-model="show_images"
           class="col-auto text-body1 low-text"
           :label="$capitalize($t('product.filters.show_images'))"
-        >
-        </q-checkbox>
+        />
 
         <q-space />
 
@@ -127,30 +130,22 @@ export default {
       return this.load_quantity + this.offset;
     },
 
-    search_string: queryModel(String, 'search', null),
-    tag_search: queryModel(String, 'tag_search', null),
+    search_string: queryModel(String, 'search_string', null),
+    search_description: queryModel(Boolean, 'search_description', false),
+    tag_key: queryModel(String, 'tag_key', null),
     active_only: queryModel(Boolean, 'active_only', false),
     show_images: queryModel(Boolean, 'show_images', false),
 
     filters() {
-      let filter = {
+      return {
         limit: this.load_quantity,
         offset: this.offset,
+        search_code: this.search_code,
+        search_description: this.search_description,
+        active_only: this.active_only,
+        tag_key: this.tag_key,
+        search_string: this.search_string,
       };
-
-      if (this.search_string) {
-        filter.search = this.search_string;
-      }
-
-      if (this.active_only) {
-        filter.active_only = this.active_only;
-      }
-
-      if (this.tag_search) {
-        filter.tag_search = this.tag_search;
-      }
-
-      return filter;
     },
 
     card_height() {
@@ -160,17 +155,22 @@ export default {
 
   watch: {
     search_string: {
-      immediate: true,
       handler: 'fetchProducts',
     },
 
     active_only: {
-      immediate: true,
       handler: 'fetchProducts',
     },
 
-    tag_search: {
-      immediate: true,
+    tag_key: {
+      handler: 'fetchProducts',
+    },
+
+    search_code: {
+      handler: 'fetchProducts',
+    },
+
+    search_description: {
       handler: 'fetchProducts',
     },
   },

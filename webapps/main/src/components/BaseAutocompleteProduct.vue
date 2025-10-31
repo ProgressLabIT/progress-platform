@@ -122,14 +122,14 @@ export default {
 
     loadProducts(search_value) {
       this.loading = true;
-      let params = {};
+      let params = { limit: 100};
 
       if (this.traceabilityOnly) {
         params.traceability_only = true
       }
 
       if (search_value) {
-        params.search = search_value;
+        params.search_string = search_value;
         this.last_research = search_value;
       }
       params.limit = 100;

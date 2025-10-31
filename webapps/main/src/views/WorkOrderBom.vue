@@ -366,7 +366,7 @@ const openItemSearch = () => {
   catalogLoading.value = true;
   showProductCatalog.value = true;
 
-  api.get('product').then((resp) => {
+  api.get('product', { params: { limit: 100 }}).then((resp) => {
     productCatalog.value = resp.data;
   });
   catalogLoading.value = false;

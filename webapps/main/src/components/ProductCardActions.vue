@@ -146,7 +146,7 @@ export default {
             .post(`product/copy`, data)
             .then(async (resp) => {
               // Load product list to include navigation state for new product
-              await this.$store.dispatch('loadProductList');
+              await this.$store.dispatch('loadProductList', { limit: 100 });
               this.$router.push({
                 name: 'productHome',
                 params: { product_key: resp.data.detail.new_product_key },
