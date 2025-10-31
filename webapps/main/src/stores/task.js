@@ -98,12 +98,6 @@ export const useTaskStore = defineStore('task', {
         return response.data
       } catch (error) {
         console.error('Error completing task:', error)
-        Notify.create({
-          message: 'Error completing task',
-          color: 'theme-red',
-          timeout: 3000,
-          position: 'top',
-        })
       }
       finally {
         if (this.activeTaskKey === taskKey) {
