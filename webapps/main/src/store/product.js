@@ -156,7 +156,7 @@ const product = {
 
     loadProductList({ commit }, search_params) {
       if (!search_params) {
-        search_params = {};
+        search_params = { limit: 100 };
       }
       return new Promise((resolve, reject) => {
         api
@@ -175,7 +175,7 @@ const product = {
 
     appendProductList({ commit }, search_params) {
       if (!search_params) {
-        search_params = {};
+        search_params = { limit: 100 };
       }
       return new Promise((resolve, reject) => {
         api

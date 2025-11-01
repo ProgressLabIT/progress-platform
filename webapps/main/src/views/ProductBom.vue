@@ -474,7 +474,7 @@ export default {
       this.catalog_loading = true;
       this.show_product_catalog = true;
 
-      api.get('product').then((resp) => {
+      api.get('product', { params: { limit: 100 }}).then((resp) => {
         this.product_catalog = resp.data.filter(
           (p) => p._key != this.product_key,
         );
