@@ -1,6 +1,7 @@
 #ADMIN EVENTS
 from events.admin.base_admin import BaseAdmin
 from events.admin.batch_canceled import BatchCanceledEvent
+from events.admin.extra_update_requested import ExtraUpdateRequestedEvent
 from events.admin.job_reset import JobResetEvent
 from events.admin.progress_override_requested import ProgressOverrideRequestedEvent
 from events.admin.time_override_requested import TimeOverrideRequested

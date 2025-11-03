@@ -353,24 +353,53 @@
         </div>
       </template>
 
+      <!-- EDIT EXTRA DIALOG -->
+      <template v-else-if="dialog === 'edit_extra'">
+        <q-card-section>
+          <div class="text-h4 display highlight text-uppercase q-mb-md">
+            {{ $t('extra_data') }}
+          </div>
+          <JsonEditor
+            :key="`extra-${tempData.entityType}-${tempData.entityKey}`"
+            v-model="tempData.extraJson"
+            :rows="10"
+            @validation-error="tempData.jsonError = $event"
+          />
+        </q-card-section>
+        <q-card-actions align="between">
+          <q-btn size="12px" flat color="theme-grey" @click="resetEditing">
+            {{ $t('cancel') }}
+          </q-btn>
+          <q-btn
+            size="12px"
+            flat
+            color="theme-blue"
+            @click="saveExtraUpdate"
+          >
+            {{ $t('save') }}
+          </q-btn>
+        </q-card-actions>
+      </template>
+
     </q-card>
   </BaseDialog>
 
 </template>
 
 <script setup>
-import { reactive, ref, computed, watch } from 'vue'
-import BaseDialog from '@/components/BaseDialog.vue'
-import BaseConfirmationDialog from '@/components/BaseConfirmationDialog.vue'
-import { sendEvent } from '@/composables/event'
-import { useI18n } from 'vue-i18n'
 import { Duration } from 'luxon'
-import { api } from '@/boot/axios'
-import { useStore } from 'vuex'
 import { Notify } from 'quasar'
+import { reactive, ref, computed, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
+import { useStore } from 'vuex'
+import { api } from '@/boot/axios'
 import { capitalize } from '@/boot/filters'
+import BaseConfirmationDialog from '@/components/BaseConfirmationDialog.vue'
+import BaseDialog from '@/components/BaseDialog.vue'
+import JsonEditor from '@/components/JsonEditor.vue'
 import WorkOrderJobQtRebalance from '@/components/WorkOrderJobQtRebalance.vue'
+import { sendEvent } from '@/composables/event'
 
 const { t } = useI18n()
 const store = useStore()
@@ -447,6 +476,10 @@ async function initTempData() {
     dueDate: woData.due_by,
     fromDate: woData.start_from,
     newQt: woData.qt_planned,
+    extraJson: '',
+    jsonError: false,
+    entityType: null,
+    entityKey: null,
   })
 }
 
@@ -459,6 +492,19 @@ watch(() => props.job?.wo_key || props.wo?._key, async (wo_key) => {
     await initTempData()
   }
 }, { immediate: false })
+
+// Watch for changes in props.wo to update woData
+watch(() => props.wo, (newWo) => {
+  if (newWo) {
+    Object.assign(woData, newWo)
+  }
+}, { deep: true })
+
+// Watch for changes in props.job (for job extra data updates)
+watch(() => props.job, () => {
+  // Job data is already in props, no need to assign anything
+  // This watch just triggers reactivity for job-related operations
+}, { deep: true })
 
 // Figure out if we can force progress. Prevented in case of:
 // - Job has mandatory form fields
@@ -752,11 +798,78 @@ async function deleteWorkOrder() {
   router.back()
 }
 
+async function editWorkOrderExtra() {
+  // Refresh woData to ensure we have the latest data
+  await getWoData()
+
+  const extraData = woData.extra || null
+  tempData.extraJson = extraData ? JSON.stringify(extraData, null, 2) : ''
+  tempData.jsonError = false
+  tempData.entityType = 'work_order'
+  tempData.entityKey = woData._key
+  dialog.value = 'edit_extra'
+}
+
+function editJobExtra() {
+  // For job extra, we use the fresh data from props.job which should be updated by the parent
+  const extraData = props.job.extra || null
+  tempData.extraJson = extraData ? JSON.stringify(extraData, null, 2) : ''
+  tempData.jsonError = false
+  tempData.entityType = 'job'
+  tempData.entityKey = props.job._key
+  dialog.value = 'edit_extra'
+}
+
+async function saveExtraUpdate() {
+  try {
+    // Validate JSON
+    let extraData = null
+    if (tempData.extraJson.trim()) {
+      extraData = JSON.parse(tempData.extraJson)
+    }
+    tempData.jsonError = false
+
+    // Send event
+    await sendEvent({
+      event_type: 'EXTRA_UPDATE_REQUESTED',
+      event_data: {
+        entity_type: tempData.entityType,
+        entity_key: tempData.entityKey,
+        extra_data: extraData,
+      },
+    })
+    let wo_key = null
+    if (tempData.entityType === 'work_order') {
+      wo_key = tempData.entityKey
+    } else if (tempData.entityType === 'job') {
+      wo_key = props.job.wo_key
+    }
+    await store.dispatch('loadWorkOrderData', wo_key)
+
+    resetEditing()
+
+    Notify.create({
+      message: t('extra_update_success'),
+      color: 'theme-green',
+      timeout: 1500,
+      position: 'top',
+    })
+    emit('ok')
+  } catch (err) {
+    if (err instanceof SyntaxError) {
+      tempData.jsonError = true
+    } else {
+      window.alert(err)
+    }
+  }
+}
+
 
 function resetEditing() {
   confirmMessage.value = undefined
   action.value = undefined
   dialog.value = undefined
+  tempData.jsonError = false
 }
 
 
@@ -808,6 +921,12 @@ const jobItems = computed(() => [
       action.value = resetJob
       confirmMessage.value = 'reset_job_confirm'
     },
+  },
+  {
+    label: 'edit_extra',
+    icon: 'mdi-code-json',
+    show: !props.job?.active,
+    action: editJobExtra,
   }
 ])
 
@@ -851,6 +970,12 @@ const workOrderItems = computed(() => [
       action.value = saveWorkOrderUpdate;
       dialog.value = 'update_due_date'
     },
+  },
+  {
+    label: 'edit_extra',
+    icon: 'mdi-code-json',
+    show: !woData.active,
+    action: editWorkOrderExtra,
   },
   {
     label: 'work_order.delete_action',

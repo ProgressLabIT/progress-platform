@@ -133,7 +133,10 @@ export default {
   due_by_min: 'Due by (min)',
   due_by_max: 'Due by (max)',
   edit: 'edit',
+  edit_extra: 'Edit extra',
   element: 'element',
+  extra_data: 'Extra data',
+  extra_update_success: 'Extra data updated successfully',
   end: 'End',
   end_date: 'end date',
   end_max: 'end max',
@@ -144,6 +147,9 @@ export default {
     save_err: 'Could not save updates',
     activation_err: 'Error activating task',
   },
+  invalid_json: 'Invalid JSON format',
+  format_json: 'format JSON',
+  json_syntax_error: 'JSON syntax error',
   events: {
     // Production Events
     ACTIVE_BATCH_CHANGED: 'Active batch changed',

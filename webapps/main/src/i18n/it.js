@@ -137,8 +137,11 @@ export default {
   due_by_min: 'Scadenza (min)',
   due_by_max: 'Scadenza (max)',
   edit: 'modifica',
+  edit_extra: 'Modifica extra',
   view: 'visualizza',
   element: 'elemento | elementi',
+  extra_data: 'Dati extra',
+  extra_update_success: 'Dati extra aggiornati con successo',
   end: 'Fine',
   end_date: 'data chiusura',
   end_max: 'fine max',
@@ -149,6 +152,9 @@ export default {
     save_err: 'Non è stato possibile salvare gli aggiornamenti',
     activation_err: 'Errore nell\'attivare il compito',
   },
+  invalid_json: 'Formato JSON non valido',
+  format_json: 'formatta JSON',
+  json_syntax_error: 'errore di sintassi JSON',
   events: {
     // Eventi di Produzione
     ACTIVE_BATCH_CHANGED: 'Lotto attivo modificato',
