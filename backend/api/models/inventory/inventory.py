@@ -1,15 +1,6 @@
-from datetime import date, datetime
-from enum import Enum
 from typing import Any
-from typing import Annotated
 
-
-from pydantic import BaseModel, ConfigDict, Field, model_validator, StringConstraints, field_serializer
-
-from models.base_models import ArangoDocument, ArangoEdge, FlexModel
-#from utils.counter import _generate_counter
-from utils.dt import timestamp
-
+from pydantic import BaseModel, ConfigDict, Field
 
 
 # ========================================================
@@ -24,6 +15,8 @@ class Inventory(BaseModel): # edge is_in_position
   serial_key: str | None = None
   quantity: float
   owned: bool = True # False means it's property of customers or suppliers
+  locked: bool = False # True means the inventory is locked and cannot be changed
+  locked_by: str | None = None # inventory count key or other entity locking the inventory (e.g. inventory booking by wo or planned movement)
   value: float | None = None
   extra: Any = None
 
