@@ -6,138 +6,15 @@ from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator, StringConstraints, field_serializer
 
-from models.base_models import ArangoDocument, ArangoEdge, FlexModel
+from models.base_models import ArangoDocument, FlexModel
 #from utils.counter import _generate_counter
 from utils.dt import timestamp
 
 
-class InventoryNotificationType(str, Enum):
-  ERROR = 'ERROR'
-  MOVEMENT_ADDED = 'MOVEMENT_ADDED'
-  MOVEMENT_UPDATED = 'MOVEMENT_UPDATED'
 
-
-class InventoryNotificationErrorCode(str, Enum):
-  EXCEPTION = 'EXCEPTION'
-
-class InventoryGlobalConfig(ArangoDocument):
-  allow_placement_different_from_planned: bool = True
-  allow_mission_closing_with_unstarted_movements: bool = False # started movements must be completed
-
-
-class InventoryUsagePolicy(str, Enum):
-  FIFO = 'fifo',
-  LIFO = 'lifo',
-  CLOSEST_TO_EXPIRATION = 'closest_to_expiration' # may be different than FIFO due to different expiration times since receipt
-
-
-class Position(ArangoDocument):
-  code: str | None = None
-  owned: bool | None = True
-  available: bool | None = True
-  disposable: bool | None = False # gets deleted when emptied or shipped
-  fixed: bool | None = True
-  deleted: bool | None = False
-  created: datetime | None = Field(default_factory=timestamp)
-  allow_consumption: bool | None = None
-  extra: Any = None
-
-class PositionNew(FlexModel):
-  parent_position_key: str | None = 'IN'
-  code: str | None = None
-  owned: bool | None = True
-  available: bool | None = True
-  fixed: bool | None = True
-  disposable: bool | None = False
-  allow_consumption: bool | None = None
-  extra: Any = None
-
-
-
-class PositionType(str, Enum):
-  FROM = 'from'
-  TO = 'to'
-
-class PositionLink(ArangoEdge):  #edge is_in_position
- """
- the is_in_position collection is used both for inventory and for position hierarchy.
- This class is only used to distinguish what we're using the collection for.
- """
- pass
-
-
-class PositionSearchParams(BaseModel):
-  search: str | None = None
-  position_keys: list[str] | None = None
-  has_product_key: list[str] | None = None
-  has_product_code: list[str] | None = None
-  is_in_position: str | None = None
-  contains_position: str | None = None
-  #include_non_disposable: bool | None = True
-  #include_disposable: bool | None = True
-  #include_owned: bool | None = True
-  #include_not_owned: bool | None = True
-  #include_deleted: bool | None = False  //include deleted non ha tanto senso perchè tanto non c'è piu' il link quindi non la trova lo stesso
-  limit: int | None = 200
-  offset: int | None = 0
-
-
-class Inventory(BaseModel): # edge is_in_position
-  model_config = ConfigDict(populate_by_name=True)
-
-  product_id: str = Field(..., alias='_from')
-  position_id: str = Field(..., alias='_to')
-  serial_key: str | None = None
-  quantity: float
-  owned: bool = True # False means it's property of customers or suppliers
-  value: float | None = None
-  extra: Any = None
-
-class InventoryPathItem(BaseModel):
-  position_key: str | None = None
-  position_code: str | None = None
-
-class InventorySearchResult(BaseModel):
-  key: str = Field(..., alias='_key') # Inventory record (is_in_position edge) key
-  product_code: str | None = None
-  product_description: str | None = None
-  position_code: str | None = None
-  path: list[InventoryPathItem] | None = []
-  serial_code: str | None = None
-  serial_key: str | None = None
-  product_key: str | None = None
-  position_key: str | None = None
-  quantity: float
-  owned: bool | None = True
-  value: float | None = None
-  reference: str | None = None
-  extra: Any = None
-
-
-class InventoryGraphSearchParams(BaseModel):
-  root_position_key: str | None = None
-  product_key: str | None = None
-  product_search: str | None = None
-  serials_only: bool | None = False
-  serial_search: str | None = None
-  serial_keys: list[str] | None = None
-  position_search: str | None = None
-  owned: bool | None = None
-  limit: int | None = 200
-  offset: int | None = 0
-
-class InventorySearchParams(BaseModel):
-  #TODO uncomment
-  product_key: str | None = None
-  product_code: str | None = None
-  position_key: str | None = None
-  position_code: str | None = None
-  serial_keys: list[str] | None = None
-  # serial_code: str | None = None
-  owned: bool | None = None
-  limit: int | None = 200
-  offset: int | None = 0
-  strict: bool | None = False
+# ========================================================
+# MOVEMENTS
+# ========================================================
 
 class MovementStatus(str, Enum):
   PLANNED = 'planned'
@@ -354,6 +231,12 @@ class InventoryMovementSearchResults(InventoryMovement):
 
 
 
+
+
+# ========================================================
+# MOVEMENT LISTS
+# ========================================================
+
 class MovementList(ArangoDocument):
   """
   The model implies movement references do NOT conflict with the list references.
@@ -418,7 +301,5 @@ class MovementListNew(MovementList):
       else:
         items_product[list_item] = dict(product=movement.get(product_ref), serials=[movement_serial])
 
-
-
-
     return values
+
