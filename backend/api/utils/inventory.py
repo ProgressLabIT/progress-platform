@@ -157,41 +157,6 @@ class Queries:
     }
   """
 
-  SEARCH_INVENTORY_PRODUCT = """
-     FOR v, e, p IN 1..99 INBOUND 'Position/IN' is_in_position OPTIONS { uniqueVertices: "path" }
-
-    """ + INVENTORY_FILTER + """
-
-    LIMIT @offset, @limit || null
-
-    RETURN DISTINCT v
-  """
-
-  SEARCH_INVENTORY_POSITIONS = """
-     FOR v, e, p IN 1..99 INBOUND 'Position/IN' is_in_position OPTIONS { uniqueVertices: "path" }
-
-    """ + INVENTORY_FILTER + """
-
-    LIMIT @offset, @limit || null
-
-      RETURN DISTINCT position
-  """
-
-  SEARCH_INVENTORY_SERIALS = """
-     FOR v, e, p IN 1..99 INBOUND 'Position/IN' is_in_position OPTIONS { uniqueVertices: "path" }
-
-    """ + INVENTORY_FILTER + """
-      && e.serial_key != null
-
-    LIMIT @offset, @limit || null
-
-
-
-      RETURN DISTINCT MERGE (serial, {
-          label: serial.code,
-          value: serial._key
-      })
-  """
 
   GET_POSITION_HIERARCHY = """
     LET start = @position_id
