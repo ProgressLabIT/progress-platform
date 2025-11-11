@@ -3,9 +3,9 @@ from enum import Enum
 from typing import Any
 
 
-from pydantic import Field, computed_field
+from pydantic import Field, model_validator
 
-from models.base_models import ArangoDocument, ArangoEdge
+from models.base_models import ArangoDocument
 from utils.dt import timestamp
 
 
@@ -23,16 +23,14 @@ class InventoryCountSessionStatus(str, Enum):
   CANCELED = 'canceled'
 
 class InventoryCountSessionType(str, Enum):
-  FULL = 'full'
-  CYCLE_POSITION = 'cycle_position'
-  CYCLE_PRODUCT = 'cycle_product'
-  SPOT = 'spot'
+  BY_POSITION = 'position'
+  BY_PRODUCT = 'product'
 
 class InventoryCountSession(ArangoDocument):
   code: str  # Auto-generated from counter
   description: str | None = None
   type: InventoryCountSessionType
-  status: InventoryCountSessionStatus = InventoryCountSessionStatus.DRAFT
+  status: InventoryCountSessionStatus = InventoryCountSessionStatus.PLANNED
   blind_mode: bool = True  # Hide expected quantities from operators
   coverage_percentage: float | None = None  # Calculated field
 
@@ -45,10 +43,11 @@ class InventoryCountSession(ArangoDocument):
   created_by: str | None = None  # user_key
   started: datetime | None = None
   completed: datetime | None = None
+
   baseline_snapshot_key: str | None = None
   post_count_snapshot_key: str | None = None
-  adjustment_list_key: str | None = None  # Link to final MovementList
   post_adjustment_snapshot_key: str | None = None
+  adjustment_list_key: str | None = None  # Link to final MovementList
 
   # Metadata
   notes: str | None = None
@@ -60,15 +59,12 @@ class InventoryCountAssignmentStatus(str, Enum):
   COMPLETED = 'completed'
   CANCELED = 'canceled'
 
-class InventoryCountAssignmentType(str, Enum):
-  POSITION = 'position'
-  PRODUCT = 'product'
 
 class InventoryCountAssignment(ArangoDocument):
   inventory_count_session_key: str  # Parent campaign
 
   # What was assigned
-  assignment_type: InventoryCountAssignmentType  # What was assigned
+  assignment_type: InventoryCountSessionType  # What was assigned
   product_key: str | None = None # product key
   position_key: str | None = None # position key
   include_children: bool = True  # For position hierarchies
@@ -85,48 +81,44 @@ class InventoryCountAssignment(ArangoDocument):
   extra: Any = None
 
 
-
-
 class InventoryCountStatus(str, Enum):
   DRAFT = 'draft'
-  COUNTED = 'counted'
+  SUBMITTED = 'submitted'
   CONFIRMED = 'confirmed'
   DISCARDED = 'discarded'
 
-class InventoryCount(ArangoDocument):
-  inventory_count_session_key: str
-  assignment_key: str
-
+class InventoryCountRecord(ArangoDocument):
   # What was counted
   product_key: str
   position_key: str
   serial_keys: list[str] | None = None
 
-  # The count
-  system_qt: float  # Snapshot at count time
-  count: float  # What the operator entered
-  delta: float | None = None  # Calculated: count - system_quantity
+  # Core data
+  system_qt: float  # Snapshot at count time. Must be retaken in case count is updated before submission
+  system_at: datetime | None = None
+
+  counted_qt: float
+  counted_at: datetime | None = None
 
   # Metadata
-  counted_at: datetime
-  confirmed_at: datetime | None = None
-  confirmed_by: str | None = None
-
-  # Audit trail
-  inventory_snapshot_key: str | None = None  # Link to snapshot
-
+  inventory_count_session_key: str
+  assignment_key: str | None = None
+  status: InventoryCountStatus = InventoryCountStatus.DRAFT
+  reviewed_at: datetime | None = None # Either confirmed or discarded
   notes: str | None = None
   extra: Any = None
 
-  @computed_field
   @property
   def product_id(self) -> str:
     return f'Product/{self.product_key}'
 
-  @computed_field
   @property
   def position_id(self) -> str:
     return f'Position/{self.position_key}'
+
+  @property
+  def delta(self) -> float | None:
+    return self.counted_qt - self.system_qt
 
 
 class InventorySnapshotReason(str, Enum):
