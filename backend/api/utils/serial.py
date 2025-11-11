@@ -239,7 +239,7 @@ class Queries:
     FILTER
       // When filtering by document key, parameters will be arrays
       (@serial_key ? POSITION(@serial_key, s._key) : true)
-      && (@serial_search ? CONTAINS(LOWER(s.code), LOWER(@serial_search)) : true)
+      && (@serial_search ? REGEX_TEST(s.code, @serial_search, true) : true)
       && (@created_by ? POSITION(@created_by[* RETURN CONCAT('User/', CURRENT)], s.created_by) : true)
       && (@time_created_from ? s.created >= @time_created_from : true)
       && (@time_created_to ? s.created <= @time_created_to : true)
@@ -285,19 +285,19 @@ class Queries:
 
     FILTER
       (@product_key ? product._key IN @product_key : true)
-      && (@product_code_search ? CONTAINS(LOWER(product.code), LOWER(@product_code_search)) : true)
+      && (@product_code_search ? REGEX_TEST(product.code, @product_code_search, true) : true)
 
     // FILTER BY COMPONENTS
     LET children=(
         FOR v, e IN 1..999 OUTBOUND s._id contains
-            FILTER @contains ? (CONTAINS(LOWER(v.code), LOWER(@contains))) : true
+            FILTER @contains ? (REGEX_TEST(v.code, @contains, true)) : true
             FILTER e.replaced == false
             RETURN v.code
         )
 
     LET parents=(
         FOR v, e IN 1..999 INBOUND s._id contains
-            FILTER @is_contained_in ? (CONTAINS(LOWER(v.code), LOWER(@is_contained_in))) : true
+            FILTER @is_contained_in ? (REGEX_TEST(v.code, @is_contained_in, true)) : true
             FILTER e.replaced == false
             RETURN v.code
         )
@@ -312,8 +312,8 @@ class Queries:
     )
 
     FILTER
-      (@work_order_search ? CONTAINS(LOWER(wo.wo_code), LOWER(@work_order_search)) : true)
-      && (@project_search ? CONTAINS(LOWER(wo.project_code), LOWER(@project_search)) : true)
+      (@work_order_search ? REGEX_TEST(wo.wo_code, @work_order_search, true) : true)
+      && (@project_search ? REGEX_TEST(wo.project_code, @project_search, true) : true)
 
     // RETURN RESULTS, WITH LINKS IF REQUESTED
     LET base_result = MERGE(s, {

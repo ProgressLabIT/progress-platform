@@ -4,11 +4,12 @@ from typing import Any
 from typing import Annotated
 
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator, StringConstraints, field_serializer
+from pydantic import BaseModel, ConfigDict, Field, model_validator, StringConstraints, field_serializer, AfterValidator
 
 from models.base_models import ArangoDocument, ArangoEdge, FlexModel
 #from utils.counter import _generate_counter
 from utils.dt import timestamp
+from utils.search import wildcard_to_regex
 
 
 class InventoryNotificationType(str, Enum):
@@ -67,7 +68,7 @@ class PositionLink(ArangoEdge):  #edge is_in_position
 
 
 class PositionSearchParams(BaseModel):
-  search: str | None = None
+  search: Annotated[str | None, AfterValidator(wildcard_to_regex)] = None
   position_keys: list[str] | None = None
   has_product_key: list[str] | None = None
   has_product_code: list[str] | None = None
@@ -117,11 +118,11 @@ class InventorySearchResult(BaseModel):
 class InventoryGraphSearchParams(BaseModel):
   root_position_key: str | None = None
   product_key: str | None = None
-  product_search: str | None = None
+  product_search: Annotated[str | None, AfterValidator(wildcard_to_regex)] = None
   serials_only: bool | None = False
-  serial_search: str | None = None
+  serial_search: Annotated[str | None, AfterValidator(wildcard_to_regex)] = None
   serial_keys: list[str] | None = None
-  position_search: str | None = None
+  position_search: Annotated[str | None, AfterValidator(wildcard_to_regex)] = None
   owned: bool | None = None
   limit: int | None = 200
   offset: int | None = 0
