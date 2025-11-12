@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { boot } from 'quasar/wrappers';
+import { store } from 'src/boot/store.js';
 
 // Default configuration
 const DEFAULT_CONFIG = {
@@ -26,9 +27,12 @@ const api = axios.create({
   baseURL: config.baseURL + config.basePath,
 });
 
-export default boot(({ app, store }) => {
+export default boot(({ app }) => {
   api.interceptors.request.use((request) => {
-    request.headers['Authorization'] = `Bearer ${store.getters.getToken}`;
+    const token = store?.getters?.getToken;
+    if (token) {
+      request.headers['Authorization'] = `Bearer ${token}`;
+    }
     return request;
   });
   api.interceptors.response.use(
@@ -37,13 +41,15 @@ export default boot(({ app, store }) => {
     },
     (error) => {
       if (error) {
-        if (error.response.status === 401) {
+        if (error?.response?.status === 401) {
           if (
             error.config.url !== 'whoami' &&
             !error.config.url.includes('session')
           ) {
             //originalRequest._retry = true;
-            store.dispatch('logout');
+            if (store && store.dispatch) {
+              store.dispatch('logout');
+            }
           }
           return error;
           //return app.router.push('/login');

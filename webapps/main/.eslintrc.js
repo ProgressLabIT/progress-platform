@@ -1,6 +1,10 @@
-const path = require('node:path');
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import vue from 'vue';
 
-module.exports = {
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+export default {
   // https://eslint.org/docs/user-guide/configuring#configuration-cascading-and-hierarchy
   // This option interrupts the configuration hierarchy at this file
   // Remove this if you have an higher level ESLint config file (it usually happens into a monorepos)
@@ -74,7 +78,7 @@ module.exports = {
     'vue/no-unsupported-features': [
       'error',
       {
-        version: require('vue').version,
+        version: vue.version,
       },
     ],
     'vue/padding-line-between-blocks': 'warn',

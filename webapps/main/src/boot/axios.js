@@ -2,6 +2,7 @@ import axios from 'axios';
 import { Notify } from 'quasar';
 import { boot } from 'quasar/wrappers';
 import { i18n } from '@/boot/i18n';
+import { store } from '@/boot/store.js';
 
 // Default configuration
 const DEFAULT_CONFIG = {
@@ -28,10 +29,11 @@ const api = axios.create({
   baseURL: config.baseURL + config.basePath,
 });
 
-export default boot(({ app, store }) => {
+export default boot(({ app }) => {
   api.interceptors.request.use((config) => {
-    config.headers.common = {
-      ...config.headers.commons,
+    // axios 1.x: use config.headers instead of config.headers.common
+    config.headers = {
+      ...config.headers,
       Authorization: `Bearer ${store.getters.getToken}`,
     };
     return config;

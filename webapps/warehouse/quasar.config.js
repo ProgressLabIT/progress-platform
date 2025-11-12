@@ -8,10 +8,10 @@
 // Configuration for your app
 // https://v2.quasar.dev/quasar-cli-vite/quasar-config-js
 
-const path = require('path');
-const { configure } = require('quasar/wrappers');
+import path from 'path';
+import { configure } from 'quasar/wrappers';
 
-module.exports = configure(function (ctx) {
+export default configure(function (ctx) {
   return {
     eslint: {
       //fix:true,
@@ -28,7 +28,7 @@ module.exports = configure(function (ctx) {
     // app boot file (/src/boot)
     // --> boot files are part of "main.js"
     // https://v2.quasar.dev/quasar-cli-vite/boot-files
-    boot: ['pinia', 'i18n', 'axios', 'filters', 'theme', 'bus'],
+    boot: ['store', 'pinia', 'i18n', 'axios', 'filters', 'theme', 'bus'],
 
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-js#css
     css: ['app.scss'],
@@ -82,22 +82,8 @@ module.exports = configure(function (ctx) {
         },
       },
 
-      vitePlugins: [
-        [
-          '@intlify/vite-plugin-vue-i18n',
-          {
-            // if you want to use Vue I18n Legacy API, you need to set `compositionOnly: false`
-            // compositionOnly: false,
-
-            // if you want to use named tokens in your Vue I18n messages, such as 'Hello {name}',
-            // you need to set `runtimeOnly: false`
-            runtimeOnly: ctx.dev,
-
-            // you need to set i18n resource including paths !
-            include: path.resolve(__dirname, './src/i18n/**'),
-          },
-        ],
-      ],
+      // vitePlugins: [] - removed deprecated @intlify/vite-plugin-vue-i18n
+      // vue-i18n 9.x works fine without the Vite plugin
     },
 
     // Full list of options: https://v2.quasar.dev/quasar-cli-vite/quasar-config-js#devServer
@@ -113,7 +99,7 @@ module.exports = configure(function (ctx) {
         dark: true,
       },
 
-      iconSet: 'mdi-v6', // Quasar icon set
+      iconSet: 'mdi-v7', // Quasar icon set
       // lang: 'en-US', // Quasar language pack
 
       // For special cases outside of where the auto-import strategy can have an impact

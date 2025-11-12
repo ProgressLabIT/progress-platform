@@ -5,6 +5,7 @@
   "productName": "Progress",
   "author": "Luca Sorgiacomo <luca@progresslab.it>",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "quasar dev",
     "build": "quasar build",
@@ -26,19 +27,19 @@
     "@pdfme/generator": "^2.2.1",
     "@pdfme/ui": "^2.2.1",
     "@quasar/extras": "^1.16.8",
-    "@vueuse/core": "^10.7.1",
-    "axios": "^0.21.1",
+    "@vueuse/core": "^11.1.0",
+    "axios": "^1.7.0",
     "codemirror": "^6.0.1",
     "file-saver": "^2.0.5",
     "jwt-decode": "^3.1.2",
     "luxon": "^3.0.4",
     "nodemon": "^3.1.0",
     "pinia": "^2.1.7",
-    "quasar": "^2.14.0",
+    "quasar": "^2.16.0",
     "socket.io-client": "^4.7.5",
     "sortablejs": "^1.15.0",
     "video.js": "^8.17.4",
-    "vue": "^3.3.8",
+    "vue": "^3.4.18",
     "vue-cookies": "^1.8.4",
     "vue-i18n": "^9.0.0",
     "vue-pdf-embed": "1.1.6",
@@ -48,13 +49,12 @@
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
-    "@intlify/vite-plugin-vue-i18n": "^3.3.1",
     "@intlify/vue-i18n-loader": "^4.2.0",
-    "@quasar/app-vite": "^1.7.0",
-    "@quasar/cli": "^2.3.0",
+    "@quasar/app-vite": "^2.0.0",
+    "@quasar/cli": "^2.5.0",
     "autoprefixer": "^10.4.2",
-    "esbuild": "^0.17.5",
-    "eslint": "^8.55.0",
+    "esbuild": "^0.21.0",
+    "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-import-resolver-typescript": "^3.6.1",
     "eslint-plugin-import": "^2.29.0",
@@ -62,11 +62,13 @@
     "eslint-plugin-promise": "^6.1.1",
     "eslint-plugin-vue": "^9.19.2",
     "postcss": "^8.4.14",
-    "prettier": "^3.1.1"
+    "prettier": "^3.1.1",
+    "vite": "^5.4.0",
+    "vite-plugin-vue-devtools": "^8.0.3"
   },
   "engines": {
-    "node": "^20 || ^18 || ^16 || ^14.19",
-    "npm": ">= 6.13.4",
-    "yarn": ">= 1.21.1"
+    "node": "^20.19.0 || ^22",
+    "npm": ">= 10.0.0",
+    "yarn": ">= 1.22.0"
   }
 }
