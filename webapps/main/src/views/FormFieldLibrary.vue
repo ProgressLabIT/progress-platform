@@ -1,7 +1,8 @@
 <template>
   <LoadingSignal v-if="!data_ready" />
 
-  <div v-else class="row full-height">
+  <q-splitter v-else v-model="splitter_model">
+    <template #before>
     <div class="full-height column col-3">
       <q-input
         v-model="search_text"
@@ -18,7 +19,7 @@
       <div
         class="row q-mt-md q-px-lg q-py-sm text-h6 text-uppercase weight-bold"
       >
-        <div class="col-3">
+        <div class="col-2">
           {{ $t('type') }}
         </div>
         <div class="col">
@@ -29,7 +30,7 @@
       <q-separator />
 
       <!-- ISSUE TYPE LIST -->
-      <div class="scroll col">
+      <q-scroll-area class="col">
         <div
           v-for="(field, index) in filtered_fields"
           :key="field._key"
@@ -41,14 +42,14 @@
           style="white-space: nowrap"
           @click="showFieldDetail(field._key)"
         >
-          <div class="col-3">
+          <div class="col-2">
             <q-icon :name="getFieldIcon(field.type)" />
           </div>
-          <div class="col">
+          <div class="col ellipsis">
             {{ $capitalize(field.name) }}
           </div>
         </div>
-      </div>
+      </q-scroll-area>
 
       <q-separator />
 
@@ -77,13 +78,15 @@
       </FormFieldNew>
     </BaseDialog>
 
-    <q-separator vertical />
+    </template>
+    <template #after>
 
     <!-- FIELD DATA -->
     <div v-if="data_ready" class="col full-height">
       <router-view :field="selected_field" @reload="getFields"> </router-view>
     </div>
-  </div>
+  </template>
+  </q-splitter>
 </template>
 
 <script>
@@ -110,6 +113,7 @@ export default {
       search_text: undefined,
       field_list: [],
       show_new_field_form: false,
+      splitter_model: 30,
     };
   },
 
