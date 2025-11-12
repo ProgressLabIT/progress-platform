@@ -63,8 +63,7 @@
     "eslint-plugin-vue": "^9.19.2",
     "postcss": "^8.4.14",
     "prettier": "^3.1.1",
-    "vite": "^5.4.0",
-    "vite-plugin-vue-devtools": "^8.0.3"
+    "vite": "^5.4.0"
   },
   "engines": {
     "node": "^20.19.0 || ^22",
