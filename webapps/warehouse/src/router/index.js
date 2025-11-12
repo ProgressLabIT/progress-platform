@@ -9,6 +9,7 @@ import {
 import en from '@/i18n/en.js';
 import it from '@/i18n/it.js';
 import routes from './routes';
+import { store } from 'src/boot/store.js';
 
 /*
  * If not building with SSR mode, you can
@@ -19,7 +20,7 @@ import routes from './routes';
  * with the Router instance.
  */
 
-export default route(function ({ store }) {
+export default route(function (/* { store } */) {
   const createHistory = process.env.SERVER
     ? createMemoryHistory
     : process.env.VUE_ROUTER_MODE === 'history'
@@ -42,13 +43,21 @@ export default route(function ({ store }) {
   };
 
   function getLocale() {
-    const preferredLocale = store.state.session.user.preferences.locale;
+    const preferredLocale = store?.state?.session?.user?.preferences?.locale;
     const detectedLocale = Quasar.lang.getLocale();
     const rawLocale = preferredLocale ?? detectedLocale ?? 'it';
     return rawLocale.startsWith('it') ? 'it' : 'en';
   }
 
   function hasRoutePermission(route) {
+    // If no scope is defined, allow access
+    if (!route.meta?.scope) {
+      return true;
+    }
+    // If store isn't ready, allow access (will be checked again on next navigation)
+    if (!store || !store.getters || !store.getters.hasPermission) {
+      return true;
+    }
     return store.getters.hasPermission(route.meta.scope);
   }
 
@@ -78,11 +87,11 @@ export default route(function ({ store }) {
 
     if (
       login_route &&
-      (store.getters.isLoggedIn || (await store.dispatch('recognizeMe')))
+      (store?.getters?.isLoggedIn || (await store?.dispatch?.('recognizeMe')))
     ) {
       let nextPage = to.query.redirect_to
         ? to.query.redirect_to
-        : store.getters.userHomepage;
+        : store?.getters?.userHomepage;
       if (!Router.hasRoute(nextPage)) {
         console.warn(`Route ${nextPage} not found, falling back to IncomingHome`);
         nextPage = 'IncomingHome';
@@ -90,8 +99,8 @@ export default route(function ({ store }) {
       next({ name: nextPage });
     } else if (
       !login_route &&
-      !store.getters.isLoggedIn &&
-      !(await store.dispatch('recognizeMe'))
+      !store?.getters?.isLoggedIn &&
+      !(await store?.dispatch?.('recognizeMe'))
     ) {
       window.alert(translate('login_page.login_first'));
       next({ name: 'login', query: { redirect_to: to.fullPath } });
@@ -104,7 +113,7 @@ export default route(function ({ store }) {
         next(false);
       } else {
         // Consider the navigation as an interaction > Reset session timeout
-        if (!login_route) {
+        if (!login_route && store?.commit) {
           store.commit('SET_SESSION_TIMEOUT');
         }
         next();

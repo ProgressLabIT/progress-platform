@@ -7,6 +7,8 @@ from models.production import Job
 class JobPauseForcedEvent(JobPausedEvent):
   class InfoModel(EventInfoModel):
     job_key: str
+    work_order_key: str | None = None
+    phase_key: str | None = None
 
   @classmethod
   def get_event_type(cls):

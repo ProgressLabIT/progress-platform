@@ -19,7 +19,7 @@ class Queries:
       IS_SAME_COLLECTION('Position', v)
       && (@position_keys ? v._key IN @position_keys : true)
       && (@contains_position ? @contains_position IN p.vertices[*]._key : true)
-      && (@search ? LOWER(v.code) LIKE CONCAT('%', LOWER(@search), '%') : true)
+      && (@search ? REGEX_TEST(v.code, @search, true) : true)
       && (@has_product_key ? @has_product_key == p.vertices[-1]._key : true)
       && (@has_product_code ? @has_product_code == p.vertices[-1].code : true)
 
@@ -76,7 +76,7 @@ class Queries:
       && (@position_key ? position._key == @position_key : true)
       && (@position_code ? position.code == @position_code : true)
       && (@serial_code ? serial.code == @serial_code : true)
-      && (@position_search ? CONTAINS(LOWER(position.code), LOWER(@position_search)) : true)
+      && (@position_search ? REGEX_TEST(position.code, @position_search, true) : true)
       && (@product_search ? CONTAINS(LOWER(v.code), LOWER(@product_search)) : true)
       && (@serial_search ? CONTAINS(LOWER(serial.code), LOWER(@serial_search)) : true)
       && (@product_key ? v._key == @product_key : true)
@@ -117,8 +117,7 @@ class Queries:
     FOR product IN Product
     FILTER @product_key ? product._key == @product_key : true
     SORT product.code
-    LET context = CONCAT(product.code, ' ', product.description)
-    FILTER @product_search ? CONTAINS(LOWER(context), LOWER(@product_search)) : true
+    FILTER @product_search ? REGEX_TEST(product.code, @product_search, true) : true
 
     LET start = @root_position_key ? DOCUMENT(Position, @root_position_key) : DOCUMENT('Position/IN')
     FOR path IN 1..99 INBOUND K_PATHS start TO product._id is_in_position
@@ -127,7 +126,7 @@ class Queries:
       FILTER @serials_only ? inventory.serial_key != null : true
       FILTER @serial_keys ? inventory.serial_key IN @serial_keys : true
       LET serial_code = DOCUMENT(Serial, inventory.serial_key).code
-      FILTER @serial_search ? CONTAINS(LOWER(serial_code), LOWER(@serial_search)) : true
+      FILTER @serial_search ? REGEX_TEST(serial_code, @serial_search, true) : true
 
       LET p = (
         FOR vertex IN SHIFT(POP(path.vertices)) // Exclude root position IN and final product vertex
@@ -139,7 +138,7 @@ class Queries:
 
       LET shown_path = LENGTH(p) == 0 ? [{ position_key: start._key, position_code: start.code }] : p
       FILTER @position_search
-        ? shown_path[? ANY FILTER CONTAINS(LOWER(CURRENT.position_code), LOWER(@position_search))]
+        ? shown_path[? ANY FILTER REGEX_TEST(CURRENT.position_code, @position_search, true)]
         : true
 
       LIMIT @offset || 0, @limit || null
@@ -158,41 +157,6 @@ class Queries:
     }
   """
 
-  SEARCH_INVENTORY_PRODUCT = """
-     FOR v, e, p IN 1..99 INBOUND 'Position/IN' is_in_position OPTIONS { uniqueVertices: "path" }
-
-    """ + INVENTORY_FILTER + """
-
-    LIMIT @offset, @limit || null
-
-    RETURN DISTINCT v
-  """
-
-  SEARCH_INVENTORY_POSITIONS = """
-     FOR v, e, p IN 1..99 INBOUND 'Position/IN' is_in_position OPTIONS { uniqueVertices: "path" }
-
-    """ + INVENTORY_FILTER + """
-
-    LIMIT @offset, @limit || null
-
-      RETURN DISTINCT position
-  """
-
-  SEARCH_INVENTORY_SERIALS = """
-     FOR v, e, p IN 1..99 INBOUND 'Position/IN' is_in_position OPTIONS { uniqueVertices: "path" }
-
-    """ + INVENTORY_FILTER + """
-      && e.serial_key != null
-
-    LIMIT @offset, @limit || null
-
-
-
-      RETURN DISTINCT MERGE (serial, {
-          label: serial.code,
-          value: serial._key
-      })
-  """
 
   GET_POSITION_HIERARCHY = """
     LET start = @position_id
@@ -272,13 +236,12 @@ class Queries:
     )
 
     FILTER @product_key ? m.product_key == @product_key : true
-    LET product_search_context = CONCAT(product.code, ' ', product.description)
-    FILTER @product_search ? CONTAINS(LOWER(product_search_context), LOWER(@product_search)) : true
+    FILTER @product_search ? REGEX_TEST(product.code, @product_search, true) : true
 
     // SERIAL FILTERS
     FILTER @serial_keys ? m.serial_key IN @serial_keys : true
     LET serial_code = NOT_NULL(m.serial_code, FIRST(FOR s IN Serial FILTER s._key == m.serial_key RETURN s.code))
-    FILTER @serial_search ? CONTAINS(LOWER(serial_code), LOWER(@serial_search)) : true
+    FILTER @serial_search ? REGEX_TEST(serial_code, @serial_search, true) : true
 
     // POSITION FILTERS
 

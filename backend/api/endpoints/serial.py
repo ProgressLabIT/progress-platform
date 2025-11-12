@@ -1,20 +1,22 @@
-import traceback
+import io
 import json
 import re
+import traceback
+from typing import Annotated, List, Union
 
 from base64 import b64decode
+from datetime import datetime
 from fastapi import APIRouter, HTTPException, Query, Depends
 from fastapi.responses import Response
-import io
-from utils import auth
-from datetime import datetime
-from typing import List, Union
+from pypdf import PdfReader, PdfWriter
+from pydantic import AfterValidator
 
 from models.serial import SerialSelection, Serial, SerialTreeNode
+from utils import auth
 from utils.db import db
 from utils.serial import Queries, get_serial_child_nodes
+from utils.search import wildcard_to_regex
 from utils.dhr import generate_dhr_for_serial
-from pypdf import PdfReader, PdfWriter
 
 router = APIRouter()
 
@@ -247,17 +249,17 @@ def verify_serial_code_free(serial_code: str | None = None,
     dependencies=[Depends(auth.verify_token)])
 async def search_serials(
   serial_key: Union[List[str], None] = Query(default=None),
-  serial_search: str | None = None,
-  is_contained_in: str | None = None,
-  contains: str | None = None,
+  serial_search: Annotated[str | None, AfterValidator(wildcard_to_regex)] = None,
+  is_contained_in: Annotated[str | None, AfterValidator(wildcard_to_regex)] = None,
+  contains: Annotated[str | None, AfterValidator(wildcard_to_regex)] = None,
   time_created_from: datetime | None = None,
   time_created_to: datetime | None = None,
   created_by: Union[List[str], None] = Query(default=None),
   advanced_filters: str = Query(default=None),
   product_key: Union[List[str], None] = Query(default=None),
-  product_code_search: str | None = None,
-  work_order_search: str | None = None,
-  project_search: str | None = None,
+  product_code_search: Annotated[str | None, AfterValidator(wildcard_to_regex)] = None,
+  work_order_search: Annotated[str | None, AfterValidator(wildcard_to_regex)] = None,
+  project_search: Annotated[str | None, AfterValidator(wildcard_to_regex)] = None,
   limit: int | None = 200,
   include_deleted: bool = False,
   offset: int | None = None,

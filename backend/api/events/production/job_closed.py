@@ -10,6 +10,8 @@ class JobClosedEvent(BaseEvent):
     job_key: str
     completed_qt: float
     update_planned_qt: bool = False
+    phase_key: str | None = None
+    work_order_key: str | None = None
     notes: str | None = None
 
   @classmethod
@@ -21,6 +23,10 @@ class JobClosedEvent(BaseEvent):
     return ['Job', 'Queue', 'WorkOrder', 'Task']
 
   def apply(self):
+    job_data = self.tx.collection('Job').get(self.info.job_key)
+    self.info.phase_key = job_data['phase_key']
+    self.info.work_order_key = job_data['work_order_key']
+
     bind_vars=dict(
       job_key=self.info.job_key,
       stage=WorkStatus.CLOSED,

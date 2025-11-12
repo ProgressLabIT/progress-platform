@@ -571,7 +571,7 @@ async function goToPreview() {
     });
   } catch (error) {
     console.error('Error generating PDF preview:', error);
-    window.alert(`PDF generation failed: ${error.message}\nPlease check the template configuration and try again.`);
+    window.alert(`PDF generation failed: ${error}\nPlease check the template configuration and try again.`);
     // Go back to the previous step
     activeStep.value = 1;
   }

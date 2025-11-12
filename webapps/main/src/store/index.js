@@ -12,19 +12,19 @@ const icon_list = icons.map((string) => {
     .join('');
 });
 
-import bom from './bom';
-import form from './form';
-import job from './job';
-import org from './org';
-import process from './process';
-import product from './product';
-import quality from './quality';
-import serial from './serial';
-import session from './session';
-import traceability from './traceability';
-import user from './user';
-import warehouse from './warehouse';
-import workorder from './workorder';
+import bom from './bom.js';
+import form from './form.js';
+import job from './job.js';
+import org from './org.js';
+import process from './process.js';
+import product from './product.js';
+import quality from './quality.js';
+import serial from './serial.js';
+import session from './session.js';
+import traceability from './traceability.js';
+import user from './user.js';
+import warehouse from './warehouse.js';
+import workorder from './workorder.js';
 
 /*
  * If not building with SSR mode, you can

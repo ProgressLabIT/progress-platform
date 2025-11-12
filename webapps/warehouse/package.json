@@ -4,6 +4,7 @@
   "description": "Warehouse mobile app",
   "productName": "Progress",
   "private": true,
+  "type": "module",
   "scripts": {
     "lint": "eslint --ext .js,.vue ./",
     "format": "prettier --write \"**/*.{js,vue,css,html,md,json}\" --ignore-path .gitignore",
@@ -21,7 +22,7 @@
     "@pdfme/common": "^2.2.1",
     "@pdfme/generator": "^2.2.1",
     "@pdfme/ui": "^2.2.1",
-    "@quasar/extras": "^1.16.4",
+    "@quasar/extras": "^1.16.8",
     "@vueuse/core": "^11.1.0",
     "@zxing/browser": "^0.1.5",
     "@zxing/library": "^0.21.3",
@@ -38,10 +39,9 @@
     "vuex": "^4.1.0"
   },
   "devDependencies": {
-    "@intlify/vite-plugin-vue-i18n": "^3.3.1",
     "@intlify/vue-i18n-loader": "^4.2.0",
-    "@quasar/app-vite": "^1.9.0",
-    "@quasar/cli": "^2.4.1",
+    "@quasar/app-vite": "^2.0.0",
+    "@quasar/cli": "^2.5.0",
     "autoprefixer": "^10.4.2",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.1.0",
@@ -52,11 +52,12 @@
     "eslint-plugin-vue": "^9.0.0",
     "postcss": "^8.4.14",
     "prettier": "^2.5.1",
-    "vite-plugin-checker": "^0.8.0"
+    "vite": "^5.4.0",
+    "vite-plugin-checker": "^0.7.0"
   },
   "engines": {
-    "node": "^20 || ^18 || ^16",
-    "npm": ">= 6.13.4",
-    "yarn": ">= 1.21.1"
+    "node": "^20.19.0 || ^22",
+    "npm": ">= 10.0.0",
+    "yarn": ">= 1.22.0"
   }
 }

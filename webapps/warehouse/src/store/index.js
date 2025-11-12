@@ -12,7 +12,7 @@ const icon_list = icons.map((string) => {
     .join('');
 });
 
-import session from './session';
+import session from './session.js';
 
 /*
  * If not building with SSR mode, you can
