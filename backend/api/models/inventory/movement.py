@@ -43,6 +43,7 @@ class InventoryMovementReferences(BaseModel):
   purchase_doc: str | None = None
   partner_name: str | None = None # supplier/customer name
   partner_code: str | None = None # supplier/customer code
+  inventory_count_session_key: str | None = None
 
 
 class InventoryMovementNew(FlexModel):

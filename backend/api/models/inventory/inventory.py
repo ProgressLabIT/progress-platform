@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -18,6 +19,7 @@ class Inventory(BaseModel): # edge is_in_position
   owned: bool = True # False means it's property of customers or suppliers
   locked: bool = False # True means the inventory is locked and cannot be changed
   locked_by: str | None = None # inventory count key or other entity locking the inventory (e.g. inventory booking by wo or planned movement)
+  last_counted: datetime | None = None
   value: float | None = None
   extra: Any = None
 

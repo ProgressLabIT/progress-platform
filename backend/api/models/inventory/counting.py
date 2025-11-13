@@ -1,13 +1,14 @@
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import Any, Literal
 
 
-from pydantic import Field, model_validator
+from pydantic import Field, model_validator, BaseModel
 
 from models.base_models import ArangoDocument
 from utils.dt import timestamp
-
+from utils.search import WildcardString
+from utils.dt import timestamp
 
 
 
@@ -18,8 +19,8 @@ from utils.dt import timestamp
 class InventoryCountSessionStatus(str, Enum):
   PLANNED = 'planned'
   STARTED = 'started'
-  REVIEW = 'review'
   COMPLETED = 'completed'
+  APPLIED = 'applied'
   CANCELED = 'canceled'
 
 class InventoryCountSessionType(str, Enum):
@@ -60,6 +61,15 @@ class InventoryCountAssignmentStatus(str, Enum):
   CANCELED = 'canceled'
 
 
+class InventoryCountSessionSearchParams(BaseModel):
+  search: WildcardString = None
+  status: InventoryCountSessionStatus | None = None
+  type: InventoryCountSessionType | None = None
+  limit: int | None = 500
+  offset: int | None = 0
+
+
+
 class InventoryCountAssignment(ArangoDocument):
   inventory_count_session_key: str  # Parent campaign
 
@@ -67,7 +77,6 @@ class InventoryCountAssignment(ArangoDocument):
   assignment_type: InventoryCountSessionType  # What was assigned
   product_key: str | None = None # product key
   position_key: str | None = None # position key
-  include_children: bool = True  # For position hierarchies
 
   # Assignment tracking
   assigned_to: str | None = None  # user_key, None means unstarted
@@ -80,60 +89,100 @@ class InventoryCountAssignment(ArangoDocument):
   notes: str | None = None
   extra: Any = None
 
+  @model_validator(mode='after')
+  def validate_assignment_type(self):
+    if self.product_key and self.position_key:
+      raise ValueError("A product and position assignment cannot be combined")
+    if self.assignment_type == InventoryCountSessionType.BY_PRODUCT and self.product_key is None:
+      raise ValueError("A product assignment must have a product key")
+    if self.assignment_type == InventoryCountSessionType.BY_POSITION and self.position_key is None:
+      raise ValueError("A position assignment must have a position key")
+    return self
+
+
+
+class InventoryCountAssignmentSearchParams(BaseModel):
+  inventory_count_session_key: str | None = None
+  product_key: str | None = None
+  product_search: WildcardString = None
+  position_key: str | None = None
+  position_search: WildcardString = None
+  assigned_to: str | None = None
+  status: InventoryCountAssignmentStatus | None = None
+  include_children: bool | None = True
+  order_by: Literal['product', 'position'] | None = None
+  limit: int | None = 500
+  offset: int | None = 0
+
+  def model_dump(self, *args, **kwargs):
+    """Transforms category into record attribute name"""
+    data = super().model_dump(*args, **kwargs)
+    if self.order_by:
+      data['order_by'] = f"{self.order_by}_key"
+    return data
+
 
 class InventoryCountStatus(str, Enum):
-  DRAFT = 'draft'
+  STARTED = 'started'
+  COMPLETED = 'completed'
   SUBMITTED = 'submitted'
   CONFIRMED = 'confirmed'
   DISCARDED = 'discarded'
 
-class InventoryCountRecord(ArangoDocument):
+class InventoryCountRecord(ArangoDocument): # edge collection inventory_count_record
   # What was counted
-  product_key: str
-  position_key: str
-  serial_keys: list[str] | None = None
+  product_id: str = Field(..., alias='_from')
+  position_id: str = Field(..., alias='_to')
 
-  # Core data
-  system_qt: float  # Snapshot at count time. Must be retaken in case count is updated before submission
-  system_at: datetime | None = None
+  # Core data - see validation below for ensuring correct setting
+  system_qt: float # Snapshot at count time. Must be retaken in case count is updated before submission
+  system_serial_keys: list[str] | None = None
+  system_at: datetime | None = Field(default_factory=timestamp)
 
-  counted_qt: float
+  counted_qt: float | None = None # Will always be set. See validation below
+  counted_serial_keys: list[str] | None = None
   counted_at: datetime | None = None
 
   # Metadata
   inventory_count_session_key: str
   assignment_key: str | None = None
-  status: InventoryCountStatus = InventoryCountStatus.DRAFT
+  status: InventoryCountStatus = InventoryCountStatus.STARTED
   reviewed_at: datetime | None = None # Either confirmed or discarded
   notes: str | None = None
   extra: Any = None
 
   @property
-  def product_id(self) -> str:
-    return f'Product/{self.product_key}'
+  def product_key(self) -> str:
+    return self.product_id.split('/')[-1]
 
   @property
-  def position_id(self) -> str:
-    return f'Position/{self.position_key}'
+  def position_key(self) -> str:
+    return self.position_id.split('/')[-1]
 
   @property
   def delta(self) -> float | None:
     return self.counted_qt - self.system_qt
 
+  @model_validator(mode='after')
+  def handle_serials(self):
+    if self.counted_serial_keys is not None:
+      serial_count = len(self.counted_serial_keys)
+      if self.counted_qt is None:
+        self.counted_qt = serial_count
+      elif self.counted_qt != serial_count:
+        raise ValueError(
+          "serial qt must be equal to the number of serial_keys if provided: "
+          f"Serial qt: {self.counted_qt}, serial_count: {serial_count}"
+        )
+    elif self.counted_qt is None:
+      raise ValueError("You must provide either a counted quantity or a list of serial keys found")
+    return self
 
-class InventorySnapshotReason(str, Enum):
-  BASELINE = 'baseline'  # Taken at campaign start
-  POST_COUNT = 'post_count'  # Before applying adjustments
-  POST_ADJUSTMENT = 'post_adjustment'  # After applying adjustments
-  FORECAST = 'forecast'  # Used for planning purposes (e.g. for MRP)
-  MANUAL = 'manual'  # User-created snapshot
 
 class InventorySnapshotSource(str, Enum):
-  COUNT = 'count'
   IMPORT = 'import'
   MRP = 'mrp'
-  USER = 'user'
-  SYSTEM = 'system'
+  COUNT_SESSION = 'count_session'
 
 class InventorySnapshotType(str, Enum):
   VIRTUAL = 'virtual'
@@ -147,7 +196,6 @@ class InventorySnapshotScopeType(str, Enum):
 class InventorySnapshot(ArangoDocument):
   snapshot_type: InventorySnapshotType
   source: InventorySnapshotSource
-  reason: InventorySnapshotReason
   inventory_count_session_key: str | None = None
   timestamp: datetime = Field(default_factory=timestamp)
 
@@ -162,20 +210,10 @@ class InventorySnapshot(ArangoDocument):
   @model_validator(mode='after')
   def validate_session_relationship(self):
     # Session snapshots MUST have a session reference
-    if self.reason in [
-      InventorySnapshotReason.BASELINE,
-      InventorySnapshotReason.POST_COUNT,
-      InventorySnapshotReason.POST_ADJUSTMENT
-    ]:
-      if not self.inventory_count_session_key:
-        raise ValueError(f"Snapshot with reason '{self.reason}' must have a session reference")
-
-    # Non-session snapshots should NOT have a session reference
-    if self.reason == InventorySnapshotReason.FORECAST and self.inventory_count_session_key is not None:
-      raise ValueError("Forecast snapshots should not have a session reference")
+    if self.source == InventorySnapshotSource.COUNT_SESSION and not self.inventory_count_session_key:
+      raise ValueError("Count session snapshots must have a session reference")
 
     return self
-
 
 class InventorySnapshotItem(ArangoDocument): # edge collection
   product_key: str = Field(..., alias='_from')
