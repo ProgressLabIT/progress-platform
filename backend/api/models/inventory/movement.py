@@ -260,14 +260,20 @@ class MovementListWithCounts(MovementList):
   counts: dict[MovementStatus, int]
 
 
+class MovementListNewStatus(str, Enum):
+  PLANNED = 'planned'
+  COMPLETED = 'completed'
+
 class MovementListNew(MovementList):
+  status: MovementListNewStatus | None = MovementListNewStatus.PLANNED
   movements: list[InventoryMovementNew]
   by_code: bool | None = False
 
   @model_validator(mode='before')
   def validate(cls, values):
     # Ensure the list contains at least one movement
-    if values.get('movements') is None or len(values.get('movements')) == 0:
+    no_movements = values.get('movements') is None or len(values.get('movements')) == 0
+    if no_movements:
       raise ValueError("A movement list must have at least one movement")
 
     # Ensure the list has a valid type
@@ -297,7 +303,7 @@ class MovementListNew(MovementList):
         if items_product.get(list_item).get('product') != movement.get(product_ref):
           raise ValueError(f"Cannot have multiple products with the same movement list item {list_item}")
         elif movement_serial in items_product.get(list_item).get('serials'):
-          raise ValueError(f"Cannot have the same serial number or no serial number in multiple movements with in the same list item (Item: {list_item})")
+          raise ValueError(f"Cannot have the same serial number or no serial number in multiple movements within the same list item (Item: {list_item})")
       else:
         items_product[list_item] = dict(product=movement.get(product_ref), serials=[movement_serial])
 
