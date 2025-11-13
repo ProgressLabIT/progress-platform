@@ -1,5 +1,8 @@
 import re
 
+from typing import Annotated
+from pydantic import AfterValidator
+
 def wildcard_to_regex(search_string: str) -> str:
   """
   Convert a wildcard search string to a regex pattern.
@@ -51,3 +54,7 @@ def wildcard_to_regex(search_string: str) -> str:
     regex_pattern = f'^{regex_pattern}'
 
   return regex_pattern
+
+
+
+WildcardString = Annotated[str | None, AfterValidator(wildcard_to_regex)]

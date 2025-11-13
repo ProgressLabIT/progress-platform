@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field
 from models.base_models import ArangoDocument, ArangoEdge, FlexModel
 #from utils.counter import _generate_counter
 from utils.dt import timestamp
+from utils.search import WildcardString
 
 # ========================================================
 # POSITIONS
@@ -49,7 +50,7 @@ class PositionLink(ArangoEdge):  #edge is_in_position
 
 
 class PositionSearchParams(BaseModel):
-  search: str | None = None
+  search: WildcardString = None
   position_keys: list[str] | None = None
   has_product_key: list[str] | None = None
   has_product_code: list[str] | None = None

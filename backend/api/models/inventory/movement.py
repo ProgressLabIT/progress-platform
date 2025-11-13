@@ -9,6 +9,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator, StringConstr
 from models.base_models import ArangoDocument, FlexModel
 #from utils.counter import _generate_counter
 from utils.dt import timestamp
+from utils.search import WildcardString
 
 
 
@@ -200,12 +201,12 @@ class InventoryMovementSearchParameters(BaseModel):
   end_from: datetime | None = None
   end_to: datetime | None = None
   product_key: str | None = None
-  product_search: str | None = None
+  product_search: WildcardString = None
   serial_keys: list[str] | None = None
-  serial_search: str | None = None
+  serial_search: WildcardString = None
   list_key: list[str] | None = None
   list_search: str | None = None
-  work_order_search: str | None = None
+  work_order_search: WildcardString = None
   position_from: str | None = None
   position_to: str | None = None
   position_filter_operator: str | None = 'AND'

@@ -1,6 +1,7 @@
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
+from utils.search import WildcardString
 
 
 # ========================================================
@@ -44,11 +45,11 @@ class InventorySearchResult(BaseModel):
 class InventoryGraphSearchParams(BaseModel):
   root_position_key: str | None = None
   product_key: str | None = None
-  product_search: str | None = None
+  product_search: WildcardString = None
   serials_only: bool | None = False
-  serial_search: str | None = None
+  serial_search: WildcardString = None
   serial_keys: list[str] | None = None
-  position_search: str | None = None
+  position_search: WildcardString = None
   owned: bool | None = None
   limit: int | None = 200
   offset: int | None = 0
