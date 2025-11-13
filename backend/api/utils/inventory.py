@@ -368,4 +368,63 @@ class Queries:
   """
 
 
+  SEARCH_INVENTORY_COUNT_SESSIONS = """
+    FOR cs IN InventoryCountSession
+    FILTER
+      (@search ? REGEX_TEST(cs.code, @search, true) : true)
+      && (@status ? cs.status == @status : true)
+      && (@type ? cs.type == @type : true)
+    LIMIT @offset, @limit || null
+    RETURN cs
+  """
 
+  SEARCH_INVENTORY_COUNT_ASSIGNMENTS = """
+    FOR ica IN InventoryCountAssignment
+
+    FILTER
+      (@inventory_count_session_key ? ica.inventory_count_session_key == @inventory_count_session_key : true)
+      && (@assignment_type ? ica.assignment_type == @assignment_type : true)
+      && (@assigned_to ? ica.assigned_to == @assigned_to : true)
+      && (@status ? ica.status == @status : true)
+
+    // Product filters
+    FILTER @product_key ? ica.product_key == @product_key : true
+    LET product = FIRST(FOR p IN Product FILTER p._key == ica.product_key RETURN p)
+    FILTER @product_search ? REGEX_TEST(product.code, @product_search, true) : true
+
+
+    // Position filters (with hierarchy consideration)
+    FILTER !(@position_key || @position_search) ? true : (
+      LET assigned = FIRST(FOR p IN Position FILTER p._key == ica.position_key RETURN p)
+      LET assigned_key_match = @position_key ? assigned._key == @position_key : true
+      LET assigned_code_match = @position_search ? REGEX_TEST(assigned.code, @position_search, true) : true
+
+      LET children = (
+        FOR p IN 1..9999 INBOUND CONCAT('Position/', ica.position_key) is_in_position
+        FILTER IS_SAME_COLLECTION(Position, p)
+        RETURN p
+      )
+
+      LET children_key_match = @position_key ? @position_key IN children[*]._key : true
+      LET children_code_match = @position_search ? children[*].code[? ANY FILTER REGEX_TEST(CURRENT, @position_search, true)] : true
+
+      RETURN assigned_key_match && assigned_code_match && children_key_match && children_code_match
+    )
+
+    SORT ica[@order_by]
+
+    LIMIT @offset, @limit || null
+
+    RETURN MERGE(ica, {
+      product_code: product.code,
+      product_description: product.description,
+      position_code: position ? position.code : null
+    })
+  """
+
+  CANCEL_INVENTORY_COUNT_ASSIGNMENTS = """
+    FOR ica IN InventoryCountAssignment
+    FILTER ica._key IN @assignment_keys && ica.status == 'planned'
+    UPDATE ica WITH { status: 'canceled' } in InventoryCountAssignment
+    RETURN OLD._key
+  """
