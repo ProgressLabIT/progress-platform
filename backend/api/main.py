@@ -88,7 +88,8 @@ app.include_router(endpoints.collaboration, tags=['Collaboration'])
 app.include_router(endpoints.traceability, tags=['Traceability'])
 app.include_router(endpoints.counter, tags=['Traceability'])
 app.include_router(endpoints.notification, tags=['Notification'])
-app.include_router(endpoints.inventory, tags=['Inventory'])
+app.include_router(endpoints.inventory, tags=['Warehouse'])
+app.include_router(endpoints.counting, tags=['Warehouse'])
 
 # app.include_router(global_router, prefix="/v1")
 
