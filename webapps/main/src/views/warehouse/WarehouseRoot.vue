@@ -115,10 +115,21 @@
         }
       "
     ></inventory-filter>
+
+    <counting-filter
+      v-if="$route.name === 'counting'"
+      v-model:show-filter-drawer="showFilterDrawer"
+      @filter-active-change="
+        (filtersActive) => {
+          filtersActiveNo = filtersActive;
+        }
+      "
+    ></counting-filter>
   </q-page-container>
 </template>
 
 <script>
+import CountingFilter from '@/components/warehouse/counting/CountingFilter.vue';
 import InventoryFilter from '@/components/warehouse/inventory/InventoryFilter.vue';
 import MovementFilter from '@/components/warehouse/movement/MovementFilter.vue';
 import PositionFilter from '@/components/warehouse/position/PositionFilter.vue';
@@ -134,6 +145,7 @@ const warehouse_views = [
   { component: 'Movements', route_name: 'movements' },
   { component: 'Lists', route_name: 'movementLists' },
   { component: 'Positions', route_name: 'positions' },
+  { component: 'Counting', route_name: 'counting' },
 ];
 
 const header_plus_footer_height = 80;
@@ -142,6 +154,7 @@ export default {
   name: 'WarehouseRoot',
 
   components: {
+    CountingFilter,
     PositionFilter,
     MovementFilter,
     InventoryFilter,

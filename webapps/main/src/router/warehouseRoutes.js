@@ -56,6 +56,13 @@ const warehouseRoutes = [
             name: 'movementLists',
             component: () => import ('@/views/warehouse/lists/MovementListsRoot.vue')
           },
+          {
+            path: 'counting',
+            name: 'counting',
+            component: () =>
+              import('@/views/warehouse/counting/CountingRoot.vue'),
+            children: [],
+          },
         ],
       },
     ],

@@ -363,3 +363,116 @@ export function useInventoryFilters() {
     filters_active,
   };
 }
+
+export function useCountSessionColumns() {
+  const { t } = useI18n();
+
+  return [
+    {
+      name: '_key',
+      field: '_key',
+      sortable: true,
+      label: 'ID',
+      align: 'left',
+      style: 'max-width: 10vw',
+    },
+    {
+      name: 'code',
+      field: 'code',
+      sortable: true,
+      label: t('code').toUpperCase(),
+      align: 'left',
+      style: 'max-width: 15vw',
+    },
+    {
+      name: 'description',
+      field: 'description',
+      sortable: true,
+      label: t('description').toUpperCase(),
+      align: 'left',
+      style: 'max-width: 25vw',
+    },
+    {
+      name: 'type',
+      field: 'type',
+      sortable: true,
+      label: t('type').toUpperCase(),
+      align: 'left',
+      style: 'max-width: 10vw',
+    },
+    {
+      name: 'status',
+      field: 'status',
+      sortable: true,
+      label: t('status').toUpperCase(),
+      align: 'left',
+      style: 'max-width: 10vw',
+    },
+    {
+      name: 'coverage_percentage',
+      field: 'coverage_percentage',
+      sortable: true,
+      label: t('warehouse.counting.coverage_percentage').toUpperCase(),
+      align: 'right',
+      style: 'max-width: 10vw',
+      format: (val) => (val !== null && val !== undefined ? `${val.toFixed(1)}%` : '-'),
+    },
+    {
+      name: 'created',
+      field: 'created',
+      sortable: true,
+      align: 'right',
+      label: t('creation_date').toUpperCase(),
+      style: 'max-width: 5vw',
+      format: (val) => (val ? shortDateString(val) : '-'),
+    },
+    {
+      name: 'started',
+      field: 'started',
+      sortable: true,
+      align: 'right',
+      label: t('start').toUpperCase(),
+      style: 'max-width: 5vw',
+      format: (val) => (val ? shortDateString(val) : '-'),
+    },
+    {
+      name: 'completed',
+      field: 'completed',
+      sortable: true,
+      align: 'right',
+      label: t('end').toUpperCase(),
+      style: 'max-width: 5vw',
+      format: (val) => (val ? shortDateString(val) : '-'),
+    },
+  ];
+}
+
+export function useCountSessionFilters() {
+  const search = ref(useQueryModel(String, 'search', null));
+  const status = ref(useQueryModel(String, 'status', null));
+  const type = ref(useQueryModel(String, 'type', null));
+
+  const filters = computed({
+    get: () => ({
+      search: search.value,
+      status: status.value,
+      type: type.value,
+    }),
+  });
+
+  const filters_active = computed({
+    get: () => {
+      return [search, status, type].filter((ref) => {
+        return !!ref.value;
+      }).length;
+    },
+  });
+
+  return {
+    filters,
+    search,
+    status,
+    type,
+    filters_active,
+  };
+}
