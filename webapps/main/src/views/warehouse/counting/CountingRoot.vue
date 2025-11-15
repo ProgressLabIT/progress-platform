@@ -1,5 +1,5 @@
 <template>
-  <div ref="container" class="q-px-sm q-pt-sm full-height">
+  <div ref="container" class="column full-height">
     <q-table
       id="count_session_list"
       v-model:pagination="pagination"
@@ -9,7 +9,7 @@
       :loading="loading"
       color="primary"
       hide-bottom
-      class="full-height"
+      class="col full-height"
       dense
       separator="none"
       table-class="text-high"
@@ -40,15 +40,15 @@
               </template>
 
               <template v-else-if="column.name === 'type'">
-                {{ $capitalizeAll(props.row[column.field] || '-') }}
+                {{ capitalizeAll(props.row[column.field] || '-') }}
               </template>
 
               <template v-else-if="column.name === 'status'">
-                {{ $capitalizeAll(props.row[column.field] || '-') }}
+                {{ capitalizeAll(props.row[column.field] || '-') }}
               </template>
 
               <template v-else>
-                {{ $capitalizeAll(props.row[column.field] || '-') }}
+                {{ capitalizeAll(props.row[column.field] || '-') }}
               </template>
             </q-td>
           </template>
@@ -61,118 +61,105 @@
   </div>
 </template>
 
-<script>
-import { ref } from 'vue';
+<script setup>
+import { computed, onMounted, ref, watch } from 'vue';
+import { useStore } from 'vuex';
+import { capitalizeAll } from '@/boot/filters';
 import {
   useCountSessionColumns,
   useCountSessionFilters,
 } from 'app/src/composables/warehouse';
 
-export default {
-  name: 'CountingRoot',
+const store = useStore();
 
-  setup() {
-    const pagination = ref({
-      rowsPerPage: 0,
-      sortBy: 'created',
-      descending: false,
-      page: 1,
-      rowsNumber: 1000,
-    });
+const pagination = ref({
+  rowsPerPage: 0,
+  sortBy: 'created',
+  descending: false,
+  page: 1,
+  rowsNumber: 1000,
+});
 
-    const countSessionColumns = useCountSessionColumns();
-    const { filters } = useCountSessionFilters();
+const countSessionColumns = useCountSessionColumns();
+const { filters } = useCountSessionFilters();
 
-    return {
-      pagination,
-      countSessionColumns,
-      filters,
-    };
-  },
+const loading = ref(false);
+const limit = ref(200);
+const offset = ref(0);
+const sort_by = ref(null);
+const sorting_order = ref('asc');
 
-  data() {
-    return {
-      loading: false,
-      limit: 200,
+const count_session_list = computed(() => {
+  return store.state.warehouse.count_sessions;
+});
+
+const columns = computed(() => {
+  return countSessionColumns;
+});
+
+function getCountSessions() {
+  reloadCountSessions({ pagination: pagination.value });
+}
+
+function reloadCountSessions(data) {
+  const { sortBy, descending } = data.pagination ?? {};
+
+  sort_by.value = sortBy;
+  sorting_order.value = descending ? 'desc' : 'asc';
+  loading.value = true;
+  store
+    .dispatch('getCountSessions', {
+      ...filters.value,
+      limit: offset.value + limit.value,
       offset: 0,
-    };
-  },
+      sort_by: sort_by.value,
+      sorting_order: sorting_order.value,
+    })
+    .then(() =>
+      setTimeout(() => {
+        loading.value = false;
+      }, 1000),
+    );
+}
 
-  computed: {
-    count_session_list() {
-      return this.$store.state.warehouse.count_sessions;
-    },
+function hasMore() {
+  return (
+    limit.value + offset.value <= store.getters.getCountSessionCount()
+  );
+}
 
-    columns() {
-      return this.countSessionColumns;
-    },
-  },
+function addCountSessions(data) {
+  const lastIndex = store.getters.getCountSessionCount() - 1;
 
-  watch: {
-    filters: {
-      deep: true,
-      handler: 'getCountSessions',
-    },
-  },
-
-  created() {
-    this.getCountSessions();
-  },
-
-  methods: {
-    getCountSessions() {
-      this.reloadCountSessions({ pagination: this.pagination });
-    },
-
-    reloadCountSessions(data) {
-      const { sortBy, descending } = data.pagination ?? {};
-
-      this.sort_by = sortBy;
-      this.sorting_order = descending ? 'desc' : 'asc';
-      this.loading = true;
-      this.$store
-        .dispatch('getCountSessions', {
-          ...this.filters,
-          limit: this.offset + this.limit,
-          offset: 0,
-          sort_by: this.sort_by,
-          sorting_order: this.sorting_order,
-        })
-        .then(() =>
-          setTimeout(() => {
-            this.loading = false;
-          }, 1000),
-        );
-    },
-
-    hasMore() {
-      return (
-        this.limit + this.offset <= this.$store.getters.getCountSessionCount()
+  if (loading.value !== true && data.to === lastIndex && hasMore()) {
+    offset.value += limit.value;
+    loading.value = true;
+    store
+      .dispatch('appendCountSessions', {
+        ...filters.value,
+        offset: offset.value,
+        sort_by: sort_by.value,
+        sorting_order: sorting_order.value,
+      })
+      .then(() =>
+        setTimeout(() => {
+          loading.value = false;
+        }, 1000),
       );
-    },
+  }
+}
 
-    addCountSessions(data) {
-      const lastIndex = this.$store.getters.getCountSessionCount() - 1;
-
-      if (this.loading !== true && data.to === lastIndex && this.hasMore()) {
-        this.offset += this.limit;
-        this.loading = true;
-        this.$store
-          .dispatch('appendCountSessions', {
-            ...this.filters,
-            offset: this.offset,
-            sort_by: this.sort_by,
-            sorting_order: this.sorting_order,
-          })
-          .then(() =>
-            setTimeout(() => {
-              this.loading = false;
-            }, 1000),
-          );
-      }
-    },
+watch(
+  filters,
+  () => {
+    getCountSessions();
   },
-};
+  { deep: true },
+);
+
+onMounted(() => {
+  getCountSessions();
+});
 </script>
 
 <style lang="sass">

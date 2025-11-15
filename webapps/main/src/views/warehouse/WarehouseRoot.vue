@@ -27,6 +27,7 @@
           <!-- POSITION BUTTONS -->
           <q-btn
             v-if="$route.name?.startsWith('position')"
+            class="q-ml-sm"
             size="0.75rem"
             color="theme-blue"
             :label="$t('new')"
@@ -38,8 +39,20 @@
 
           <!-- INVENTORY BUTTONS -->
 
+          <!-- COUNTING BUTTONS -->
+          <q-btn
+            v-if="$route.name === 'counting'"
+            class="q-ml-sm"
+            size="0.75rem"
+            color="theme-blue"
+            :label="$t('new')"
+            @click="openNewCountSessionDialog"
+          >
+          </q-btn>
+
           <!-- EXPORT EXCEL -->
           <q-btn
+            class="q-ml-sm"
             size="0.75rem"
             :label="$t('export')"
             color="theme-blue"
@@ -129,10 +142,12 @@
 </template>
 
 <script>
+import { Dialog } from 'quasar';
 import CountingFilter from '@/components/warehouse/counting/CountingFilter.vue';
 import InventoryFilter from '@/components/warehouse/inventory/InventoryFilter.vue';
 import MovementFilter from '@/components/warehouse/movement/MovementFilter.vue';
 import PositionFilter from '@/components/warehouse/position/PositionFilter.vue';
+import CountSessionNew from '@/views/warehouse/counting/CountSessionNew.vue';
 import { XLSXDownload, XLSXGetData } from '@/lib/xlsxDownload';
 import {
   useInventoryColumns,
@@ -255,6 +270,15 @@ export default {
         'inventory',
         'inventory',
       );*/
+    },
+
+    openNewCountSessionDialog() {
+      Dialog.create({
+        component: CountSessionNew,
+      }).onOk(() => {
+        // Reload sessions after creation
+        // The component will handle this via getCountSessions
+      });
     },
   },
 };
