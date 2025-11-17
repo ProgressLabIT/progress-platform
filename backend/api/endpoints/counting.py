@@ -1,4 +1,5 @@
 import traceback
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
@@ -7,6 +8,7 @@ from utils.inventory import Queries
 from utils.db import db
 from utils import auth
 from utils.api import APIResponse
+from utils.counter import _generate_counter
 
 
 router = APIRouter()
@@ -17,14 +19,44 @@ router = APIRouter()
 # ========================================================
 
 @router.post('/inventory/count-session', dependencies=[Depends(auth.verify_token)])
-def create_counting_session(counting_session: InventoryCountSession):
+def create_counting_session(count_session: InventoryCountSession, assignments: list[InventoryCountAssignmentNew]):
   try:
-    counting_session_key = db.collection('InventoryCountSession').insert(counting_session)['_key']
+    if len(assignments) == 0:
+      raise HTTPException(status_code=400, detail="At least one assignment is required")
+    tx = db.begin_transaction(write=['InventoryCountSession', 'InventoryCountAssignment', 'Config', 'Counter'])
+
+    # Generate counting session code if not provided
+    if count_session.code is None:
+      counter_key = tx.collection('Config').get('system_counters').get('counting_sessions', 'default')
+      try:
+        count_session.code = _generate_counter(tx, counter_key)
+      except Exception as e:
+        raise Exception("Cannot generate counting session code. Please check if the counter is configured correctly.") from e
+
+    count_session_key = tx.collection('InventoryCountSession').insert(count_session.model_dump(by_alias=True))['_key']
+    assignement_records = []
+    for a in assignments:
+      if a.target_keys is None or len(a.target_keys) == 0:
+        raise HTTPException(status_code=400, detail="At least one item is required for each assignment")
+
+      records = [InventoryCountAssignment(
+        inventory_count_session_key=count_session_key,
+        assigned_to=a.user_key,
+        target_key=target_key,
+        target_type=count_session.type,
+      ).model_dump(by_alias=True) for target_key in a.target_keys]
+
+      assignement_records.extend(records)
+
+    tx.collection('InventoryCountAssignment').insert_many(assignement_records)
+    tx.commit_transaction()
+
     return APIResponse(
-      message = "Counting session created successfully",
-      detail = dict(counting_session_key=counting_session_key)
+      message = f"Counting session {count_session.code} created successfully",
+      detail = dict(count_session_key=count_session_key, code=count_session.code)
     )
   except:
+    tx.abort_transaction()
     raise HTTPException(status_code=500, detail=traceback.format_exc())
 
 

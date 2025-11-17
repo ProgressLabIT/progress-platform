@@ -28,7 +28,7 @@ class InventoryCountSessionType(str, Enum):
   BY_PRODUCT = 'product'
 
 class InventoryCountSession(ArangoDocument):
-  code: str  # Auto-generated from counter
+  code: str | None = None  # Auto-generated from counter if not provided
   description: str | None = None
   type: InventoryCountSessionType
   status: InventoryCountSessionStatus = InventoryCountSessionStatus.PLANNED
@@ -69,14 +69,16 @@ class InventoryCountSessionSearchParams(BaseModel):
   offset: int | None = 0
 
 
+class InventoryCountAssignmentNew(BaseModel):
+  user_key: str
+  items: list[str]
 
 class InventoryCountAssignment(ArangoDocument):
   inventory_count_session_key: str  # Parent campaign
 
   # What was assigned
-  assignment_type: InventoryCountSessionType  # What was assigned
-  product_key: str | None = None # product key
-  position_key: str | None = None # position key
+  target_type: InventoryCountSessionType  # What was assigned
+  target_key: str # Product key or position key
 
   # Assignment tracking
   assigned_to: str | None = None  # user_key, None means unstarted
@@ -88,17 +90,6 @@ class InventoryCountAssignment(ArangoDocument):
 
   notes: str | None = None
   extra: Any = None
-
-  @model_validator(mode='after')
-  def validate_assignment_type(self):
-    if self.product_key and self.position_key:
-      raise ValueError("A product and position assignment cannot be combined")
-    if self.assignment_type == InventoryCountSessionType.BY_PRODUCT and self.product_key is None:
-      raise ValueError("A product assignment must have a product key")
-    if self.assignment_type == InventoryCountSessionType.BY_POSITION and self.position_key is None:
-      raise ValueError("A position assignment must have a position key")
-    return self
-
 
 
 class InventoryCountAssignmentSearchParams(BaseModel):
