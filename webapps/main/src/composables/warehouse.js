@@ -369,14 +369,6 @@ export function useCountSessionColumns() {
 
   return [
     {
-      name: '_key',
-      field: '_key',
-      sortable: true,
-      label: 'ID',
-      align: 'left',
-      style: 'max-width: 10vw',
-    },
-    {
       name: 'code',
       field: 'code',
       sortable: true,
@@ -391,6 +383,7 @@ export function useCountSessionColumns() {
       label: t('description').toUpperCase(),
       align: 'left',
       style: 'max-width: 25vw',
+      classes: 'ellipsis',
     },
     {
       name: 'type',
@@ -413,6 +406,15 @@ export function useCountSessionColumns() {
       field: 'coverage_percentage',
       sortable: true,
       label: t('warehouse.counting.coverage_percentage').toUpperCase(),
+      align: 'right',
+      style: 'max-width: 10vw',
+      format: (val) => (val !== null && val !== undefined ? `${val.toFixed(1)}%` : '-'),
+    },
+    {
+      name: 'progress',
+      field: 'progress',
+      sortable: true,
+      label: t('progress').toUpperCase(),
       align: 'right',
       style: 'max-width: 10vw',
       format: (val) => (val !== null && val !== undefined ? `${val.toFixed(1)}%` : '-'),
