@@ -152,6 +152,16 @@
 
               <q-separator inset class="q-my-sm" />
 
+              <!-- ADD ASSIGNMENT BUTTON -->
+              <BaseAutocompleteUser
+                  dense
+                  :label="$capitalize($t('warehouse.counting.add_assignment'))"
+                  :clearable="false"
+                  :key-only="true"
+                  @select="addAssignment"
+                  class="q-mx-md q-my-sm"
+                />
+
               <q-scroll-area class="col" style="max-height: 100%">
                 <q-list>
                   <q-item
@@ -184,18 +194,6 @@
                   </q-item>
                 </q-list>
               </q-scroll-area>
-               <!-- ADD ASSIGNMENT BUTTON -->
-
-              <q-separator inset />
-
-               <BaseAutocompleteUser
-                  dense
-                  :label="$capitalize($t('warehouse.counting.add_assignment'))"
-                  :clearable="false"
-                  :key-only="true"
-                  @select="addAssignment"
-                  class="q-mx-md q-mt-md"
-                />
             </div>
 
             <q-separator vertical />
@@ -203,7 +201,7 @@
             <!-- CENTER COLUMN: AVAILABLE ITEMS -->
             <div class="col column full-height">
               <div class="row items-center justify-between q-col-gutter-x-lg q-px-md">
-                <div class="col-auto">
+                <div class="col-auto row items-center q-gutter-x-sm">
                   <span class="q-mr-sm text-h5 uppercase">
                     {{ $t('shown', 2) }}
                   </span>
@@ -217,6 +215,20 @@
                     <strong>
                       {{ totalItemCount }}
                     </strong>
+                  </q-chip>
+                  <q-icon
+                    name="mdi-account-group"
+                    size="20px"
+                    class="q-ml-sm"
+                  />
+                  <q-chip
+                    color="theme-grey"
+                    size="sm"
+                    clickable
+                    @click="showMultiAssignedOnlyCenter = !showMultiAssignedOnlyCenter"
+                    :outline="!showMultiAssignedOnlyCenter"
+                  >
+                    <strong>{{ centerColumnMultiAssignedCount }}</strong>
                   </q-chip>
                 </div>
                 <q-btn
@@ -265,7 +277,7 @@
                     <q-checkbox
                       size="sm"
                       dense
-                      :model-value="assignedItemKeys.has(item._key || item.key)"
+                      :model-value="isItemSelected(item)"
                       @click="toggleItem(item)"
                     />
                   </q-item-section>
@@ -277,13 +289,34 @@
                       {{ item.description }}
                     </q-item-label>
                   </q-item-section>
-                  <q-item-section v-if="disableItem(item)" side>
-                    <BaseUserAvatar
-                      :user="getAssignedUser(item)"
-                      :show_name="false"
-                      size="32px"
-                      dense
-                    />
+                  <q-item-section v-if="getItemAssignees(item).length > 0" side>
+                    <template v-if="getItemAssignees(item).length === 1">
+                      <BaseUserAvatar
+                        :user="getItemAssignees(item)[0]"
+                        :show_name="false"
+                        size="32px"
+                        dense
+                      >
+                        <q-tooltip>
+                          {{ getItemAssignees(item)[0].name }} {{ getItemAssignees(item)[0].surname }}
+                        </q-tooltip>
+                      </BaseUserAvatar>
+                    </template>
+                    <template v-else>
+                      <div class="row items-center q-gutter-x-xs">
+                        <q-icon
+                          name="mdi-account-group"
+                          size="20px"
+                        >
+                          <q-tooltip>
+                            <div v-for="user in getItemAssignees(item)" :key="user._key">
+                              {{ user.name }} {{ user.surname }}
+                            </div>
+                          </q-tooltip>
+                        </q-icon>
+                        <span class="text-caption">{{ getItemAssignees(item).length }}</span>
+                      </div>
+                    </template>
                   </q-item-section>
                 </q-item>
               </q-virtual-scroll>
@@ -325,14 +358,36 @@
                       />
                       <span class="q-ml-sm"># {{ prop.node.label }}</span>
                       <q-space />
-                      <BaseUserAvatar
-                        v-if="disableItem({ key: prop.node.key })"
-                        :user="getAssignedUser({ key: prop.node.key })"
-                        :show-name="false"
-                        size="32px"
-                        dense
-                        class="q-ml-sm"
-                      />
+                      <template v-if="getItemAssignees({ key: prop.node.key }).length > 0">
+                        <template v-if="getItemAssignees({ key: prop.node.key }).length === 1">
+                          <BaseUserAvatar
+                            :user="getItemAssignees({ key: prop.node.key })[0]"
+                            :show-name="false"
+                            size="32px"
+                            dense
+                            class="q-ml-sm"
+                          >
+                            <q-tooltip>
+                              {{ getItemAssignees({ key: prop.node.key })[0].name }} {{ getItemAssignees({ key: prop.node.key })[0].surname }}
+                            </q-tooltip>
+                          </BaseUserAvatar>
+                        </template>
+                        <template v-else>
+                          <div class="row items-center q-gutter-x-xs">
+                            <q-icon
+                              name="mdi-account-group"
+                              size="20px"
+                            >
+                              <q-tooltip>
+                                <div v-for="user in getItemAssignees({ key: prop.node.key })" :key="user._key">
+                                  {{ user.name }} {{ user.surname }}
+                                </div>
+                              </q-tooltip>
+                            </q-icon>
+                            <span class="text-caption">{{ getItemAssignees({ key: prop.node.key }).length }}</span>
+                          </div>
+                        </template>
+                      </template>
                     </div>
                   </template>
                 </q-tree>
@@ -344,8 +399,10 @@
             <!-- RIGHT COLUMN: SELECTED ITEMS -->
             <div class="col column full-height">
               <div class="col-auto row items-center q-px-md justify-between">
-                <div class="text-h5 uppercase">
-                  {{ $t('warehouse.counting.selected') }}
+                <div class="row items-center q-gutter-x-sm">
+                  <span class="text-h5 uppercase">
+                    {{ $t('warehouse.counting.selected') }}
+                  </span>
                   <q-chip color="theme-grey" size="sm">
                     <strong>
                       {{ filteredAssignedItems?.length }}
@@ -356,6 +413,20 @@
                     <strong>
                       {{ selectedItemsForAssignment?.length }}
                     </strong>
+                  </q-chip>
+                  <q-icon
+                    name="mdi-account-group"
+                    size="20px"
+                    class="q-ml-sm"
+                  />
+                  <q-chip
+                    color="theme-grey"
+                    size="sm"
+                    clickable
+                    @click="showMultiAssignedOnlyRight = !showMultiAssignedOnlyRight"
+                    :outline="!showMultiAssignedOnlyRight"
+                  >
+                    <strong>{{ rightColumnMultiAssignedCount }}</strong>
                   </q-chip>
                 </div>
                 <q-btn
@@ -413,6 +484,21 @@
                       {{ item.description }}
                     </q-item-label>
                   </q-item-section>
+                  <q-item-section v-if="getItemAssignees(item).length > 1" side>
+                    <div class="row items-center q-gutter-x-xs">
+                      <q-icon
+                        name="mdi-account-group"
+                        size="20px"
+                      >
+                        <q-tooltip>
+                          <div v-for="user in getItemAssignees(item)" :key="user._key">
+                            {{ user.name }} {{ user.surname }}
+                          </div>
+                        </q-tooltip>
+                      </q-icon>
+                      <span class="text-caption">{{ getItemAssignees(item).length }}</span>
+                    </div>
+                  </q-item-section>
                 </q-item>
               </q-virtual-scroll>
             </div>
@@ -423,31 +509,41 @@
       <q-separator />
 
       <q-card-section class="col-auto">
-        <div class="row items-center q-gutter-x-sm justify-end">
-          <q-btn
-            :label="$t('cancel')"
-            color="theme-grey"
-            @click="onDialogCancel"
-          />
-          <q-btn
-            v-if="step > 1"
-            :label="$t('back')"
-            color="theme-grey"
-            @click="step--"
-          />
-          <q-btn
-            v-if="step < 2"
-            :label="$t('next')"
-            color="primary"
-            @click="step++"
-          />
-          <q-btn
-            v-else
-            :label="$t('create')"
-            color="primary"
-            :loading="saving"
-            @click="createSession"
-          />
+        <div class="row items-center q-gutter-x-sm justify-between">
+          <div class="col-auto">
+            <q-checkbox
+              v-if="step === 2"
+              v-model="disableAssignedItems"
+              :label="$t('warehouse.counting.disable_assigned_items')"
+              dense
+            />
+          </div>
+          <div class="row items-center q-gutter-x-sm">
+            <q-btn
+              :label="$t('cancel')"
+              color="theme-grey"
+              @click="onDialogCancel"
+            />
+            <q-btn
+              v-if="step > 1"
+              :label="$t('back')"
+              color="theme-grey"
+              @click="step--"
+            />
+            <q-btn
+              v-if="step < 2"
+              :label="$t('next')"
+              color="primary"
+              @click="step++"
+            />
+            <q-btn
+              v-else
+              :label="$t('create')"
+              color="primary"
+              :loading="saving"
+              @click="createSession"
+            />
+          </div>
         </div>
       </q-card-section>
     </q-card>
@@ -483,6 +579,9 @@ const searchText = ref('');
 const selectedAssignment = ref(null);
 const selectedPositions = ref([]);
 const selectedItemsSearchText = ref('');
+const disableAssignedItems = ref(false);
+const showMultiAssignedOnlyCenter = ref(false);
+const showMultiAssignedOnlyRight = ref(false);
 
 const sessionData = reactive({
   code: '',
@@ -504,18 +603,45 @@ const sessionTypeOptions = computed(() => [
 
 // Computed properties
 const filteredItems = computed(() => {
-  if (sessionData.type !== 'product') return items.value;
-  if (!searchText.value) return items.value;
+  let result = items.value;
 
-  const regex = wildcardToRegex(searchText.value);
-  console.log(regex)
-  return items.value.filter((p) => regex.test(p.code));
+  if (sessionData.type === 'product') {
+    // Apply search filter
+    if (searchText.value) {
+      const regex = wildcardToRegex(searchText.value);
+      result = result.filter((p) => regex.test(p.code));
+    }
+
+    // Apply multi-assignment filter for center column
+    if (showMultiAssignedOnlyCenter.value) {
+      result = result.filter((item) => {
+        const assignees = getItemAssignees(item);
+        return assignees.length > 1;
+      });
+    }
+  }
+
+  return result;
 });
 
 const filteredAssignedItems = computed(() => {
-  if (!selectedItemsSearchText.value) {return selectedItemsForAssignment.value};
-  const regex = wildcardToRegex(selectedItemsSearchText.value);
-  return selectedItemsForAssignment.value.filter((a) => regex.test(a.code));
+  let result = selectedItemsForAssignment.value;
+
+  // Apply search filter
+  if (selectedItemsSearchText.value) {
+    const regex = wildcardToRegex(selectedItemsSearchText.value);
+    result = result.filter((a) => regex.test(a.code || a.label));
+  }
+
+  // Apply multi-assignment filter for right column
+  if (showMultiAssignedOnlyRight.value) {
+    result = result.filter((item) => {
+      const assignees = getItemAssignees(item);
+      return assignees.length > 1;
+    });
+  }
+
+  return result;
 });
 
 const totalItemCount = computed(() => {
@@ -578,18 +704,22 @@ function selectAllItems() {
 
 
 const filteredPositionTreeNodes = computed(() => {
-  if (!searchText.value) {
-    return positionTreeNodes.value;
-  }
-  const regex = wildcardToRegex(searchText.value);
+  const regex = searchText.value ? wildcardToRegex(searchText.value) : null;
+
   const filterTree = (nodes) => {
     return nodes
       .map((node) => {
-        const matches = regex.test(node.label);
+        const matchesSearch = !regex || regex.test(node.label);
+        const matchesMultiAssignment = !showMultiAssignedOnlyCenter.value || (() => {
+          const assignees = getItemAssignees({ key: node.key });
+          return assignees.length > 1;
+        })();
+
         const filteredChildren = node.children
           ? filterTree(node.children)
           : undefined;
-        if (matches || (filteredChildren && filteredChildren.length > 0)) {
+
+        if ((matchesSearch && matchesMultiAssignment) || (filteredChildren && filteredChildren.length > 0)) {
           return {
             ...node,
             children: filteredChildren,
@@ -599,6 +729,7 @@ const filteredPositionTreeNodes = computed(() => {
       })
       .filter((n) => n !== null);
   };
+
   return filterTree(positionTreeNodes.value);
 });
 
@@ -622,6 +753,20 @@ const coveragePercentage = computed(() => {
      return 0
   };
   return (assignedItemKeys.value.size / totalItemCount.value) * 100;
+});
+
+const centerColumnMultiAssignedCount = computed(() => {
+  return filteredItems.value.filter((item) => {
+    const assignees = getItemAssignees(item);
+    return assignees.length > 1;
+  }).length;
+});
+
+const rightColumnMultiAssignedCount = computed(() => {
+  return selectedItemsForAssignment.value.filter((item) => {
+    const assignees = getItemAssignees(item);
+    return assignees.length > 1;
+  }).length;
 });
 
 // Methods
@@ -667,12 +812,17 @@ function isItemSelected(item) {
 }
 
 function disableItem(item) {
+  // If toggle is off, allow all items to be selected
+  if (!disableAssignedItems.value) {
+    return false;
+  }
+
   const itemKey = item._key || item.key;
   // Don't disable if item is in current assignment
   if (selectedAssignment.value?.items?.some(i => (i._key || i.key) === itemKey)) {
     return false;
   }
-  // Disable if assigned to another user
+  // Disable if assigned to another user (only when toggle is on)
   return assignedItemKeys.value.has(itemKey);
 }
 
@@ -683,6 +833,18 @@ function getAssignedUser(item) {
     assignment.items?.some((i) => (i._key || i.key) === itemKey),
   );
   return assignment ? getUser(assignment.user_key) : null;
+}
+
+function getItemAssignees(item) {
+  const itemKey = item._key || item.key;
+  const assignees = [];
+  assignments.value.forEach((assignment) => {
+    if (assignment.items?.some((i) => (i._key || i.key) === itemKey)) {
+      const user = getUser(assignment.user_key);
+      if (user) assignees.push(user);
+    }
+  });
+  return assignees;
 }
 
 function toggleItem(item) {
@@ -916,33 +1078,20 @@ async function createSession() {
       scheduled_end: sessionData.scheduled_end || null,
     };
 
-    const { data: sessionResponse } = await api.post(
-      '/inventory/count-session',
-      sessionPayload,
-    );
-    const sessionKey = sessionResponse.detail.counting_session_key;
-
     // Create assignments
-    const assignmentPayloads = [];
-    assignments.value.forEach((assignment) => {
-      assignment.items?.forEach((item) => {
-        assignmentPayloads.push({
-          inventory_count_session_key: sessionKey,
-          assignment_type: sessionData.type,
-          product_key:
-            sessionData.type === 'product' ? item._key : null,
-          position_key:
-            sessionData.type === 'position' ? (item._key || item.key) : null,
-        });
-      });
-    });
+    const assignmentPayloads = assignments.value.map((assignment) => ({
+      user_key: assignment.user_key,
+      target_keys: assignment.items.map((item) => item._key || item.key),
+    }));
 
-    if (assignmentPayloads.length > 0) {
-      await api.post('/inventory/count-assignment', assignmentPayloads);
-    }
+    const { data: sessionResponse } = await api.post(
+      '/inventory/count-session', {
+        count_session: sessionPayload,
+        assignments: assignmentPayloads,
+      }
+    );
 
     Notify.create({
-      type: 'positive',
       message: $t('warehouse.counting.session.created_successfully'),
       color: 'theme-green',
     });
@@ -952,8 +1101,11 @@ async function createSession() {
     console.error('Error creating session:', error);
     Notify.create({
       type: 'negative',
-      message: error.response?.data?.detail || $t('warehouse.counting.session.creation_error'),
+      // message: error.response?.data?.detail || $t('warehouse.counting.session.creation_error'),
+      message: $t('warehouse.counting.session.creation_error'),
       color: 'theme-red',
+      timeout: 0,
+      actions: [{ label: 'CLOSE', color: 'white', handler: () => {} }],
     });
   } finally {
     saving.value = false;

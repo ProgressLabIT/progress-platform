@@ -1268,6 +1268,7 @@ export default {
       assignments_required: 'È richiesta almeno un\'assegnazione',
       created_successfully: 'Sessione di conteggio creata con successo',
       creation_error: 'Errore nella creazione della sessione di conteggio',
+      disable_assigned_items: 'Disabilita elementi assegnati',
     },
     output_position: 'Posizione di versamento',
   },

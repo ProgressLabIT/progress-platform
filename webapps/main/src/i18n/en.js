@@ -1247,6 +1247,7 @@ export default {
       assignments_required: 'At least one assignment is required',
       created_successfully: 'Count session created successfully',
       creation_error: 'Error creating count session',
+      disable_assigned_items: 'Disable assigned items',
     },
     output_position: 'Output position',
   },
