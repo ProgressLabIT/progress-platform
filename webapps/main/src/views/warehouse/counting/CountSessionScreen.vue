@@ -33,19 +33,22 @@
         class="col surface1"
       >
         <!-- TAB 1: SESSION DATA -->
+        <q-tab-panel :name="1">
         <CountSessionDataTab
           :session-data="sessionData"
           @update:session-data="sessionData = $event"
         />
-
+        </q-tab-panel>
         <!-- TAB 2: ASSIGNMENTS -->
+        <q-tab-panel :name="2">
         <CountSessionAssignmentsTab
           ref="assignmentsTabRef"
           :session-type="sessionData.type"
           :items="items"
-          :position-tree-nodes="positionTreeNodes"
-          :disable-assigned-items="disableAssignedItems"
-        />
+            :position-tree-nodes="positionTreeNodes"
+            :disable-assigned-items="disableAssignedItems"
+          />
+        </q-tab-panel>
       </q-tab-panels>
 
       <q-separator />

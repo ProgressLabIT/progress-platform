@@ -1,5 +1,4 @@
 <template>
-  <q-tab-panel :name="1">
     <div class="column q-gutter-y-lg q-pa-md">
 
       <div class="row items-center q-gutter-x-xl">
@@ -104,7 +103,6 @@
         :label="$t('warehouse.counting.blind_mode')"
       />
     </div>
-  </q-tab-panel>
 </template>
 
 <script setup>

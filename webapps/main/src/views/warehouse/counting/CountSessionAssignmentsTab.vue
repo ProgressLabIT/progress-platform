@@ -1,5 +1,4 @@
 <template>
-  <q-tab-panel :name="2" class="q-px-none">
     <div class="row full-height">
 
       <!-- LEFT COLUMN: ASSIGNMENT LIST -->
@@ -375,7 +374,6 @@
         </q-virtual-scroll>
       </div>
     </div>
-  </q-tab-panel>
 </template>
 
 <script setup>
