@@ -71,7 +71,7 @@ class InventoryCountSessionSearchParams(BaseModel):
 
 class InventoryCountAssignmentNew(BaseModel):
   user_key: str
-  items: list[str]
+  target_keys: list[str]
 
 class InventoryCountAssignment(ArangoDocument):
   inventory_count_session_key: str  # Parent campaign
