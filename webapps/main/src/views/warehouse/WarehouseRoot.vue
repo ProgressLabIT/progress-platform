@@ -147,7 +147,7 @@ import CountingFilter from '@/components/warehouse/counting/CountingFilter.vue';
 import InventoryFilter from '@/components/warehouse/inventory/InventoryFilter.vue';
 import MovementFilter from '@/components/warehouse/movement/MovementFilter.vue';
 import PositionFilter from '@/components/warehouse/position/PositionFilter.vue';
-import CountSessionNew from '@/views/warehouse/counting/CountSessionNew.vue';
+import CountSessionScreen from '@/views/warehouse/counting/CountSessionScreen.vue';
 import { XLSXDownload, XLSXGetData } from '@/lib/xlsxDownload';
 import {
   useInventoryColumns,
@@ -274,7 +274,7 @@ export default {
 
     openNewCountSessionDialog() {
       Dialog.create({
-        component: CountSessionNew,
+        component: CountSessionScreen,
       }).onOk(() => {
         // Reload sessions after creation
         // The component will handle this via getCountSessions
