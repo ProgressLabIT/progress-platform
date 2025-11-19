@@ -377,7 +377,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useStore } from 'vuex';
 import { Notify } from 'quasar';
@@ -417,7 +417,20 @@ const selectedItemsSearchText = ref('');
 const showMultiAssignedOnlyCenter = ref(false);
 const showMultiAssignedOnlyRight = ref(false);
 
-const assignments = ref([]); // [{ user_key, items: [] }]
+const assignments = defineModel('assignments', { default: () => [] }); // [{ user_key, items: [] }]
+
+// Watch assignments to auto-select first assignment when loaded
+watch(
+  assignments,
+  (newAssignments) => {
+    if (newAssignments.length > 0 && !selectedAssignment.value) {
+      selectedAssignment.value = newAssignments[0];
+    } else if (newAssignments.length === 0) {
+      selectedAssignment.value = null;
+    }
+  },
+  { immediate: true },
+);
 
 // Computed properties
 const filteredItems = computed(() => {
@@ -510,8 +523,8 @@ const filteredPositionTreeNodes = computed(() => {
 
 const assignedItemKeys = computed(() => {
   const keys = new Set();
-  assignments.value.forEach((assignment) => {
-    assignment.items?.forEach((item) => {
+  assignments.value?.forEach((assignment) => {
+    assignment?.items?.forEach((item) => {
       keys.add(item._key || item.key);
     });
   });
@@ -604,7 +617,7 @@ function disableItem(item) {
 function getItemAssignees(item) {
   const itemKey = item._key || item.key;
   const assignees = [];
-  assignments.value.forEach((assignment) => {
+  assignments.value?.forEach((assignment) => {
     if (assignment.items?.some((i) => (i._key || i.key) === itemKey)) {
       const user = getUser(assignment.user_key);
       if (user) assignees.push(user);
@@ -629,14 +642,20 @@ function toggleItem(item) {
   const assignment = selectedAssignment.value;
   if (!assignment.items) assignment.items = [];
 
+  const itemKey = item._key || item.key;
   const index = assignment.items.findIndex(
-    (i) => (i._key || i.key) === (item._key || item.key),
+    (i) => (i._key || i.key) === itemKey,
   );
 
   if (index > -1) {
     assignment.items.splice(index, 1);
   } else {
-    assignment.items.push(item);
+    // Add minimal item structure
+    assignment.items.push({
+      _key: item._key,
+      code: item.code,
+      description: item.description,
+    });
   }
 }
 
@@ -685,13 +704,12 @@ function togglePosition(node) {
       (i) => !positionKeys.includes(i.key),
     );
   } else {
-    // Add this position and all children using tree node data
+    // Add this position and all children using minimal structure
     const addPositionsFromNode = (n) => {
       if (!assignment.items.some((i) => i.key === n.key)) {
         assignment.items.push({
           key: n.key,
           code: n.label,
-          label: n.label,
         });
       }
       if (n.children) {
@@ -753,21 +771,24 @@ function selectAllItems() {
   if (!assignment.items) assignment.items = [];
 
   if (props.sessionType === 'product') {
-    // Add visible, non-disabled products
+    // Add visible, non-disabled products with minimal structure
     filteredItems.value.forEach((item) => {
       if (!disableItem(item) && !isItemSelected(item)) {
-        assignment.items.push(item);
+        assignment.items.push({
+          _key: item._key,
+          code: item.code,
+          description: item.description,
+        });
       }
     });
   } else {
-    // For positions, traverse the filtered tree and add visible, non-disabled positions
+    // For positions, traverse the filtered tree and add visible, non-disabled positions with minimal structure
     const addPositionsFromTree = (nodes) => {
       nodes.forEach((node) => {
         if (!disableItem({ key: node.key }) && !isPositionSelected(node.key)) {
           assignment.items.push({
             key: node.key,
             code: node.label,
-            label: node.label,
           });
         }
         if (node.children) {
@@ -779,11 +800,6 @@ function selectAllItems() {
   }
 }
 
-// Expose methods and data that parent needs
-defineExpose({
-  assignments,
-  selectedAssignment,
-});
 </script>
 
 <style scoped lang="sass">

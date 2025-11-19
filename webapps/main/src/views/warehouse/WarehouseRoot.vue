@@ -41,12 +41,12 @@
 
           <!-- COUNTING BUTTONS -->
           <q-btn
-            v-if="$route.name === 'counting'"
+            v-if="$route.name === 'countSessions'"
             class="q-ml-sm"
             size="0.75rem"
             color="theme-blue"
             :label="$t('new')"
-            @click="openNewCountSessionDialog"
+            @click="$router.push({ name: 'countSessionNew' })"
           >
           </q-btn>
 
@@ -160,7 +160,7 @@ const warehouse_views = [
   { component: 'Movements', route_name: 'movements' },
   { component: 'Lists', route_name: 'movementLists' },
   { component: 'Positions', route_name: 'positions' },
-  { component: 'Counting', route_name: 'counting' },
+  { component: 'Counting', route_name: 'countSessions' },
 ];
 
 const header_plus_footer_height = 80;
@@ -270,15 +270,6 @@ export default {
         'inventory',
         'inventory',
       );*/
-    },
-
-    openNewCountSessionDialog() {
-      Dialog.create({
-        component: CountSessionScreen,
-      }).onOk(() => {
-        // Reload sessions after creation
-        // The component will handle this via getCountSessions
-      });
     },
   },
 };

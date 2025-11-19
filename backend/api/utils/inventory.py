@@ -392,12 +392,11 @@ class Queries:
     LET product = FIRST(FOR p IN Product FILTER p._key == ica.product_key RETURN p)
     FILTER @product_search ? REGEX_TEST(product.code, @product_search, true) : true
 
-
     // Position filters (with hierarchy consideration)
+    LET assigned_position = FIRST(FOR p IN Position FILTER p._key == ica.position_key RETURN p)
     FILTER !(@position_key || @position_search) ? true : (
-      LET assigned = FIRST(FOR p IN Position FILTER p._key == ica.position_key RETURN p)
-      LET assigned_key_match = @position_key ? assigned._key == @position_key : true
-      LET assigned_code_match = @position_search ? REGEX_TEST(assigned.code, @position_search, true) : true
+      LET position_key_match = @position_key ? assigned_position._key == @position_key : true
+      LET position_code_match = @position_search ? REGEX_TEST(assigned_position.code, @position_search, true) : true
 
       LET children = (
         FOR p IN 1..9999 INBOUND CONCAT('Position/', ica.position_key) is_in_position
@@ -408,7 +407,7 @@ class Queries:
       LET children_key_match = @position_key ? @position_key IN children[*]._key : true
       LET children_code_match = @position_search ? children[*].code[? ANY FILTER REGEX_TEST(CURRENT, @position_search, true)] : true
 
-      RETURN assigned_key_match && assigned_code_match && children_key_match && children_code_match
+      RETURN position_key_match && position_code_match && children_key_match && children_code_match
     )
 
     SORT ica[@order_by]
@@ -418,8 +417,23 @@ class Queries:
     RETURN MERGE(ica, {
       product_code: product.code,
       product_description: product.description,
-      position_code: position ? position.code : null
+      position_code: assigned_position ? assigned_position.code : null
     })
+  """
+
+  GET_COUNT_SESSION_DETAILS = """
+    FOR cs IN InventoryCountSession
+    FILTER cs._key == @inventory_count_session_key
+    LET target_collection_name = { 'product': 'Product', 'position': 'Position' }[cs.type]
+    LET assignments = MERGE(
+      FOR ica IN InventoryCountAssignment
+      FILTER ica.inventory_count_session_key == @inventory_count_session_key
+      LET target_data = KEEP(DOCUMENT(target_collection_name, ica.target_key), 'code', 'description')
+      LET assignment = { _key: ica._key, target_key: ica.target_key, status: ica.status, target_data }
+      COLLECT assignee = ica.assigned_to INTO assignment_group KEEP assignment
+      RETURN { [assignee]: assignment_group[*].assignment }
+    )
+    RETURN MERGE(cs, { assignments })
   """
 
   CANCEL_INVENTORY_COUNT_ASSIGNMENTS = """

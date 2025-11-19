@@ -27,6 +27,8 @@
           :id="props.row._key"
           :key="props.row._key"
           :props="props"
+          @dblclick="onRowDoubleClick(props.row)"
+          style="cursor: pointer"
         >
           <template v-for="column in columns" :key="column.name">
             <q-td class="ellipsis" :props="props" :style="column.style">
@@ -64,6 +66,7 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue';
 import { useStore } from 'vuex';
+import { useRouter } from 'vue-router';
 import { capitalizeAll } from '@/boot/filters';
 import {
   useCountSessionColumns,
@@ -71,6 +74,7 @@ import {
 } from 'app/src/composables/warehouse';
 
 const store = useStore();
+const router = useRouter();
 
 const pagination = ref({
   rowsPerPage: 0,
@@ -147,6 +151,13 @@ function addCountSessions(data) {
         }, 1000),
       );
   }
+}
+
+function onRowDoubleClick(row) {
+  router.push({
+    name: 'countSessionDetail',
+    params: { countSessionKey: row._key },
+  });
 }
 
 watch(

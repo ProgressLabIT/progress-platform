@@ -1,9 +1,9 @@
 <template>
-  <BaseDialog :show="true" :get-dialog-ref="getDialogRef" @close="onDialogHide">
+  <BaseDialog :show="true" @close.stop="router.back()">
     <q-card class="surface1 column" style="height: 90vh; min-width: 90vw">
       <q-card-section class="row items-center justify-between col-auto q-pb-none">
         <div class="display text-h3">
-          {{ $t('warehouse.counting.session_new') }}
+          {{ isEditMode ? $t('warehouse.counting.session_edit') : $t('warehouse.counting.session_new') }}
         </div>
         <q-tabs
           v-model="step"
@@ -28,23 +28,25 @@
 
       <q-separator />
 
+      <q-linear-progress v-if="loading" indeterminate color="primary" />
+
       <q-tab-panels
         v-model="step"
         class="col surface1"
       >
         <!-- TAB 1: SESSION DATA -->
-        <q-tab-panel :name="1">
-        <CountSessionDataTab
-          :session-data="sessionData"
-          @update:session-data="sessionData = $event"
-        />
+        <q-tab-panel :name="1" class="q-px-none">
+          <CountSessionDataTab
+            v-model:session-data="sessionData"
+            :session-status="sessionData.status || 'planned'"
+          />
         </q-tab-panel>
         <!-- TAB 2: ASSIGNMENTS -->
-        <q-tab-panel :name="2">
-        <CountSessionAssignmentsTab
-          ref="assignmentsTabRef"
-          :session-type="sessionData.type"
-          :items="items"
+        <q-tab-panel :name="2" class="q-px-none">
+          <CountSessionAssignmentsTab
+            v-model:assignments="assignments"
+            :session-type="sessionData.type"
+            :items="items"
             :position-tree-nodes="positionTreeNodes"
             :disable-assigned-items="disableAssignedItems"
           />
@@ -67,7 +69,7 @@
             <q-btn
               :label="$t('cancel')"
               color="theme-grey"
-              @click="onDialogCancel"
+              @click="router.back()"
             />
             <q-btn
               v-if="step > 1"
@@ -83,10 +85,10 @@
             />
             <q-btn
               v-else
-              :label="$t('create')"
+              :label="isEditMode ? $t('save') : $t('create')"
               color="primary"
               :loading="saving"
-              @click="createSession"
+              @click="saveSession"
             />
           </div>
         </div>
@@ -96,8 +98,8 @@
 </template>
 
 <script setup>
-import { useDialogPluginComponent } from 'quasar';
-import { ref, watch, onMounted, reactive } from 'vue';
+import { ref, watch, onMounted, reactive, computed } from 'vue';
+import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useStore } from 'vuex';
 import { api } from '@/boot/axios';
@@ -106,20 +108,22 @@ import BaseDialog from '@/components/BaseDialog.vue';
 import CountSessionDataTab from './CountSessionDataTab.vue';
 import CountSessionAssignmentsTab from './CountSessionAssignmentsTab.vue';
 
-const props = defineProps({});
-
-defineEmits(useDialogPluginComponent.emitsObject);
-
-const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } = useDialogPluginComponent();
-const getDialogRef = () => dialogRef;
+const props = defineProps({
+  countSessionKey: {
+    type: String,
+    default: null,
+  },
+});
 
 const { t: $t } = useI18n();
 const store = useStore();
-
+const router = useRouter();
 const step = ref(1);
 const saving = ref(false);
+const loading = ref(false);
 const disableAssignedItems = ref(false);
-const assignmentsTabRef = ref(null);
+const isEditMode = computed(() => !!props.countSessionKey);
+const originalSessionType = ref(null);
 
 const sessionData = reactive({
   code: '',
@@ -132,8 +136,80 @@ const sessionData = reactive({
 
 const items = ref([]); // Unified list: products or positions depending on type
 const positionTreeNodes = ref([]);
+const assignments = ref([]); // Store assignments for v-model binding
+const initialAssignments = ref(new Map()); // Map of assignment key -> status
 
 // Methods
+
+async function loadSessionData() {
+  if (!props.countSessionKey) return;
+
+  loading.value = true;
+  try {
+    // Fetch session data
+    const { data } = await api.get(`/inventory/count-session/${props.countSessionKey}`);
+
+    // Update session data (destructure session fields)
+    Object.assign(sessionData, {
+      code: data.code,
+      description: data.description,
+      type: data.type,
+      blind_mode: data.blind_mode,
+      scheduled_start: data.scheduled_start,
+      scheduled_end: data.scheduled_end,
+      status: data.status,
+    });
+
+    originalSessionType.value = data.type;
+
+    // Load items for the session type
+    await loadItems();
+
+    // Process assignments - backend returns { [user_key]: [{ target_key, status, target_data }] }
+    const assignmentsByUser = [];
+    const loadedAssignments = new Map();
+
+    if (data.assignments) {
+      for (const [userKey, userAssignments] of Object.entries(data.assignments)) {
+        const assignment = {
+          user_key: userKey,
+          items: [],
+        };
+
+        // Convert backend assignment format to minimal item structure
+        for (const assign of userAssignments) {
+          if (assign._key) {
+            loadedAssignments.set(assign._key, assign.status);
+          }
+          assignment.items.push({
+            _key: data.type === 'product' ? assign.target_key : undefined,
+            key: data.type === 'position' ? assign.target_key : undefined,
+            assignment_key: assign._key,
+            code: assign.target_data?.code || assign.target_key,
+            description: assign.target_data?.description || undefined,
+            assignment_status: assign.status,
+          });
+        }
+
+        assignmentsByUser.push(assignment);
+      }
+    }
+
+    // Set assignments - v-model will automatically sync to child component when it mounts
+    assignments.value = assignmentsByUser;
+    initialAssignments.value = loadedAssignments;
+
+  } catch (error) {
+    console.error('Error loading session data:', error);
+    Notify.create({
+      type: 'negative',
+      message: $t('warehouse.counting.session.load_error'),
+      color: 'theme-red',
+    });
+  } finally {
+    loading.value = false;
+  }
+}
 
 async function loadItems() {
   if (sessionData.type === 'product') {
@@ -210,7 +286,97 @@ async function loadPositions() {
   }
 }
 
-async function createSession() {
+async function updateSession(assignments) {
+
+  const sessionPayload = {};
+  ['code', 'description', 'type', 'blind_mode', 'scheduled_start', 'scheduled_end'].forEach(field => {
+    if (sessionData[field] !== undefined) {
+      sessionPayload[field] = sessionData[field];
+    }
+  });
+
+  await api.put(`/inventory/count-session/${props.countSessionKey}`, sessionPayload);
+
+  // Manage assignments
+  // Use initialAssignments to determine additions and deletions
+  const assignmentsToDelete = [];
+  const remainingKeys = new Set(initialAssignments.value.keys());
+  const newAssignments = [];
+
+  for (const assignment of assignments) {
+    for (const item of assignment.items) {
+      // Check if this assignment has a key (meaning it existed)
+      if (item.assignment_key) {
+        if (remainingKeys.has(item.assignment_key)) {
+          // Still exists, so remove from deletion set (mark as kept)
+          remainingKeys.delete(item.assignment_key);
+        }
+      } else {
+        // New assignment
+        newAssignments.push({
+          inventory_count_session_key: props.countSessionKey,
+          assigned_to: assignment.user_key,
+          target_key: item._key || item.key,
+          target_type: sessionData.type,
+        });
+      }
+    }
+  }
+
+  // Identify assignments to delete (only if they were 'planned')
+  for (const key of remainingKeys) {
+    if (initialAssignments.value.get(key) === 'planned') {
+      assignmentsToDelete.push(key);
+    }
+  }
+
+  if (assignmentsToDelete.length > 0) {
+    await api.delete('/inventory/count-assignment', {
+      data: { assignment_keys: assignmentsToDelete },
+    });
+  }
+
+  // Add new assignments
+  if (newAssignments.length > 0) {
+    await api.post('/inventory/count-assignment', newAssignments);
+  }
+
+  Notify.create({
+    message: $t('warehouse.counting.session.updated_successfully'),
+    color: 'theme-green',
+  });
+}
+
+async function createSession(assignments) {
+  const sessionPayload = {
+    code: sessionData.code || null, // null for auto-generation
+    description: sessionData.description || null,
+    type: sessionData.type,
+    blind_mode: sessionData.blind_mode,
+    scheduled_start: sessionData.scheduled_start || null,
+    scheduled_end: sessionData.scheduled_end || null,
+  };
+
+  // Create assignments
+  const assignmentPayloads = assignments.map((assignment) => ({
+    user_key: assignment.user_key,
+    target_keys: assignment.items.map((item) => item._key || item.key),
+  }));
+
+  const { data: sessionResponse } = await api.post(
+    '/inventory/count-session', {
+      count_session: sessionPayload,
+      assignments: assignmentPayloads,
+    }
+  );
+
+  Notify.create({
+    message: $t('warehouse.counting.session.created_successfully'),
+    color: 'theme-green',
+  });
+}
+
+async function saveSession() {
   if (!sessionData.type) {
     Notify.create({
       type: 'negative',
@@ -220,56 +386,28 @@ async function createSession() {
     return;
   }
 
-  // Get assignments from the child component
-  const assignments = assignmentsTabRef.value?.assignments || [];
+  // Get assignments from the reactive ref
+  const currentAssignments = assignments.value || [];
 
-  if (assignments.length === 0) {
-    Notify.create({
-      type: 'negative',
-      message: $t('warehouse.counting.assignments_required'),
-      color: 'theme-red',
-    });
-    return;
-  }
+
 
   saving.value = true;
 
   try {
-    // Create session
-    const sessionPayload = {
-      code: sessionData.code || null, // null for auto-generation
-      description: sessionData.description || null,
-      type: sessionData.type,
-      blind_mode: sessionData.blind_mode,
-      scheduled_start: sessionData.scheduled_start || null,
-      scheduled_end: sessionData.scheduled_end || null,
-    };
-
-    // Create assignments
-    const assignmentPayloads = assignments.map((assignment) => ({
-      user_key: assignment.user_key,
-      target_keys: assignment.items.map((item) => item._key || item.key),
-    }));
-
-    const { data: sessionResponse } = await api.post(
-      '/inventory/count-session', {
-        count_session: sessionPayload,
-        assignments: assignmentPayloads,
-      }
-    );
-
-    Notify.create({
-      message: $t('warehouse.counting.session.created_successfully'),
-      color: 'theme-green',
-    });
-
-    onDialogOK();
+    if (isEditMode.value) {
+      await updateSession(currentAssignments);
+    } else {
+      await createSession(currentAssignments);
+    }
+    await store.dispatch('getCountSessions');
+    router.back();
   } catch (error) {
-    console.error('Error creating session:', error);
+    console.error('Error saving session:', error);
     Notify.create({
       type: 'negative',
-      // message: error.response?.data?.detail || $t('warehouse.counting.session.creation_error'),
-      message: $t('warehouse.counting.session.creation_error'),
+      message: error.response?.data?.detail || (isEditMode.value
+        ? $t('warehouse.counting.session.update_error')
+        : $t('warehouse.counting.session.creation_error')),
       color: 'theme-red',
       timeout: 0,
       actions: [{ label: 'CLOSE', color: 'white', handler: () => {} }],
@@ -280,25 +418,86 @@ async function createSession() {
 }
 
 // Load data on mount
-onMounted(() => {
+onMounted(async () => {
   store.dispatch('loadUsers');
-  loadItems();
+
+  if (isEditMode.value) {
+    // Load session and assignment data
+    await loadSessionData();
+  } else {
+    // Just load items for create mode
+    await loadItems();
+  }
 });
 
 // Watch session type to reload appropriate data and reset state
 watch(
   () => sessionData.type,
-  () => {
+  async (newType, oldType) => {
+    // Only react if type actually changed
+    if (newType === oldType) return;
+
+    // In edit mode, warn about type changes
+    if (isEditMode.value && originalSessionType.value && newType !== originalSessionType.value) {
+      // Show confirmation dialog
+      const confirmed = await new Promise((resolve) => {
+        Notify.create({
+          message: $t('warehouse.counting.type_change_warning'),
+          color: 'theme-orange',
+          timeout: 0,
+          actions: [
+            { label: $t('cancel'), color: 'white', handler: () => resolve(false) },
+            { label: $t('confirm'), color: 'white', handler: () => resolve(true) },
+          ],
+        });
+      });
+
+      if (!confirmed) {
+        // Revert the type change
+        sessionData.type = oldType;
+        return;
+      }
+
+      // Delete existing assignments
+      try {
+        loading.value = true;
+        // Collect all planned assignment keys from initialAssignments
+        const assignmentKeys = [];
+        for (const [key, status] of initialAssignments.value.entries()) {
+            if (status === 'planned') {
+                assignmentKeys.push(key);
+            }
+        }
+
+        if (assignmentKeys.length > 0) {
+          await api.delete('/inventory/count-assignment', {
+            data: { assignment_keys: assignmentKeys },
+          });
+        }
+      } catch (error) {
+        console.error('Error deleting assignments:', error);
+        Notify.create({
+          type: 'negative',
+          message: $t('warehouse.counting.session.delete_assignments_error'),
+          color: 'theme-red',
+        });
+        sessionData.type = oldType;
+        loading.value = false;
+        return;
+      } finally {
+        loading.value = false;
+      }
+    }
+
     // Reset items and tree nodes
     items.value = [];
     positionTreeNodes.value = [];
+
     // Clear assignments when type changes
-    if (assignmentsTabRef.value) {
-      assignmentsTabRef.value.assignments = [];
-      assignmentsTabRef.value.selectedAssignment = null;
-    }
+    assignments.value = [];
+
     // Load new items for the selected type
-    loadItems();
-  },
+    await loadItems();
+  }
 );
 </script>

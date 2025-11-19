@@ -61,6 +61,15 @@ class InventoryCountAssignmentStatus(str, Enum):
   CANCELED = 'canceled'
 
 
+class InventoryCountSessionUpdate(BaseModel):
+  code: str | None = None
+  description: str | None = None
+  type: InventoryCountSessionType | None = None
+  blind_mode: bool | None = None
+  scheduled_start: datetime | None = None
+  scheduled_end: datetime | None = None
+  notes: str | None = None
+
 class InventoryCountSessionSearchParams(BaseModel):
   search: WildcardString = None
   status: InventoryCountSessionStatus | None = None
@@ -84,7 +93,9 @@ class InventoryCountAssignment(ArangoDocument):
   assigned_to: str | None = None  # user_key, None means unstarted
 
   # Execution tracking
-  status: InventoryCountAssignmentStatus = InventoryCountAssignmentStatus.PLANNED
+  status: InventoryCountAssignmentStatus | None = InventoryCountAssignmentStatus.PLANNED
+  created: datetime = Field(default_factory=timestamp)
+  created_by: str | None = None  # user_key
   started: datetime | None = None
   completed: datetime | None = None
 
@@ -94,13 +105,13 @@ class InventoryCountAssignment(ArangoDocument):
 
 class InventoryCountAssignmentSearchParams(BaseModel):
   inventory_count_session_key: str | None = None
+  assignment_type: InventoryCountSessionType | None = None
   product_key: str | None = None
   product_search: WildcardString = None
   position_key: str | None = None
   position_search: WildcardString = None
   assigned_to: str | None = None
   status: InventoryCountAssignmentStatus | None = None
-  include_children: bool | None = True
   order_by: Literal['product', 'position'] | None = None
   limit: int | None = 500
   offset: int | None = 0
