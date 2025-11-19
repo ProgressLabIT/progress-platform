@@ -427,7 +427,7 @@ class Queries:
     LET target_collection_name = { 'product': 'Product', 'position': 'Position' }[cs.type]
     LET assignments = MERGE(
       FOR ica IN InventoryCountAssignment
-      FILTER ica.inventory_count_session_key == @inventory_count_session_key
+      FILTER ica.inventory_count_session_key == @inventory_count_session_key && ica.status != 'canceled'
       LET target_data = KEEP(DOCUMENT(target_collection_name, ica.target_key), 'code', 'description')
       LET assignment = { _key: ica._key, target_key: ica.target_key, status: ica.status, target_data }
       COLLECT assignee = ica.assigned_to INTO assignment_group KEEP assignment

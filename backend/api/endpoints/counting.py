@@ -211,7 +211,7 @@ def create_counting_assignments(
 
 
 @router.delete('/inventory/count-assignment', dependencies=[Depends(auth.verify_token)])
-def delete_counting_assignments(assignment_keys: list[str] = Body(...)):
+def delete_counting_assignments(assignment_keys: list[str] = Body(..., embed=True)):
   try:
     tx = db.begin_transaction(write=['InventoryCountAssignment'])
     removed = list(tx.aql.execute(Queries.CANCEL_INVENTORY_COUNT_ASSIGNMENTS, bind_vars=dict(assignment_keys=assignment_keys)))
