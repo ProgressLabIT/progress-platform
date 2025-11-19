@@ -90,6 +90,8 @@ def get_position_hierarchy(
       elif ('children' in hierarchy and search_children(position_key, hierarchy['children'])):
           filtered_hierarchy.append(hierarchy)
 
+    # Sort top-level positions alphabetically by code
+    filtered_hierarchy.sort(key=lambda x: x.get('code', '').lower())
     return filtered_hierarchy
 
   except Exception:
@@ -118,6 +120,8 @@ def get_children(position_key, positions, level):
         merged_position['children'] = position_children
       children.append(merged_position)
 
+  # Sort children alphabetically by code
+  children.sort(key=lambda x: x.get('code', '').lower())
   return children
 
 def search_children(position_key, children):

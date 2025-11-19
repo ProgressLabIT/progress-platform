@@ -56,6 +56,7 @@ class PositionSearchParams(BaseModel):
   has_product_code: list[str] | None = None
   is_in_position: str | None = None
   contains_position: str | None = None
+  fixed_only: bool | None = False
   #include_non_disposable: bool | None = True
   #include_disposable: bool | None = True
   #include_owned: bool | None = True

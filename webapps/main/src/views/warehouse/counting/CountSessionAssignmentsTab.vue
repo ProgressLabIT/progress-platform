@@ -175,20 +175,22 @@
                 {{ selectedItemsForAssignment?.length }}
               </strong>
             </q-chip>
-            <q-icon
-              name="mdi-account-group"
-              size="20px"
-              class="q-ml-sm"
-            />
-            <q-chip
-              color="theme-grey"
-              size="sm"
-              clickable
-              @click="showMultiAssignedOnlyRight = !showMultiAssignedOnlyRight"
-              :outline="!showMultiAssignedOnlyRight"
-            >
-              <strong>{{ rightColumnMultiAssignedCount }}</strong>
-            </q-chip>
+            <template v-if="props.sessionType === 'product'">
+              <q-icon
+                name="mdi-account-group"
+                size="20px"
+                class="q-ml-sm"
+              />
+              <q-chip
+                color="theme-grey"
+                size="sm"
+                clickable
+                @click="showMultiAssignedOnlyRight = !showMultiAssignedOnlyRight"
+                :outline="!showMultiAssignedOnlyRight"
+              >
+                <strong>{{ rightColumnMultiAssignedCount }}</strong>
+              </q-chip>
+            </template>
           </div>
           <q-btn
             size="xs"
@@ -376,13 +378,16 @@ const selectedItemsForAssignment = computed(() => {
 });
 
 const coveragePercentage = computed(() => {
-  // Use currentTotalCount if available, otherwise fallback to store stats
-  const total = currentTotalCount.value || countSessionStore.sessionCoverage(assignedItemKeys.value);
-
-  if (total === 0) {
-     return 0;
-  };
-  return (assignedItemKeys.value.size / total) * 100;
+  if (props.sessionType === 'position') {
+    // Position mode: use smart coverage calculation with position lookup
+    const positionLookup = countSessionStore.positionLookup;
+    return countSessionStore.sessionCoverage(assignedItemKeys.value, positionLookup);
+  } else {
+    // Product mode: simple ratio calculation
+    const total = currentTotalCount.value || countSessionStore.items.length;
+    if (total === 0) return 0;
+    return (assignedItemKeys.value.size / total) * 100;
+  }
 });
 
 const centerColumnMultiAssignedCount = computed(() => {

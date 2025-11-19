@@ -194,7 +194,7 @@ def create_counting_assignments(
     assignment_records = []
     for a in assignments:
       a.created_by = token.consumer_key
-      assignment_records.append(a.model_dump(by_alias=True, exclude_unset=True))
+      assignment_records.append(a.model_dump(by_alias=True, exclude=['key', 'id', 'rev']))
 
     db.collection('InventoryCountAssignment').insert_many(assignment_records)
     return APIResponse(

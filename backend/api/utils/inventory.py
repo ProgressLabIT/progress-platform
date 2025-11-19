@@ -22,6 +22,7 @@ class Queries:
       && (@search ? REGEX_TEST(v.code, @search, true) : true)
       && (@has_product_key ? @has_product_key == p.vertices[-1]._key : true)
       && (@has_product_code ? @has_product_code == p.vertices[-1].code : true)
+      && (@fixed_only ? v.fixed == true : true)
 
     LIMIT @offset, @limit || null
 
@@ -429,6 +430,7 @@ class Queries:
       FOR ica IN InventoryCountAssignment
       FILTER ica.inventory_count_session_key == @inventory_count_session_key && ica.status != 'canceled'
       LET target_data = KEEP(DOCUMENT(target_collection_name, ica.target_key), 'code', 'description')
+      FILTER target_data != null
       LET assignment = { _key: ica._key, target_key: ica.target_key, status: ica.status, target_data }
       COLLECT assignee = ica.assigned_to INTO assignment_group KEEP assignment
       RETURN { [assignee]: assignment_group[*].assignment }

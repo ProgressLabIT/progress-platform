@@ -25,16 +25,141 @@ export const useCountSessionStore = defineStore('countSession', {
 
   getters: {
     /**
-     * Calculate coverage percentage based on assignments
-     * @param {Set} assignedItemKeys - Set of assigned item keys
+     * Build a comprehensive lookup map for position data
+     * Enables O(1) lookups for position metadata, relationships, and paths
+     * @returns {Map<string, Object>} Map of position_key to enhanced position data
      */
-    sessionCoverage: (state) => (assignedItemKeys) => {
-      const total = state.sessionType === 'product'
-        ? state.items.length
-        : state.fullPositionTree.length || 0;
+    positionLookup: (state) => {
+      const lookup = new Map();
 
-      if (total === 0) return 0;
-      return (assignedItemKeys.size / total) * 100;
+      function traverse(nodes, level = 0, ancestors = [], ancestorKeys = [], parent_key = null) {
+        nodes.forEach(node => {
+          // Build path: use node.path only if it has content, otherwise build from ancestors
+          const path = (node.path && node.path.length > 0)
+            ? node.path
+            : [...ancestors, node.code];
+
+          const descendants = [];
+
+          // Recursively collect all descendant keys
+          function collectDescendants(n) {
+            if (n.children) {
+              n.children.forEach(child => {
+                descendants.push(child.position_key);
+                collectDescendants(child);
+              });
+            }
+          }
+          collectDescendants(node);
+
+          // Build ancestor keys array (excluding current node)
+          // Use node.path_keys if available and has content, otherwise use passed ancestorKeys
+          const currentAncestorKeys = (node.path_keys && node.path_keys.length > 0)
+            ? node.path_keys.slice(0, -1)  // Remove self (last element)
+            : ancestorKeys;
+
+          lookup.set(node.position_key, {
+            ...node,
+            path,
+            pathString: path.join(' > '),
+            parent_key,
+            ancestors: currentAncestorKeys,
+            descendants,
+            level,
+            isLeaf: !node.children || node.children.length === 0
+          });
+
+          if (node.children) {
+            // Pass updated ancestors and ancestorKeys for next level
+            traverse(
+              node.children,
+              level + 1,
+              path,
+              [...currentAncestorKeys, node.position_key],
+              node.position_key
+            );
+          }
+        });
+      }
+
+      if (state.positionTree && state.positionTree.length > 0) {
+        traverse(state.positionTree);
+      }
+
+      return lookup;
+    },
+
+    /**
+     * Helper to find a node in the tree by position key
+     * @param {string} positionKey - The position key to find
+     * @returns {Object|null} The node object or null if not found
+     */
+    findNodeInTree: (state) => (positionKey) => {
+      function search(nodes) {
+        for (const node of nodes) {
+          if (node.position_key === positionKey) {
+            return node;
+          }
+          if (node.children) {
+            const found = search(node.children);
+            if (found) return found;
+          }
+        }
+        return null;
+      }
+
+      return state.positionTree ? search(state.positionTree) : null;
+    },
+
+    /**
+     * Calculate coverage percentage based on assignments
+     * For positions: counts leaf positions covered (directly or via parent assignment)
+     * For products: counts items covered
+     * @param {Set} assignedItemKeys - Set of assigned item keys
+     * @param {Map} positionLookup - Optional position lookup map (for position mode)
+     */
+    sessionCoverage: (state) => (assignedItemKeys, positionLookup = null) => {
+      if (state.sessionType === 'product') {
+        const total = state.items.length;
+        if (total === 0) return 0;
+        return (assignedItemKeys.size / total) * 100;
+      } else {
+        // Position mode: calculate based on leaf coverage
+        if (!positionLookup) return 0;
+
+        // Get all leaf positions (positions with no children)
+        const allLeafKeys = [];
+        positionLookup.forEach((data, key) => {
+          if (data.isLeaf) {
+            allLeafKeys.push(key);
+          }
+        });
+
+        if (allLeafKeys.length === 0) return 0;
+
+        // Calculate covered leaves (including implicit coverage via parent assignments)
+        const coveredLeafKeys = new Set();
+
+        allLeafKeys.forEach(leafKey => {
+          const leafData = positionLookup.get(leafKey);
+
+          // Check if leaf is directly assigned
+          if (assignedItemKeys.has(leafKey)) {
+            coveredLeafKeys.add(leafKey);
+            return;
+          }
+
+          // Check if any ancestor is assigned
+          for (const ancestorKey of leafData.ancestors) {
+            if (assignedItemKeys.has(ancestorKey)) {
+              coveredLeafKeys.add(leafKey);
+              break;
+            }
+          }
+        });
+
+        return (coveredLeafKeys.size / allLeafKeys.length) * 100;
+      }
     },
   },
 
@@ -47,7 +172,7 @@ export const useCountSessionStore = defineStore('countSession', {
         this.sessionType = type;
         // Clear items when type changes
         this.items = [];
-        this.fullPositionTree = [];
+        this.positionTree = [];
       }
     },
 
@@ -83,12 +208,12 @@ export const useCountSessionStore = defineStore('countSession', {
         // Try to build tree structure using position hierarchy
         try {
           const { data: hierarchyData } = await api.get('/position-hierarchy', {
-            params: { position_key: 'IN' },
+            params: { position_key: 'IN', fixed_only: true },
           });
 
           if (hierarchyData && hierarchyData.length > 0) {
             // Store full tree - child component will handle all processing
-            this.fullPositionTree = hierarchyData;
+            this.positionTree = hierarchyData;
             this.items = []; // Clear flat list when we have tree
           } else {
             // Fallback: fetch flat list if hierarchy is empty
@@ -97,27 +222,15 @@ export const useCountSessionStore = defineStore('countSession', {
         } catch (hierarchyError) {
           console.warn('Could not load position hierarchy, using flat list:', hierarchyError);
           // Fallback: fetch flat list
-          await this.loadPositionsFlat();
         }
       } catch (error) {
         console.error('Error loading positions:', error);
         this.items = [];
-        this.fullPositionTree = [];
+        this.positionTree = [];
         throw error;
       } finally {
         this.loading = false;
       }
-    },
-
-    /**
-     * Load positions as a flat list (fallback method)
-     */
-    async loadPositionsFlat() {
-      const { data } = await api.get('/position', {
-        params: { limit: null },
-      });
-      this.items = data;
-      this.fullPositionTree = [];
     },
 
     /**
@@ -137,7 +250,7 @@ export const useCountSessionStore = defineStore('countSession', {
      */
     reset() {
       this.items = [];
-      this.fullPositionTree = [];
+      this.positionTree = [];
       this.sessionType = 'product';
       this.loading = false;
     },
