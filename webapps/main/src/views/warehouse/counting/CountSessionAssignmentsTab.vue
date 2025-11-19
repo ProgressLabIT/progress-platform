@@ -78,13 +78,13 @@
             </span>
             <q-chip color="theme-grey" size="sm">
               <strong>
-                {{ filteredItems?.length }}
+                {{ currentShownCount }}
               </strong>
               <span class="q-mx-xs">
                 {{ $t('of') }}
               </span>
               <strong>
-                {{ totalItemCount }}
+                {{ currentTotalCount }}
               </strong>
             </q-chip>
             <q-icon
@@ -130,139 +130,29 @@
           </q-input>
         </div>
 
-        <q-virtual-scroll
+        <CountSessionAssignmentsProductList
           v-if="sessionType === 'product'"
-          v-slot="{ item }"
-          style="max-height: 100%"
-          class="col fit"
-          :items="filteredItems"
-        >
-          <q-item
-            :key="item._key"
-            clickable
-            style="min-height: none"
-            :disable="disableItem(item)"
-            @click="toggleItem(item)"
-          >
-            <q-item-section side>
-              <q-checkbox
-                size="sm"
-                dense
-                :model-value="isItemSelected(item)"
-                @click="toggleItem(item)"
-              />
-            </q-item-section>
-            <q-item-section>
-              <q-item-label class="highlight">
-                {{ item.code }}
-              </q-item-label>
-              <q-item-label caption class="ellipsis">
-                {{ item.description }}
-              </q-item-label>
-            </q-item-section>
-            <q-item-section v-if="getItemAssignees(item).length > 0" side>
-              <template v-if="getItemAssignees(item).length === 1">
-                <BaseUserAvatar
-                  :user="getItemAssignees(item)[0]"
-                  :show_name="false"
-                  size="32px"
-                  dense
-                >
-                  <q-tooltip>
-                    {{ getItemAssignees(item)[0].name }} {{ getItemAssignees(item)[0].surname }}
-                  </q-tooltip>
-                </BaseUserAvatar>
-              </template>
-              <template v-else>
-                <div class="row items-center q-gutter-x-xs">
-                  <q-icon
-                    name="mdi-account-group"
-                    size="20px"
-                  >
-                    <q-tooltip>
-                      <div v-for="user in getItemAssignees(item)" :key="user._key">
-                        {{ user.name }} {{ user.surname }}
-                      </div>
-                    </q-tooltip>
-                  </q-icon>
-                  <span class="text-caption">{{ getItemAssignees(item).length }}</span>
-                </div>
-              </template>
-            </q-item-section>
-          </q-item>
-        </q-virtual-scroll>
+          ref="productListRef"
+          v-model:selected-assignment="selectedAssignment"
+          :items="items"
+          :assignments="assignments"
+          :disable-assigned-items="disableAssignedItems"
+          :search-text="searchText"
+          :show-multi-assigned-only="showMultiAssignedOnlyCenter"
+          @update:stats="updateStats"
+        />
 
-        <div
+        <CountSessionAssignmentsPositionTree
           v-else
-          class="col fit column"
-          style="max-height: 100%; overflow-y: auto"
-        >
-          <q-input
-            v-model="searchText"
-            filled
-            dense
-            debounce="200"
-            :placeholder="$t('search')"
-            class="q-mb-sm col-auto"
-          >
-            <template #prepend>
-              <q-icon name="mdi-magnify" />
-            </template>
-          </q-input>
-          <q-tree
-            v-if="positionTreeNodes.length > 0"
-            class="col"
-            v-model:ticked="selectedPositions"
-            tick-strategy="leaf"
-            :nodes="filteredPositionTreeNodes"
-            accordion
-            node-key="key"
-            :tick-strategy="'leaf'"
-            @update:selected="onPositionSelection"
-          >
-            <template #default-header="prop">
-              <div class="row items-center full-width">
-                <q-checkbox
-                  :model-value="isPositionSelected(prop.node.key)"
-                  @update:model-value="togglePosition(prop.node)"
-                  @click.stop
-                />
-                <span class="q-ml-sm"># {{ prop.node.label }}</span>
-                <q-space />
-                <template v-if="getItemAssignees({ key: prop.node.key }).length > 0">
-                  <template v-if="getItemAssignees({ key: prop.node.key }).length === 1">
-                    <BaseUserAvatar
-                      :user="getItemAssignees({ key: prop.node.key })[0]"
-                      :show-name="false"
-                      size="32px"
-                      dense
-                      class="q-ml-sm"
-                    >
-                      <q-tooltip>
-                        {{ getItemAssignees({ key: prop.node.key })[0].name }} {{ getItemAssignees({ key: prop.node.key })[0].surname }}
-                      </q-tooltip>
-                    </BaseUserAvatar>
-                  </template>
-                  <template v-else>
-                    <div class="row items-center q-gutter-x-xs">
-                      <q-icon
-                        name="mdi-account-group"
-                        size="20px"
-                      >
-                        <q-tooltip>
-                          <div v-for="user in getItemAssignees({ key: prop.node.key })" :key="user._key">
-                            {{ user.name }} {{ user.surname }}
-                          </div>
-                        </q-tooltip>
-                      </q-icon>
-                      <span class="text-caption">{{ getItemAssignees({ key: prop.node.key }).length }}</span>
-                    </div>
-                  </template>
-                </template>
-              </div>
-            </template>
-          </q-tree>
-        </div>
+          ref="positionTreeRef"
+          v-model:selected-assignment="selectedAssignment"
+          :nodes="positionTreeNodes"
+          :assignments="assignments"
+          :disable-assigned-items="disableAssignedItems"
+          :search-text="searchText"
+          :show-multi-assigned-only="showMultiAssignedOnlyCenter"
+          @update:stats="updateStats"
+        />
       </div>
 
       <q-separator vertical />
@@ -377,26 +267,21 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useStore } from 'vuex';
 import { Notify } from 'quasar';
 import { useWildcardToRegex } from '@/composables/useWildcardToRegex';
+import { useCountSessionStore } from '@/stores/countSession';
 import BaseAutocompleteUser from '@/components/BaseAutocompleteUser.vue';
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue';
+import CountSessionAssignmentsProductList from './CountSessionAssignmentsProductList.vue';
+import CountSessionAssignmentsPositionTree from './CountSessionAssignmentsPositionTree.vue';
 
 const props = defineProps({
   sessionType: {
     type: String,
     required: true,
-  },
-  items: {
-    type: Array,
-    required: true,
-  },
-  positionTreeNodes: {
-    type: Array,
-    default: () => [],
   },
   disableAssignedItems: {
     type: Boolean,
@@ -408,14 +293,21 @@ const emit = defineEmits(['update:disableAssignedItems']);
 
 const { t: $t } = useI18n();
 const store = useStore();
+const countSessionStore = useCountSessionStore();
 const { wildcardToRegex } = useWildcardToRegex();
 
 const searchText = ref('');
 const selectedAssignment = ref(null);
-const selectedPositions = ref([]);
 const selectedItemsSearchText = ref('');
 const showMultiAssignedOnlyCenter = ref(false);
 const showMultiAssignedOnlyRight = ref(false);
+const productListRef = ref(null);
+const positionTreeRef = ref(null);
+
+// Stats for center column (updated by child components)
+const currentShownCount = ref(0);
+const currentTotalCount = ref(0);
+const currentMultiAssignedCount = ref(0);
 
 const assignments = defineModel('assignments', { default: () => [] }); // [{ user_key, items: [] }]
 
@@ -432,28 +324,21 @@ watch(
   { immediate: true },
 );
 
-// Computed properties
-const filteredItems = computed(() => {
-  let result = props.items;
-
-  if (props.sessionType === 'product') {
-    // Apply search filter
-    if (searchText.value) {
-      const regex = wildcardToRegex(searchText.value);
-      result = result.filter((p) => regex.test(p.code));
-    }
-
-    // Apply multi-assignment filter for center column
-    if (showMultiAssignedOnlyCenter.value) {
-      result = result.filter((item) => {
-        const assignees = getItemAssignees(item);
-        return assignees.length > 1;
-      });
-    }
-  }
-
-  return result;
+// Reset stats when session type changes (optional, helps avoid flicker of old stats)
+watch(() => props.sessionType, () => {
+  currentShownCount.value = 0;
+  currentTotalCount.value = 0;
+  currentMultiAssignedCount.value = 0;
+  searchText.value = '';
 });
+
+function updateStats(stats) {
+  currentShownCount.value = stats.shownCount;
+  currentTotalCount.value = stats.totalCount;
+  currentMultiAssignedCount.value = stats.multiAssignedCount;
+}
+
+// Computed properties
 
 const filteredAssignedItems = computed(() => {
   let result = selectedItemsForAssignment.value;
@@ -475,52 +360,6 @@ const filteredAssignedItems = computed(() => {
   return result;
 });
 
-const totalItemCount = computed(() => {
-  if (props.sessionType === 'product') {
-    return props.items.length;
-  } else {
-    // For positions, count all nodes in the tree
-    const countNodes = (nodes) => {
-      return nodes.reduce((count, node) => {
-        return count + 1 + (node.children ? countNodes(node.children) : 0);
-      }, 0);
-    };
-    return props.positionTreeNodes.length > 0
-      ? countNodes(props.positionTreeNodes)
-      : props.items.length; // Fallback to flat list
-  }
-});
-
-const filteredPositionTreeNodes = computed(() => {
-  const regex = searchText.value ? wildcardToRegex(searchText.value) : null;
-
-  const filterTree = (nodes) => {
-    return nodes
-      .map((node) => {
-        const matchesSearch = !regex || regex.test(node.label);
-        const matchesMultiAssignment = !showMultiAssignedOnlyCenter.value || (() => {
-          const assignees = getItemAssignees({ key: node.key });
-          return assignees.length > 1;
-        })();
-
-        const filteredChildren = node.children
-          ? filterTree(node.children)
-          : undefined;
-
-        if ((matchesSearch && matchesMultiAssignment) || (filteredChildren && filteredChildren.length > 0)) {
-          return {
-            ...node,
-            children: filteredChildren,
-          };
-        }
-        return null;
-      })
-      .filter((n) => n !== null);
-  };
-
-  return filterTree(props.positionTreeNodes);
-});
-
 const assignedItemKeys = computed(() => {
   const keys = new Set();
   assignments.value?.forEach((assignment) => {
@@ -537,17 +376,17 @@ const selectedItemsForAssignment = computed(() => {
 });
 
 const coveragePercentage = computed(() => {
-  if (totalItemCount.value === 0) {
-     return 0
+  // Use currentTotalCount if available, otherwise fallback to store stats
+  const total = currentTotalCount.value || countSessionStore.sessionCoverage(assignedItemKeys.value);
+
+  if (total === 0) {
+     return 0;
   };
-  return (assignedItemKeys.value.size / totalItemCount.value) * 100;
+  return (assignedItemKeys.value.size / total) * 100;
 });
 
 const centerColumnMultiAssignedCount = computed(() => {
-  return filteredItems.value.filter((item) => {
-    const assignees = getItemAssignees(item);
-    return assignees.length > 1;
-  }).length;
+  return currentMultiAssignedCount.value;
 });
 
 const rightColumnMultiAssignedCount = computed(() => {
@@ -557,7 +396,27 @@ const rightColumnMultiAssignedCount = computed(() => {
   }).length;
 });
 
+const positionTreeNodes = computed(() => countSessionStore.positionTree);
+
+// Computed properties for items from store
+const items = computed(() => countSessionStore.items);
+
 // Methods
+
+async function loadItems() {
+  try {
+    // Set the session type in the store
+    countSessionStore.setSessionType(props.sessionType);
+    // Load items from the store
+    await countSessionStore.loadItems();
+  } catch (error) {
+    Notify.create({
+      type: 'negative',
+      message: $t('warehouse.counting.items_load_error'),
+      color: 'theme-red',
+    });
+  }
+}
 function getUser(user_key) {
   return store.getters.operator_list().find((u) => u._key === user_key);
 }
@@ -581,37 +440,13 @@ function removeAssignment(user_key) {
   const index = assignments.value.findIndex((a) => a.user_key === user_key);
   if (index > -1) {
     assignments.value.splice(index, 1);
-    if (
-      selectedAssignment.value?.user_key === user_key ||
-      assignments.value.length === 0
-    ) {
+    if (assignments.value.length === 0) {
       selectedAssignment.value = null;
-    } else {
+    } else if (selectedAssignment.value?.user_key === user_key) {
+      // If we deleted the selected assignment, select another one
       selectedAssignment.value = assignments.value[0];
     }
   }
-}
-
-function isItemSelected(item) {
-  if (!selectedAssignment.value) return false;
-  return selectedAssignment.value.items?.some(
-    (i) => (i._key || i.key) === (item._key || item.key),
-  );
-}
-
-function disableItem(item) {
-  // If toggle is off, allow all items to be selected
-  if (!props.disableAssignedItems) {
-    return false;
-  }
-
-  const itemKey = item._key || item.key;
-  // Don't disable if item is in current assignment
-  if (selectedAssignment.value?.items?.some(i => (i._key || i.key) === itemKey)) {
-    return false;
-  }
-  // Disable if assigned to another user (only when toggle is on)
-  return assignedItemKeys.value.has(itemKey);
 }
 
 function getItemAssignees(item) {
@@ -624,105 +459,6 @@ function getItemAssignees(item) {
     }
   });
   return assignees;
-}
-
-function toggleItem(item) {
-  if (!selectedAssignment.value) {
-    // Auto-select first assignment or create one
-    if (assignments.value.length === 0) {
-      Notify.create({
-        message: $t('warehouse.counting.select_assignment_first'),
-        color: 'theme-orange',
-      });
-      return;
-    }
-    selectedAssignment.value = assignments.value[0];
-  }
-
-  const assignment = selectedAssignment.value;
-  if (!assignment.items) assignment.items = [];
-
-  const itemKey = item._key || item.key;
-  const index = assignment.items.findIndex(
-    (i) => (i._key || i.key) === itemKey,
-  );
-
-  if (index > -1) {
-    assignment.items.splice(index, 1);
-  } else {
-    // Add minimal item structure
-    assignment.items.push({
-      _key: item._key,
-      code: item.code,
-      description: item.description,
-    });
-  }
-}
-
-function isPositionSelected(positionKey) {
-  if (!selectedAssignment.value) return false;
-  return selectedAssignment.value.items?.some(
-    (i) => i.key === positionKey,
-  );
-}
-
-function togglePosition(node) {
-  if (!selectedAssignment.value) {
-    if (assignments.value.length === 0) {
-      Notify.create({
-        type: 'warning',
-        message: $t('warehouse.counting.session.select_assignment_first'),
-        color: 'theme-orange',
-      });
-      return;
-    }
-    selectedAssignment.value = assignments.value[0];
-  }
-
-  const assignment = selectedAssignment.value;
-  if (!assignment.items) assignment.items = [];
-
-  // Get all children positions recursively
-  const getAllChildren = (n) => {
-    const children = [n.key];
-    if (n.children) {
-      n.children.forEach((child) => {
-        children.push(...getAllChildren(child));
-      });
-    }
-    return children;
-  };
-
-  const positionKeys = getAllChildren(node);
-  const isSelected = positionKeys.some((key) =>
-    assignment.items.some((i) => i.key === key),
-  );
-
-  if (isSelected) {
-    // Remove this position and all children
-    assignment.items = assignment.items.filter(
-      (i) => !positionKeys.includes(i.key),
-    );
-  } else {
-    // Add this position and all children using minimal structure
-    const addPositionsFromNode = (n) => {
-      if (!assignment.items.some((i) => i.key === n.key)) {
-        assignment.items.push({
-          key: n.key,
-          code: n.label,
-        });
-      }
-      if (n.children) {
-        n.children.forEach(addPositionsFromNode);
-      }
-    };
-    addPositionsFromNode(node);
-  }
-}
-
-function onPositionSelection(selected) {
-  // Handle position tree selection
-  // This is handled by togglePosition
 }
 
 function removeSelectedItem(item) {
@@ -756,49 +492,29 @@ function clearSelectedItems() {
 }
 
 function selectAllItems() {
-  if (!selectedAssignment.value) {
-    if (assignments.value.length === 0) {
-      Notify.create({
-        message: $t('warehouse.counting.select_assignment_first'),
-        color: 'theme-orange',
-      });
-      return;
-    }
-    selectedAssignment.value = assignments.value[0];
-  }
-
-  const assignment = selectedAssignment.value;
-  if (!assignment.items) assignment.items = [];
-
   if (props.sessionType === 'product') {
-    // Add visible, non-disabled products with minimal structure
-    filteredItems.value.forEach((item) => {
-      if (!disableItem(item) && !isItemSelected(item)) {
-        assignment.items.push({
-          _key: item._key,
-          code: item.code,
-          description: item.description,
-        });
-      }
-    });
+    productListRef.value?.selectAll();
   } else {
-    // For positions, traverse the filtered tree and add visible, non-disabled positions with minimal structure
-    const addPositionsFromTree = (nodes) => {
-      nodes.forEach((node) => {
-        if (!disableItem({ key: node.key }) && !isPositionSelected(node.key)) {
-          assignment.items.push({
-            key: node.key,
-            code: node.label,
-          });
-        }
-        if (node.children) {
-          addPositionsFromTree(node.children);
-        }
-      });
-    };
-    addPositionsFromTree(filteredPositionTreeNodes.value);
+    positionTreeRef.value?.selectAll();
   }
 }
+
+// Load items on mount
+onMounted(async () => {
+  await loadItems();
+});
+
+// Watch session type to reload items
+watch(
+  () => props.sessionType,
+  async (newType, oldType) => {
+    // Only react if type actually changed
+    if (newType === oldType) return;
+
+    // Load new items for the selected type (store will handle reset)
+    await loadItems();
+  }
+);
 
 </script>
 
@@ -816,4 +532,3 @@ function selectAllItems() {
 .selected-assignment :deep(.q-item__section)
   font-weight: 600
 </style>
-
