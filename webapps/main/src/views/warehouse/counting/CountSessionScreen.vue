@@ -240,10 +240,16 @@ watch(
         countSessionStore.sessionData.type = oldType;
         return;
       }
-    }
 
-    // Clear assignments when type changes
-    countSessionStore.assignments = [];
+      // Clear assignments after confirmation
+      countSessionStore.assignments = [];
+    } else if (!isEditMode.value) {
+      // Only clear assignments when type changes in create mode
+      // In edit mode, assignments are cleared above after user confirmation
+      countSessionStore.assignments = [];
+    }
+    // In edit mode during initial load (originalSessionType.value is null),
+    // don't clear assignments - they were just loaded from the API
   }
 );
 </script>

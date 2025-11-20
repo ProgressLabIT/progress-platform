@@ -431,7 +431,7 @@ class Queries:
       FILTER ica.inventory_count_session_key == @inventory_count_session_key && ica.status != 'canceled'
       LET target_data = KEEP(DOCUMENT(target_collection_name, ica.target_key), 'code', 'description')
       FILTER target_data != null
-      LET assignment = { _key: ica._key, target_key: ica.target_key, status: ica.status, target_data }
+      LET assignment = { _key: ica._key, target_key: ica.target_key, status: ica.status, target_data, include_children: ica.include_children }
       COLLECT assignee = ica.assigned_to INTO assignment_group KEEP assignment
       RETURN { [assignee]: assignment_group[*].assignment }
     )
