@@ -54,6 +54,8 @@ class Queries:
       quantity: e.quantity,
       serial_code: result.type == 'serial' ? serial.code : null,
       serial_key: result.type == 'serial' ? serial._key : null,
+      counting: e.counting || false,
+      count_by: e.count_by,
     }
   """
 
@@ -443,4 +445,21 @@ class Queries:
     FILTER ica._key IN @assignment_keys && ica.status == 'planned'
     UPDATE ica WITH { status: 'canceled' } in InventoryCountAssignment
     RETURN OLD._key
+  """
+
+  SEARCH_INVENTORY_COUNT_RECORDS = """
+    FOR r IN inventory_count_record
+    FILTER
+      @count_session_key ? r.inventory_count_session_key == @count_session_key : true
+      && @assignment_key ? r.assignment_key == @assignment_key : true
+      && @product_key ? r._from == @product_key : true
+      && @position_key ? r._to == @position_key : true
+      && @user_key ? r.user_key == @user_key : true
+      && @status ? r.status == @status : true
+    LIMIT @offset, @limit || null
+    RETURN MERGE(r, {
+      product_code: FIRST(FOR p IN Product FILTER p._key == r._from RETURN p).code,
+      product_description: FIRST(FOR p IN Product FILTER p._key == r._from RETURN p).description,
+      position_code: FIRST(FOR p IN Position FILTER p._key == r._to RETURN p).code
+    })
   """

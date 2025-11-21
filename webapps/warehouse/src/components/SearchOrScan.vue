@@ -55,7 +55,7 @@ import CameraCodeScanner from '@/components/barcode-reader/CameraCodeScanner.vue
 const props = defineProps({
   label: {
     type: String,
-    default: ''
+    default: () => undefined
   }
 });
 const inputText = defineModel({ type: String });

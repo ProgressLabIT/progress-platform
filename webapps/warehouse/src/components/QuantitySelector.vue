@@ -18,7 +18,7 @@
     </div>
 
     <q-card
-      v-touch-repeat:0:800:800:100.mouse="handleRepeat"
+      v-touch-repeat:0:600:600:60.mouse="handleRepeat"
       outline
       flat
       class="cursor-pointer q-my-md surface2 col"
@@ -60,7 +60,7 @@
             label="-10"
             size="md"
             class="full-width"
-            v-touch-repeat:0:800:800:100.mouse="() => addQuantity(-10)"
+            v-touch-repeat:0:600:600:60.mouse="() => addQuantity(-10)"
           />
         </div>
         <div class="q-mx-xs"></div>
@@ -71,7 +71,7 @@
             label="+10"
             size="md"
             class="full-width"
-            v-touch-repeat:0:800:800:100.mouse="() => addQuantity(10)"
+            v-touch-repeat:0:600:600:60.mouse="() => addQuantity(10)"
           />
         </div>
       </div>
@@ -83,7 +83,7 @@
             label="-100"
             size="md"
             class="full-width"
-            v-touch-repeat:0:800:800:100.mouse="() => addQuantity(-100)"
+            v-touch-repeat:0:600:600:60.mouse="() => addQuantity(-100)"
           />
         </div>
         <div class="q-mx-xs"></div>
@@ -94,7 +94,7 @@
             label="+100"
             size="md"
             class="full-width"
-            v-touch-repeat:0:800:800:100.mouse="() => addQuantity(100)"
+            v-touch-repeat:0:600:600:60.mouse="() => addQuantity(100)"
           />
         </div>
       </div>

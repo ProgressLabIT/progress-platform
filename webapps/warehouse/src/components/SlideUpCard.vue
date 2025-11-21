@@ -3,9 +3,11 @@
     v-model="show"
     square
     full-width
+    :persistent="persistent"
+    no-shake
     transition-show="slide-up"
     transition-hide="slide-down"
-    @hide="emit('hide')"
+    @hide="handleHide"
   >
     <q-card
       class="q-pa-lg absolute-bottom column"
@@ -17,12 +19,13 @@
 </template>
 
 <script setup>
-const emit = defineEmits(['hide'])
 
 const show = defineModel({
   type: Boolean,
   default: false,
 });
+
+const emit = defineEmits(['hide'])
 
 const props = defineProps({
   minHeight: {
@@ -32,8 +35,23 @@ const props = defineProps({
   height: {
     type: String,
     default: null
+  },
+  persistent: {
+    type: Boolean,
+    default: false
+  },
+  onHide: {
+    type: Function,
+    default: undefined
   }
 });
+
+function handleHide() {
+  if (props.onHide) {
+    props.onHide();
+  }
+  emit('hide');
+}
 
 </script>
 

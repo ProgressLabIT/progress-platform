@@ -253,7 +253,6 @@ collections = [
   ]),
   Collection(name='InventoryCountSession'),
   Collection(name='InventoryCountAssignment'),
-  Collection(name='InventoryCountRecord'),
   Collection(name='InventorySnapshot'),
   Collection(name='InventorySnapshotItem'),
   Collection(name='inventory_count_record'),

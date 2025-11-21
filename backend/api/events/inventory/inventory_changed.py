@@ -51,7 +51,7 @@ class InventoryChangedEvent(BaseInventoryEvent):
           **match_criteria,
           quantity = self.info.quantity_change,
           owned = True
-        ))
+        ).model_dump(exclude=['key']))
         return False
       else:
         self._get_product()

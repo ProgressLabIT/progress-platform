@@ -36,8 +36,8 @@ class CountStartedEvent(BaseEvent):
       FOR inventory IN is_in_position
       FILTER inventory._key IN @inventory_keys
       SORT inventory._from, inventory._to
-      UPDATE inventory WITH { locked: true, locked_by: @user_key } IN is_in_position
-      RETURN NEW
+      UPDATE inventory WITH { counting: true, count_by: @user_key } IN is_in_position
+      RETURN OLD
       """,
       bind_vars=dict(
         inventory_keys=self.info.inventory_keys,
@@ -52,8 +52,8 @@ class CountStartedEvent(BaseEvent):
     position_id = inventory_records[0].position_id
 
     for inventory in inventory_records:
-      if inventory.locked:
-        raise ValueError(f"Inventory record {inventory._key} is already locked")
+      if inventory.counting:
+        raise ValueError(f"Inventory record {inventory.key} is already being counted")
 
       if inventory.product_id != product_id or inventory.position_id != position_id:
         raise ValueError("All inventory records must be for the same product/position pair")
@@ -65,7 +65,8 @@ class CountStartedEvent(BaseEvent):
       system_qt=sum(i.quantity for i in inventory_records),
       system_serial_keys=[i.serial_key for i in inventory_records if i.serial_key is not None],
       system_at=timestamp(),
-      inventory_count_session_key=self.info.count_key,
+      user_key=self.info.user_key,
+      inventory_count_session_key=self.info.inventory_count_session_key,
       assignment_key=self.info.assignment_key,
       status=InventoryCountStatus.STARTED
     )

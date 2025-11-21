@@ -12,14 +12,17 @@ from utils.search import WildcardString
 class Inventory(BaseModel): # edge is_in_position
   model_config = ConfigDict(populate_by_name=True)
 
+  key: str | None = Field(None, alias='_key')
   product_id: str = Field(..., alias='_from')
   position_id: str = Field(..., alias='_to')
   serial_key: str | None = None
   quantity: float
   owned: bool = True # False means it's property of customers or suppliers
-  locked: bool = False # True means the inventory is locked and cannot be changed
-  locked_by: str | None = None # inventory count key or other entity locking the inventory (e.g. inventory booking by wo or planned movement)
+
+  counting: bool = False # True means the inventory is being counted
+  count_by: str | None = None # inventory count key or other entity counting the inventory (e.g. inventory count session)
   last_counted: datetime | None = None
+
   value: float | None = None
   extra: Any = None
 

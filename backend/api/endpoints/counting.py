@@ -41,17 +41,18 @@ def create_counting_session(
     count_session_key = tx.collection('InventoryCountSession').insert(count_session.model_dump(by_alias=True))['_key']
     assignement_records = []
     for a in assignments:
-      if a.target_keys is None or len(a.target_keys) == 0:
+      if a.targets is None or len(a.targets) == 0:
         raise HTTPException(status_code=400, detail="At least one item is required for each assignment")
 
       records = [InventoryCountAssignment(
         inventory_count_session_key=count_session_key,
         assigned_to=a.user_key,
-        target_key=target_key,
+        target_key=target.target_key,
+        include_children=target.include_children,
         target_type=count_session.type,
         created_by=token.consumer_key,
         status=InventoryCountAssignmentStatus.PLANNED,
-      ).model_dump(exclude=['key', 'id', 'rev']) for target_key in a.target_keys]
+      ).model_dump(exclude=['key', 'id', 'rev']) for target in a.targets]
 
       assignement_records.extend(records)
 
@@ -190,10 +191,12 @@ def create_counting_assignments(
           detail=f"Cannot add assignments to session {session['code']} - session is {session_status.value}"
         )
 
-    # Set created_by for all assignments
+    # Set created_by for all assignments and ensure include_children defaults to False
     assignment_records = []
     for a in assignments:
       a.created_by = token.consumer_key
+      if a.include_children is None:
+        a.include_children = False
       assignment_records.append(a.model_dump(by_alias=True, exclude=['key', 'id', 'rev']))
 
     db.collection('InventoryCountAssignment').insert_many(assignment_records)
@@ -228,3 +231,15 @@ def delete_counting_assignments(assignment_keys: list[str] = Body(..., embed=Tru
   except:
     raise HTTPException(status_code=500, detail=traceback.format_exc())
 
+# ========================================================
+# COUNTING RECORDS
+# ========================================================
+
+@router.get('/inventory/count-record', dependencies=[Depends(auth.verify_token)])
+def get_counting_record(params: Annotated[InventoryCountRecordSearchParams, Query()]):
+  try:
+    bind_vars = dict(**params.model_dump())
+    cursor = db.aql.execute(Queries.SEARCH_INVENTORY_COUNT_RECORDS, bind_vars=bind_vars)
+    return [InventoryCountRecord(**f) for f in cursor]
+  except:
+    raise HTTPException(status_code=500, detail=traceback.format_exc())

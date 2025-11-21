@@ -167,19 +167,31 @@ class InventoryCountRecord(ArangoDocument): # edge collection inventory_count_re
 
   @model_validator(mode='after')
   def handle_serials(self):
-    if self.counted_serial_keys is not None:
-      serial_count = len(self.counted_serial_keys)
-      if self.counted_qt is None:
-        self.counted_qt = serial_count
-      elif self.counted_qt != serial_count:
-        raise ValueError(
-          "serial qt must be equal to the number of serial_keys if provided: "
-          f"Serial qt: {self.counted_qt}, serial_count: {serial_count}"
-        )
-    elif self.counted_qt is None:
-      raise ValueError("You must provide either a counted quantity or a list of serial keys found")
+    # Ensure actual counts are recorded correctly
+    if self.status != InventoryCountStatus.STARTED:
+      if self.counted_serial_keys is not None:
+        serial_count = len(self.counted_serial_keys)
+        if self.counted_qt is None:
+          self.counted_qt = serial_count
+        elif self.counted_qt != serial_count:
+          raise ValueError(
+            "serial qt must be equal to the number of serial_keys if provided: "
+            f"Serial qt: {self.counted_qt}, serial_count: {serial_count}"
+          )
+      elif self.counted_qt is None:
+        raise ValueError("You must provide either a counted quantity or a list of serial keys found")
     return self
 
+
+class InventoryCountRecordSearchParams(BaseModel):
+  count_session_key: str | None = None
+  user_key: str | None = None
+  assignment_key: str | None = None
+  product_key: str | None = None
+  position_key: str | None = None
+  status: InventoryCountStatus | None = None
+  limit: int | None = 500
+  offset: int | None = 0
 
 class InventorySnapshotSource(str, Enum):
   IMPORT = 'import'
