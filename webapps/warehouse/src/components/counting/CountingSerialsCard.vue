@@ -94,8 +94,8 @@
             padding="xs md"
             icon="mdi-plus"
             class="col-auto q-ml-md"
-            :loading="loading"
-            :disabled="!newSerialCode?.length"
+            :loading="loading || validatingSerial"
+            :disabled="!newSerialCode?.length || validatingSerial"
             @click="() => toggleItem(newSerialCode)"
           />
         </div>
@@ -124,6 +124,19 @@
             </q-card>
           </div>
         </q-scroll-area>
+
+        <!-- NOTES FIELD -->
+        <div class="col-auto">
+          <q-input
+            v-model="notes"
+            filled
+            type="textarea"
+            :label="$t('notes')"
+            :placeholder="$t('notes_placeholder')"
+            rows="3"
+            autogrow
+          />
+        </div>
 
         <!-- ACTIONS -->
         <div class="row q-gutter-sm">
@@ -178,6 +191,8 @@ const startingCount = ref(false);
 const countRecordKey = ref(null);
 const showCancelConfirmation = ref(false);
 const cancelingCount = ref(false);
+const notes = ref('');
+const validatingSerial = ref(false);
 
 const displayedSerials = computed(() => {
   if (props.blindMode) {
@@ -193,13 +208,14 @@ const isNewInventory = computed(() => {
   return !props.item?.inventory_keys || props.item?.inventory_keys?.length === 0;
 });
 
-onMounted(() => {
-  // Reset temp serials when opening the card
+onMounted(async () => {
+  // Reset temp serials and notes when opening the card
   countingStore.tempSerials = [];
+  notes.value = '';
 
-  // For new inventory, skip confirmation and go directly to counting UI
+  // For new inventory, skip confirmation dialog but still fire COUNT_STARTED event
   if (isNewInventory.value) {
-    countStarted.value = true;
+    await startCount();
     // For new inventory, don't load existing serials (there are none)
   } else if (props.item.counting) {
     // If count is already active for existing inventory, skip confirmation and go directly to counting UI
@@ -214,19 +230,21 @@ onMounted(() => {
 });
 
 async function startCount() {
-  // Only start count for existing inventory
-  if (isNewInventory.value) {
-    return;
-  }
-
   startingCount.value = true;
 
   try {
+    const hasInventoryKeys = props.item.inventory_keys && props.item.inventory_keys.length > 0;
     const eventData = {
       inventory_count_session_key: countingStore.sessionData?._key,
       assignment_key: props.item.assignment_key || null,
-      inventory_keys: props.item.inventory_keys
     };
+
+    if (hasInventoryKeys) {
+      eventData.inventory_keys = props.item.inventory_keys;
+    } else {
+      eventData.product_key = props.item.product_key;
+      eventData.position_key = props.item.position_key || props.item.path?.[props.item.path.length - 1]?.position_key;
+    }
 
     const response = await sendEvent({
       event_type: 'COUNT_STARTED',
@@ -236,8 +254,8 @@ async function startCount() {
     countRecordKey.value = response.data?.detail?.count_record_key;
     countStarted.value = true;
 
-    // Load existing serials after count is started (for non-blind mode)
-    if (!props.blindMode) {
+    // Load existing serials after count is started (for non-blind mode, only for existing inventory)
+    if (!props.blindMode && hasInventoryKeys) {
       await loadExistingSerials();
     }
 
@@ -303,26 +321,58 @@ async function toggleItem(serialCode) {
     Notify.create({
       position: 'top',
       color: 'theme-grey',
-      message: `Seriale ${serialCode} rimosso`,
+      message: $t('serial_removed_single', { serial: serialCode }),
       timeout: 1500
     });
   } else {
-    // In non-blind mode with existing serials, check if serial is in the list
-    if (!props.blindMode && existingSerials.value.length > 0 && !existingSerials.value.includes(serialCode)) {
+    // Validate serial exists in the database
+    validatingSerial.value = true;
+    try {
+      const response = await api.get('/serial-code', {
+        params: {
+          serial_code: serialCode,
+          product_key: props.item.product_key
+        }
+      });
+
+      if (!response.data || response.data.length === 0) {
+        Notify.create({
+          position: 'top',
+          color: 'theme-orange',
+          message: $t('serial_not_found', { serial: serialCode }),
+          timeout: 2000
+        });
+        validatingSerial.value = false;
+        return;
+      }
+
+      // In non-blind mode with existing serials, check if serial is in the list
+      if (!props.blindMode && existingSerials.value.length > 0 && !existingSerials.value.includes(serialCode)) {
+        Notify.create({
+          position: 'top',
+          color: 'theme-orange',
+          message: $t('serial_not_in_expected_list', { serial: serialCode }),
+          timeout: 2000
+        });
+      } else {
+        countingStore.tempSerials.push(serialCode);
+        Notify.create({
+          position: 'top',
+          color: 'theme-green',
+          message: $t('serial_added'),
+          timeout: 1500
+        });
+      }
+    } catch (error) {
+      console.error('Error validating serial:', error);
       Notify.create({
         position: 'top',
         color: 'theme-orange',
-        message: `Seriale ${serialCode} non presente fra quelli previsti`,
-        timeout: 1500
+        message: $t('error_validating_serial'),
+        timeout: 2000
       });
-    } else {
-      countingStore.tempSerials.push(serialCode);
-      Notify.create({
-        position: 'top',
-        color: 'theme-green',
-        message: `Seriale ${serialCode} aggiunto`,
-        timeout: 1500
-      });
+    } finally {
+      validatingSerial.value = false;
     }
   }
 
@@ -359,6 +409,7 @@ function saveCount() {
     quantity_original: existingSerials.value.length,
     quantity_counted: countingStore.tempSerials.length,
     serials_counted: [...countingStore.tempSerials],
+    notes: notes.value || null,
   };
 
   countingStore.saveCount(countData);
@@ -383,15 +434,7 @@ async function cancelCount() {
   cancelingCount.value = true;
 
   try {
-    // For new inventory, just reset and close without firing COUNT_CANCELED event
-    if (isNewInventory.value) {
-      countingStore.tempSerials = [];
-      cancelingCount.value = false;
-      emit('close');
-      return;
-    }
-
-    // For existing inventory, check if count record exists
+    // Check if count record exists
     if (!countRecordKey.value) {
       Notify.create({
         message: 'Cannot cancel: count record not found. Please refresh the page.',
@@ -403,11 +446,16 @@ async function cancelCount() {
       return;
     }
 
-    // Fire COUNT_CANCELED event for existing inventory
+    const hasInventoryKeys = props.item.inventory_keys && props.item.inventory_keys.length > 0;
     const eventData = {
       count_key: countRecordKey.value,
-      inventory_keys: props.item.inventory_keys
     };
+
+    if (hasInventoryKeys) {
+      eventData.inventory_keys = props.item.inventory_keys;
+    } else {
+      eventData.inventory_keys = [];
+    }
 
     await sendEvent({
       event_type: 'COUNT_CANCELED',
@@ -425,6 +473,7 @@ async function cancelCount() {
   } finally {
     cancelingCount.value = false;
     countingStore.tempSerials = [];
+    notes.value = '';
     emit('close');
   }
 }

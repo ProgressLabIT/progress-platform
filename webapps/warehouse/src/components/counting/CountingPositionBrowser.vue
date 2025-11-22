@@ -59,8 +59,8 @@
               :key="item._key"
               clickable
               class="content-card q-my-xs q-pa-md text-body1"
-              :style="{ 'border-color': item.counting ? 'var(--theme-blue)' : 'yellow' }"
-              :class="[getColor(item), { 'locked-item': item.count_by === store.state.session.user._key }]"
+              :style="{ 'border-color': getCountInfo(item).hasStarted ? 'var(--theme-blue)' : 'yellow' }"
+              :class="[getColor(item), { 'locked-item': getCountInfo(item).hasStarted && getCountInfo(item).startedBy === store.state.session.user._key }]"
               @click="selectItem(item)"
             >
               <q-item-section side>
@@ -74,15 +74,29 @@
                   {{ item.quantity }}
                 </div>
               </q-item-section>
-              <q-item-section v-if="item.counting" side>
-                <q-badge :color="item.count_by === store.state.session.user._key ? 'theme-blue' : 'theme-orange'" class="q-pa-xs">
-                  {{ item.count_by === store.state.session.user._key ? $t('count_resume') : $t('count_active') }}
+              <q-item-section v-if="getCountInfo(item).hasStarted" side>
+                <q-badge :color="getCountInfo(item).startedBy === store.state.session.user._key ? 'theme-blue' : 'theme-orange'" class="q-pa-xs">
+                  {{ getCountInfo(item).startedBy === store.state.session.user._key ? $t('count_resume') : $t('count_active') }}
                 </q-badge>
               </q-item-section>
-              <q-item-section v-if="item.count_by" side>
+              <q-item-section v-if="getCountInfo(item).completedCount > 0" side>
+                <div class="row items-center q-gutter-xs">
+                  <q-icon name="mdi-check-circle" color="theme-green" size="20px" />
+                  <span v-if="getCountInfo(item).completedCount > 1" class="text-body2">
+                    {{ getCountInfo(item).completedCount }}
+                  </span>
+                </div>
+              </q-item-section>
+              <q-item-section v-if="getCountInfo(item).hasRecords && (getCountInfo(item).startedBy || getCountInfo(item).completedBy.length > 0)" side>
+                <q-icon
+                  v-if="getCountInfo(item).completedCount > 1"
+                  name="mdi-account-group"
+                  size="20px"
+                  color="theme-grey"
+                />
                 <BaseUserAvatar
-                  v-if="item.count_by"
-                  :user="usersByKeys[item.count_by]"
+                  v-else
+                  :user="usersByKeys[getCountInfo(item).startedBy || getCountInfo(item).completedBy[0]]"
                   :show_name="false"
                   size="20px"
                   dense
@@ -205,6 +219,7 @@ const productListLabel = ref('Recenti');
 const productRows = ref([]);
 const productLastResearch = ref(undefined);
 const usersByKeys = ref({});
+const countRecords = ref([]);
 
 api.get('user').then((resp) => {
   usersByKeys.value = resp.data.detail.reduce((acc, user) => {
@@ -281,6 +296,9 @@ async function loadPositionContents(position_key) {
   const response = await api.get(`/position/${position_key}`, { params: { search: filter.value } });
   positionContents.value = response.data;
 
+  // Fetch count records for this position and session
+  await loadCountRecords(position_key);
+
   // Auto-select if exactly one item matches the filter
   if (filter.value && response.data.length === 1 && response.data[0].code === filter.value) {
     await nextTick();
@@ -294,6 +312,26 @@ async function loadPositionContents(position_key) {
         filter.value = '';
       }
     }
+  }
+}
+
+async function loadCountRecords(position_key) {
+  if (!props.sessionData?._key) return;
+
+  try {
+    // The API expects full document IDs (e.g., "Position/KEY") for position_key
+    const positionId = position_key.includes('/') ? position_key : `Position/${position_key}`;
+    const response = await api.get('/inventory/count-record', {
+      params: {
+        count_session_key: props.sessionData._key,
+        position_key: positionId,
+        limit: 1000
+      }
+    });
+    countRecords.value = response.data || [];
+  } catch (error) {
+    console.error('Error loading count records:', error);
+    countRecords.value = [];
   }
 }
 
@@ -336,6 +374,7 @@ const filteredContents = computed(() => {
           _key: `aggregated_${item.product_key}`,
           type: 'serial',
           code: item.product_code,
+          product_key: item.product_key,
           quantity: 0,
           serial_keys: [],
           inventory_keys: [],
@@ -400,10 +439,11 @@ onMounted(() => {
 });
 
 function selectItem(item) {
-  // Check if item is locked by another user
-  if (item.counting && item.count_by) {
+  // Check if item is locked by another user using count records
+  const countInfo = getCountInfo(item);
+  if (countInfo.hasStarted && countInfo.startedBy) {
     const currentUserKey = store.state.session.user._key;
-    if (item.count_by !== currentUserKey) {
+    if (countInfo.startedBy !== currentUserKey) {
       // Item is locked by another user, block access
       Notify.create({
         message: $t('count_locked_by_other_user'),
@@ -461,6 +501,44 @@ function unselectItem() {
   loadPositionContents(selectedPosition.value._key);
 }
 
+// Helper function to get count records for an item
+function getCountRecordsForItem(item) {
+  if (!item.product_key) return [];
+
+  const positionKey = selectedPosition.value?._key;
+  if (!positionKey) return [];
+
+  return countRecords.value.filter(record => {
+    // Extract key from record (handles both "Product/KEY" and "KEY" formats)
+    const recordProductKey = record.product_key || (record._from ? record._from.split('/').pop() : null);
+    const recordPositionKey = record.position_key || (record._to ? record._to.split('/').pop() : null);
+
+    // For serial items, check if the record matches the product
+    if (item.type === 'serial') {
+      return recordProductKey === item.product_key && recordPositionKey === positionKey;
+    }
+    // For product items, match by product_key and position_key
+    return recordProductKey === item.product_key && recordPositionKey === positionKey;
+  });
+}
+
+// Helper function to get count info for display
+function getCountInfo(item) {
+  const records = getCountRecordsForItem(item);
+  const completedRecords = records.filter(r => r.status === 'completed' || r.status === 'submitted' || r.status === 'confirmed');
+  const startedRecords = records.filter(r => r.status === 'started');
+
+  return {
+    hasRecords: records.length > 0,
+    completedCount: completedRecords.length,
+    startedCount: startedRecords.length,
+    hasStarted: startedRecords.length > 0,
+    startedBy: startedRecords.length > 0 ? startedRecords[0].user_key : null,
+    completedBy: completedRecords.map(r => r.user_key).filter(Boolean),
+    allRecords: records
+  };
+}
+
 function searchProducts() {
   if (productFilter.value === productLastResearch.value) {
     return;
@@ -474,7 +552,7 @@ function searchProducts() {
     loading.value = true;
     api.get('product', {
       params: {
-        search: productFilter.value,
+        search_string: productFilter.value,
         limit: 100
       }
     }).then((resp) => {

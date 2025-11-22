@@ -2,7 +2,7 @@
   <SlideUpCard
     :model-value="true"
     :persistent="countStarted"
-    height="600px"
+    height="80vh"
   >
     <div class="col column q-gutter-y-md">
       <!-- ITEM INFO -->
@@ -88,6 +88,19 @@
           </template>
         </QuantitySelector>
 
+        <!-- NOTES FIELD -->
+        <div class="col-auto">
+          <q-input
+            v-model="notes"
+            filled
+            type="textarea"
+            :label="$t('notes')"
+            :placeholder="$t('notes_placeholder')"
+            rows="3"
+            autogrow
+          />
+        </div>
+
         <!-- ACTIONS -->
         <div class="row q-gutter-sm">
           <q-btn
@@ -146,6 +159,7 @@ const startingCount = ref(false);
 const countRecordKey = ref(null);
 const showCancelConfirmation = ref(false);
 const cancelingCount = ref(false);
+const notes = ref('');
 
 const adjustmentQuantity = computed(() => {
   if (props.blindMode) return 0;
@@ -153,7 +167,7 @@ const adjustmentQuantity = computed(() => {
 });
 
 const isNewInventory = computed(() => {
-  return !props.item.inventory_keys || props.item.inventory_keys.length === 0;
+  return !props.item?.inventory_keys || props.item?.inventory_keys?.length === 0;
 });
 
 async function loadCountRecord() {
@@ -186,13 +200,14 @@ async function loadCountRecord() {
   }
 }
 
-onMounted(() => {
-  // Initialize quantity based on blind mode
+onMounted(async () => {
+  // Initialize quantity based on blind mode and reset notes
   countedQuantity.value = props.blindMode ? 0 : props.item.quantity;
+  notes.value = '';
 
-  // For new inventory, skip confirmation and go directly to counting UI
+  // For new inventory, skip confirmation dialog but still fire COUNT_STARTED event
   if (isNewInventory.value) {
-    countStarted.value = true;
+    await startCount();
   } else if (props.item.counting) {
     // If count is already active for existing inventory, skip confirmation and go directly to counting UI
     countStarted.value = true;
@@ -201,19 +216,21 @@ onMounted(() => {
 });
 
 async function startCount() {
-  // Only start count for existing inventory
-  if (isNewInventory.value) {
-    return;
-  }
-
   startingCount.value = true;
 
   try {
+    const hasInventoryKeys = props.item.inventory_keys && props.item.inventory_keys.length > 0;
     const eventData = {
       inventory_count_session_key: countingStore.sessionData?._key,
       assignment_key: props.item.assignment_key || null,
-      inventory_keys: props.item.inventory_keys
     };
+
+    if (hasInventoryKeys) {
+      eventData.inventory_keys = props.item.inventory_keys;
+    } else {
+      eventData.product_key = props.item.product_key;
+      eventData.position_key = props.item.position_key || props.item.path?.[props.item.path.length - 1]?.position_key;
+    }
 
     const response = await sendEvent({
       event_type: 'COUNT_STARTED',
@@ -241,19 +258,16 @@ async function cancelCount() {
   cancelingCount.value = true;
 
   try {
-    // For new inventory, just reset and close without firing COUNT_CANCELED event
-    if (isNewInventory.value) {
-      countedQuantity.value = props.blindMode ? 0 : props.item.quantity;
-      cancelingCount.value = false;
-      emit('close');
-      return;
-    }
-
-    // For existing inventory, fire COUNT_CANCELED event
+    const hasInventoryKeys = props.item.inventory_keys && props.item.inventory_keys.length > 0;
     const eventData = {
       count_key: countRecordKey.value,
-      inventory_keys: props.item.inventory_keys
     };
+
+    if (hasInventoryKeys) {
+      eventData.inventory_keys = props.item.inventory_keys;
+    } else {
+      eventData.inventory_keys = [];
+    }
 
     await sendEvent({
       event_type: 'COUNT_CANCELED',
@@ -270,29 +284,25 @@ async function cancelCount() {
     console.error('Error canceling count:', error);
   } finally {
     cancelingCount.value = false;
+    notes.value = '';
     emit('close');
   }
 }
 
 function saveCount() {
   const countData = {
-    inventory_key: props.item._key,
-    product_key: props.item.product_key,
-    position_key: props.item.position_key || props.item.path?.[props.item.path.length - 1]?.position_key,
-    serial_key: null,
-    quantity_original: props.item.quantity,
-    quantity_counted: countedQuantity.value,
-    serials_counted: [],
+    count_key: countRecordKey.value,
+    count_qt: countedQuantity.value,
+    count_serial_keys: [],
+    notes: notes.value || null,
   };
 
   countingStore.saveCount(countData);
-
   Notify.create({
     message: $t('count_saved'),
     color: 'theme-green',
     position: 'top',
   });
-
   emit('close');
 }
 </script>

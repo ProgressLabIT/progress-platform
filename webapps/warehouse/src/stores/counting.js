@@ -1,11 +1,12 @@
 import { defineStore } from 'pinia';
 import { api } from '@/boot/axios';
 import { store } from '@/boot/store.js';
+import { sendEvent } from '@/composables/event';
+
 
 export const useCountingStore = defineStore('counting', {
   state: () => ({
     sessionData: null,
-    countedItems: {},
     tempSerials: [],
   }),
   actions: {
@@ -17,24 +18,32 @@ export const useCountingStore = defineStore('counting', {
       });
       this.sessionData = response.data;
     },
-    saveCount(countData) {
-      const dataToLog = {
-        inventory_key: countData.inventory_key,
-        product_key: countData.product_key,
-        position_key: countData.position_key,
-        serial_key: countData.serial_key || null,
-        quantity_original: countData.quantity_original,
-        quantity_counted: countData.quantity_counted,
-        serials_counted: countData.serials_counted || [],
-        timestamp: new Date().toISOString(),
-      };
-      console.log('Count data saved:', dataToLog);
+    /**
+     * Complete a count record
+     * Uses COUNT_COMPLETED event
+     * @param {Object} countData - Count data object
+     * @param {string} countData.count_key - The count record key to complete (required)
+     * @param {number} countData.quantity_counted - The counted quantity (required)
+     * @param {Array<string>} countData.serials_counted - Optional array of serial keys
+     * @param {string} countData.notes - Optional notes
+     * @returns {Promise<void>}
+     */
+    async saveCount(countData) {
+      if (!countData.count_key) {
+        throw new Error('count_key is required to complete a count');
+      }
 
-      // Store in countedItems
-      this.countedItems[countData.inventory_key] = dataToLog;
+      await sendEvent({
+        event_type: 'COUNT_COMPLETED',
+        event_data: {
+          count_key: countData.count_key,
+          count_qt: countData.count_qt,
+          count_serial_keys: countData.serials_counted || null,
+          notes: countData.notes || null,
+        }
+      });
     },
     resetCounting() {
-      this.countedItems = {};
       this.tempSerials = [];
     }
   }
