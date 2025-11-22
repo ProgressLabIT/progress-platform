@@ -15,8 +15,8 @@
         </div>
       </div>
 
-      <!-- START COUNT CONFIRMATION -->
-      <template v-if="!countStarted">
+      <!-- START COUNT CONFIRMATION (only for existing inventory) -->
+      <template v-if="!countStarted && !isNewInventory">
         <q-space></q-space>
         <div class="col-auto text-center">
           <div class="text-h5 q-mb-md">{{ $t('start_count_question') }}</div>
@@ -189,12 +189,20 @@ const displayedSerials = computed(() => {
   }
 });
 
+const isNewInventory = computed(() => {
+  return !props.item?.inventory_keys || props.item?.inventory_keys?.length === 0;
+});
+
 onMounted(() => {
   // Reset temp serials when opening the card
   countingStore.tempSerials = [];
 
-  // If count is already active, skip confirmation and go directly to counting UI
-  if (props.item.counting) {
+  // For new inventory, skip confirmation and go directly to counting UI
+  if (isNewInventory.value) {
+    countStarted.value = true;
+    // For new inventory, don't load existing serials (there are none)
+  } else if (props.item.counting) {
+    // If count is already active for existing inventory, skip confirmation and go directly to counting UI
     countStarted.value = true;
     // Load existing serials if in non-blind mode
     if (!props.blindMode) {
@@ -206,16 +214,23 @@ onMounted(() => {
 });
 
 async function startCount() {
+  // Only start count for existing inventory
+  if (isNewInventory.value) {
+    return;
+  }
+
   startingCount.value = true;
 
   try {
+    const eventData = {
+      inventory_count_session_key: countingStore.sessionData?._key,
+      assignment_key: props.item.assignment_key || null,
+      inventory_keys: props.item.inventory_keys
+    };
+
     const response = await sendEvent({
       event_type: 'COUNT_STARTED',
-      event_data: {
-        inventory_count_session_key: countingStore.sessionData?._key,
-        assignment_key: props.item.assignment_key || null,
-        inventory_keys: props.item.inventory_keys || [props.item._key]
-      }
+      event_data: eventData
     });
 
     countRecordKey.value = response.data?.detail?.count_record_key;
@@ -365,26 +380,38 @@ function handleClose() {
 }
 
 async function cancelCount() {
-  if (!countRecordKey.value) {
-    Notify.create({
-      message: 'Cannot cancel: count record not found. Please refresh the page.',
-      color: 'negative',
-      position: 'top',
-      timeout: 3000
-    });
-    cancelingCount.value = false;
-    return;
-  }
-
   cancelingCount.value = true;
 
   try {
+    // For new inventory, just reset and close without firing COUNT_CANCELED event
+    if (isNewInventory.value) {
+      countingStore.tempSerials = [];
+      cancelingCount.value = false;
+      emit('close');
+      return;
+    }
+
+    // For existing inventory, check if count record exists
+    if (!countRecordKey.value) {
+      Notify.create({
+        message: 'Cannot cancel: count record not found. Please refresh the page.',
+        color: 'negative',
+        position: 'top',
+        timeout: 3000
+      });
+      cancelingCount.value = false;
+      return;
+    }
+
+    // Fire COUNT_CANCELED event for existing inventory
+    const eventData = {
+      count_key: countRecordKey.value,
+      inventory_keys: props.item.inventory_keys
+    };
+
     await sendEvent({
       event_type: 'COUNT_CANCELED',
-      event_data: {
-        count_key: countRecordKey.value,
-        inventory_keys: props.item.inventory_keys || [props.item._key]
-      }
+      event_data: eventData
     });
 
     Notify.create({

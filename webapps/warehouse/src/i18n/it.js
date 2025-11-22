@@ -7,6 +7,7 @@ export default {
     template_error: 'Errore template',
     no_printer_found: 'Nessuna stampante trovata',
   },
+  add_count_for_product: 'Aggiungi conteggio per prodotto',
   adjust_quantity: 'Adegua quantità',
   back: 'Indietro',
   breadcrumb: {
@@ -32,6 +33,7 @@ export default {
   count_active: 'Conteggio Attivo',
   count_canceled: 'Conteggio annullato',
   count_locked_by_other_user: 'Questo elemento è in conteggio da un altro utente',
+  count_resume: 'Riprendi conteggio',
   count_saved: 'Conteggio salvato',
   count_session: 'Sessione Inventario | Sessioni Inventario',
   count_started_error: 'Errore avvio conteggio',

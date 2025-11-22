@@ -15,8 +15,8 @@
         </div>
       </div>
 
-      <!-- START COUNT CONFIRMATION -->
-      <template v-if="!countStarted">
+      <!-- START COUNT CONFIRMATION (only for existing inventory) -->
+      <template v-if="!countStarted && !isNewInventory">
         <q-space></q-space>
         <div class="col-auto text-center">
           <div class="text-h5 q-mb-md">{{ $t('start_count_question') }}</div>
@@ -152,6 +152,10 @@ const adjustmentQuantity = computed(() => {
   return countedQuantity.value - props.item.quantity;
 });
 
+const isNewInventory = computed(() => {
+  return !props.item.inventory_keys || props.item.inventory_keys.length === 0;
+});
+
 async function loadCountRecord() {
    // Attempt to retrieve count record if existing, in case of page reload or previous count session
   try {
@@ -186,24 +190,34 @@ onMounted(() => {
   // Initialize quantity based on blind mode
   countedQuantity.value = props.blindMode ? 0 : props.item.quantity;
 
-  // If count is already active, skip confirmation and go directly to counting UI
-  if (props.item.counting) {
+  // For new inventory, skip confirmation and go directly to counting UI
+  if (isNewInventory.value) {
+    countStarted.value = true;
+  } else if (props.item.counting) {
+    // If count is already active for existing inventory, skip confirmation and go directly to counting UI
     countStarted.value = true;
     loadCountRecord();
   }
 });
 
 async function startCount() {
+  // Only start count for existing inventory
+  if (isNewInventory.value) {
+    return;
+  }
+
   startingCount.value = true;
 
   try {
+    const eventData = {
+      inventory_count_session_key: countingStore.sessionData?._key,
+      assignment_key: props.item.assignment_key || null,
+      inventory_keys: props.item.inventory_keys
+    };
+
     const response = await sendEvent({
       event_type: 'COUNT_STARTED',
-      event_data: {
-        inventory_count_session_key: countingStore.sessionData?._key,
-        assignment_key: props.item.assignment_key || null,
-        inventory_keys: props.item.inventory_keys || [props.item._key]
-      }
+      event_data: eventData
     });
 
     countRecordKey.value = response.data?.detail?.count_record_key;
@@ -227,12 +241,23 @@ async function cancelCount() {
   cancelingCount.value = true;
 
   try {
+    // For new inventory, just reset and close without firing COUNT_CANCELED event
+    if (isNewInventory.value) {
+      countedQuantity.value = props.blindMode ? 0 : props.item.quantity;
+      cancelingCount.value = false;
+      emit('close');
+      return;
+    }
+
+    // For existing inventory, fire COUNT_CANCELED event
+    const eventData = {
+      count_key: countRecordKey.value,
+      inventory_keys: props.item.inventory_keys
+    };
+
     await sendEvent({
       event_type: 'COUNT_CANCELED',
-      event_data: {
-        count_key: countRecordKey.value,
-        inventory_keys: props.item.inventory_keys || [props.item._key]
-      }
+      event_data: eventData
     });
 
     Notify.create({

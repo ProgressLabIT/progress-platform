@@ -59,7 +59,8 @@
               :key="item._key"
               clickable
               class="content-card q-my-xs q-pa-md text-body1"
-              :class="[getColor(item), { 'locked-item': item.counting }]"
+              :style="{ 'border-color': item.counting ? 'var(--theme-blue)' : 'yellow' }"
+              :class="[getColor(item), { 'locked-item': item.count_by === store.state.session.user._key }]"
               @click="selectItem(item)"
             >
               <q-item-section side>
@@ -74,18 +75,18 @@
                 </div>
               </q-item-section>
               <q-item-section v-if="item.counting" side>
-                <q-badge color="yellow" text-color="dark" class="q-pa-xs">
-                  <div class="row items-center q-gutter-xs">
-                    <span>{{ $t('count_active') }}</span>
-                    <BaseUserAvatar
-                      v-if="item.count_user"
-                      :user="{ _key: item.count_by, ...item.count_user }"
-                      :show_name="false"
-                      size="20px"
-                      dense
-                    />
-                  </div>
+                <q-badge :color="item.count_by === store.state.session.user._key ? 'theme-blue' : 'theme-orange'" class="q-pa-xs">
+                  {{ item.count_by === store.state.session.user._key ? $t('count_resume') : $t('count_active') }}
                 </q-badge>
+              </q-item-section>
+              <q-item-section v-if="item.count_by" side>
+                <BaseUserAvatar
+                  v-if="item.count_by"
+                  :user="usersByKeys[item.count_by]"
+                  :show_name="false"
+                  size="20px"
+                  dense
+                />
               </q-item-section>
             </q-item>
           </q-list>
@@ -93,6 +94,13 @@
       </template>
 
       <q-space></q-space>
+      <q-btn
+        color="theme-blue"
+        outline
+        :label="$t('add_count_for_product')"
+        class="full-width q-mb-sm"
+        @click="showProductSearch = true"
+      />
       <q-btn
         color="theme-grey"
         :label="$t('back')"
@@ -110,16 +118,59 @@
     />
 
     <CountingSerialsCard
-      v-if="selectedItem && (selectedItem.serial_key !== null || selectedItem.serial_key === 'aggregated')"
+      v-if="selectedItem && selectedItem?.serial_key !== null"
       :item="selectedItem"
       :blind-mode="blindMode"
       @close="unselectItem()"
     />
+
+    <!-- Product Search Card -->
+    <SlideUpCard
+      :model-value="showProductSearch"
+      @hide="showProductSearch = false"
+      height="90vh"
+    >
+      <div class="col column">
+        <div class="col-auto q-mb-sm text-h3">
+          {{ $t('product') }}
+        </div>
+
+        <!-- PRODUCT SEARCH -->
+        <SearchOrScan v-model="productFilter" @update:model-value="searchProducts" />
+
+        <!-- PRODUCT LIST -->
+        <div class="col-auto q-mt-md q-mb-sm text-h6">
+          {{ productListLabel }} ({{ productRows?.length || 0 }})
+        </div>
+
+        <q-scroll-area class="col">
+          <q-list>
+            <q-item
+              v-for="product in productRows"
+              :key="product._key"
+              clickable
+              dense
+              class="content-card q-my-xs q-py-sm"
+              :class="getProductColor(product)"
+              @click="selectProductForCount(product)"
+            >
+              <q-item-section side>
+                <q-icon :name="product.traceability_level ? 'mdi-cube-scan' : 'mdi-apps'" />
+              </q-item-section>
+              <q-item-section>
+                <q-item-label class="highlight">{{ product.code }}</q-item-label>
+                <q-item-label caption class="">{{ product.description }}</q-item-label>
+              </q-item-section>
+            </q-item>
+          </q-list>
+        </q-scroll-area>
+      </div>
+    </SlideUpCard>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Notify } from 'quasar';
 import { api } from '@/boot/axios';
@@ -128,6 +179,7 @@ import SearchOrScan from '@/components/SearchOrScan.vue';
 import CountingQuantityCard from './CountingQuantityCard.vue';
 import CountingSerialsCard from './CountingSerialsCard.vue';
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue';
+import SlideUpCard from '@/components/SlideUpCard.vue';
 
 const props = defineProps({
   sessionData: {
@@ -147,6 +199,19 @@ const positionResultsType = ref('RECENTI');
 const selectedPosition = ref(null);
 const positionContents = ref([]);
 const selectedItem = ref(null);
+const showProductSearch = ref(false);
+const productFilter = ref('');
+const productListLabel = ref('Recenti');
+const productRows = ref([]);
+const productLastResearch = ref(undefined);
+const usersByKeys = ref({});
+
+api.get('user').then((resp) => {
+  usersByKeys.value = resp.data.detail.reduce((acc, user) => {
+    acc[user._key] = user;
+    return acc;
+  }, {});
+});
 
 const blindMode = computed(() => props.sessionData.blind_mode);
 
@@ -164,6 +229,10 @@ function getColor(item) {
   };
   const color = colorMap[item.type];
   return `bg-${color}-backdrop`;
+}
+
+function getProductColor(product) {
+  return product.traceability_level ? 'bg-green-backdrop' : 'bg-blue-backdrop';
 }
 
 function loadLatestUsedPositions() {
@@ -211,6 +280,21 @@ function searchPositions() {
 async function loadPositionContents(position_key) {
   const response = await api.get(`/position/${position_key}`, { params: { search: filter.value } });
   positionContents.value = response.data;
+
+  // Auto-select if exactly one item matches the filter
+  if (filter.value && response.data.length === 1 && response.data[0].code === filter.value) {
+    await nextTick();
+    // Check filteredContents after aggregation/processing
+    const filtered = filteredContents.value;
+    if (filtered.length === 1) {
+      // Check if filter matches the item's code (case-insensitive)
+      const itemCode = filtered[0].code?.toLowerCase() || '';
+      if (itemCode === filter.value.toLowerCase()) {
+        selectItem(filtered[0]);
+        filter.value = '';
+      }
+    }
+  }
 }
 
 function selectRootPosition() {
@@ -312,6 +396,7 @@ const filteredContents = computed(() => {
 
 onMounted(() => {
   loadLatestUsedPositions();
+  loadLatestUsedProducts();
 });
 
 function selectItem(item) {
@@ -322,7 +407,7 @@ function selectItem(item) {
       // Item is locked by another user, block access
       Notify.create({
         message: $t('count_locked_by_other_user'),
-        color: 'negative',
+        color: 'theme-orange',
         position: 'top',
         timeout: 3000
       });
@@ -375,6 +460,71 @@ function unselectItem() {
   selectedItem.value = null;
   loadPositionContents(selectedPosition.value._key);
 }
+
+function searchProducts() {
+  if (productFilter.value === productLastResearch.value) {
+    return;
+  }
+
+  if (productFilter.value.length === 0) {
+    loadLatestUsedProducts();
+    productListLabel.value = 'Recenti';
+  } else {
+    productLastResearch.value = productFilter.value;
+    loading.value = true;
+    api.get('product', {
+      params: {
+        search: productFilter.value,
+        limit: 100
+      }
+    }).then((resp) => {
+      // Auto-select if exactly one product matches the filter
+      if (resp.data.length === 1 && resp.data[0].code === productFilter.value) {
+        selectProductForCount(resp.data[0]);
+        productFilter.value = '';
+      } else {
+        productRows.value = resp.data;
+      }
+      loading.value = false;
+      productListLabel.value = 'Risultati';
+    });
+  }
+}
+
+function loadLatestUsedProducts() {
+  loading.value = true;
+  api.get('movement/latest-products', { params: { limit: 10 } })
+    .then((resp) => {
+      productRows.value = resp.data;
+      loading.value = false;
+      productListLabel.value = 'Recenti';
+    });
+}
+
+function selectProductForCount(product) {
+  // Determine card type based on traceability_level
+  const isSerialProduct = !!product.traceability_level;
+
+  // Create item object for counting cards
+  selectedItem.value = {
+    _key: null, // No inventory key yet
+    product_key: product._key,
+    product_code: product.code,
+    product_description: product.description,
+    position_key: selectedPosition.value._key,
+    position_code: selectedPosition.value.code,
+    serial_key: isSerialProduct ? 'aggregated' : null,
+    quantity: 0,
+    counting: false,
+    count_by: null,
+    inventory_keys: [], // Empty - item doesn't exist in inventory yet
+    path: [{ position_key: selectedPosition.value._key, position_code: selectedPosition.value.code }]
+  };
+
+  // Close product search card
+  showProductSearch.value = false;
+  productFilter.value = '';
+}
 </script>
 
 <style lang="sass" scoped>
@@ -382,7 +532,7 @@ function unselectItem() {
   border-radius: 5px
 
 .locked-item
-  border: 2px solid yellow !important
+  border: 2px solid var(--theme-blue) !important
 
 .grid-style-transition
   transition: transform .28s, background-color .28s

@@ -1,4 +1,6 @@
 export default {
+  count_resume: 'Resume counting',
+  add_count_for_product: 'Add count for product',
   adjust_quantity: 'Adjust quantity',
   alerts: {
     404: 'this page does not exists',
@@ -23,6 +25,7 @@ export default {
   contents: 'Contents',
   count_active: 'Count Active',
   count_canceled: 'Count canceled',
+  count_resume: 'Resume counting',
   count_locked_by_other_user: 'This item is being counted by another user',
   count_saved: 'Count saved',
   count_session: 'Count Session | Count Sessions',
