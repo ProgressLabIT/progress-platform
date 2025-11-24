@@ -4,8 +4,6 @@ workflow:
       when: always
     - when: never
 
-services:
-  - docker:dind
 
 # Just extract version info
 version-info:
@@ -26,11 +24,13 @@ version-info:
 
 .service-template: &service-template
   stage: build
-  image: docker:stable
+  image: docker:24.0.5-cli
+  services:
+    - docker:24.0.5-dind
   needs:
     - version-info
   script:
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD registry.gitlab.com
+    - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin registry.gitlab.com
     - cd $BUILD_DIR
     - >
       docker build
