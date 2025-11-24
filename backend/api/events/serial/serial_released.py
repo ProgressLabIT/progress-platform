@@ -1,17 +1,15 @@
-from events.serial.base_serial import BaseSerialEvent, BaseSerialModel
-from typing import Any
-from utils.db import db, model_to_db_dict
-from utils.dt import timestamp
-from models.event import EventType
+from datetime import datetime
 
-from models.serial import  SerialNotificationType, Serial
-import traceback
-from utils.serial import Queries
+from pydantic import Field
+
+from events.serial.base_serial import BaseSerialEvent, BaseSerialModel
+from models.event import EventType
+from utils.dt import timestamp
 
 
 class SerialReleasedEvent(BaseSerialEvent):
   class InfoModel(BaseSerialModel):
-    pass
+    released: datetime | None = Field(default_factory=timestamp)
 
   @classmethod
   def get_event_type(cls):
@@ -21,5 +19,10 @@ class SerialReleasedEvent(BaseSerialEvent):
     # Update released date
     self.tx.collection('Serial').update(dict(
       _key=self.info.serial_key,
-      released=timestamp()
+      released=self.info.released
     ))
+
+    self.response = dict(
+      message="Serial released correctly",
+      serial_key=self.info.serial_key
+    )
