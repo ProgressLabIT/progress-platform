@@ -9,7 +9,14 @@ from utils.dt import timestamp
 
 class SerialReleasedEvent(BaseSerialEvent):
   class InfoModel(BaseSerialModel):
-    released: datetime | None = Field(default_factory=timestamp)
+    released: datetime | None = None
+
+    @field_validator('released', mode='after')
+    def validate_released(self, v):
+      # Use timestamp if released is explicitly set to None
+      if v is None:
+        return timestamp()
+      return v
 
   @classmethod
   def get_event_type(cls):
