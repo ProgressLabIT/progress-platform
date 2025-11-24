@@ -4,8 +4,6 @@ workflow:
       when: always
     - when: never
 
-services:
-  - docker:dind    
 
 # Just extract version info
 version-info:
@@ -14,9 +12,9 @@ version-info:
   before_script: []  # Override the default docker login since we don't need it (and alpine doesn't have docker)
   script:
     - |
-      # Extract version from tag
+      # Extract version from tag (e.g., v0.9.8 -> 0.9.8)
       echo "VERSION=${CI_COMMIT_TAG#v}" >> build.env
-      # Extract version from branch name (e.g., release/0.9 -> 0.9)
+      # Extract MAJOR.MINOR version from tag name (e.g., v0.9.8 -> 0.9)
       MAJOR_MINOR=$(echo ${CI_COMMIT_TAG#v} | cut -d'.' -f1,2)
       echo "BRANCH_VERSION=$MAJOR_MINOR" >> build.env
   artifacts:
@@ -26,11 +24,13 @@ version-info:
 
 .service-template: &service-template
   stage: build
-  image: docker:stable
+  image: docker:24.0.5-cli
+  services:
+    - docker:24.0.5-dind
   needs:
     - version-info
   script:
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD registry.gitlab.com
+    - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin registry.gitlab.com
     - cd $BUILD_DIR
     - >
       docker build
