@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import Field
+from pydantic import field_validator
 
 from events.serial.base_serial import BaseSerialEvent, BaseSerialModel
 from models.event import EventType
