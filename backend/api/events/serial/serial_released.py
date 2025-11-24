@@ -12,7 +12,8 @@ class SerialReleasedEvent(BaseSerialEvent):
     released: datetime | None = None
 
     @field_validator('released', mode='after')
-    def validate_released(self, v):
+    @classmethod
+    def validate_released(cls, v):
       # Use timestamp if released is explicitly set to None
       if v is None:
         return timestamp()

@@ -59,6 +59,7 @@ class SerialLink(FlexModel):
     return f'Serial/{serial_key}' if '/' not in serial_key else serial_key
 
   @field_validator('parent_serial_key', 'child_serial_key', mode="after")
+  @classmethod
   def parse_serial_key(cls, v):
     return v.split('/')[-1]
 

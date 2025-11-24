@@ -104,5 +104,6 @@ class ProductSearchParams(BaseModel):
   offset: int = 0
 
   @field_validator('search_string', 'include_text', 'exclude_text', mode='after')
+  @classmethod
   def convert_wildcard_to_regex(cls, v):
     return wildcard_to_regex(v)

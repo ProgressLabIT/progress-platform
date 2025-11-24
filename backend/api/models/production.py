@@ -169,6 +169,7 @@ class Job(FlexModel):
   #   return v
 
   @field_validator('qt_released')
+  @classmethod
   def released_less_than_completed(cls, qt_released: float, info: ValidationInfo):
     if qt_released > info.data['qt_completed']:
       raise ValueError("Released quantity cannot exceed completed quantity")
