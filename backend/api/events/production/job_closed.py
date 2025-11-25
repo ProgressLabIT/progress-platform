@@ -25,7 +25,7 @@ class JobClosedEvent(BaseEvent):
   def apply(self):
     job_data = self.tx.collection('Job').get(self.info.job_key)
     self.info.phase_key = job_data['phase_key']
-    self.info.work_order_key = job_data['work_order_key']
+    self.info.work_order_key = job_data['wo_key']
 
     bind_vars=dict(
       job_key=self.info.job_key,
