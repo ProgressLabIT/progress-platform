@@ -7,7 +7,7 @@ from models.event import EventModel, EventType
 from models.form import SerialFormFieldValue
 from models.serial import ProcessedSerialCode, SerialNotificationType, SerialNotificationErrorCode
 from utils.serial import Queries as SerialQueries
-from utils.exceptions import (SerialNotUpdatedError)
+from utils.exceptions import (SerialNotUpdatedError, SerialCodeAlreadyPresent)
 
 class SerialUpdatedEvent(BaseSerialEvent):
   class InfoModel(BaseSerialModel):
@@ -49,8 +49,8 @@ class SerialUpdatedEvent(BaseSerialEvent):
     # UPDATE SCENARIOS
     # ===================================================================
 
-    # Update code if provided
-    if self.info.serial_code:
+    # Set code if provided, allow clearing code if empty string is provided (if None nothing happens)
+    if self.info.serial_code is not None:
       # Prevent code change if it's protected. Not applicable if serial hasn't been assigned a code yet
       if (
         self.original['code'] is not None and
@@ -59,7 +59,11 @@ class SerialUpdatedEvent(BaseSerialEvent):
       ):
         raise SerialNotUpdatedError(f'Changing serial code is not allowed')
 
-      serial_update['code'] = self.info.serial_code
+      # Ensure serial code is unique for this product, unless it's empty string (to allow clearing code)
+      if len(self.info.serial_code) > 0 and not self.verify_serial_code_free(self.info.serial_key, self.original['product_key'], self.info.serial_code):
+        raise SerialCodeAlreadyPresent(f'Cannot update serial, serial code {self.info.serial_code} already in use for this product')
+
+      serial_update['code'] = self.info.serial_code if len(self.info.serial_code) > 0 else None
 
     # Update data if provided
     if self.info.serial_data:

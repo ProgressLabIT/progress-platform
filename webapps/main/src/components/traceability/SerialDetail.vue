@@ -287,16 +287,21 @@ async function save() {
 
   serial_data.updated_by = `User/${session_data.value.user._key}`; // temporarily hardcoding DB id
 
-  await saveFiles(serial_data._key);
-  await sendEvent({
-    event_type: 'SERIAL_UPDATED',
-    event_data: {
-      serial_key: serial_data._key,
-      serial_code: serial_data.code,
-      serial_data: serial_data.data
-    }
-  });
-  refreshSerial();
+  try {
+
+    await saveFiles(serial_data._key);
+    await sendEvent({
+      event_type: 'SERIAL_UPDATED',
+      event_data: {
+        serial_key: serial_data._key,
+        serial_code: serial_data.code,
+        serial_data: serial_data.data
+      }
+    });
+    await refreshSerial();
+  } catch (error) {
+    console.error('Error updating serial:', error);
+  }
 
   editMode.value = false;
   saving.value = false;

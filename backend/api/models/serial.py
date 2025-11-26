@@ -14,12 +14,11 @@ def process_serial_code(code: str | None) -> str | None:
   if not isinstance(code, str):
     raise ValueError('Serial code must be a string')
   code = code.upper().strip()
-  if len(code) < 1:
-    raise ValueError('Serial code must be at least 1 character long')
+
   return code
 
 
-ProcessedSerialCode = Annotated[str, BeforeValidator(process_serial_code)]
+ProcessedSerialCode = Annotated[str | None, BeforeValidator(process_serial_code)]
 
 
 class Serial(ArangoDocument):
