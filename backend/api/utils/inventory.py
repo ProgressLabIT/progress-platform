@@ -456,10 +456,15 @@ class Queries:
       && @position_key ? r._to == @position_key : true
       && @user_key ? r.user_key == @user_key : true
       && @status ? r.status == @status : true
+    LET product = FIRST(FOR p IN Product FILTER p._key == PARSE_IDENTIFIER(r._from).key RETURN p)
+    LET position = FIRST(FOR p IN Position FILTER p._key == PARSE_IDENTIFIER(r._to).key RETURN p)
     LIMIT @offset, @limit || null
     RETURN MERGE(r, {
-      product_code: FIRST(FOR p IN Product FILTER p._key == r._from RETURN p).code,
-      product_description: FIRST(FOR p IN Product FILTER p._key == r._from RETURN p).description,
-      position_code: FIRST(FOR p IN Position FILTER p._key == r._to RETURN p).code
+      product_key: product._key,
+      product_code: product.code,
+      product_description: product.description,
+      product_traceability_level: product.traceability_level,
+      position_key: position._key,
+      position_code: position.code
     })
   """

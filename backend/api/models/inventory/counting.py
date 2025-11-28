@@ -148,6 +148,7 @@ class InventoryCountRecord(ArangoDocument): # edge collection inventory_count_re
   # Metadata
   inventory_count_session_key: str
   assignment_key: str | None = None
+  user_key: str | None = None # User who started the count
   status: InventoryCountStatus = InventoryCountStatus.STARTED
   reviewed_at: datetime | None = None # Either confirmed or discarded
   notes: str | None = None

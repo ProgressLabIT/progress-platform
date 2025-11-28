@@ -23,6 +23,12 @@
             :label="$t('warehouse.counting.assignments')"
             icon="mdi-account-multiple"
           />
+          <q-tab
+            v-if="showRecordsTab"
+            :name="3"
+            :label="$t('warehouse.counting.records')"
+            icon="mdi-clipboard-list"
+          />
         </q-tabs>
       </q-card-section>
 
@@ -49,6 +55,10 @@
             :disable-assigned-items="disableAssignedItems"
           />
         </q-tab-panel>
+        <!-- TAB 3: RECORDS -->
+        <q-tab-panel v-if="showRecordsTab" :name="3" class="q-px-none">
+          <CountSessionRecordsTab />
+        </q-tab-panel>
       </q-tab-panels>
 
       <q-separator />
@@ -65,7 +75,7 @@
           </div>
           <div class="row items-center q-gutter-x-sm">
             <q-btn
-              :label="$t('cancel')"
+              :label="$t('close')"
               color="theme-grey"
               @click="router.back()"
             />
@@ -76,13 +86,13 @@
               @click="step--"
             />
             <q-btn
-              v-if="step < 2"
+              v-if="step < maxStep"
               :label="$t('next')"
               color="primary"
               @click="step++"
             />
             <q-btn
-              v-else
+              v-if="step !== 3"
               :label="isEditMode ? $t('save') : $t('create')"
               color="primary"
               :loading="saving"
@@ -105,6 +115,7 @@ import { useCountSessionStore } from '@/stores/countSession';
 import BaseDialog from '@/components/BaseDialog.vue';
 import CountSessionDataTab from './CountSessionDataTab.vue';
 import CountSessionAssignmentsTab from './CountSessionAssignmentsTab.vue';
+import CountSessionRecordsTab from './CountSessionRecordsTab.vue';
 
 const props = defineProps({
   countSessionKey: {
@@ -122,6 +133,14 @@ const saving = ref(false);
 const disableAssignedItems = ref(false);
 const isEditMode = computed(() => !!props.countSessionKey);
 const originalSessionType = ref(null);
+
+// Show records tab only when session has been started (not in 'planned' status)
+const showRecordsTab = computed(() => {
+  return isEditMode.value && sessionData.value.status && sessionData.value.status !== 'planned';
+});
+
+// Max step depends on whether records tab is visible
+const maxStep = computed(() => showRecordsTab.value ? 3 : 2);
 
 // Use store state with computed get/set for proper v-model binding
 const sessionData = computed({

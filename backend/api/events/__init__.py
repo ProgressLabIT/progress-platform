@@ -40,8 +40,7 @@ from events.inventory.assignment_completed import AssignmentCompletedEvent
 from events.inventory.count_started import CountStartedEvent
 from events.inventory.count_completed import CountCompletedEvent
 from events.inventory.count_canceled import CountCanceledEvent
-from events.inventory.count_edited import CountEditedEvent
-from events.inventory.count_submitted import CountSubmittedEvent
+from events.inventory.count_discarded import CountDiscardedEvent
 from events.inventory.count_session_started import CountSessionStartedEvent
 from events.inventory.count_session_completed import CountSessionCompletedEvent
 from events.inventory.count_session_applied import CountSessionAppliedEvent

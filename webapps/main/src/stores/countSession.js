@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { api } from '@/boot/axios.js'
+import { sendEventsBulk } from '@/composables/event.js'
 
 export const useCountSessionStore = defineStore('countSession', {
   state: () => ({
@@ -21,6 +22,10 @@ export const useCountSessionStore = defineStore('countSession', {
     },
     assignments: [],
     initialAssignments: new Map(), // Map of assignment key -> status
+
+    // Count records state
+    records: [],
+    recordsLoading: false,
   }),
 
   getters: {
@@ -475,6 +480,74 @@ export const useCountSessionStore = defineStore('countSession', {
       // Clear local state
       this.assignments = [];
       this.initialAssignments = new Map();
+    },
+
+    /**
+     * Load count records for a session
+     * @param {string} sessionKey - The session key to load records for
+     * @returns {Promise<Array>} The loaded records
+     */
+    async loadRecords(sessionKey = null) {
+      const key = sessionKey || this.currentSession;
+      if (!key) {
+        console.warn('No session key provided for loading records');
+        return [];
+      }
+
+      this.recordsLoading = true;
+      try {
+        const { data } = await api.get('/inventory/count-record', {
+          params: {
+            count_session_key: key,
+            limit: null,
+          },
+        });
+        this.records = data;
+        return data;
+      } catch (error) {
+        console.error('Error loading count records:', error);
+        this.records = [];
+        throw error;
+      } finally {
+        this.recordsLoading = false;
+      }
+    },
+
+    /**
+     * Discard multiple count records via COUNT_DISCARDED events (bulk)
+     * @param {Array<string>} countKeys - Array of count record keys to discard
+     * @returns {Promise<object>} The bulk event response
+     */
+    async discardRecords(countKeys) {
+      if (!countKeys || countKeys.length === 0) {
+        return;
+      }
+
+      // Build events array for bulk request
+      const events = countKeys.map(count_key => ({
+        event_type: 'COUNT_DISCARDED',
+        count_key,
+      }));
+
+      const response = await sendEventsBulk(events);
+
+      // Update local state - mark the records as discarded
+      for (const countKey of countKeys) {
+        const recordIndex = this.records.findIndex(r => r._key === countKey);
+        if (recordIndex !== -1) {
+          this.records[recordIndex].status = 'discarded';
+        }
+      }
+
+      return response;
+    },
+
+    /**
+     * Clear records state
+     */
+    clearRecords() {
+      this.records = [];
+      this.recordsLoading = false;
     },
   },
 })
