@@ -8,6 +8,7 @@ export default {
     no_printer_found: 'Nessuna stampante trovata',
   },
   add_count_for_product: 'Aggiungi conteggio per prodotto',
+  added: 'aggiunto | aggiunti',
   adjust_quantity: 'Adegua quantità',
   back: 'Indietro',
   breadcrumb: {
