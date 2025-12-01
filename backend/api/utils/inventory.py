@@ -50,12 +50,11 @@ class Queries:
       position_key: result.type == 'position' ? v._key : null,
       position_fixed: result.type == 'position' ? v.fixed : null,
       product_code: result.type == 'position' ? null : v.code,
+      product_description: result.type == 'position' ? null : v.description,
       product_key: result.type == 'position' ? null : v._key,
       quantity: e.quantity,
       serial_code: result.type == 'serial' ? serial.code : null,
-      serial_key: result.type == 'serial' ? serial._key : null,
-      counting: e.counting || false,
-      count_by: e.count_by,
+      serial_key: result.type == 'serial' ? serial._key : null
     }
   """
 
@@ -464,6 +463,7 @@ class Queries:
       product_code: product.code,
       product_description: product.description,
       product_traceability_level: product.traceability_level,
+      product_tags: product.tags,
       position_key: position._key,
       position_code: position.code
     })

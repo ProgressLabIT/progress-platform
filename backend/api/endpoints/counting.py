@@ -240,6 +240,6 @@ def get_counting_record(params: Annotated[InventoryCountRecordSearchParams, Quer
   try:
     bind_vars = dict(**params.model_dump())
     cursor = db.aql.execute(Queries.SEARCH_INVENTORY_COUNT_RECORDS, bind_vars=bind_vars)
-    return [InventoryCountRecord(**f) for f in cursor]
+    return list(cursor)
   except:
     raise HTTPException(status_code=500, detail=traceback.format_exc())
