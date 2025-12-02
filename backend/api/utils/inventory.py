@@ -449,17 +449,17 @@ class Queries:
   SEARCH_INVENTORY_COUNT_RECORDS = """
     FOR r IN inventory_count_record
     FILTER
-      @count_session_key ? r.inventory_count_session_key == @count_session_key : true
-      && @assignment_key ? r.assignment_key == @assignment_key : true
-      && @product_key ? r._from == @product_key : true
-      && @position_key ? r._to == @position_key : true
-      && @user_key ? r.user_key == @user_key : true
-      && @include_started ? r.status == 'started' : true
-      && @include_completed ? r.status == 'completed' : true
-      && @include_discarded ? r.status == 'discarded' : true
+      (@count_session_key ? r.inventory_count_session_key == @count_session_key : true)
+      && (@assignment_key ? r.assignment_key == @assignment_key : true)
+      && (@product_key ? r._from == @product_key : true)
+      && (@position_key ? r._to == @position_key : true)
+      && (@user_key ? r.user_key == @user_key : true)
+      && (@include_started ? r.status == 'started' : true)
+      && (@include_completed ? r.status == 'completed' : true)
+      && (@include_discarded ? r.status == 'discarded' : true)
     LET product = FIRST(FOR p IN Product FILTER p._key == PARSE_IDENTIFIER(r._from).key RETURN p)
     LET position = FIRST(FOR p IN Position FILTER p._key == PARSE_IDENTIFIER(r._to).key RETURN p)
-    LIMIT @offset, @limit || null
+    LIMIT @offset,@limit || null
     RETURN MERGE(r, {
       product_key: product._key,
       product_code: product.code,

@@ -528,7 +528,9 @@ const filteredRecords = computed(() => {
 // Methods
 async function loadRecords() {
   try {
-    await countSessionStore.loadRecords();
+    await countSessionStore.loadRecords(null, { // current session is stored in the store
+      include_started: false,
+    });
   } catch (error) {
     console.error('Error loading records:', error);
   }

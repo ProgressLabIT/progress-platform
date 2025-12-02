@@ -485,9 +485,10 @@ export const useCountSessionStore = defineStore('countSession', {
     /**
      * Load count records for a session
      * @param {string} sessionKey - The session key to load records for
+     * @param {Object} filters - Optional filters for records
      * @returns {Promise<Array>} The loaded records
      */
-    async loadRecords(sessionKey = null) {
+    async loadRecords(sessionKey = null, filters = {}) {
       const key = sessionKey || this.currentSession;
       if (!key) {
         console.warn('No session key provided for loading records');
@@ -496,14 +497,15 @@ export const useCountSessionStore = defineStore('countSession', {
 
       this.recordsLoading = true;
       try {
-        const { data } = await api.get('/inventory/count-record', {
-          params: {
-            count_session_key: key,
-            limit: null,
-          },
-        });
-        this.records = data;
-        return data;
+        const params = {
+          count_session_key: key,
+          limit: null,
+          ...filters,
+        };
+
+        const { data } = await api.get('/inventory/count-record', { params });
+        this.records = data || [];
+        return this.records;
       } catch (error) {
         console.error('Error loading count records:', error);
         this.records = [];
