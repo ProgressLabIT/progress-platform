@@ -15,8 +15,8 @@
         </div>
       </div>
 
-      <!-- START COUNT CONFIRMATION (only for existing inventory) -->
-      <template v-if="!countStarted && !isNewInventory">
+      <!-- START COUNT CONFIRMATION -->
+      <template v-if="!countStarted">
         <q-space></q-space>
         <div class="col-auto text-center">
           <div class="text-h5 q-mb-md">{{ $t('start_count_question') }}</div>
@@ -135,6 +135,7 @@ import { Notify } from 'quasar';
 import { useCountingStore } from '@/stores/counting';
 import { sendEvent } from '@/composables/event';
 import { api } from '@/boot/axios';
+import { store } from '@/boot/store';
 import SlideUpCard from '@/components/SlideUpCard.vue';
 import QuantitySelector from '@/components/QuantitySelector.vue';
 
@@ -143,10 +144,6 @@ const props = defineProps({
     type: Object,
     required: true
   },
-  blindMode: {
-    type: Boolean,
-    default: true
-  }
 });
 
 const emit = defineEmits(['close']);
@@ -161,13 +158,10 @@ const showCancelConfirmation = ref(false);
 const cancelingCount = ref(false);
 const notes = ref('');
 
+const blindMode = computed(() => countingStore.sessionData?.blind_mode || true);
 const adjustmentQuantity = computed(() => {
-  if (props.blindMode) return 0;
-  return countedQuantity.value - props.item.quantity;
-});
-
-const isNewInventory = computed(() => {
-  return !props.item?.inventory_keys || props.item?.inventory_keys?.length === 0;
+  if (blindMode.value) return 0;
+  return countedQuantity.value - props.item?.quantity;
 });
 
 async function loadCountRecord() {
@@ -180,8 +174,12 @@ async function loadCountRecord() {
         count_session_key: countingStore.sessionData?._key
       }
     });
-    if (Array.isArray(data) && data.length === 1) {
-      countRecordKey.value = data[0]._key;
+    if (Array.isArray(data)) {
+      const startedRecord = data.filter(record => record.status === 'started')[0];
+      if (startedRecord) {
+        countRecordKey.value = startedRecord._key;
+        return startedRecord;
+      }
     } else {
       Notify.create({
         message: $t('count_record_quantity_error') || 'Error: count record not found or multiple records returned.',
@@ -198,21 +196,24 @@ async function loadCountRecord() {
       timeout: 3000
     });
   }
+  return null;
 }
 
 onMounted(async () => {
   // Initialize quantity based on blind mode and reset notes
-  countedQuantity.value = props.blindMode ? 0 : props.item.quantity;
+  countedQuantity.value = blindMode.value ? 0 : props.item.quantity;
   notes.value = '';
 
-  // For new inventory, skip confirmation dialog but still fire COUNT_STARTED event
-  if (isNewInventory.value) {
-    await startCount();
-  } else if (props.item.counting) {
-    // If count is already active for existing inventory, skip confirmation and go directly to counting UI
+  // Only skip confirmation if count is already active AND belongs to current user
+  const currentUserKey = store.state.session.user._key;
+  const isActiveCountByCurrentUser = props.item.counting === true && props.item.count_by === currentUserKey;
+
+  if (isActiveCountByCurrentUser) {
+    // Load the count record key for cancellation
+    await loadCountRecord();
     countStarted.value = true;
-    loadCountRecord();
   }
+  // Otherwise, show the confirmation dialog (default behavior)
 });
 
 async function startCount() {

@@ -15,20 +15,19 @@
         </div>
       </div>
 
-      <!-- START COUNT CONFIRMATION (only for existing inventory) -->
-      <template v-if="!countStarted && !isNewInventory">
+      <!-- START COUNT CONFIRMATION -->
+      <template v-if="!countStarted">
         <q-space></q-space>
         <div class="col-auto text-center">
           <div class="text-h5 q-mb-md">{{ $t('start_count_question') }}</div>
-          <q-btn
-            color="theme-blue"
-            size="lg"
-            :label="$t('start_count')"
-            :loading="startingCount"
-            @click="startCount"
-          />
         </div>
         <q-space></q-space>
+        <q-btn
+          color="theme-blue"
+          :label="$t('start_count')"
+          :loading="startingCount"
+          @click="startCount"
+        />
         <q-btn
           color="theme-grey"
           :label="$t('cancel')"
@@ -166,6 +165,7 @@ import { Notify } from 'quasar';
 import { api } from '@/boot/axios';
 import { useCountingStore } from '@/stores/counting';
 import { sendEvent } from '@/composables/event';
+import { store } from '@/boot/store';
 import SlideUpCard from '@/components/SlideUpCard.vue';
 
 const props = defineProps({
@@ -204,29 +204,49 @@ const displayedSerials = computed(() => {
   }
 });
 
-const isNewInventory = computed(() => {
-  return !props.item?.inventory_keys || props.item?.inventory_keys?.length === 0;
-});
+async function loadCountRecord() {
+  // Attempt to retrieve count record if existing, in case of page reload or previous count session
+  try {
+    const { data } = await api.get('/inventory/count-record', {
+      params: {
+        product_key: props.item.product_key,
+        position_key: props.item.position_key || props.item.path?.[props.item.path.length - 1]?.position_key,
+        count_session_key: countingStore.sessionData?._key
+      }
+    });
+    if (Array.isArray(data)) {
+      const startedRecord = data.filter(record => record.status === 'started')[0];
+      if (startedRecord) {
+        countRecordKey.value = startedRecord._key;
+        return startedRecord;
+      }
+    }
+  } catch (e) {
+    console.error('Error loading count record:', e);
+    // Silently fail - this is just to retrieve the count record key for cancellation
+  }
+  return null;
+}
 
 onMounted(async () => {
   // Reset temp serials and notes when opening the card
   countingStore.tempSerials = [];
   notes.value = '';
 
-  // For new inventory, skip confirmation dialog but still fire COUNT_STARTED event
-  if (isNewInventory.value) {
-    await startCount();
-    // For new inventory, don't load existing serials (there are none)
-  } else if (props.item.counting) {
-    // If count is already active for existing inventory, skip confirmation and go directly to counting UI
+  // Only skip confirmation if count is already active AND belongs to current user
+  const currentUserKey = store.state.session.user._key;
+  const isActiveCountByCurrentUser = props.item.counting === true && props.item.count_by === currentUserKey;
+
+  if (isActiveCountByCurrentUser) {
+    // Load the count record key for cancellation
+    await loadCountRecord();
     countStarted.value = true;
     // Load existing serials if in non-blind mode
     if (!props.blindMode) {
       loadExistingSerials();
     }
-    // Note: countRecordKey will be null if count was started elsewhere,
-    // but that's okay - we'll handle it if user tries to cancel
   }
+  // Otherwise, show the confirmation dialog (default behavior)
 });
 
 async function startCount() {
@@ -481,4 +501,5 @@ async function cancelCount() {
 
 <style lang="scss" scoped>
 </style>
+
 
