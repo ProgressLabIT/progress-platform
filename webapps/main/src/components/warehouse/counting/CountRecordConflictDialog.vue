@@ -25,13 +25,13 @@
         <q-separator />
 
         <!-- Count Records List -->
-        <q-list v-if="nonDiscardedRecords.length" separator>
+        <q-list v-if="nonDiscardedRecords.length" separator class="q-mt-none">
           <q-item
             v-for="record in nonDiscardedRecords"
             :key="record._key"
             clickable
             :active="selectedRecordKey === record._key"
-            active-class="bg-primary text-white"
+            active-class="text-white"
             @click="selectedRecordKey = record._key"
           >
             <q-item-section avatar>
@@ -57,21 +57,17 @@
               <q-item-label caption class="q-mt-xs">
                 <q-icon name="mdi-clock-outline" size="xs" class="q-mr-xs" />
                 {{ formatDate(record.counted_at) }}
-                <template v-if="getUserName(record)">
-                  <q-icon name="mdi-account" size="xs" class="q-ml-md q-mr-xs" />
-                  {{ getUserName(record) }}
-                </template>
               </q-item-label>
               <q-item-label v-if="record.notes" caption class="q-mt-xs text-italic">
                 <q-icon name="mdi-note-text" size="xs" class="q-mr-xs" />
                 {{ record.notes }}
               </q-item-label>
             </q-item-section>
-
             <q-item-section side>
-              <q-badge :color="getStatusColor(record.status)">
-                {{ record.status }}
-              </q-badge>
+              <BaseUserAvatar
+                :user="store.getters.getUserByKey(record.user_key)"
+                :show_name="false"
+              />
             </q-item-section>
           </q-item>
         </q-list>
@@ -110,19 +106,23 @@
     </template>
 
     <template #actions>
-      <q-btn
-        :label="$t('cancel')"
-        color="theme-grey"
-        flat
-        @click="handleClose"
-      />
-      <q-btn
-        :label="$t('warehouse.counting.discard_others')"
-        color="primary"
-        :loading="loading"
-        :disable="!selectedRecordKey || nonDiscardedRecords.length < 2"
-        @click="handleResolve"
-      />
+      <div class="col-auto">
+        <q-btn
+          :label="$t('cancel')"
+          color="theme-grey"
+          flat
+          @click="handleClose"
+        />
+      </div>
+      <div class="col-auto">
+        <q-btn
+          :label="$t('warehouse.counting.discard_others')"
+          color="theme-orange"
+          :loading="loading"
+          :disable="!selectedRecordKey || nonDiscardedRecords.length < 2"
+          @click="handleResolve"
+        />
+      </div>
     </template>
   </BaseModalForm>
 </template>
@@ -135,6 +135,7 @@ import { Notify } from 'quasar';
 import { useCountSessionStore } from '@/stores/countSession';
 import BaseModalForm from '@/components/BaseModalForm.vue';
 import { DateTime } from 'luxon';
+import BaseUserAvatar from '@/components/BaseUserAvatar.vue';
 
 const props = defineProps({
   modelValue: {
