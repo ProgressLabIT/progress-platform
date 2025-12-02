@@ -190,7 +190,9 @@ class InventoryCountRecordSearchParams(BaseModel):
   assignment_key: str | None = None
   product_key: str | None = None
   position_key: str | None = None
-  status: InventoryCountStatus | None = None
+  include_started: bool = True
+  include_completed: bool = True
+  include_discarded: bool = True
   limit: int | None = 500
   offset: int | None = 0
 

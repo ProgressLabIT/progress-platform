@@ -42,7 +42,7 @@ class Queries:
     FILTER result != null && result.code != null
     FILTER @search ? (CONTAINS(LOWER(result.code), LOWER(@search)) || CONTAINS(LOWER(result.product_code), LOWER(@search))) : true
     SORT result.code ASC
-    LIMIT @limit
+    LIMIT @limit + 1
     RETURN {
       _key: e._key,
       type: result.type,
@@ -454,7 +454,9 @@ class Queries:
       && @product_key ? r._from == @product_key : true
       && @position_key ? r._to == @position_key : true
       && @user_key ? r.user_key == @user_key : true
-      && @status ? r.status == @status : true
+      && @include_started ? r.status == 'started' : true
+      && @include_completed ? r.status == 'completed' : true
+      && @include_discarded ? r.status == 'discarded' : true
     LET product = FIRST(FOR p IN Product FILTER p._key == PARSE_IDENTIFIER(r._from).key RETURN p)
     LET position = FIRST(FOR p IN Position FILTER p._key == PARSE_IDENTIFIER(r._to).key RETURN p)
     LIMIT @offset, @limit || null
