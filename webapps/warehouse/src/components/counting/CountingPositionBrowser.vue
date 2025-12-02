@@ -89,13 +89,13 @@
                 </div>
               </q-item-section>
               <q-item-section v-if="getCountInfo(item).hasStarted" side>
-                <q-badge :color="getCountInfo(item).startedBy === store.state.session.user._key ? 'theme-blue' : 'theme-orange'" class="q-pa-xs">
+                <q-badge :color="getCountInfo(item).startedBy === store.state.session.user._key ? 'theme-blue' : 'theme-orange'" class="q-pa-sm uppercase highlight">
                   {{ getCountInfo(item).startedBy === store.state.session.user._key ? $t('count_resume') : $t('count_active') }}
                 </q-badge>
               </q-item-section>
               <q-item-section v-if="getCountInfo(item).hasRecords && (getCountInfo(item).startedBy || getCountInfo(item).completedBy.length > 0)" side>
                 <q-icon
-                  v-if="getCountInfo(item).completedCount > 1"
+                  v-if="getCountInfo(item).completedBy.length > 1"
                   name="mdi-account-group"
                   size="20px"
                   color="theme-grey"
@@ -413,7 +413,7 @@ function searchPositions() {
     return;
   }
 
-  if (filter.value.length === 0) {
+  if (!filter.value || filter.value.length === 0) {
     loadLatestUsedPositions();
     positionResultsType.value = 'RECENTI';
   } else {
@@ -486,6 +486,7 @@ function selectRootPosition() {
 
 function selectPosition(position) {
   filter.value = '';
+  last_research.value = '';
   selectedPosition.value = position;
   loadPositionContents(position._key);
   stage.value = 'contents';
@@ -625,7 +626,7 @@ function getCountInfo(item) {
     startedCount: startedRecords.length,
     hasStarted: startedRecords.length > 0,
     startedBy: startedRecords.length > 0 ? startedRecords[0].user_key : null,
-    completedBy: completedRecords.map(r => r.user_key).filter(Boolean),
+    completedBy: [...new Set(completedRecords.map(r => r.user_key).filter(Boolean))],
     allRecords: records
   };
 }
