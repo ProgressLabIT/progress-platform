@@ -91,7 +91,7 @@ class BaseProductionEvent(BaseEvent, BaseBatchEvent, BaseJobEvent, BaseSerialEve
         work_order_key = self.info.work_order_key,
       ))
     # Restore work order in the queue if latest event reopened it
-    if wo_previous_state.status == WorkStatus.CLOSED and updated_wo.status != WorkStatus.STARTED:
+    if wo_previous_state.status == WorkStatus.CLOSED and updated_wo.status != WorkStatus.CLOSED:
       self.tx.aql.execute(
         ProductionQueries.ADD_WORK_ORDER_TO_QUEUE,
         bind_vars=dict(new_wo_key=self.info.work_order_key)

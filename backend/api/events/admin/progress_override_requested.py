@@ -25,6 +25,17 @@ class ProgressOverrideRequestedEvent(BaseAdmin, BaseProductionEvent):
     # Override post_processing to avoid updating job last_online field
     self.update_work_order()
 
+    # Reorder job queue if we reopened a closed job
+    # Now safe because work order has been re-added to site queue by update_work_order()
+    if getattr(self, '_job_was_reopened', False):
+      self.tx.aql.execute(
+        ProductionQueries.REORDER_JOB_QUEUES,
+        bind_vars=dict(
+          site_key='0',
+          target_key=self.job.assigned_to
+        )
+      )
+
   class InfoModel(EventInfoModel):
     job_key: str
     new_job_qt_completed: float
@@ -312,9 +323,9 @@ class ProgressOverrideRequestedEvent(BaseAdmin, BaseProductionEvent):
         self.job_update['stage'] = WorkStatus.STARTED
 
     else:  # quantity_change < 0
-      # Reopen job if it was closed
-      was_closed = self.job.stage == WorkStatus.CLOSED
-      if was_closed:
+      # Reopen job if it was closed (stored for post_processing reorder)
+      self._job_was_reopened = self.job.stage == WorkStatus.CLOSED
+      if self._job_was_reopened:
         self.job_update['stage'] = WorkStatus.STARTED
         self.job_update['end'] = None
 
@@ -326,22 +337,15 @@ class ProgressOverrideRequestedEvent(BaseAdmin, BaseProductionEvent):
     self.tx.collection('Job').update(self.job_update)
 
 
-    if self.info.quantity_change < 0 and was_closed:
-      # Readd job to queue and reorder
-      # Must be done after job update to avoid the removal of the job
-      # during reordering
+    if self.info.quantity_change < 0 and self._job_was_reopened:
+      # Re-add job to operator queue
+      # NOTE: Do NOT call REORDER_JOB_QUEUES here - the work order is not yet
+      # re-added to the site queue (happens in post_processing). Reordering is
+      # done in post_processing after the work order is restored to the site queue.
       self.tx.aql.execute(
         ProductionQueries.ADD_JOB_TO_QUEUE,
         bind_vars=dict(
           job_key=self.job.key,
-          target_key=self.job.assigned_to
-        )
-      )
-
-      self.tx.aql.execute(
-        ProductionQueries.REORDER_JOB_QUEUES,
-        bind_vars=dict(
-          site_key='0',
           target_key=self.job.assigned_to
         )
       )
