@@ -24,33 +24,35 @@
       <div class="text-body2">{{ $t('no_results')}}</div>
     </template>
 
-    <q-scroll-area v-else class="col">
-      <q-list>
-        <q-item
-          v-for="item in list"
-          :key="item._key"
-          clickable
-          class="content-card q-my-xs q-pa-md text-body1"
-          :class="getColor(item)"
-          @click="toggleItem(item)"
-        >
-          <q-item-section avatar>
-            <q-icon :name="contentIcon[item.type]" />
-          </q-item-section>
-          <q-item-section>
-              <div v-if="item.type === 'serial'" class="text-h6">{{ item.product_code }}</div>
-              <div class="highlight">{{ item.code }}</div>
-          </q-item-section>
-          <q-item-section v-if="item.type === 'product'" side>
-            <div class="text-body2">
-              <span class="highlight">
-                {{ getItemSelectedQty(item) }}
-              </span> / {{ item.quantity }}
-            </div>
-          </q-item-section>
-        </q-item>
-      </q-list>
-    </q-scroll-area>
+    <q-virtual-scroll
+      v-else
+      :items="list"
+      v-slot="{ item }"
+      class="col"
+    >
+      <q-item
+        :key="item._key"
+        clickable
+        class="content-card q-my-xs q-pa-md text-body1"
+        :class="getColor(item)"
+        @click="toggleItem(item)"
+      >
+        <q-item-section avatar>
+          <q-icon :name="contentIcon[item.type]" />
+        </q-item-section>
+        <q-item-section>
+            <div v-if="item.type === 'serial'" class="text-h6">{{ item.product_code }}</div>
+            <div class="highlight">{{ item.code }}</div>
+        </q-item-section>
+        <q-item-section v-if="item.type === 'product'" side>
+          <div class="text-body2">
+            <span class="highlight">
+              {{ getItemSelectedQty(item) }}
+            </span> / {{ item.quantity }}
+          </div>
+        </q-item-section>
+      </q-item>
+    </q-virtual-scroll>
 
 
 
@@ -107,8 +109,10 @@ const itemQuantity = ref(1);
 
 function getPositionContents(position_key, search = null) {
   api.get(`position/${position_key}`, { params: { search } }).then((resp) => {
-    results.value = resp.data;
-    list.value = resp.data;
+    // Extract contents from object response format: { position, path, contents }
+    const contents = resp.data?.contents || [];
+    results.value = contents;
+    list.value = contents;
   });
 }
 
@@ -136,12 +140,14 @@ async function searchContents() {
     return
   }
   api.get(`position/${transfer.startPosition._key}`, { params: { search: filter.value } }).then((resp) => {
-    if (resp.data.length === 1 && resp.data[0].code === filter.value) {
-      toggleItem(resp.data[0]);
+    // Extract contents from object response format: { position, path, contents }
+    const contents = resp.data?.contents || [];
+    if (contents.length === 1 && contents[0].code === filter.value) {
+      toggleItem(contents[0]);
       filter.value = null;
     }
     else {
-      list.value = resp.data;
+      list.value = contents;
     }
   })
 }

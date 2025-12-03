@@ -29,32 +29,51 @@ class Queries:
     RETURN v
   """
 
-  GET_POSITION_CONTENTS = """
-    FOR v, e IN 1..1 INBOUND CONCAT('Position/', @position_key) is_in_position OPTIONS { uniqueVertices: "path" }
-    LET position = (IS_SAME_COLLECTION(Position, v)) ? MERGE({ type: 'position' }, v) : null
-    LET product = IS_SAME_COLLECTION(Product, v) ? MERGE({ type: 'product', quantity: e.quantity }, v) : null
-    LET serial = e.serial_key ? FIRST(
-      FOR s IN Serial
-      FILTER s._key == e.serial_key
-      RETURN MERGE({ type: 'serial', product_code: v.code }, s)
-    ): null
-    LET result = NOT_NULL(serial, product, position)
-    FILTER result != null && result.code != null
-    FILTER @search ? (CONTAINS(LOWER(result.code), LOWER(@search)) || CONTAINS(LOWER(result.product_code), LOWER(@search))) : true
-    SORT result.code ASC
-    LIMIT @limit + 1
+  GET_POSITION_DETAILS = """
+    LET current_position = DOCUMENT('Position', @position_key)
+
+    // Build path from root (IN) to current position using SHORTEST_PATH
+    // Path goes OUTBOUND from current position to root (Position/IN)
+    LET path = SHIFT(  // Remove root position (Position/IN)
+      FOR v IN INBOUND SHORTEST_PATH
+      'Position/IN' TO CONCAT('Position/', @position_key) is_in_position
+      RETURN { position_key: v._key, position_code: v.code }
+    )
+
+
+    // Get contents (products, serials, sub-positions)
+    LET contents = (
+      FOR v, e IN 1..1 INBOUND CONCAT('Position/', @position_key) is_in_position OPTIONS { uniqueVertices: "path" }
+      LET position = (IS_SAME_COLLECTION(Position, v)) ? MERGE({ type: 'position' }, v) : null
+      LET product = IS_SAME_COLLECTION(Product, v) ? MERGE({ type: 'product', quantity: e.quantity }, v) : null
+      LET serial = e.serial_key ? FIRST(
+        FOR s IN Serial
+        FILTER s._key == e.serial_key
+        RETURN MERGE({ type: 'serial', product_code: v.code }, s)
+      ): null
+      LET result = NOT_NULL(serial, product, position)
+      FILTER result != null && result.code != null
+      FILTER @search ? (CONTAINS(LOWER(result.code), LOWER(@search)) || CONTAINS(LOWER(result.product_code), LOWER(@search))) : true
+      SORT result.code ASC
+      RETURN {
+        _key: e._key,
+        type: result.type,
+        code: result.code,
+        position_key: result.type == 'position' ? v._key : null,
+        position_fixed: result.type == 'position' ? v.fixed : null,
+        product_code: result.type == 'position' ? null : v.code,
+        product_description: result.type == 'position' ? null : v.description,
+        product_key: result.type == 'position' ? null : v._key,
+        quantity: e.quantity,
+        serial_code: result.type == 'serial' ? serial.code : null,
+        serial_key: result.type == 'serial' ? serial._key : null
+      }
+    )
+
     RETURN {
-      _key: e._key,
-      type: result.type,
-      code: result.code,
-      position_key: result.type == 'position' ? v._key : null,
-      position_fixed: result.type == 'position' ? v.fixed : null,
-      product_code: result.type == 'position' ? null : v.code,
-      product_description: result.type == 'position' ? null : v.description,
-      product_key: result.type == 'position' ? null : v._key,
-      quantity: e.quantity,
-      serial_code: result.type == 'serial' ? serial.code : null,
-      serial_key: result.type == 'serial' ? serial._key : null
+      position: current_position,
+      path,
+      contents: contents
     }
   """
 
@@ -451,12 +470,14 @@ class Queries:
     FILTER
       (@count_session_key ? r.inventory_count_session_key == @count_session_key : true)
       && (@assignment_key ? r.assignment_key == @assignment_key : true)
-      && (@product_key ? r._from == @product_key : true)
-      && (@position_key ? r._to == @position_key : true)
+      && (@product_key ? r._from == CONCAT('Product/', @product_key) : true)
+      && (@position_key ? r._to == CONCAT('Position/', @position_key) : true)
       && (@user_key ? r.user_key == @user_key : true)
-      && (@include_started ? r.status == 'started' : true)
-      && (@include_completed ? r.status == 'completed' : true)
-      && (@include_discarded ? r.status == 'discarded' : true)
+      && (
+        (@include_started && r.status == 'started') ||
+        (@include_completed && (r.status == 'completed' || r.status == 'submitted' || r.status == 'confirmed')) ||
+        (@include_discarded && r.status == 'discarded')
+      )
     LET product = FIRST(FOR p IN Product FILTER p._key == PARSE_IDENTIFIER(r._from).key RETURN p)
     LET position = FIRST(FOR p IN Position FILTER p._key == PARSE_IDENTIFIER(r._to).key RETURN p)
     LIMIT @offset,@limit || null
