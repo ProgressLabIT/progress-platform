@@ -5,7 +5,7 @@ from events.serial.serial_deleted import SerialDeletedEvent
 from events.serial.serial_updated import SerialUpdatedEvent
 from events.serial.serial_unlinked import SerialUnlinkedEvent
 from models.event import EventInfoModel, EventType
-from utils.production import update_target_queue
+from utils.production import Queries as ProductionQueries
 from utils.traceability import Queries as TraceabilityQueries
 from utils.exceptions import WipNotAvailableError
 
@@ -32,6 +32,19 @@ class JobResetEvent(BaseAdmin):
   @classmethod
   def get_event_type(cls):
     return EventType.JOB_RESET
+
+  def post_processing(self):
+    super().post_processing()
+    # Reorder job queue if we reopened a closed job
+    # Now safe because work order has been re-added to site queue by update_work_order()
+    if getattr(self, '_job_was_reopened', False):
+      self.tx.aql.execute(
+        ProductionQueries.REORDER_JOB_QUEUES,
+        bind_vars=dict(
+          site_key='0',
+          target_key=self.job.assigned_to
+        )
+      )
 
 
   def apply(self):
@@ -261,12 +274,17 @@ class JobResetEvent(BaseAdmin):
     self.tx.collection('Job').update(job_update)
 
     # If original was closed, put it back into the queue
+    # NOTE: Do NOT call REORDER_JOB_QUEUES here - the work order may not yet be
+    # re-added to the site queue (happens in post_processing). Reordering is
+    # done in post_processing after the work order is restored to the site queue.
     if self.job.stage == 'closed':
-      update_target_queue(
-        job_key=self.job.key,
-        target_key=self.job.assigned_to,
-        action='add',
-        tx=self.tx
+      self._job_was_reopened = True
+      self.tx.aql.execute(
+        ProductionQueries.ADD_JOB_TO_QUEUE,
+        bind_vars=dict(
+          job_key=self.job.key,
+          target_key=self.job.assigned_to
+        )
       )
 
     # Update batch available states
