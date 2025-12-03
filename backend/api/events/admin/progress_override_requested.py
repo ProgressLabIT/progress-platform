@@ -1,7 +1,6 @@
 from events.admin.base_admin import BaseAdmin, Queries
 from events.inventory.movement_completed import MovementCompletedEvent
 from events.inventory.movement_reversed import MovementReversedEvent
-from events.production.base_production import BaseProductionEvent
 from events.production.job_closed import JobClosedEvent
 from utils.inventory import Queries as InventoryQueries
 from models.inventory import InventoryMovementType, InventoryMovementReferences
@@ -19,7 +18,7 @@ from collections import deque
 from utils.production import Queries as ProductionQueries
 from utils.traceability import Queries as TraceabilityQueries
 
-class ProgressOverrideRequestedEvent(BaseAdmin, BaseProductionEvent):
+class ProgressOverrideRequestedEvent(BaseAdmin):
 
   def post_processing(self):
     # Override post_processing to avoid updating job last_online field
