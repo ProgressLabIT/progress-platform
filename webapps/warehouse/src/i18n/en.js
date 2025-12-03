@@ -39,6 +39,7 @@ export default {
   enter_serials: 'Enter serials',
   error_loading_serials: 'Error loading serials',
   existing_serials: 'Existing serials',
+  hide_counted: 'Hide counted',
   incoming_new: 'New receipt',
   invalid_serial: 'Invalid serial',
   serial_not_found: 'Serial {serial} not found in the system',

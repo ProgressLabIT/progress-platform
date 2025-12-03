@@ -51,6 +51,7 @@ export default {
   serial_not_found: 'Seriale {serial} non trovato nel sistema',
   serial_not_in_expected_list: 'Seriale {serial} non presente nella lista prevista per questa posizione',
   error_validating_serial: 'Errore nella validazione del seriale',
+  hide_counted: 'Nascondi conteggiati',
   notes: 'Note',
   notes_placeholder: 'Aggiungi eventuali note su questo conteggio...',
   inventory_checks: 'Verifica Giacenze',

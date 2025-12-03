@@ -8,6 +8,7 @@ export const useCountingStore = defineStore('counting', {
   state: () => ({
     sessionData: null,
     tempSerials: [],
+    selectedPosition: null,
   }),
   actions: {
     async loadCountSessionData(countSessionKey) {
@@ -45,6 +46,12 @@ export const useCountingStore = defineStore('counting', {
     },
     resetCounting() {
       this.tempSerials = [];
+    },
+    setSelectedPosition(position) {
+      this.selectedPosition = position;
+    },
+    resetPositionNavigation() {
+      this.selectedPosition = null;
     }
   }
 });
