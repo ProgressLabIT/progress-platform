@@ -1,0 +1,21 @@
+// Restore job queue items
+for job_key in [XXX] // multiple job keys
+let job = Document(Job, job_key)
+filter job != null and job.assigned_to != null
+let queue = FIRST(for q in Queue filter q.subqueue_target_key == job.assigned_to RETURN q)
+let old_queue = queue.jobs
+let new_queue = PUSH(queue.jobs, job_key) // use REMOVE_VALUES (plural) to remove if needed
+// update queue with { jobs: new_queue } in Queue
+let diff = OUTERSECTION(old_queue, new_queue)
+return { old: length(old_queue), new: length(new_queue), diff, check: diff == [job_key] }
+
+
+// Restore work order queue items
+let wo_key = XXX // just one work order key
+for q in Queue
+filter q.type == 's'
+let old_queue = q.work_orders
+let new_queue = PUSH(q.work_orders, wo_key) // use REMOVE_VALUE (singular) to remove if needed
+// update q with { work_orders: new_queue } in Queue
+let diff = OUTERSECTION(old_queue, new_queue)
+return { old: length(old_queue), new: length(new_queue), diff, check: diff == [wo_key] }
