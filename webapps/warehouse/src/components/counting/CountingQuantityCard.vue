@@ -158,7 +158,7 @@ const showCancelConfirmation = ref(false);
 const cancelingCount = ref(false);
 const notes = ref('');
 
-const blindMode = computed(() => countingStore.sessionData?.blind_mode || true);
+const blindMode = computed(() => countingStore.sessionData?.blind_mode ?? true);
 const adjustmentQuantity = computed(() => {
   if (blindMode.value) return 0;
   return countedQuantity.value - props.item?.quantity;
