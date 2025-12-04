@@ -32,7 +32,8 @@ class InventoryCountSession(ArangoDocument):
   description: str | None = None
   type: InventoryCountSessionType
   status: InventoryCountSessionStatus = InventoryCountSessionStatus.PLANNED
-  blind_mode: bool = True  # Hide expected quantities from operators
+  blind_quantities: bool = True  # Hide expected quantities from operators
+  blind_serials: bool = True  # Hide serial numbers from operators
   coverage_percentage: float | None = None  # Calculated field
 
   # Schedule
@@ -65,7 +66,8 @@ class InventoryCountSessionUpdate(BaseModel):
   code: str | None = None
   description: str | None = None
   type: InventoryCountSessionType | None = None
-  blind_mode: bool | None = None
+  blind_quantities: bool | None = None
+  blind_serials: bool | None = None
   scheduled_start: datetime | None = None
   scheduled_end: datetime | None = None
   notes: str | None = None

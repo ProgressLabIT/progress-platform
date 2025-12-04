@@ -30,7 +30,7 @@
               {{ item.path.map(p => p.position_code).join(' → ') || 'IN' }}
             </q-item-label>
           </q-item-section>
-          <q-item-section v-if="item.serial_key === null && !blindMode" side>
+          <q-item-section v-if="item.serial_key === null && !blindQuantities" side>
             <div class="text-body2">
               {{ item.quantity }}
             </div>
@@ -43,14 +43,14 @@
     <CountingQuantityCard
       v-if="selectedItem && selectedItem.serial_key === null"
       :item="selectedItem"
-      :blind-mode="blindMode"
+      :blind-mode="blindQuantities"
       @close="selectedItem = null"
     />
 
     <CountingSerialsCard
       v-if="selectedItem && selectedItem.serial_key !== null"
       :item="selectedItem"
-      :blind-mode="blindMode"
+      :blind-mode="blindSerials"
       @close="selectedItem = null"
     />
   </div>
@@ -76,7 +76,8 @@ const inventory = useInventoryStore();
 const productSearch = ref('');
 const selectedItem = ref(null);
 
-const blindMode = computed(() => props.sessionData.blind_mode);
+const blindQuantities = computed(() => props.sessionData.blind_quantities ?? true);
+const blindSerials = computed(() => props.sessionData.blind_serials ?? true);
 
 const filteredContents = computed(() => {
   if (!productSearch.value) return inventory.contents;

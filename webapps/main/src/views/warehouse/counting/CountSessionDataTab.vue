@@ -102,11 +102,18 @@
         </q-input>
       </div>
 
-      <q-checkbox
-        v-model="sessionDataModel.blind_mode"
-        :label="$t('warehouse.counting.blind_mode')"
-        :disable="!canEditBlindMode"
-      />
+      <div class="row items-center q-gutter-x-md">
+        <q-checkbox
+          v-model="sessionDataModel.blind_quantities"
+          :label="$t('warehouse.counting.blind_quantities')"
+          :disable="!canEditBlindMode"
+        />
+        <q-checkbox
+          v-model="sessionDataModel.blind_serials"
+          :label="$t('warehouse.counting.blind_serials')"
+          :disable="!canEditBlindMode"
+        />
+      </div>
     </div>
 </template>
 

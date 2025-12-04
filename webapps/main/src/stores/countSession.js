@@ -15,7 +15,8 @@ export const useCountSessionStore = defineStore('countSession', {
       code: '',
       description: '',
       type: 'product',
-      blind_mode: true,
+      blind_quantities: true,
+      blind_serials: true,
       scheduled_start: null,
       scheduled_end: null,
       status: null,
@@ -269,7 +270,8 @@ export const useCountSessionStore = defineStore('countSession', {
         code: '',
         description: '',
         type: 'product',
-        blind_mode: true,
+        blind_quantities: true,
+        blind_serials: true,
         scheduled_start: null,
         scheduled_end: null,
         status: null,
@@ -296,7 +298,8 @@ export const useCountSessionStore = defineStore('countSession', {
           code: data.code,
           description: data.description,
           type: data.type,
-          blind_mode: data.blind_mode,
+          blind_quantities: data.blind_quantities,
+          blind_serials: data.blind_serials,
           scheduled_start: data.scheduled_start,
           scheduled_end: data.scheduled_end,
           status: data.status,
@@ -353,7 +356,8 @@ export const useCountSessionStore = defineStore('countSession', {
         code: this.sessionData.code || null,
         description: this.sessionData.description || null,
         type: this.sessionData.type,
-        blind_mode: this.sessionData.blind_mode,
+        blind_quantities: this.sessionData.blind_quantities,
+        blind_serials: this.sessionData.blind_serials,
         scheduled_start: this.sessionData.scheduled_start || null,
         scheduled_end: this.sessionData.scheduled_end || null,
       };
@@ -381,7 +385,7 @@ export const useCountSessionStore = defineStore('countSession', {
      */
     async updateSession(countSessionKey, assignmentsData = null) {
       const sessionPayload = {};
-      ['code', 'description', 'type', 'blind_mode', 'scheduled_start', 'scheduled_end'].forEach(field => {
+      ['code', 'description', 'type', 'blind_quantities', 'blind_serials', 'scheduled_start', 'scheduled_end'].forEach(field => {
         if (this.sessionData[field] !== undefined) {
           sessionPayload[field] = this.sessionData[field];
         }

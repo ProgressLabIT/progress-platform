@@ -105,7 +105,7 @@
                 {{ item.product_description }}
               </q-item-label>
             </q-item-section>
-            <q-item-section v-if="item.quantity && !blindMode" side class="col-auto">
+            <q-item-section v-if="item.quantity && !blindQuantities" side class="col-auto">
               <div class="text-body2">
                 {{ item.quantity }}
                 <span v-if="getCountedQuantity(item) !== null" class="text-low q-ml-xs">
@@ -180,6 +180,7 @@
     <CountingSerialsCard
       v-if="selectedItem && selectedItem?.serial_key !== null"
       :item="selectedItem"
+      :blind-mode="blindSerials"
       @close="unselectItem()"
     />
 
@@ -275,7 +276,8 @@ api.get('user').then((resp) => {
   }, {});
 });
 
-const blindMode = computed(() => props.sessionData.blind_mode);
+const blindQuantities = computed(() => props.sessionData.blind_quantities ?? true);
+const blindSerials = computed(() => props.sessionData.blind_serials ?? true);
 
 const positionPath = computed(() => countingStore.selectedPosition?.path || []);
 
@@ -750,7 +752,6 @@ function getCountInfo(item) {
 function getCountedQuantity(item) {
   const countInfo = getCountInfo(item);
   if (!countInfo.hasRecords || countInfo.allRecords.length === 0) {
-    console.log({ countInfo });
     return null;
   }
 
@@ -767,7 +768,6 @@ function getCountedQuantity(item) {
       const dateB = b.counted_at ? new Date(b.counted_at) : new Date(0);
       return dateB - dateA;
     });
-    console.log({ sorted, completedRecords });
     return sorted[0].counted_qt ?? null;
   }
 

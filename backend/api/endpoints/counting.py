@@ -116,7 +116,7 @@ def update_counting_session(
 
 
     if session.status != InventoryCountSessionStatus.PLANNED:
-      can_update_only_if_planned = ['code', 'type', 'blind_mode', 'scheduled_start']
+      can_update_only_if_planned = ['code', 'type', 'blind_quantities', 'blind_serials', 'scheduled_start']
       for field in can_update_only_if_planned:
         if update_data.get(field, None) is not None:
           raise HTTPException(status_code=422, detail=f"Cannot update {field} for a {session.status.value} session")
