@@ -138,15 +138,16 @@
               </q-badge>
             </q-item-section>
 
-            <!-- POSITION FULLY COUNTED -->
+            <!-- POSITION FULLY CHECKED -->
             <q-item-section
               v-if="item?.type === 'position' && item?.position_key && item.position_key in positionStatus"
               side
               class="col-auto"
             >
-              <q-icon
-                :name="positionStatus[item.position_key] === 'counted' ? 'mdi-check-circle' : 'mdi-package-variant-remove'"
-              />
+              <div class="row items-baseline">
+                <q-icon name="mdi-check-circle" :size="positionStatus[item.position_key] === 'empty' ? '10px' : '25px'"/>
+                <q-icon v-if="positionStatus[item.position_key] === 'empty'" name="mdi-package-variant-remove" size="27px"/>
+              </div>
             </q-item-section>
 
             <!-- COUNT COMPLETED -->
