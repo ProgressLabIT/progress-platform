@@ -44,9 +44,10 @@ from events.inventory.count_discarded import CountDiscardedEvent
 from events.inventory.count_session_started import CountSessionStartedEvent
 from events.inventory.count_session_completed import CountSessionCompletedEvent
 from events.inventory.count_session_applied import CountSessionAppliedEvent
-from events.production.active_batch_changed import ActiveBatchChangedEvent
+from events.inventory.position_confirmed_empty import PositionConfirmedEmptyEvent
 
 #PRODUCTION EVENTS
+from events.production.active_batch_changed import ActiveBatchChangedEvent
 from events.production.base_production import BaseProductionEvent
 from events.production.batch_completed import BatchCompletedEvent
 from events.production.batch_created import BatchCreatedEvent

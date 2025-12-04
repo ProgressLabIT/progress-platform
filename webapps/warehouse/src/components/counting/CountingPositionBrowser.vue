@@ -1,6 +1,9 @@
 <template>
   <div class="col column full-width q-pb-md">
+
+    <!-- ================================ -->
     <!-- POSITION SELECTION -->
+    <!-- ================================ -->
     <template v-if="countingStore.selectedPosition === null">
       <div class="text-h3 q-mb-md">{{ $t('start_from_position') }}</div>
       <SearchOrScan v-model="filter" @update:model-value="searchPositions" />
@@ -31,11 +34,15 @@
         color="primary"
         outline
         :label="$t('select_root_position')"
-        @click="selectRootPosition()"
+        @click="selectPosition('IN')"
       />
     </template>
 
-    <!-- CONTENTS -->
+
+    <!-- ================================ -->
+    <!-- POSITION CONTENTS -->
+    <!-- ================================ -->
+
     <template v-if="countingStore.selectedPosition !== null">
       <div class="row items-center q-mb-sm">
         <div class="text-h3 q-mr-sm">{{ $t('position') }}</div>
@@ -69,6 +76,10 @@
 
       <div class="text-h6" v-if="!loading && positionContents.length === 0">{{ $t('no_contents') }}</div>
 
+
+      <!-- ================================ -->
+      <!-- ITEM LIST -->
+      <!-- ================================ -->
       <template v-else>
         <div class="row items-center justify-between q-mb-md">
           <div class="text-h6">{{ $t('contents') }}</div>
@@ -96,15 +107,21 @@
             :class="[getColor(item), {'locked-item': getCountInfo(item).hasStarted && getCountInfo(item).startedBy === store.state.session.user._key}]"
             @click="selectItem(item)"
           >
+
+            <!-- ICON -->
             <q-item-section side class="col-auto">
               <q-icon :name="contentIcon[item.type]" />
             </q-item-section>
+
+            <!-- CODE AND DESCRIPTION -->
             <q-item-section class="col" style="min-width: 0; flex-shrink: 1">
               <q-item-label class="highlight">{{ item.code }}</q-item-label>
               <q-item-label v-if="item.product_description" caption class="ellipsis">
                 {{ item.product_description }}
               </q-item-label>
             </q-item-section>
+
+            <!-- QUANTITY -->
             <q-item-section v-if="item.quantity && !blindQuantities" side class="col-auto">
               <div class="text-body2">
                 {{ item.quantity }}
@@ -113,11 +130,26 @@
                 </span>
               </div>
             </q-item-section>
+
+            <!-- ADDED ITEMS -->
             <q-item-section v-if="item.isCountOnly" side class="col-auto">
               <q-badge color="theme-orange" class="uppercase highlight q-pa-sm">
                 {{ $t('added') }}
               </q-badge>
             </q-item-section>
+
+            <!-- POSITION FULLY COUNTED -->
+            <q-item-section
+              v-if="item?.type === 'position' && item?.position_key && item.position_key in positionStatus"
+              side
+              class="col-auto"
+            >
+              <q-icon
+                :name="positionStatus[item.position_key] === 'counted' ? 'mdi-check-circle' : 'mdi-package-variant-remove'"
+              />
+            </q-item-section>
+
+            <!-- COUNT COMPLETED -->
             <q-item-section v-if="getCountInfo(item).completedCount > 0" side class="col-auto">
               <div class="row items-center q-gutter-xs">
                 <span v-if="getCountInfo(item).completedCount > 1" class="text-body2">
@@ -126,11 +158,15 @@
                 <q-icon name="mdi-check-circle" color="theme-green" size="20px" />
               </div>
             </q-item-section>
+
+            <!-- COUNT ACTIVE -->
             <q-item-section v-if="getCountInfo(item).hasStarted" side class="col-auto">
               <q-badge :color="getCountInfo(item).startedBy === store.state.session.user._key ? 'theme-blue' : 'theme-orange'" class="q-pa-sm uppercase highlight">
                 {{ getCountInfo(item).startedBy === store.state.session.user._key ? $t('count_resume') : $t('count_active') }}
               </q-badge>
             </q-item-section>
+
+            <!-- COUNT NUMBER & USER -->
             <q-item-section
               v-if="getCountInfo(item).hasRecords && (getCountInfo(item).startedBy || getCountInfo(item).completedBy.length > 0)"
               side
@@ -154,13 +190,23 @@
         </q-virtual-scroll>
       </template>
 
+      <!-- ================================ -->
+      <!-- ACTIONS -->
+      <!-- ================================ -->
       <q-space></q-space>
       <q-btn
         color="theme-blue"
         outline
         :label="$t('add_count_for_product')"
         class="full-width q-mb-sm"
-        @click="searchProducts()"
+        @click="showProductSearch = true"
+      />
+      <q-btn
+        v-if="positionContents.length === 0"
+        color="theme-blue"
+        :label="$t('confirm_empty_position')"
+        class="full-width q-mb-sm"
+        @click="showEmptyPositionConfirmation = true"
       />
       <q-btn
         color="theme-grey"
@@ -170,7 +216,10 @@
       />
     </template>
 
+
+    <!-- ================================ -->
     <!-- Counting Cards -->
+    <!-- ================================ -->
     <CountingQuantityCard
       v-if="selectedItem && selectedItem.serial_key === null"
       :item="selectedItem"
@@ -184,48 +233,26 @@
       @close="unselectItem()"
     />
 
+
+    <!-- ================================ -->
     <!-- Product Search Card -->
-    <SlideUpCard
-      :model-value="showProductSearch"
-      @hide="showProductSearch = false"
-      height="90vh"
-    >
-      <div class="col column">
-        <div class="col-auto q-mb-sm text-h3">
-          {{ $t('product') }}
-        </div>
+    <!-- ================================ -->
+    <CountingProductSearchCard
+      v-model="showProductSearch"
+      :position-contents="positionContents"
+      :selected-position="countingStore.selectedPosition"
+      @product-selected="handleProductSelected"
+    />
 
-        <!-- PRODUCT SEARCH -->
-        <SearchOrScan v-model="productFilter" @update:model-value="searchProducts" />
-
-        <!-- PRODUCT LIST -->
-        <div class="col-auto q-mt-md q-mb-sm text-h6">
-          {{ productListLabel }} ({{ productRows?.length || 0 }})
-        </div>
-
-        <q-scroll-area class="col">
-          <q-list>
-            <q-item
-              v-for="product in productRows"
-              :key="product._key"
-              clickable
-              dense
-              class="content-card q-my-xs q-py-sm"
-              :class="getProductColor(product)"
-              @click="selectProductForCount(product)"
-            >
-              <q-item-section side>
-                <q-icon :name="product.traceability_level ? 'mdi-cube-scan' : 'mdi-apps'" />
-              </q-item-section>
-              <q-item-section>
-                <q-item-label class="highlight">{{ product.code }}</q-item-label>
-                <q-item-label caption class="">{{ product.description }}</q-item-label>
-              </q-item-section>
-            </q-item>
-          </q-list>
-        </q-scroll-area>
-      </div>
-    </SlideUpCard>
+    <!-- ================================ -->
+    <!-- Empty Position Confirmation Card -->
+    <!-- ================================ -->
+    <CountingEmptyPositionCard
+      v-model="showEmptyPositionConfirmation"
+      :session-key="sessionData._key"
+      :position-key="countingStore.selectedPosition?._key"
+      @confirmed="handleEmptyPositionConfirmed"
+    />
   </div>
 </template>
 
@@ -239,8 +266,9 @@ import { useCountingStore } from '@/stores/counting';
 import SearchOrScan from '@/components/SearchOrScan.vue';
 import CountingQuantityCard from './CountingQuantityCard.vue';
 import CountingSerialsCard from './CountingSerialsCard.vue';
+import CountingProductSearchCard from './CountingProductSearchCard.vue';
+import CountingEmptyPositionCard from './CountingEmptyPositionCard.vue';
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue';
-import SlideUpCard from '@/components/SlideUpCard.vue';
 import { Loading } from 'quasar';
 
 const props = defineProps({
@@ -259,15 +287,13 @@ const filter = ref('');
 const positionResults = ref([]);
 const positionResultsType = ref('RECENTI');
 const positionContents = ref([]);
+const positionStatus = ref({});
 const selectedItem = ref(null);
 const showProductSearch = ref(false);
-const productFilter = ref('');
-const productListLabel = ref('Recenti');
-const productRows = ref([]);
-const productLastResearch = ref(undefined);
 const usersByKeys = ref({});
 const countRecords = ref([]);
 const hideCountedFilter = ref(false);
+const showEmptyPositionConfirmation = ref(false);
 
 api.get('user').then((resp) => {
   usersByKeys.value = resp.data.detail.reduce((acc, user) => {
@@ -299,10 +325,6 @@ function getColor(item) {
   };
   const color = colorMap[item.type];
   return `bg-${color}-backdrop`;
-}
-
-function getProductColor(product) {
-  return product.traceability_level ? 'bg-green-backdrop' : 'bg-blue-backdrop';
 }
 
 function getPathString(position) {
@@ -482,10 +504,30 @@ async function loadPositionContents(positionKey) {
       positionContents.value = Array.isArray(response.data) ? response.data : [];
     }
 
+    // Fetch position completion status for this position and session
+    await loadPositionCompletionStatus(positionKey);
+
     // Fetch count records for this position and session
     await loadCountRecords(positionKey);
   } finally {
     Loading.hide();
+  }
+}
+
+async function loadPositionCompletionStatus(positionKey) {
+  if (!props.sessionData?._key || !positionKey) return;
+
+  try {
+    const response = await api.get('/inventory/count-position-status', {
+      params: {
+        session_key: props.sessionData._key,
+        parent_key: positionKey
+      }
+    });
+    positionStatus.value = response.data;
+  } catch (error) {
+    console.error('Error loading position completion status:', error);
+    positionStatus.value = {};
   }
 }
 
@@ -506,10 +548,6 @@ async function loadCountRecords(positionKey) {
     console.error('Error loading count records:', error);
     countRecords.value = [];
   }
-}
-
-function selectRootPosition() {
-  selectPosition('IN');
 }
 
 async function selectPosition(positionKey) {
@@ -640,8 +678,16 @@ const filteredContents = computed(() => {
   // 5) Filter out completed counts if hideCountedFilter is active
   const filteredItems = hideCountedFilter.value
     ? textFiltered.filter(item => {
+        // Filter out items with completed counts
         const countInfo = countInfoMap.value.get(item._key);
-        return !countInfo || countInfo.completedCount === 0;
+        if (countInfo && countInfo.completedCount > 0) {
+          return false;
+        }
+        // Filter out positions that are counted or empty
+        if (item.type === 'position' && item.position_key && item.position_key in positionStatus.value) {
+          return false;
+        }
+        return true;
       })
     : textFiltered;
 
@@ -774,33 +820,7 @@ function getCountedQuantity(item) {
   return null;
 }
 
-async function searchProducts() {
-  showProductSearch.value = true;
-  if (productFilter.value === productLastResearch.value) {
-    return;
-  }
-
-  Loading.show();
-  const resp = await api.get('product', {
-    params: {
-      search_string: productFilter.value,
-      limit: 100
-    }
-  });
-  const existingProducts = positionContents.value.map(p => p.product_key);
-  const subset = resp.data.filter(p => !existingProducts.includes(p._key));
-  if (subset.length === 1 && subset[0].code === productFilter.value) {
-    selectProductForCount(subset[0]);
-    productFilter.value = '';
-  } else {
-    productRows.value = subset;
-    productListLabel.value = 'Risultati';
-    productLastResearch.value = productFilter.value;
-  }
-  Loading.hide();
-}
-
-function selectProductForCount(product) {
+function handleProductSelected(product) {
   // Determine card type based on traceability_level
   const isSerialProduct = !!product.traceability_level;
 
@@ -819,10 +839,13 @@ function selectProductForCount(product) {
     inventory_keys: [], // Empty - item doesn't exist in inventory yet
     path: [{ position_key: countingStore.selectedPosition._key, position_code: countingStore.selectedPosition.code }]
   };
+}
 
-  // Close product search card
-  showProductSearch.value = false;
-  productFilter.value = '';
+function handleEmptyPositionConfirmed() {
+  // Refresh position contents after empty position confirmation
+  if (countingStore.selectedPosition?._key) {
+    loadPositionContents(countingStore.selectedPosition._key);
+  }
 }
 </script>
 

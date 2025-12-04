@@ -491,3 +491,27 @@ class Queries:
       position_code: position.code
     })
   """
+
+
+  CHECK_POSITION_COMPLETION = """
+    LET items_to_count = (
+      FOR i IN 1..1 INBOUND @position_id is_in_position
+      RETURN DISTINCT i._id // Product ID or Position ID
+    )
+
+    LET counted_items = (
+      FOR cr IN inventory_count_record
+      FILTER
+        cr.inventory_count_session_key == @session_key
+        && cr._to == @position_id
+        && cr.status == 'completed'
+      RETURN DISTINCT cr._from // Product ID
+    )
+
+    LET complete_positions = ( // throughout the whole session
+      FOR i IN 1..1 OUTBOUND CONCAT('InventoryCountSession/', @session_key) inventory_count_position_complete
+      RETURN DISTINCT i._id // Position ID
+    )
+
+    RETURN items_to_count ALL IN UNION(counted_items, complete_positions)
+  """

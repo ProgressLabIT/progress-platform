@@ -255,6 +255,7 @@ collections = [
   Collection(name='InventoryCountAssignment'),
   Collection(name='InventorySnapshot'),
   Collection(name='InventorySnapshotItem'),
+  Collection(name='inventory_count_position_complete'),
   Collection(name='inventory_count_record'),
   Collection(name='Issue', indexes=[
     DBIndex(fields=['issue_type_key'], name="issue-type"),

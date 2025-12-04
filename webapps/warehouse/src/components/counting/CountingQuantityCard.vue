@@ -299,11 +299,6 @@ function saveCount() {
   };
 
   countingStore.saveCount(countData);
-  Notify.create({
-    message: $t('count_saved'),
-    color: 'theme-green',
-    position: 'top',
-  });
   emit('close');
 }
 </script>

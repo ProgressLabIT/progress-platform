@@ -33,16 +33,25 @@ export const useCountingStore = defineStore('counting', {
       if (!countData.count_key) {
         throw new Error('count_key is required to complete a count');
       }
-
-      await sendEvent({
-        event_type: 'COUNT_COMPLETED',
-        event_data: {
-          count_key: countData.count_key,
-          count_qt: countData.count_qt,
-          count_serial_keys: countData.serials_counted || null,
-          notes: countData.notes || null,
-        }
-      });
+      try {
+        await sendEvent({
+          event_type: 'COUNT_COMPLETED',
+          event_data: {
+            count_key: countData.count_key,
+            count_qt: countData.count_qt,
+            count_serial_keys: countData.serials_counted || null,
+            notes: countData.notes || null,
+          }
+        });
+        Notify.create({
+          message: $t('count_saved'),
+          color: 'theme-green',
+          position: 'top',
+        });
+      } catch (error) {
+        console.error('Error saving count:', error);
+        throw error;
+      }
     },
     resetCounting() {
       this.tempSerials = [];

@@ -133,6 +133,16 @@ class InventoryCountStatus(str, Enum):
   CONFIRMED = 'confirmed'
   DISCARDED = 'discarded'
 
+
+class InventoryCountPositionCompleteRecord(ArangoDocument):  # edge collection: inventory_count_position_completed
+  """Tracks whether all items in a position have been counted during a session."""
+  session_id: str = Field(..., alias='_from')   # InventoryCountSession/KEY
+  position_id: str = Field(..., alias='_to')    # Position/KEY
+  completed_at: datetime = Field(default_factory=timestamp)
+  status: Literal['counted', 'empty'] = 'counted'
+  user_key: str | None = None
+  notes: str | None = None
+
 class InventoryCountRecord(ArangoDocument): # edge collection inventory_count_record
   # What was counted
   product_id: str = Field(..., alias='_from')

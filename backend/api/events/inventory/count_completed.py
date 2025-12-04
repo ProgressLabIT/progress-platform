@@ -1,7 +1,7 @@
 from events.base_event import BaseEvent
 from models.event import EventInfoModel, EventType
 from models.inventory.counting import InventoryCountRecord, InventoryCountStatus
-
+from utils.inventory import Queries
 
 class CountCompletedEvent(BaseEvent):
   class InfoModel(EventInfoModel):
@@ -16,20 +16,45 @@ class CountCompletedEvent(BaseEvent):
 
   @classmethod
   def get_tx_collections(cls):
-    return ['inventory_count_record', 'is_in_position']
+    return ['inventory_count_record', 'is_in_position', 'inventory_count_position_complete']
+
+
+  # ========================================================
+  # MAIN LOGIC
+  # ========================================================
 
   def apply(self):
-    # Get the count record to verify it exists and is completable
-    count_record = InventoryCountRecord(**self.tx.collection('inventory_count_record').get(self.info.count_key))
 
-    if not count_record:
+    self._fetch_and_validate_count_record()
+    self._update_count_record()
+    self._unlock_inventory_records()
+    self._flag_position_as_counted_if_count_complete()
+
+    self.response = dict(
+      message=f"Count record completed",
+      count_record_key=self.count_record.key
+    )
+
+
+  # ========================================================
+  # PRIVATE METHODS
+  # ========================================================
+
+  def _fetch_and_validate_count_record(self):
+    # Get the count record to verify it exists and is completable
+    self.count_record = InventoryCountRecord(**self.tx.collection('inventory_count_record').get(self.info.count_key))
+
+    if not self.count_record:
       raise ValueError(f"Count record with key {self.info.count_key} not found")
 
     # Only allow completing if status is STARTED
-    if count_record.status != InventoryCountStatus.STARTED:
-      raise ValueError(f"Cannot complete count record {self.info.count_key} with status {count_record.status}. Only STARTED counts can be completed.")
+    if self.count_record.status != InventoryCountStatus.STARTED:
+      raise ValueError(f"Cannot complete count record {self.info.count_key} with status {self.count_record.status}. Only STARTED counts can be completed.")
 
-    # Update the count record
+
+  # ========================================================
+
+  def _update_count_record(self):
     update = dict(
       _key=self.info.count_key,
       counted_qt=self.info.count_qt,
@@ -40,6 +65,10 @@ class CountCompletedEvent(BaseEvent):
     )
     self.tx.collection('inventory_count_record').update(update)
 
+
+  # ========================================================
+
+  def _unlock_inventory_records(self):
     # Unlock all inventory records
     self.tx.aql.execute(
       """
@@ -48,15 +77,26 @@ class CountCompletedEvent(BaseEvent):
       UPDATE i WITH { counting: false, last_counted: @timestamp } IN is_in_position
       """,
       bind_vars=dict(
-        product_id=count_record.product_id,
-        position_id=count_record.position_id,
+        product_id=self.count_record.product_id,
+        position_id=self.count_record.position_id,
         timestamp=self.info.timestamp
       )
     )
 
-    self.response = dict(
-      message=f"Count record completed",
-      count_record_key=count_record.key
-    )
+  # ========================================================
 
-    # Unlock all inventory records
+  def _flag_position_as_counted_if_count_complete(self):
+    result = self.tx.aql.execute(Queries.CHECK_POSITION_COMPLETION, bind_vars=dict(
+      session_key=self.count_record.inventory_count_session_key,
+      position_id=self.count_record.position_id
+    )).next()
+
+    if result:
+      # Do not indicate user since it's the system that flagged the position as counted
+      self.tx.collection('inventory_count_position_complete').insert(dict(
+        _from=f'InventoryCountSession/{self.count_record.inventory_count_session_key}',
+        _to=self.count_record.position_id,
+        status='counted',
+        completed_at=self.info.timestamp,
+        notes="Last position item counted"
+      ))

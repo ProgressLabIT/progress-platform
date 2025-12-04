@@ -243,3 +243,38 @@ def get_counting_record(params: Annotated[InventoryCountRecordSearchParams, Quer
     return list(cursor)
   except:
     raise HTTPException(status_code=500, detail=traceback.format_exc())
+
+
+@router.get('/inventory/count-position-status')
+async def get_count_position_status(
+  session_key: str,
+  parent_key: str
+) -> dict[str, str]:
+  """Get counting completion status for positions in a session, given a parent position key."""
+
+  parent_id = f"Position/{parent_key}"
+  session_id = f"InventoryCountSession/{session_key}"
+
+  query = """
+    LET children_ids = (
+      FOR i IN 1..1 INBOUND @parent_id is_in_position
+      FILTER IS_SAME_COLLECTION(Position, i)
+      RETURN i._id
+    )
+    RETURN MERGE(
+      FOR record IN inventory_count_position_complete
+      FILTER record._from == @session_id && record._to IN children_ids
+      RETURN { [PARSE_IDENTIFIER(record._to).key]: record.status }
+    )
+  """
+
+  try:
+    results = db.aql.execute(query, bind_vars=dict(
+      session_id=session_id,
+      parent_id=parent_id
+    )).next()
+  except Exception:
+    raise HTTPException(status_code=500, detail=traceback.format_exc())
+
+  # Return as dict for easy lookup
+  return results
