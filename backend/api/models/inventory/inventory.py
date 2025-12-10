@@ -55,6 +55,7 @@ class InventoryGraphSearchParams(BaseModel):
   serial_search: WildcardString = None
   serial_keys: list[str] | None = None
   position_search: WildcardString = None
+  position_key: str | None = None
   owned: bool | None = None
   limit: int | None = 200
   offset: int | None = 0

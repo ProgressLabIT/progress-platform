@@ -498,7 +498,7 @@ async function loadPositionContents(positionKey) {
         ...response.data.position,
         path: response.data.path || []
       };
-      countingStore.setSelectedPosition(positionWithPath);
+      countingStore.selectedPosition = positionWithPath;
       positionContents.value = response.data.contents || [];
     } else {
       // Fallback for old response format (array of contents)
@@ -569,14 +569,14 @@ function goUpOneLevel() {
     selectPosition(parentPosition.position_key);
   } else {
     // At root position, reset to position selection
-    countingStore.resetPositionNavigation();
+    countingStore.selectedPosition = null;
     positionContents.value = [];
   }
 }
 
 function resetPositionNavigation() {
   filter.value = '';
-  countingStore.resetPositionNavigation();
+  countingStore.selectedPosition = null;
   positionContents.value = [];
 }
 

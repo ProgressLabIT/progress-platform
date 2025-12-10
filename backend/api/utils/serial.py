@@ -226,7 +226,7 @@ class Queries:
 
   GET_SERIALS_FOR_CODE = """
     FOR s IN Serial
-      FILTER (s.code == @serial_code && s.product_key == @product_key)
+      FILTER (UPPER(s.code) == UPPER(@serial_code) && s.product_key == @product_key)
       && s.deleted == False
       RETURN s
   """

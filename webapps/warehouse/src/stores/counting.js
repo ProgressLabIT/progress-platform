@@ -2,12 +2,12 @@ import { defineStore } from 'pinia';
 import { api } from '@/boot/axios';
 import { store } from '@/boot/store.js';
 import { sendEvent } from '@/composables/event';
+import { Notify } from 'quasar';
 
 
 export const useCountingStore = defineStore('counting', {
   state: () => ({
     sessionData: null,
-    tempSerials: [],
     selectedPosition: null,
   }),
   actions: {
@@ -24,8 +24,8 @@ export const useCountingStore = defineStore('counting', {
      * Uses COUNT_COMPLETED event
      * @param {Object} countData - Count data object
      * @param {string} countData.count_key - The count record key to complete (required)
-     * @param {number} countData.quantity_counted - The counted quantity (required)
-     * @param {Array<string>} countData.serials_counted - Optional array of serial keys
+     * @param {number} countData.count_qt - The counted quantity (required)
+     * @param {Array<string>} countData.count_serial_keys - Optional array of serial keys
      * @param {string} countData.notes - Optional notes
      * @returns {Promise<void>}
      */
@@ -39,7 +39,7 @@ export const useCountingStore = defineStore('counting', {
           event_data: {
             count_key: countData.count_key,
             count_qt: countData.count_qt,
-            count_serial_keys: countData.serials_counted || null,
+            count_serial_keys: countData.count_serial_keys || null,
             notes: countData.notes || null,
           }
         });
@@ -54,12 +54,7 @@ export const useCountingStore = defineStore('counting', {
       }
     },
     resetCounting() {
-      this.tempSerials = [];
-    },
-    setSelectedPosition(position) {
-      this.selectedPosition = position;
-    },
-    resetPositionNavigation() {
+      this.sessionData = null;
       this.selectedPosition = null;
     }
   }

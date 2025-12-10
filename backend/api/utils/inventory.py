@@ -158,6 +158,7 @@ class Queries:
       )
 
       LET shown_path = LENGTH(p) == 0 ? [{ position_key: start._key, position_code: start.code }] : p
+      FILTER @position_key ? LAST(shown_path).position_key == @position_key : true
       FILTER @position_search
         ? shown_path[? ANY FILTER REGEX_TEST(CURRENT.position_code, @position_search, true)]
         : true
