@@ -481,6 +481,16 @@ class Queries:
       )
     LET product = FIRST(FOR p IN Product FILTER p._key == PARSE_IDENTIFIER(r._from).key RETURN p)
     LET position = FIRST(FOR p IN Position FILTER p._key == PARSE_IDENTIFIER(r._to).key RETURN p)
+    LET system_serials = (
+      FOR s IN Serial
+      FILTER s._key IN r.system_serial_keys
+      RETURN { serial_key: s._key, serial_code: s.code }
+    )
+    LET counted_serials = (
+      FOR s IN Serial
+      FILTER s._key IN r.counted_serial_keys
+      RETURN { serial_key: s._key, serial_code: s.code }
+    )
     LIMIT @offset,@limit || null
     RETURN MERGE(r, {
       product_key: product._key,
@@ -489,7 +499,9 @@ class Queries:
       product_traceability_level: product.traceability_level,
       product_tags: product.tags,
       position_key: position._key,
-      position_code: position.code
+      position_code: position.code,
+      system_serials,
+      counted_serials
     })
   """
 

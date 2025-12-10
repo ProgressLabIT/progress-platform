@@ -56,7 +56,7 @@
           />
         </q-tab-panel>
         <!-- TAB 3: RECORDS -->
-        <q-tab-panel v-if="showRecordsTab" :name="3" class="q-px-none">
+        <q-tab-panel v-if="showRecordsTab" :name="3" class="q-pa-none">
           <CountSessionRecordsTab />
         </q-tab-panel>
       </q-tab-panels>
