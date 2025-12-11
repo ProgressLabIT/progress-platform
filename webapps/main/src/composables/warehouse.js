@@ -172,7 +172,7 @@ export function useMovementColumns() {
     {
       name: 'user',
       field: 'user_key',
-      sortable: true,
+      align: 'right',
       label: t('user.label').toUpperCase(),
     }
   ];
