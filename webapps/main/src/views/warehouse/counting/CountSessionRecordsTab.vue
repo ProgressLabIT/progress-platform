@@ -37,15 +37,20 @@
         <!-- Position Column -->
         <template #body-cell-position="props">
           <q-td :props="props">
-            <span v-if="props.row.position">{{ props.row.position.code }}</span>
-            <span v-else class="text-grey">-</span>
+            <div v-if="props.row.position">
+              {{ props.row.position.code }}
+              <q-tooltip anchor="top middle" self="bottom middle">
+                {{ props.row.pathString }}
+              </q-tooltip>
+            </div>
+            <div v-else class="text-grey">-</div>
           </q-td>
         </template>
 
         <!-- Counted Qt Column -->
         <template #body-cell-counted_qt="props">
           <q-td :props="props">
-            {{ props.row.activeRecord?.counted_qt ?? '-' }}
+            {{ getActiveRecord(props.row)?.counted_qt ?? '-' }}
           </q-td>
         </template>
 
@@ -55,10 +60,12 @@
             <template v-if="props.row.hasConflict">
               <q-btn icon="mdi-alert" color="theme-orange" round size="xs" @click="openConflictDialog(props.row)" />
             </template>
-            <template v-else-if="props.row.activeRecord">
+            <template v-else-if="props.row.activeRecordKey">
               <!-- For products with serial keys, show serial-based delta -->
               <template v-if="props.row.serialDelta && (props.row.serialDelta.added.length > 0 || props.row.serialDelta.removed.length > 0)">
-                <div class="row items-center q-gutter-x-xs justify-end">
+                <div class="row items-center q-gutter-x-xs justify-end weight-bold">
+
+                  <!-- Added/Removed deltas -->
                   <span v-if="props.row.serialDelta.added.length > 0" class="text-theme-green">
                     +{{ props.row.serialDelta.added.length }}
                   </span>
@@ -68,12 +75,16 @@
                   <span v-if="props.row.serialDelta.added.length === 0 && props.row.serialDelta.removed.length === 0" class="text-grey">
                     0
                   </span>
+
+                  <!-- Tooltip with added/removed serial codes -->
                   <q-tooltip v-if="props.row.serialDelta.added.length > 0 || props.row.serialDelta.removed.length > 0">
-                    <div v-if="props.row.serialDelta.added.length > 0">
+                    <div v-if="props.row.serialDelta.added.length > 0" >
                       <strong>{{ $t('warehouse.counting.serials_added') }}:</strong>
                       <div v-for="serial in props.row.serialDelta.added" :key="serial">{{ serial }}</div>
                     </div>
-                    <div v-if="props.row.serialDelta.removed.length > 0" class="q-mt-sm">
+                    <div class="q-mt-sm" v-if="props.row.serialDelta.added.length > 0 && props.row.serialDelta.removed.length > 0">
+                    </div>
+                    <div v-if="props.row.serialDelta.removed.length > 0">
                       <strong>{{ $t('warehouse.counting.serials_removed') }}:</strong>
                       <div v-for="serial in props.row.serialDelta.removed" :key="serial">{{ serial }}</div>
                     </div>
@@ -82,40 +93,10 @@
               </template>
               <!-- For non-serialized products, show quantity delta -->
               <template v-else>
-                <span :class="getDeltaClass(props.row.activeRecord.delta)">
-                  {{ formatDelta(props.row.activeRecord.delta) }}
+                <span :class="getDeltaClass(props.row.delta)">
+                  {{ formatDelta(props.row.delta) }}
                 </span>
               </template>
-            </template>
-            <span v-else class="text-grey">-</span>
-          </q-td>
-        </template>
-
-        <!-- Serials Column -->
-        <template #body-cell-serials="props">
-          <q-td :props="props">
-            <template v-if="props.row.product.traceability_level === 'complete' && props.row.activeRecord">
-              <div class="row items-center q-gutter-x-xs">
-                <!-- Added/Removed deltas -->
-                <span v-if="props.row.serialDelta.added.length > 0" class="text-theme-green">
-                  +{{ props.row.serialDelta.added.length }}
-                </span>
-                <span v-if="props.row.serialDelta.removed.length > 0" class="text-theme-red">
-                  -{{ props.row.serialDelta.removed.length }}
-                </span>
-
-                <!-- Tooltip with added/removed serial codes -->
-                <q-tooltip v-if="props.row.serialDelta.added.length > 0 || props.row.serialDelta.removed.length > 0">
-                  <div v-if="props.row.serialDelta.added.length > 0">
-                    <strong>{{ $t('warehouse.counting.serials_added') }}:</strong>
-                    <div v-for="serial in props.row.serialDelta.added" :key="serial">{{ serial }}</div>
-                  </div>
-                  <div v-if="props.row.serialDelta.removed.length > 0" class="q-mt-sm">
-                    <strong>{{ $t('warehouse.counting.serials_removed') }}:</strong>
-                    <div v-for="serial in props.row.serialDelta.removed" :key="serial">{{ serial }}</div>
-                  </div>
-                </q-tooltip>
-              </div>
             </template>
             <span v-else class="text-grey">-</span>
           </q-td>
@@ -125,16 +106,17 @@
         <template #body-cell-notes="props">
           <q-td :props="props">
             <template v-if="props.row.hasNotes">
-              <q-icon name="mdi-note-text" color="primary" size="sm">
+              <q-icon name="mdi-note-text-outline" color="low" size="sm">
                 <q-badge v-if="props.row.notesCount > 1" color="primary" floating>
                   {{ props.row.notesCount }}
                 </q-badge>
+                <q-tooltip anchor="top middle" self="bottom middle">
+                  <div v-for="(note, idx) in props.row.allNotes" :key="idx">
+                    {{ note }}
+                  </div>
+                  <q-separator v-if="idx < props.row.notesCount - 1" />
+                </q-tooltip>
               </q-icon>
-              <q-tooltip>
-                <div v-for="(note, idx) in props.row.allNotes" :key="idx" class="q-mb-xs">
-                  {{ note }}
-                </div>
-              </q-tooltip>
             </template>
           </q-td>
         </template>
@@ -143,7 +125,7 @@
         <template #body-cell-conflict="props">
           <q-td :props="props">
             <q-btn
-              v-if="props.row.discardedRecords.length > 0"
+              v-if="getDiscardedRecords(props.row).length > 0"
               round
               flat
               size="sm"
@@ -152,7 +134,7 @@
               @click="openConflictDialog(props.row)"
             >
               <q-tooltip>
-                {{ $t('warehouse.counting.records_discarded', { count: props.row.discardedRecords.length }) }}
+                {{ $t('warehouse.counting.records_discarded', { count: getDiscardedRecords(props.row).length }) }}
               </q-tooltip>
             </q-btn>
           </q-td>
@@ -197,12 +179,12 @@
               filled
             />
           </div>
-          <div class="col-auto q-ml-md">
+          <div class="col-auto">
             <q-btn-toggle
               v-model="filters.varianceType"
               map-options
               emit-value
-
+              outline
               dense
               padding="xs md"
               :options="[
@@ -227,11 +209,12 @@
             />
           </div>
 
-          <div class="col-auto q-ml-md">
+          <div class="col-auto">
             <q-btn
               :color="allLevels ? 'primary' : 'white-low'"
               size="sm"
               padding="xs md"
+              outline
               dense
               @click="allLevels = !allLevels">
               <div class="q-mr-sm">{{ $t('all') }}</div>
@@ -364,6 +347,15 @@ const rawRecords = computed(() => countSessionStore.records);
 // Position lookup (for path-based search)
 const positionLookup = computed(() => countSessionStore.positionLookup);
 
+function getActiveRecord(row) {
+  if (!row.activeRecordKey) return null;
+  return row.records.find(r => r._key === row.activeRecordKey);
+}
+
+function getDiscardedRecords(row) {
+  return row.records.filter(r => r.status === 'discarded');
+}
+
 // Table columns
 const tableColumns = computed(() => [
   {
@@ -383,29 +375,23 @@ const tableColumns = computed(() => [
   {
     name: 'system_qt',
     label: $t('warehouse.counting.system_qt'),
-    field: row => row.activeRecord?.system_qt,
+    field: row => getActiveRecord(row)?.system_qt,
     align: 'right',
     sortable: true,
   },
   {
     name: 'counted_qt',
     label: $t('warehouse.counting.counted_qt'),
-    field: row => row.activeRecord?.counted_qt,
+    field: row => getActiveRecord(row)?.counted_qt,
     align: 'right',
     sortable: true,
   },
   {
     name: 'delta',
     label: $t('warehouse.counting.delta'),
-    field: row => row.activeRecord?.delta,
+    field: row => row.delta,
     align: 'right',
     sortable: true,
-  },
-  {
-    name: 'serials',
-    label: $t('serials'),
-    field: 'serials',
-    align: 'center',
   },
   {
     name: 'notes',
@@ -476,16 +462,17 @@ const aggregatedRecords = computed(() => {
         },
         position: record.position_key ? {
           key: record.position_key,
-          code: record.position_code,
+          code: record.position_code
         } : null,
         records: [],
-        activeRecord: null,
-        discardedRecords: [],
+        pathString: record.position_path?.join(' > ') || '',
+        activeRecordKey: null,
+        delta: null,
+        serialDelta: { added: [], removed: [] },
         hasConflict: false,
         hasNotes: false,
         notesCount: 0,
         allNotes: [],
-        serialDelta: { added: [], removed: [] },
       });
     }
 
@@ -498,22 +485,20 @@ const aggregatedRecords = computed(() => {
       aggregate.notesCount++;
       aggregate.hasNotes = true;
     }
-
-    // Categorize records
-    if (record.status === 'discarded') {
-      aggregate.discardedRecords.push(record);
-    }
   }
 
   // Process each aggregate to determine active record and conflicts
   for (const aggregate of aggregateMap.values()) {
     const nonDiscardedRecords = aggregate.records.filter(r => r.status !== 'discarded');
+    let activeRecord = null;
 
     if (nonDiscardedRecords.length === 0) {
       // All records discarded, use the most recent discarded one for display
-      aggregate.activeRecord = aggregate.discardedRecords[0] || null;
+      activeRecord = aggregate.records.filter(r => r.status === 'discarded').sort(
+        (a, b) => new Date(b.counted_at) - new Date(a.counted_at)
+      )[0] || null;
     } else if (nonDiscardedRecords.length === 1) {
-      aggregate.activeRecord = nonDiscardedRecords[0];
+      activeRecord = nonDiscardedRecords[0];
     } else {
       // Multiple non-discarded records - check if they match
       const firstQt = nonDiscardedRecords[0].counted_qt;
@@ -521,36 +506,36 @@ const aggregatedRecords = computed(() => {
 
       if (allMatch) {
         // All counts match, use the first one
-        aggregate.activeRecord = nonDiscardedRecords[0];
+        activeRecord = nonDiscardedRecords[0];
       } else {
         // Conflict - different counts
         aggregate.hasConflict = true;
         // Show the most recent one but mark as conflict
-        aggregate.activeRecord = nonDiscardedRecords.sort(
+        activeRecord = nonDiscardedRecords.sort(
           (a, b) => new Date(b.counted_at) - new Date(a.counted_at)
         )[0];
       }
     }
 
-    // Calculate serial delta for products with serial keys
-    if (aggregate.activeRecord) {
-      const hasSystemSerials = aggregate.activeRecord.system_serial_keys && aggregate.activeRecord.system_serial_keys.length > 0;
-      const hasCountedSerials = aggregate.activeRecord.counted_serial_keys && aggregate.activeRecord.counted_serial_keys.length > 0;
+    if (activeRecord) {
+      aggregate.activeRecordKey = activeRecord._key;
+
+      // Calculate serial delta for products with serial keys
+      const hasSystemSerials = activeRecord.system_serial_keys && activeRecord.system_serial_keys.length > 0;
+      const hasCountedSerials = activeRecord.counted_serial_keys && activeRecord.counted_serial_keys.length > 0;
 
       if (hasSystemSerials || hasCountedSerials) {
-        const systemSerialsCodes = new Set(aggregate.activeRecord.system_serials.map(s => s.serial_code) || []);
-        const countedSerialsCodes = new Set(aggregate.activeRecord.counted_serials.map(s => s.serial_code) || []);
+        const systemSerialsCodes = new Set(activeRecord.system_serials?.map(s => s.serial_code) || []);
+        const countedSerialsCodes = new Set(activeRecord.counted_serials?.map(s => s.serial_code) || []);
 
         aggregate.serialDelta = {
           added: [...countedSerialsCodes].filter(s => !systemSerialsCodes.has(s)),
           removed: [...systemSerialsCodes].filter(s => !countedSerialsCodes.has(s)),
         };
       }
-    }
 
-    // Calculate delta for active record
-    if (aggregate.activeRecord) {
-      aggregate.activeRecord.delta = (aggregate.activeRecord.counted_qt ?? 0) - (aggregate.activeRecord.system_qt ?? 0);
+      // Calculate delta for active record
+      aggregate.delta = (activeRecord.counted_qt ?? 0) - (activeRecord.system_qt ?? 0);
     }
   }
 
@@ -572,10 +557,11 @@ const filteredRecords = computed(() => {
   if (filters.value.variance !== null && filters.value.variance !== '') {
     const threshold = Number(filters.value.variance);
     result = result.filter(r => {
-      if (!r.activeRecord) return false;
-      const delta = Math.abs(r.activeRecord.delta || 0);
+      if (!r.activeRecordKey) return false;
+      const delta = Math.abs(r.delta || r.serialDelta?.added?.length + r.serialDelta?.removed?.length || 0);
       if (filters.value.varianceType === 'percentage') {
-        const systemQt = r.activeRecord.system_qt || 1;
+        const activeRecord = r.records.find(rec => rec._key === r.activeRecordKey);
+        const systemQt = activeRecord?.system_qt || 1;
         const percentVariance = (delta / systemQt) * 100;
         return percentVariance >= threshold;
       }
@@ -586,8 +572,8 @@ const filteredRecords = computed(() => {
   // Only with variance filter
   if (filters.value.onlyWithVariance) {
     result = result.filter((r) => {
-      const delta = r.activeRecord?.delta;
-      return delta !== null && delta !== undefined && delta !== 0;
+      const delta = Math.abs(r.delta || r.serialDelta?.added?.length + r.serialDelta?.removed?.length || 0);
+      return delta > 0;
     });
   }
 
@@ -615,9 +601,10 @@ const filteredRecords = computed(() => {
   // Serial filter
   if (filters.value.serial) {
     result = result.filter(r => {
+      const activeRecord = r.records.find(rec => rec._key === r.activeRecordKey);
       const allSerials = [
-        ...(r.activeRecord?.system_serial_keys || []),
-        ...(r.activeRecord?.counted_serial_keys || []),
+        ...(activeRecord?.system_serial_keys || []),
+        ...(activeRecord?.counted_serial_keys || []),
       ];
       return allSerials.some(s => serialMatcher(s));
     });

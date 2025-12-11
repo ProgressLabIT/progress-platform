@@ -481,6 +481,11 @@ class Queries:
       )
     LET product = FIRST(FOR p IN Product FILTER p._key == PARSE_IDENTIFIER(r._from).key RETURN p)
     LET position = FIRST(FOR p IN Position FILTER p._key == PARSE_IDENTIFIER(r._to).key RETURN p)
+    LET path = SHIFT(
+      FOR path IN 1..99 INBOUND K_PATHS 'Position/IN' TO position._id is_in_position
+      FOR v IN path.vertices
+      RETURN v.code
+    )
     LET system_serials = (
       FOR s IN Serial
       FILTER s._key IN r.system_serial_keys
@@ -500,6 +505,7 @@ class Queries:
       product_tags: product.tags,
       position_key: position._key,
       position_code: position.code,
+      position_path: path,
       system_serials,
       counted_serials
     })

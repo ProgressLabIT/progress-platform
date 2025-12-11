@@ -165,7 +165,7 @@ const nonDiscardedRecords = computed(() => {
 
 const discardedRecords = computed(() => {
   if (!props.aggregate) return [];
-  return props.aggregate.discardedRecords || [];
+  return props.aggregate.records.filter(r => r.status === 'discarded');
 });
 
 // Watch for dialog open to reset selection
