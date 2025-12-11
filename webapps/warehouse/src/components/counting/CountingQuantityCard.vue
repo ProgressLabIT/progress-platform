@@ -200,8 +200,9 @@ async function loadCountRecord() {
 }
 
 onMounted(async () => {
-  // Initialize quantity based on blind mode and reset notes
-  countedQuantity.value = blindMode.value ? 0 : props.item.quantity;
+  // Initialize quantity: use last count if available, otherwise system quantity (or 0 in blind mode)
+  countedQuantity.value = props.item.lastCountRecord?.counted_qt
+    ?? (blindMode.value ? 0 : props.item.quantity);
   notes.value = '';
 
   // Only skip confirmation if count is already active AND belongs to current user

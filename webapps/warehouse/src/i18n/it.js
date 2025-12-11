@@ -31,6 +31,8 @@ export default {
   confirm_cancel_count: 'Annullare il conteggio?',
   confirm_cancel_count_message: 'Il conteggio verrà annullato e la giacenza verrà sbloccata.',
   confirm_empty_position: 'Conferma posizione vuota',
+  confirm_zero_count: 'Conferma zero seriali',
+  confirm_zero_count_message: 'Verrà salvato un conteggio con quantità zero e nessun seriale.',
   contents: 'Contenuti',
   count_active: 'Conteggio Attivo',
   count_canceled: 'Conteggio annullato',

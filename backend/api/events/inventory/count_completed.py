@@ -1,4 +1,5 @@
 from events.base_event import BaseEvent
+from events.inventory.count_discarded import CountDiscardedEvent
 from models.event import EventInfoModel, EventType
 from models.inventory.counting import InventoryCountRecord, InventoryCountStatus
 from utils.inventory import Queries
@@ -27,6 +28,7 @@ class CountCompletedEvent(BaseEvent):
 
     self._fetch_and_validate_count_record()
     self._update_count_record()
+    self._discard_previous_counts_by_same_user()
     self._unlock_inventory_records()
     self._flag_position_as_counted_if_count_complete()
 
@@ -64,6 +66,34 @@ class CountCompletedEvent(BaseEvent):
       notes=self.info.notes
     )
     self.tx.collection('inventory_count_record').update(update)
+
+
+  # ========================================================
+
+  def _discard_previous_counts_by_same_user(self):
+    # Find previous counts by the same user for the same product/position/session
+    previous_counts = self.tx.aql.execute(
+      """
+      FOR r IN inventory_count_record
+      FILTER r._from == @product_id
+         AND r._to == @position_id
+         AND r.inventory_count_session_key == @session_key
+         AND r.user_key == @user_key
+         AND r.status IN ['completed', 'submitted', 'confirmed']
+         AND r._key != @current_key
+      RETURN r._key
+      """,
+      bind_vars=dict(
+        product_id=self.count_record.product_id,
+        position_id=self.count_record.position_id,
+        session_key=self.count_record.inventory_count_session_key,
+        user_key=self.count_record.user_key,
+        current_key=self.info.count_key
+      )
+    )
+
+    for record_key in previous_counts:
+      CountDiscardedEvent.create_as_child(self, dict(count_key=record_key))
 
 
   # ========================================================

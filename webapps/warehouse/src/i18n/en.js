@@ -24,6 +24,8 @@ export default {
   confirm_cancel_count: 'Cancel count?',
   confirm_cancel_count_message: 'The count will be canceled and the inventory will be unlocked.',
   confirm_empty_position: 'Confirm empty position',
+  confirm_zero_count: 'Confirm zero serials',
+  confirm_zero_count_message: 'A count with zero quantity and no serials will be saved.',
   contents: 'Contents',
   count_active: 'Count Active',
   count_canceled: 'Count canceled',

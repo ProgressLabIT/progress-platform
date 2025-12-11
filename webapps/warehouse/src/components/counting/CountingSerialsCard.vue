@@ -61,6 +61,31 @@
         </div>
       </template>
 
+      <!-- ZERO COUNT CONFIRMATION -->
+      <template v-else-if="showZeroCountConfirmation">
+        <q-space></q-space>
+        <div class="col-auto text-center">
+          <div class="text-h5 q-mb-sm">{{ $t('confirm_zero_count') }}</div>
+          <div class="text-body2 text-low q-mb-md">{{ $t('confirm_zero_count_message') }}</div>
+        </div>
+        <q-space></q-space>
+        <div class="row q-gutter-sm">
+          <q-btn
+            color="theme-grey"
+            class="col"
+            :label="$t('no')"
+            @click="showZeroCountConfirmation = false"
+          />
+          <q-btn
+            color="theme-blue"
+            class="col"
+            :label="$t('yes')"
+            :loading="loading"
+            @click="saveCount"
+          />
+        </div>
+      </template>
+
       <!-- COUNTING UI -->
       <template v-else>
         <!-- HEADING -->
@@ -147,15 +172,21 @@
         </div>
 
         <!-- ACTIONS -->
-        <div class="row q-gutter-sm">
-          <q-btn
-            color="theme-blue"
-            class="col"
-            :label="$t('save')"
-            :disabled="selectedSerialKeys.length === 0 || loading"
-            @click="saveCount"
-          />
-        </div>
+        <q-btn
+          v-if="selectedSerialKeys.length === 0"
+          color="theme-blue"
+          outline
+          :label="$t('confirm_zero_count')"
+          :disabled="loading"
+          @click="showZeroCountConfirmation = true"
+        />
+        <q-btn
+          v-else
+          color="theme-blue"
+          :label="$t('save')"
+          :disabled="selectedSerialKeys.length === 0 || loading"
+          @click="saveCount"
+        />
         <q-btn
           color="theme-grey"
           :label="$t('cancel')"
@@ -201,6 +232,7 @@ const startingCount = ref(false);
 const countRecordKey = ref(null);
 const showCancelConfirmation = ref(false);
 const cancelingCount = ref(false);
+const showZeroCountConfirmation = ref(false);
 const notes = ref('');
 const validatingSerial = ref(false);
 const codeSearch = ref('');
@@ -275,8 +307,9 @@ onMounted(async () => {
     // Load the count record key for cancellation (needed even if we trust props)
     await loadCountRecord();
     countStarted.value = true;
-    // Load existing serials if in non-blind mode
-    loadExistingSerials();
+    // Load existing serials and pre-select from last count if available
+    await loadExistingSerials();
+    await preSelectLastCountSerials();
   }
   // Otherwise, show the confirmation dialog (default behavior)
 });
@@ -310,6 +343,9 @@ async function startCount() {
     if (hasInventoryKeys) {
       await loadExistingSerials();
     }
+
+    // Pre-select serials from last count if available
+    await preSelectLastCountSerials();
 
     Notify.create({
       message: $t('count_started_success'),
@@ -353,6 +389,37 @@ async function loadExistingSerials() {
     });
   } finally {
     loading.value = false;
+  }
+}
+
+// Pre-select serials from the last completed count record
+async function preSelectLastCountSerials() {
+  const lastSerialKeys = props.item.lastCountRecord?.counted_serial_keys;
+  if (!lastSerialKeys?.length) return;
+
+  const existingKeys = new Set(existingSerials.value.map(s => s.serial_key));
+
+  // Pre-select serials that exist in the position
+  const existingFromLastCount = lastSerialKeys.filter(k => existingKeys.has(k));
+  selectedSerialKeys.value = [...existingFromLastCount];
+
+  // Fetch and add serials that are not in the position (were added from elsewhere)
+  const missingKeys = lastSerialKeys.filter(k => !existingKeys.has(k));
+  if (missingKeys.length > 0) {
+    // Fetch each missing serial individually using the /serial/{key} endpoint
+    // This ensures we get the exact serial we're looking for
+    for (const serialKey of missingKeys) {
+      try {
+        const response = await api.get(`/serial/${serialKey}`);
+        if (response.data) {
+          // Add to addedSerials (shows as "added") and select them
+          addedSerials.value.push({ serial_key: response.data._key, serial_code: response.data.code });
+          selectedSerialKeys.value.push(response.data._key);
+        }
+      } catch (error) {
+        console.error('Error fetching serial:', serialKey, error);
+      }
+    }
   }
 }
 

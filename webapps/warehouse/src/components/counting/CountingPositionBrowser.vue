@@ -131,6 +131,13 @@
               </div>
             </q-item-section>
 
+            <!-- COUNTED QUANTITY (blind mode) -->
+            <q-item-section v-if="blindQuantities && getCountedQuantity(item) !== null" side class="col-auto">
+              <div class="text-body2 text-low">
+                {{ getCountedQuantity(item) }}
+              </div>
+            </q-item-section>
+
             <!-- ADDED ITEMS -->
             <q-item-section v-if="item.isCountOnly" side class="col-auto">
               <q-badge color="theme-orange" class="uppercase highlight q-pa-sm">
@@ -152,12 +159,7 @@
 
             <!-- COUNT COMPLETED -->
             <q-item-section v-if="getCountInfo(item).completedCount > 0" side class="col-auto">
-              <div class="row items-center q-gutter-xs">
-                <span v-if="getCountInfo(item).completedCount > 1" class="text-body2">
-                  {{ getCountInfo(item).completedCount }}x
-                </span>
-                <q-icon name="mdi-check-circle" color="theme-green" size="20px" />
-              </div>
+              <q-icon name="mdi-check-circle" color="theme-green" size="20px" />
             </q-item-section>
 
             <!-- COUNT ACTIVE -->
@@ -737,6 +739,9 @@ function selectItem(item) {
   const isCounting = countInfo?.hasStarted || false;
   const countBy = countInfo?.startedBy || item.count_by || null;
 
+  // Get the last count record for pre-filling
+  const lastCountRecord = getLastCountRecord(item);
+
   if (item.type === 'position') {
     selectPosition(item.position_key);
   } else if (item.isAggregatedSerial) {
@@ -754,7 +759,8 @@ function selectItem(item) {
       counting: isCounting,
       count_by: countBy,
       inventory_keys: item.inventory_keys || [],
-      path: [{ position_key: countingStore.selectedPosition._key, position_code: countingStore.selectedPosition.code }]
+      path: [{ position_key: countingStore.selectedPosition._key, position_code: countingStore.selectedPosition.code }],
+      lastCountRecord,
     };
   } else {
     // Convert position API response format to inventory format for counting cards
@@ -771,7 +777,8 @@ function selectItem(item) {
       counting: isCounting,
       count_by: countBy,
       inventory_keys: item.inventory_keys || [item._key],
-      path: [{ position_key: countingStore.selectedPosition._key, position_code: countingStore.selectedPosition.code }]
+      path: [{ position_key: countingStore.selectedPosition._key, position_code: countingStore.selectedPosition.code }],
+      lastCountRecord,
     };
   }
 }
@@ -797,28 +804,33 @@ function getCountInfo(item) {
 
 // Helper function to get counted quantity from count records
 function getCountedQuantity(item) {
+  const lastRecord = getLastCountRecord(item);
+  return lastRecord?.counted_qt ?? null;
+}
+
+// Helper function to get the last completed count record for the current user
+function getLastCountRecord(item) {
   const countInfo = getCountInfo(item);
   if (!countInfo.hasRecords || countInfo.allRecords.length === 0) {
     return null;
   }
 
+  const currentUserKey = store.state.session.user._key;
 
-  // Get completed/submitted/confirmed records first (most recent)
+  // Get completed/submitted/confirmed records by current user
   const completedRecords = countInfo.allRecords.filter(
-    r => r.status === 'completed' && r.counted_by === store.state.session.user._key
+    r => (r.status === 'completed' || r.status === 'submitted' || r.status === 'confirmed')
+      && r.user_key === currentUserKey
   );
 
-  if (completedRecords.length > 0) {
-    // Sort by counted_at descending and get the most recent
-    const sorted = completedRecords.sort((a, b) => {
-      const dateA = a.counted_at ? new Date(a.counted_at) : new Date(0);
-      const dateB = b.counted_at ? new Date(b.counted_at) : new Date(0);
-      return dateB - dateA;
-    });
-    return sorted[0].counted_qt ?? null;
-  }
+  if (completedRecords.length === 0) return null;
 
-  return null;
+  // Sort by counted_at descending and return the most recent
+  return completedRecords.sort((a, b) => {
+    const dateA = a.counted_at ? new Date(a.counted_at) : new Date(0);
+    const dateB = b.counted_at ? new Date(b.counted_at) : new Date(0);
+    return dateB - dateA;
+  })[0];
 }
 
 function handleProductSelected(product) {
