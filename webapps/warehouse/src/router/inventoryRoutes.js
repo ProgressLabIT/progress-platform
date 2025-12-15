@@ -12,6 +12,15 @@ const inventoryRoutes = [
         component: () => import('app/src/views/inventory/InventoryHome.vue'),
       },
       {
+        path: 'count-session/:countSessionKey',
+        name: 'InventoryCountSession',
+        component: () => import('app/src/views/inventory/InventoryCountSession.vue'),
+        props: true,
+        meta: {
+          dynamicBreadcrumb: true,
+        },
+      },
+      {
         path: 'product',
         name: 'InventoryProduct',
         component: () => import('app/src/views/inventory/InventoryProduct.vue'),

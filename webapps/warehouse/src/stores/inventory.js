@@ -14,7 +14,8 @@ export const useInventoryStore = defineStore('inventory', {
     },
     async loadPositionContents(position_key) {
       const response = await api.get(`/position/${position_key}`);
-      this.contents = response.data;
+      // Extract contents from object response format: { position, path, contents }
+      this.contents = response.data?.contents || [];
     }
   }
 });

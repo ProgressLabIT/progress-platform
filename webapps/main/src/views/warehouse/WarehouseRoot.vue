@@ -27,6 +27,7 @@
           <!-- POSITION BUTTONS -->
           <q-btn
             v-if="$route.name?.startsWith('position')"
+            class="q-ml-sm"
             size="0.75rem"
             color="theme-blue"
             :label="$t('new')"
@@ -38,8 +39,20 @@
 
           <!-- INVENTORY BUTTONS -->
 
+          <!-- COUNTING BUTTONS -->
+          <q-btn
+            v-if="$route.name === 'countSessions'"
+            class="q-ml-sm"
+            size="0.75rem"
+            color="theme-blue"
+            :label="$t('new')"
+            @click="$router.push({ name: 'countSessionNew' })"
+          >
+          </q-btn>
+
           <!-- EXPORT EXCEL -->
           <q-btn
+            class="q-ml-sm"
             size="0.75rem"
             :label="$t('export')"
             color="theme-blue"
@@ -115,13 +128,26 @@
         }
       "
     ></inventory-filter>
+
+    <counting-filter
+      v-if="$route.name === 'counting'"
+      v-model:show-filter-drawer="showFilterDrawer"
+      @filter-active-change="
+        (filtersActive) => {
+          filtersActiveNo = filtersActive;
+        }
+      "
+    ></counting-filter>
   </q-page-container>
 </template>
 
 <script>
+import { Dialog } from 'quasar';
+import CountingFilter from '@/components/warehouse/counting/CountingFilter.vue';
 import InventoryFilter from '@/components/warehouse/inventory/InventoryFilter.vue';
 import MovementFilter from '@/components/warehouse/movement/MovementFilter.vue';
 import PositionFilter from '@/components/warehouse/position/PositionFilter.vue';
+import CountSessionScreen from '@/views/warehouse/counting/CountSessionScreen.vue';
 import { XLSXDownload, XLSXGetData } from '@/lib/xlsxDownload';
 import {
   useInventoryColumns,
@@ -134,6 +160,7 @@ const warehouse_views = [
   { component: 'Movements', route_name: 'movements' },
   { component: 'Lists', route_name: 'movementLists' },
   { component: 'Positions', route_name: 'positions' },
+  { component: 'Counting', route_name: 'countSessions' },
 ];
 
 const header_plus_footer_height = 80;
@@ -142,6 +169,7 @@ export default {
   name: 'WarehouseRoot',
 
   components: {
+    CountingFilter,
     PositionFilter,
     MovementFilter,
     InventoryFilter,

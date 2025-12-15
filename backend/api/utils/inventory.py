@@ -22,37 +22,58 @@ class Queries:
       && (@search ? REGEX_TEST(v.code, @search, true) : true)
       && (@has_product_key ? @has_product_key == p.vertices[-1]._key : true)
       && (@has_product_code ? @has_product_code == p.vertices[-1].code : true)
+      && (@fixed_only ? v.fixed == true : true)
 
     LIMIT @offset, @limit || null
 
     RETURN v
   """
 
-  GET_POSITION_CONTENTS = """
-    FOR v, e IN 1..1 INBOUND CONCAT('Position/', @position_key) is_in_position OPTIONS { uniqueVertices: "path" }
-    LET position = (IS_SAME_COLLECTION(Position, v)) ? MERGE({ type: 'position' }, v) : null
-    LET product = IS_SAME_COLLECTION(Product, v) ? MERGE({ type: 'product', quantity: e.quantity }, v) : null
-    LET serial = e.serial_key ? FIRST(
-      FOR s IN Serial
-      FILTER s._key == e.serial_key
-      RETURN MERGE({ type: 'serial', product_code: v.code }, s)
-    ): null
-    LET result = NOT_NULL(serial, product, position)
-    FILTER result != null && result.code != null
-    FILTER @search ? (CONTAINS(LOWER(result.code), LOWER(@search)) || CONTAINS(LOWER(result.product_code), LOWER(@search))) : true
-    SORT result.code ASC
-    LIMIT @limit
+  GET_POSITION_DETAILS = """
+    LET current_position = DOCUMENT('Position', @position_key)
+
+    // Build path from root (IN) to current position using SHORTEST_PATH
+    // Path goes OUTBOUND from current position to root (Position/IN)
+    LET path = SHIFT(  // Remove root position (Position/IN)
+      FOR v IN INBOUND SHORTEST_PATH
+      'Position/IN' TO CONCAT('Position/', @position_key) is_in_position
+      RETURN { position_key: v._key, position_code: v.code }
+    )
+
+
+    // Get contents (products, serials, sub-positions)
+    LET contents = (
+      FOR v, e IN 1..1 INBOUND CONCAT('Position/', @position_key) is_in_position OPTIONS { uniqueVertices: "path" }
+      LET position = (IS_SAME_COLLECTION(Position, v)) ? MERGE({ type: 'position' }, v) : null
+      LET product = IS_SAME_COLLECTION(Product, v) ? MERGE({ type: 'product', quantity: e.quantity }, v) : null
+      LET serial = e.serial_key ? FIRST(
+        FOR s IN Serial
+        FILTER s._key == e.serial_key
+        RETURN MERGE({ type: 'serial', product_code: v.code }, s)
+      ): null
+      LET result = NOT_NULL(serial, product, position)
+      FILTER result != null && result.code != null
+      FILTER @search ? (CONTAINS(LOWER(result.code), LOWER(@search)) || CONTAINS(LOWER(result.product_code), LOWER(@search))) : true
+      SORT result.code ASC
+      RETURN {
+        _key: e._key,
+        type: result.type,
+        code: result.code,
+        position_key: result.type == 'position' ? v._key : null,
+        position_fixed: result.type == 'position' ? v.fixed : null,
+        product_code: result.type == 'position' ? null : v.code,
+        product_description: result.type == 'position' ? null : v.description,
+        product_key: result.type == 'position' ? null : v._key,
+        quantity: e.quantity,
+        serial_code: result.type == 'serial' ? serial.code : null,
+        serial_key: result.type == 'serial' ? serial._key : null
+      }
+    )
+
     RETURN {
-      _key: e._key,
-      type: result.type,
-      code: result.code,
-      position_key: result.type == 'position' ? v._key : null,
-      position_fixed: result.type == 'position' ? v.fixed : null,
-      product_code: result.type == 'position' ? null : v.code,
-      product_key: result.type == 'position' ? null : v._key,
-      quantity: e.quantity,
-      serial_code: result.type == 'serial' ? serial.code : null,
-      serial_key: result.type == 'serial' ? serial._key : null,
+      position: current_position,
+      path,
+      contents: contents
     }
   """
 
@@ -137,6 +158,7 @@ class Queries:
       )
 
       LET shown_path = LENGTH(p) == 0 ? [{ position_key: start._key, position_code: start.code }] : p
+      FILTER @position_key ? LAST(shown_path).position_key == @position_key : true
       FILTER @position_search
         ? shown_path[? ANY FILTER REGEX_TEST(CURRENT.position_code, @position_search, true)]
         : true
@@ -368,4 +390,147 @@ class Queries:
   """
 
 
+  SEARCH_INVENTORY_COUNT_SESSIONS = """
+    FOR cs IN InventoryCountSession
+    FILTER
+      (@search ? REGEX_TEST(cs.code, @search, true) : true)
+      && (@status ? cs.status == @status : true)
+      && (@type ? cs.type == @type : true)
+    LIMIT @offset, @limit || null
+    RETURN cs
+  """
 
+  SEARCH_INVENTORY_COUNT_ASSIGNMENTS = """
+    FOR ica IN InventoryCountAssignment
+
+    FILTER
+      (@inventory_count_session_key ? ica.inventory_count_session_key == @inventory_count_session_key : true)
+      && (@assignment_type ? ica.assignment_type == @assignment_type : true)
+      && (@assigned_to ? ica.assigned_to == @assigned_to : true)
+      && (@status ? ica.status == @status : true)
+
+    // Product filters
+    FILTER @product_key ? ica.product_key == @product_key : true
+    LET product = FIRST(FOR p IN Product FILTER p._key == ica.product_key RETURN p)
+    FILTER @product_search ? REGEX_TEST(product.code, @product_search, true) : true
+
+    // Position filters (with hierarchy consideration)
+    LET assigned_position = FIRST(FOR p IN Position FILTER p._key == ica.position_key RETURN p)
+    FILTER !(@position_key || @position_search) ? true : (
+      LET position_key_match = @position_key ? assigned_position._key == @position_key : true
+      LET position_code_match = @position_search ? REGEX_TEST(assigned_position.code, @position_search, true) : true
+
+      LET children = (
+        FOR p IN 1..9999 INBOUND CONCAT('Position/', ica.position_key) is_in_position
+        FILTER IS_SAME_COLLECTION(Position, p)
+        RETURN p
+      )
+
+      LET children_key_match = @position_key ? @position_key IN children[*]._key : true
+      LET children_code_match = @position_search ? children[*].code[? ANY FILTER REGEX_TEST(CURRENT, @position_search, true)] : true
+
+      RETURN position_key_match && position_code_match && children_key_match && children_code_match
+    )
+
+    SORT ica[@order_by]
+
+    LIMIT @offset, @limit || null
+
+    RETURN MERGE(ica, {
+      product_code: product.code,
+      product_description: product.description,
+      position_code: assigned_position ? assigned_position.code : null
+    })
+  """
+
+  GET_COUNT_SESSION_DETAILS = """
+    FOR cs IN InventoryCountSession
+    FILTER cs._key == @inventory_count_session_key
+    LET target_collection_name = { 'product': 'Product', 'position': 'Position' }[cs.type]
+    LET assignments = MERGE(
+      FOR ica IN InventoryCountAssignment
+      FILTER ica.inventory_count_session_key == @inventory_count_session_key && ica.status != 'canceled'
+      LET target_data = KEEP(DOCUMENT(target_collection_name, ica.target_key), 'code', 'description')
+      FILTER target_data != null
+      LET assignment = { _key: ica._key, target_key: ica.target_key, status: ica.status, target_data, include_children: ica.include_children }
+      COLLECT assignee = ica.assigned_to INTO assignment_group KEEP assignment
+      RETURN { [assignee]: assignment_group[*].assignment }
+    )
+    RETURN MERGE(cs, { assignments })
+  """
+
+  CANCEL_INVENTORY_COUNT_ASSIGNMENTS = """
+    FOR ica IN InventoryCountAssignment
+    FILTER ica._key IN @assignment_keys && ica.status == 'planned'
+    UPDATE ica WITH { status: 'canceled' } in InventoryCountAssignment
+    RETURN OLD._key
+  """
+
+  SEARCH_INVENTORY_COUNT_RECORDS = """
+    FOR r IN inventory_count_record
+    FILTER
+      (@count_session_key ? r.inventory_count_session_key == @count_session_key : true)
+      && (@assignment_key ? r.assignment_key == @assignment_key : true)
+      && (@product_key ? r._from == CONCAT('Product/', @product_key) : true)
+      && (@position_key ? r._to == CONCAT('Position/', @position_key) : true)
+      && (@user_key ? r.user_key == @user_key : true)
+      && (
+        (@include_started && r.status == 'started') ||
+        (@include_completed && (r.status == 'completed' || r.status == 'submitted' || r.status == 'confirmed')) ||
+        (@include_discarded && r.status == 'discarded')
+      )
+    LET product = FIRST(FOR p IN Product FILTER p._key == PARSE_IDENTIFIER(r._from).key RETURN p)
+    LET position = FIRST(FOR p IN Position FILTER p._key == PARSE_IDENTIFIER(r._to).key RETURN p)
+    LET path = SHIFT(
+      FOR path IN 1..99 INBOUND K_PATHS 'Position/IN' TO position._id is_in_position
+      FOR v IN path.vertices
+      RETURN v.code
+    )
+    LET system_serials = (
+      FOR s IN Serial
+      FILTER s._key IN r.system_serial_keys
+      RETURN { serial_key: s._key, serial_code: s.code }
+    )
+    LET counted_serials = (
+      FOR s IN Serial
+      FILTER s._key IN r.counted_serial_keys
+      RETURN { serial_key: s._key, serial_code: s.code }
+    )
+    LIMIT @offset,@limit || null
+    RETURN MERGE(r, {
+      product_key: product._key,
+      product_code: product.code,
+      product_description: product.description,
+      product_traceability_level: product.traceability_level,
+      product_tags: product.tags,
+      position_key: position._key,
+      position_code: position.code,
+      position_path: path,
+      system_serials,
+      counted_serials
+    })
+  """
+
+
+  CHECK_POSITION_COMPLETION = """
+    LET items_to_count = (
+      FOR i IN 1..1 INBOUND @position_id is_in_position
+      RETURN DISTINCT i._id // Product ID or Position ID
+    )
+
+    LET counted_items = (
+      FOR cr IN inventory_count_record
+      FILTER
+        cr.inventory_count_session_key == @session_key
+        && cr._to == @position_id
+        && cr.status == 'completed'
+      RETURN DISTINCT cr._from // Product ID
+    )
+
+    LET complete_positions = ( // throughout the whole session
+      FOR i IN 1..1 OUTBOUND CONCAT('InventoryCountSession/', @session_key) inventory_count_position_complete
+      RETURN DISTINCT i._id // Position ID
+    )
+
+    RETURN items_to_count ALL IN UNION(counted_items, complete_positions)
+  """

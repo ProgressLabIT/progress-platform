@@ -12,10 +12,10 @@ from utils.inventory import Queries as InventoryQueries
 
 
 class BaseInventoryModel(EventModel):
-    # Inventory fields
-    movement: InventoryMovementNew | InventoryMovementUpdate | None = None
-    movement_list: MovementListNew | None = None
-    movement_key: str | None = None
+  # Inventory fields
+  movement: InventoryMovementNew | InventoryMovementUpdate | None = None
+  movement_list: MovementListNew | None = None
+  movement_key: str | None = None
 
 class BaseInventoryEvent(BaseEvent, ABC):
 
@@ -26,7 +26,6 @@ class BaseInventoryEvent(BaseEvent, ABC):
       'Serial',
       'movement'
     ]
-
 
   def _ensure_inventory_management_enabled(self):
     warehouse_enabled = self.tx.collection('Config').get('enable_inventory_management')
@@ -47,10 +46,6 @@ class BaseInventoryEvent(BaseEvent, ABC):
     movement_data = InventoryMovementNew(**self.info.model_dump()).model_dump(by_alias=True)
     movement_record = self.tx.collection('movement').insert(movement_data, return_new=True)['new']
     return InventoryMovement(**movement_record)
-
-
-
-
 
 
   def _ensure_position_id(self, position_string):

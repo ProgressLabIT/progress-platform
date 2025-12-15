@@ -12,6 +12,8 @@ const warehouse = {
     movement_search_params: undefined,
     inventory: [],
     inventory_search_params: undefined,
+    count_sessions: [],
+    count_session_search_params: undefined,
   },
 
   getters: {
@@ -34,6 +36,13 @@ const warehouse = {
     },
     getInventoryData: (state) => (inventory_key) => {
       return state.inventory.find((i) => i._key == inventory_key);
+    },
+
+    getCountSessionCount: (state) => () => {
+      return state.count_sessions.length;
+    },
+    getCountSessionData: (state) => (count_session_key) => {
+      return state.count_sessions.find((i) => i._key == count_session_key);
     },
   },
   mutations: {
@@ -105,6 +114,23 @@ const warehouse = {
     },
     SET_INVENTORY_SEARCH_PARAMS(state, params) {
       state.inventory_search_params = params;
+    },
+
+    // COUNT SESSIONS
+    LOAD_COUNT_SESSIONS(state, count_sessions) {
+      state.count_sessions = count_sessions;
+    },
+    APPEND_COUNT_SESSIONS(state, count_sessions) {
+      if (state.count_sessions) {
+        for (const session of count_sessions) {
+          state.count_sessions.push(session);
+        }
+      } else {
+        state.count_sessions = count_sessions;
+      }
+    },
+    SET_COUNT_SESSION_SEARCH_PARAMS(state, params) {
+      state.count_session_search_params = params;
     },
 
     // MOVEMENT LIST
@@ -234,6 +260,37 @@ const warehouse = {
       const { data } = await api.get('movement-list', { params: search_params });
       commit('APPEND_MOVEMENT_LISTS', data);
       commit('SET_MOVEMENT_LIST_SEARCH_PARAMS', search_params);
+    },
+
+    // COUNT SESSIONS
+    async getCountSessions({ commit }, search_params) {
+      try {
+        const { data } = await api.get('inventory/count-session', { params: search_params });
+        commit('LOAD_COUNT_SESSIONS', data);
+        commit('SET_COUNT_SESSION_SEARCH_PARAMS', search_params);
+      } catch (error) {
+        Notify.create({
+          message: error.message,
+          color: 'theme-red',
+          timeout: 1500,
+          position: 'top',
+        });
+      }
+    },
+
+    async appendCountSessions({ commit }, search_params) {
+      try {
+        const { data } = await api.get('inventory/count-session', { params: search_params });
+        commit('APPEND_COUNT_SESSIONS', data);
+        commit('SET_COUNT_SESSION_SEARCH_PARAMS', search_params);
+      } catch (error) {
+        Notify.create({
+          message: error.message,
+          color: 'theme-red',
+          timeout: 1500,
+          position: 'top',
+        });
+      }
     },
   },
 };

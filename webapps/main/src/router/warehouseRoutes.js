@@ -56,6 +56,25 @@ const warehouseRoutes = [
             name: 'movementLists',
             component: () => import ('@/views/warehouse/lists/MovementListsRoot.vue')
           },
+          {
+            path: 'count-sessions',
+            name: 'countSessions',
+            component: () =>
+              import('@/views/warehouse/counting/CountingRoot.vue'),
+            children: [{
+              path: 'new',
+              name: 'countSessionNew',
+              component: () =>
+                import('@/views/warehouse/counting/CountSessionScreen.vue'),
+              props: true,
+            }, {
+              path: ':countSessionKey',
+              name: 'countSessionDetail',
+              component: () =>
+                import('@/views/warehouse/counting/CountSessionScreen.vue'),
+              props: true,
+            }],
+          },
         ],
       },
     ],

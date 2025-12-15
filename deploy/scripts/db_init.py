@@ -211,6 +211,7 @@ collections = [
       _key = 'system_counters',
       work_orders = 'default',
       warehouse_missions = 'default',
+      counting_sessions = 'default',
       positions = 'default',
       tasks = 'default'
     )
@@ -250,6 +251,12 @@ collections = [
     DBIndex(fields=['list_key'], name="movement-list"),
     DBIndex(fields=['start', 'end'], name="movement-time-range"),
   ]),
+  Collection(name='InventoryCountSession'),
+  Collection(name='InventoryCountAssignment'),
+  Collection(name='InventorySnapshot'),
+  Collection(name='InventorySnapshotItem'),
+  Collection(name='inventory_count_position_complete'),
+  Collection(name='inventory_count_record'),
   Collection(name='Issue', indexes=[
     DBIndex(fields=['issue_type_key'], name="issue-type"),
     DBIndex(fields=['created'], name='issue-created-time'),
@@ -338,7 +345,7 @@ collections = [
     DBIndex(fields=['assigned_to', 'status'], name='task-assignee-status'),
   ]),
   Collection(name='TaskType'),
-  Collection(name='task_rel', edge=True),
+  Collection(name='task_rel'),
   Collection(name='Token'),
   Collection(name='User', default_records=[
     dict(
@@ -373,7 +380,7 @@ collections = [
     DBIndex(fields=['user_key, active'], name='ws-user-active'),
     DBIndex(fields=['batch_key, canceled'], name='ws-batch-canceled'),
   ]),
-  Collection(name='event_source', edge=True),  # Edge collection for parent-child event relationships
+  Collection(name='event_source'),  # Edge collection for parent-child event relationships
 ]
 
 

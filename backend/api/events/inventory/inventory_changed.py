@@ -47,11 +47,12 @@ class InventoryChangedEvent(BaseInventoryEvent):
       # No matching inventory record found
       if self.info.quantity_change > 0:
         # Create new inventory record
-        self.tx.collection('is_in_position').insert(Inventory(
+        record = Inventory(
           **match_criteria,
           quantity = self.info.quantity_change,
           owned = True
-        ))
+        ).model_dump(exclude=['key'], by_alias=True)
+        self.tx.collection('is_in_position').insert(record)
         return False
       else:
         self._get_product()

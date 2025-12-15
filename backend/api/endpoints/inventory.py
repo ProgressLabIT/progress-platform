@@ -37,10 +37,20 @@ async def get_positions(params: Annotated[PositionSearchParams, Query()]):
 
 @router.get('/position/{position_key}',
     dependencies=[Depends(auth.verify_token)])
-async def get_position_contents(position_key: str, search: str | None = None, limit: int | None = 100):
+async def get_position_details(position_key: str, search: str | None = None):
   try:
-    bind_vars = dict(position_key=position_key, search=search, limit=limit)
-    return [x for x in db.aql.execute(Queries.GET_POSITION_CONTENTS, bind_vars=bind_vars)]
+    bind_vars = dict(position_key=position_key, search=search)
+    result = next(db.aql.execute(Queries.GET_POSITION_DETAILS, bind_vars=bind_vars), None)
+    if result is None:
+      raise HTTPException(
+        status_code=404,
+        detail=dict(
+          message=f"Position {position_key} not found."
+        )
+      )
+    return result
+  except HTTPException:
+    raise
   except Exception:
     raise HTTPException(
       status_code=500,
@@ -90,6 +100,8 @@ def get_position_hierarchy(
       elif ('children' in hierarchy and search_children(position_key, hierarchy['children'])):
           filtered_hierarchy.append(hierarchy)
 
+    # Sort top-level positions alphabetically by code
+    filtered_hierarchy.sort(key=lambda x: x.get('code', '').lower())
     return filtered_hierarchy
 
   except Exception:
@@ -118,6 +130,8 @@ def get_children(position_key, positions, level):
         merged_position['children'] = position_children
       children.append(merged_position)
 
+  # Sort children alphabetically by code
+  children.sort(key=lambda x: x.get('code', '').lower())
   return children
 
 def search_children(position_key, children):

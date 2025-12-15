@@ -118,9 +118,12 @@
 
               <template v-else-if="column.name === 'user'">
                 <BaseUserAvatar
-                  dense
-                  name_first
-                  :user="getUser(props.row.user_key)" size="24px"/>
+                  :show_name="false"
+                  :user="props.row.user" size="24px">
+                </BaseUserAvatar>
+                <q-tooltip anchor="top middle" self="bottom middle" delay="500" :offset="[10, 0]">
+                  {{ props.row.user.name }} {{ props.row.user.surname }}
+                </q-tooltip>
               </template>
 
               <template v-else>
@@ -252,7 +255,10 @@ export default {
     },
 
     movement_list() {
-      return this.$store.state.warehouse.movements;
+      return this.$store.state.warehouse.movements.map(movement => ({
+        ...movement,
+        user: this.getUser(movement.user_key)
+      }));
     },
 
     columns() {
@@ -269,6 +275,7 @@ export default {
 
   created() {
     this.getMovements();
+    this.$store.dispatch('loadUsers');
     let eventURL =
       this.$api.defaults.baseURL + '/notification/inventory-notification';
     this.events = new EventSource(eventURL, {
@@ -367,7 +374,8 @@ export default {
     },
 
     getUser(userKey) {
-      return this.$store.getters.user_data(userKey);
+      const user = this.$store.getters.user_data(userKey);
+      return user
     },
 
     showMovementDetails(movementKey) {

@@ -1,8 +1,8 @@
 from events.inventory.base_inventory import BaseInventoryEvent
 from events.inventory.movement_planned import MovementPlannedEvent
+from events.inventory.movement_completed import MovementCompletedEvent
 from models.event import EventInfoModel
-from models.inventory import MovementListNew, InventoryMovementReferences, MovementStatus
-from utils.dt import timestamp
+from models.inventory import MovementListNew, InventoryMovementReferences, MovementStatus, MovementListNewStatus
 
 class WarehouseListCreatedEvent(BaseInventoryEvent):
 
@@ -20,7 +20,8 @@ class WarehouseListCreatedEvent(BaseInventoryEvent):
       'MovementList',
       'movement',
       'Serial',
-      'Counter'
+      'Counter',
+      'is_in_position'
     ]
 
   @classmethod
@@ -89,18 +90,32 @@ class WarehouseListCreatedEvent(BaseInventoryEvent):
     # Create the movements
     # ===============================================
     for m in self.info.new_movement_list.movements:
-      MovementPlannedEvent.create_as_child(self, dict(
+      # Build common arguments
+      common_args = dict(
         movement_type = self.info.new_movement_list.type,
-        serial_code = m.serial_code,
         serial_key = m.serial_key,
         qt_planned = m.qt_planned,
         movement_list_key = new_list_key,
         movement_list_item = m.movement_list_item,
+        position_from = m.position_from,
+        position_to = m.position_to,
         product_key = m.product_key,
-        status = MovementStatus.PLANNED,
         references = self._merge_references(list_references=self.info.new_movement_list.references, movement_references=m.references),
         extra = getattr(m, 'extra', self.info.new_movement_list.extra)
-      ))
+      )
+
+      # Choose event class and add status-specific fields
+      if self.info.new_movement_list.status == MovementListNewStatus.PLANNED:
+        event_class = MovementPlannedEvent
+        event_args = dict(**common_args, serial_code=m.serial_code, status=MovementStatus.PLANNED)
+      elif self.info.new_movement_list.status == MovementListNewStatus.COMPLETED:
+        event_class = MovementCompletedEvent
+        event_args = dict(**common_args, qt_confirmed=m.qt_confirmed)
+      else:
+        # Should never happen, since MovementListNewStatus allows only PLANNED and COMPLETED
+        raise ValueError(f"Invalid movement list status: {self.info.new_movement_list.status}")
+
+      event_class.create_as_child(self, event_args)
 
     self.response = new_list_key
 

@@ -63,10 +63,12 @@
 
       <template v-else>
         <div class="text-h6 q-mb-md">{{ $t('contents') }}</div>
-        <q-scroll-area class="col q-mb-md">
-          <q-list>
-            <q-item
-            v-for="item in filteredContents"
+        <q-virtual-scroll
+          :items="filteredContents"
+          v-slot="{ item }"
+          class="col q-mb-md"
+        >
+          <q-item
             :key="item._key"
             :clickable="item.type !== 'serial'"
             class="content-card q-my-xs q-pa-md text-body1"
@@ -86,8 +88,7 @@
               </div>
             </q-item-section>
           </q-item>
-        </q-list>
-        </q-scroll-area>
+        </q-virtual-scroll>
       </template>
 
       <q-space></q-space>
@@ -220,7 +221,8 @@ function searchPositions() {
 
 async function loadPositionContents(position_key) {
   const response = await api.get(`/position/${position_key}`, { params: { search: filter.value } });
-  positionContents.value = response.data;
+  // Extract contents from object response format: { position, path, contents }
+  positionContents.value = response.data?.contents || [];
 }
 
 function selectRootPosition() {

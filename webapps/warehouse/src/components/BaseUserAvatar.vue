@@ -1,20 +1,23 @@
 <template>
-  <div class="row items-center" :class="name_first ? ' reverse' : ''">
+  <div class="row inline items-center" :class="name_first ? ' reverse' : ''">
     <q-avatar
       v-if="initials && showAvatar"
-      color="theme-grey"
+      :color="imgError ? 'theme-grey' : undefined"
       :size="computed_size"
       class="weight-bold"
       font-size=".4em"
     >
-      <q-img :src="avatar_src" :alt="initials" :style="avatar_style">
-        <template #error>
-          <div v-if="initials" class="absolute-center bg-theme-grey">
-            {{ initials }}
-          </div>
-          <q-icon v-else name="mdi-account-circle" :size="computed_size" />
-        </template>
-      </q-img>
+      <img
+        v-if="!imgError"
+        :src="avatar_src"
+        :alt="initials"
+        :style="avatar_style"
+        @error="imgError = true"
+      >
+      <template v-else>
+        <span v-if="initials">{{ initials }}</span>
+        <q-icon v-else name="mdi-account-circle" :size="computed_size" />
+      </template>
     </q-avatar>
 
     <div
@@ -83,7 +86,14 @@ export default {
   data() {
     return {
       base_path: '/media/user/',
+      imgError: false,
     };
+  },
+
+  watch: {
+    user() {
+      this.imgError = false;
+    },
   },
 
   computed: {
