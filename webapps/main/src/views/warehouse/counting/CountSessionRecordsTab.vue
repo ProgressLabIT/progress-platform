@@ -31,6 +31,10 @@
           <q-td :props="props" style="max-width: 250px">
             <div class="text-weight-medium">{{ props.row.product.code }}</div>
             <div class="text-caption text-grey ellipsis">{{ props.row.product.description }}</div>
+            <q-tooltip anchor="top middle" self="bottom middle" :delay="500">
+              <div class="highlight">{{ props.row.product.code }}</div>
+              <div>{{ props.row.product.description }}</div>
+            </q-tooltip>
           </q-td>
         </template>
 
@@ -39,11 +43,39 @@
           <q-td :props="props">
             <div v-if="props.row.position">
               {{ props.row.position.code }}
-              <q-tooltip anchor="top middle" self="bottom middle">
+              <q-tooltip anchor="top middle" self="bottom middle" :delay="500">
                 {{ props.row.pathString }}
               </q-tooltip>
             </div>
             <div v-else class="text-grey">-</div>
+          </q-td>
+        </template>
+
+        <!-- User Column -->
+        <template #body-cell-user="props">
+          <q-td :props="props">
+            <template v-if="props.row.user_key && !props.row.hasConflict">
+              <BaseUserAvatar
+                :user="store.getters.getUserByKey(props.row.user_key)"
+                :show_name="false"
+                dense
+              />
+              <q-tooltip anchor="top middle" self="bottom middle" :delay="500">
+                {{ store.getters.getUserByKey(props.row.user_key).name }}
+                {{ store.getters.getUserByKey(props.row.user_key).surname }}
+              </q-tooltip>
+            </template>
+            <span v-else class="text-grey">-</span>
+          </q-td>
+        </template>
+
+        <!-- Counted At Column -->
+        <template #body-cell-counted_at="props">
+          <q-td :props="props">
+            <span v-if="props.row.counted_at && !props.row.hasConflict">
+              {{ formatDate(props.row.counted_at) }}
+            </span>
+            <span v-else class="text-grey">-</span>
           </q-td>
         </template>
 
@@ -166,63 +198,60 @@
           </div>
         </div>
 
-        <div class="col-auto row items-center justify-between">
-          <div class="col-8">
-            <q-input
-              v-model="filters.variance"
-              type="number"
-              min="0"
-              :max="filters.varianceType === 'percentage' ? 100 : null"
-              :label="$t('warehouse.counting.variance_threshold')"
-              stack-label
-              dense
-              filled
-            />
-          </div>
-          <div class="col-auto">
-            <q-btn-toggle
-              v-model="filters.varianceType"
-              map-options
-              emit-value
-              outline
-              dense
-              padding="xs md"
-              :options="[
-                { label: $t('quantity.short'), value: 'absolute' },
-                { label: '%', value: 'percentage' },
-              ]">
-            </q-btn-toggle>
-          </div>
+        <div class="col-auto">
+          <q-input
+          v-model="filters.variance"
+          type="number"
+            class="full-width"
+            min="0"
+            :max="filters.varianceType === 'percentage' ? 100 : null"
+            :label="$t('warehouse.counting.variance_threshold')"
+            stack-label
+            dense
+            filled
+          >
+            <template #append>
+              <q-btn-toggle
+                v-model="filters.varianceType"
+                map-options
+                emit-value
+                dense
+                flat
+                size="md"
+                :options="[
+                  { label: $t('quantity.short'), value: 'absolute' },
+                  { label: '%', value: 'percentage' },
+                ]"/>
+            </template>
+          </q-input>
         </div>
 
         <!-- Position Level -->
-        <div class="col-auto row items-center justify-between">
-          <div class="col-8">
-            <q-input
-              :model-value.number="positionLevel"
-              @update:model-value="setPositionLevel"
-              type="number"
-              :label="$t('warehouse.counting.position_level')"
-              dense
-              filled
-              min="1"
-            />
-          </div>
-
-          <div class="col-auto">
-            <q-btn
-              :color="allLevels ? 'primary' : 'white-low'"
-              size="sm"
-              padding="xs md"
-              outline
-              dense
-              @click="allLevels = !allLevels">
-              <div class="q-mr-sm">{{ $t('all') }}</div>
-              <q-icon name="mdi-family-tree" size="xs" />
-            </q-btn>
-          </div>
+        <div class="col-auto">
+          <q-input
+            :model-value.number="positionLevel"
+            @update:model-value="setPositionLevel"
+            type="number"
+            :label="$t('warehouse.counting.position_level')"
+            class="full-width"
+            dense
+            filled
+            min="1"
+          >
+            <template #append>
+              <q-btn
+                :color="allLevels ? 'primary' : 'white-low'"
+                size="sm"
+                padding="xs md"
+                outline
+                dense
+                @click="allLevels = !allLevels">
+                <div class="q-mr-sm">{{ $t('all') }}</div>
+                <q-icon name="mdi-family-tree" size="xs" />
+              </q-btn>
+            </template>
+          </q-input>
         </div>
-
 
         <!-- Text & tag filters -->
 
@@ -233,6 +262,16 @@
           :label="$t('search_tags')"
           dense
           @select="val => (filters.productTag = val)"
+        />
+
+        <!-- User Filter -->
+        <BaseAutocompleteUser
+          :value="filters.userKey"
+          :key-only="true"
+          :operator-only="false"
+          dense
+          :label="$t('warehouse.counting.user')"
+          @select="val => (filters.userKey = val)"
         />
 
         <!-- Product Filter -->
@@ -288,8 +327,11 @@ import { api } from '@/boot/axios.js';
 import { useWildcardToRegex } from '@/composables/useWildcardToRegex';
 import CountRecordConflictDialog from '@/components/warehouse/counting/CountRecordConflictDialog.vue';
 import BaseAutocompleteTag from '@/components/BaseAutocompleteTag.vue';
+import BaseAutocompleteUser from '@/components/BaseAutocompleteUser.vue';
+import BaseUserAvatar from '@/components/BaseUserAvatar.vue';
+import { formatDateTime } from '@/lib/TimeHandling';
 
-const { t: $t } = useI18n();
+const { t: $t, locale } = useI18n();
 const store = useStore();
 const countSessionStore = useCountSessionStore();
 const { wildcardToRegex } = useWildcardToRegex();
@@ -328,6 +370,7 @@ const filters = ref({
   position: '',
   positionIncludePath: false,
   productTag: null,
+  userKey: null,
 });
 
 // Display mode options
@@ -373,18 +416,29 @@ const tableColumns = computed(() => [
     sortable: true,
   },
   {
+    name: 'user',
+    label: $t('warehouse.counting.user'),
+    field: row => row.user_key,
+    align: 'center',
+  },
+  {
+    name: 'counted_at',
+    label: $t('warehouse.counting.counted_at'),
+    field: row => row.counted_at,
+    align: 'left',
+    sortable: true,
+  },
+  {
     name: 'system_qt',
     label: $t('warehouse.counting.system_qt'),
     field: row => getActiveRecord(row)?.system_qt,
     align: 'right',
-    sortable: true,
   },
   {
     name: 'counted_qt',
     label: $t('warehouse.counting.counted_qt'),
     field: row => getActiveRecord(row)?.counted_qt,
     align: 'right',
-    sortable: true,
   },
   {
     name: 'delta',
@@ -473,6 +527,8 @@ const aggregatedRecords = computed(() => {
         hasNotes: false,
         notesCount: 0,
         allNotes: [],
+        user_key: null,
+        counted_at: null,
       });
     }
 
@@ -519,6 +575,15 @@ const aggregatedRecords = computed(() => {
 
     if (activeRecord) {
       aggregate.activeRecordKey = activeRecord._key;
+
+      // Only expose user and timestamp when there is no conflict
+      if (!aggregate.hasConflict) {
+        aggregate.user_key = activeRecord.user_key || null;
+        aggregate.counted_at = activeRecord.counted_at || null;
+      } else {
+        aggregate.user_key = null;
+        aggregate.counted_at = null;
+      }
 
       // Calculate serial delta for products with serial keys
       const hasSystemSerials = activeRecord.system_serial_keys && activeRecord.system_serial_keys.length > 0;
@@ -625,6 +690,11 @@ const filteredRecords = computed(() => {
     });
   }
 
+  // User filter
+  if (filters.value.userKey) {
+    result = result.filter(r => r.user_key === filters.value.userKey);
+  }
+
   return result;
 });
 
@@ -650,6 +720,14 @@ function formatDelta(delta) {
   if (delta === null || delta === undefined) return '-';
   if (delta > 0) return `+${delta}`;
   return String(delta);
+}
+
+function formatDate(date) {
+  return formatDateTime(
+    date,
+    locale.value,
+    { dateStyle: 'short', timeStyle: 'short' }
+  );
 }
 
 function openConflictDialog(aggregate) {

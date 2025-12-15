@@ -2,9 +2,35 @@
   <BaseDialog :show="true" @close.stop="router.back()">
     <q-card class="surface1 column" style="height: 90vh; min-width: 90vw">
       <q-card-section class="row items-center justify-between col-auto q-pb-none">
-        <div class="display text-h3">
-          {{ isEditMode ? $t('warehouse.counting.session_edit') : $t('warehouse.counting.session_new') }}
+        <div class="row items-center col">
+          <div class="display text-h3 q-mr-md">
+            {{ isEditMode ? $t('warehouse.counting.session_edit') : $t('warehouse.counting.session_new') }}
+          </div>
+          <div class="row items-center q-gutter-x-sm" v-if="sessionStatus">
+            <div class="text-caption text-low">
+              {{ $t('warehouse.counting.status') }}
+            </div>
+            <q-chip
+              dense
+              :color="statusColor"
+              text-color="white"
+              class="text-caption"
+            >
+              {{ $t(`warehouse.counting.${sessionStatus}`) }}
+            </q-chip>
+            <q-btn
+              v-if="sessionStatus === 'planned'"
+              color="theme-green"
+              :loading="starting"
+              size="sm"
+              @click="startSession"
+            >
+              <q-icon name="mdi-play" class="q-mr-sm"/>
+              {{ $t('warehouse.counting.start_session') }}
+            </q-btn>
+          </div>
         </div>
+
         <q-tabs
           v-model="step"
           dense
@@ -112,6 +138,7 @@ import { useI18n } from 'vue-i18n';
 import { useStore } from 'vuex';
 import { Notify } from 'quasar';
 import { useCountSessionStore } from '@/stores/countSession';
+import { sendEvent } from '@/composables/event.js';
 import BaseDialog from '@/components/BaseDialog.vue';
 import CountSessionDataTab from './CountSessionDataTab.vue';
 import CountSessionAssignmentsTab from './CountSessionAssignmentsTab.vue';
@@ -130,6 +157,7 @@ const countSessionStore = useCountSessionStore();
 const router = useRouter();
 const step = ref(1);
 const saving = ref(false);
+const starting = ref(false);
 const disableAssignedItems = ref(false);
 const isEditMode = computed(() => !!props.countSessionKey);
 const originalSessionType = ref(null);
@@ -141,6 +169,24 @@ const showRecordsTab = computed(() => {
 
 // Max step depends on whether records tab is visible
 const maxStep = computed(() => showRecordsTab.value ? 3 : 2);
+
+const sessionStatus = computed(() => {
+  return sessionData.value.status || 'planned';
+});
+
+const statusColor = computed(() => {
+  switch (sessionStatus.value) {
+    case 'started':
+      return 'primary';
+    case 'completed':
+    case 'applied':
+      return 'theme-green';
+    case 'canceled':
+      return 'theme-red';
+    default:
+      return 'theme-grey';
+  }
+});
 
 // Use store state with computed get/set for proper v-model binding
 const sessionData = computed({
@@ -192,6 +238,41 @@ async function saveSession() {
     });
   } finally {
     saving.value = false;
+  }
+}
+
+async function startSession() {
+  if (sessionStatus.value !== 'planned' || !props.countSessionKey) {
+    return;
+  }
+
+  starting.value = true;
+
+  try {
+    await sendEvent({
+      event_type: 'COUNT_SESSION_STARTED',
+      event_data: {
+        count_session_key: props.countSessionKey,
+      },
+    });
+
+    await countSessionStore.loadSessionData(props.countSessionKey);
+
+    Notify.create({
+      message: $t('warehouse.counting.session.started_successfully'),
+      color: 'theme-green',
+    });
+  } catch (error) {
+    console.error('Error starting session:', error);
+    Notify.create({
+      type: 'negative',
+      message: error.response?.data?.detail || $t('warehouse.counting.session.start_error'),
+      color: 'theme-red',
+      timeout: 0,
+      actions: [{ label: 'CLOSE', color: 'white', handler: () => {} }],
+    });
+  } finally {
+    starting.value = false;
   }
 }
 
