@@ -74,7 +74,7 @@
         class="q-mb-md"
       />
 
-      <div class="text-h6" v-if="!loading && positionContents.length === 0">{{ $t('no_contents') }}</div>
+      <div class="text-h6" v-if="!loading && filteredContents.length === 0">{{ $t('no_contents') }}</div>
 
 
       <!-- ================================ -->
@@ -429,7 +429,11 @@ function buildCountOnlyItems() {
     }
 
     // Ensure record belongs to currently selected position
-    const recordPositionKey = record.position_key || (record._to ? record._to.split('/').pop() : null);
+    const recordPositionKeyRaw = record.position_key || (record._to ? record._to : null);
+    const recordPositionKey = recordPositionKeyRaw && recordPositionKeyRaw.includes('/')
+      ? recordPositionKeyRaw.split('/').pop()
+      : recordPositionKeyRaw;
+
     if (selectedPosKey && recordPositionKey && recordPositionKey !== selectedPosKey) {
       return;
     }
