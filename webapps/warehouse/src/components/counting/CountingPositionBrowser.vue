@@ -114,8 +114,37 @@
             </q-item-section>
 
             <!-- CODE AND DESCRIPTION -->
-            <q-item-section class="col" style="min-width: 0; flex-shrink: 1">
-              <q-item-label class="highlight">{{ item.code }}</q-item-label>
+            <q-item-section>
+              <div class="row items-center highlight">
+                <div class="col-auto q-mr-sm">{{ item.code }}</div>
+                <!-- Added Icon -->
+                <div class="col-auto column items-center">
+                <q-icon
+                    v-if="item.isCountOnly"
+                    name="mdi-plus-circle"
+                    color="theme-orange"
+                    size="16px"
+                />
+                </div>
+                <!-- Resume/Active Icon -->
+                <div class="col-auto column items-center">
+                  <q-icon
+                      v-if="getCountInfo(item).hasStarted"
+                      :name="getCountInfo(item).startedBy === store.state.session.user._key ? 'mdi-progress-pencil' : 'mdi-lock'"
+                      :color="getCountInfo(item).startedBy === store.state.session.user._key ? 'theme-blue' : 'theme-orange'"
+                      size="16px"
+                  />
+                </div>
+                <!-- Completed Icon -->
+                <div class="col-auto column items-center">
+                  <q-icon
+                      v-if="getCountInfo(item).completedCount > 0 && !(getCountInfo(item).hasStarted && getCountInfo(item).startedBy === store.state.session.user._key)"
+                      name="mdi-check-circle"
+                      color="theme-green"
+                      size="16px"
+                  />
+                </div>
+              </div>
               <q-item-label v-if="item.product_description" caption class="ellipsis">
                 {{ item.product_description }}
               </q-item-label>
@@ -138,13 +167,6 @@
               </div>
             </q-item-section>
 
-            <!-- ADDED ITEMS -->
-            <q-item-section v-if="item.isCountOnly" side class="col-auto">
-              <q-badge color="theme-orange" class="uppercase highlight q-pa-sm">
-                {{ $t('added') }}
-              </q-badge>
-            </q-item-section>
-
             <!-- POSITION FULLY CHECKED -->
             <q-item-section
               v-if="item?.type === 'position' && item?.position_key && item.position_key in positionStatus"
@@ -155,18 +177,6 @@
                 <q-icon name="mdi-check-circle" :size="positionStatus[item.position_key] === 'empty' ? '10px' : '25px'"/>
                 <q-icon v-if="positionStatus[item.position_key] === 'empty'" name="mdi-package-variant-remove" size="27px"/>
               </div>
-            </q-item-section>
-
-            <!-- COUNT COMPLETED -->
-            <q-item-section v-if="getCountInfo(item).completedCount > 0" side class="col-auto">
-              <q-icon name="mdi-check-circle" color="theme-green" size="20px" />
-            </q-item-section>
-
-            <!-- COUNT ACTIVE -->
-            <q-item-section v-if="getCountInfo(item).hasStarted" side class="col-auto">
-              <q-badge :color="getCountInfo(item).startedBy === store.state.session.user._key ? 'theme-blue' : 'theme-orange'" class="q-pa-sm uppercase highlight">
-                {{ getCountInfo(item).startedBy === store.state.session.user._key ? $t('count_resume') : $t('count_active') }}
-              </q-badge>
             </q-item-section>
 
             <!-- COUNT NUMBER & USER -->

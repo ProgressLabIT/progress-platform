@@ -288,7 +288,7 @@ class Queries:
     LET match_to = (@position_to ? m._to IN allowed_positions_to : true)
     LET position_match = (@position_filter_operator || 'AND') == 'AND'
         ? match_from && match_to
-        : match_from || match_to
+        : match_from || match_to // position filter operator is OR
 
     FILTER position_match
 
