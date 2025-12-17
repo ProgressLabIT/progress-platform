@@ -82,7 +82,10 @@ function loadProducts(filter) {
   let params = {};
 
   if (filter.value) {
-    params.search = filter.value;
+    params.search_string = filter.value;
+    if (rows.value.length === 1 && rows.value[0].code === filter.value) {
+      selectProduct(rows.value[0]);
+    }
     last_research.value = filter.value;
   }
 
