@@ -488,7 +488,7 @@ function searchPositions() {
 
     api.get('position', { params }).then((resp) => {
       if (resp.data.length === 1 && resp.data[0].code === filter.value) {
-        selectPosition(resp.data[0]);
+        selectPosition(resp.data[0]._key);
       } else {
         positionResults.value = [...resp.data];
       }
