@@ -2,9 +2,9 @@
   <SlideUpCard
     :model-value="true"
     :persistent="countStarted"
-    height="80vh"
+    height="95vh"
   >
-    <div class="col column q-gutter-y-md">
+    <div class="col column q-gutter-y-sm">
       <!-- ITEM INFO -->
       <div class="col-auto">
         <div class="text-h6 q-mb-sm">{{ $t('product') }}</div>
@@ -63,6 +63,15 @@
 
       <!-- COUNTING UI -->
       <template v-else>
+
+        <!-- MOVEMENTS CALLOUT -->
+        <CountMovementsCallout
+          :movements="movements"
+          :loading-movements="loadingMovements"
+          :show-movements-callout="showMovementsCallout"
+          display-mode="quantity"
+        />
+
         <!-- QUANTITY SELECTOR -->
         <QuantitySelector
           v-model="countedQuantity"
@@ -93,10 +102,8 @@
           <q-input
             v-model="notes"
             filled
-            type="textarea"
+            dense
             :label="$t('notes')"
-            :placeholder="$t('notes_placeholder')"
-            rows="3"
             autogrow
           />
         </div>
@@ -138,6 +145,8 @@ import { api } from '@/boot/axios';
 import { store } from '@/boot/store';
 import SlideUpCard from '@/components/SlideUpCard.vue';
 import QuantitySelector from '@/components/QuantitySelector.vue';
+import { useInventoryMovements } from '@/composables/useInventoryMovements';
+import CountMovementsCallout from '@/components/counting/CountMovementsCallout.vue';
 
 const props = defineProps({
   item: {
@@ -163,6 +172,31 @@ const adjustmentQuantity = computed(() => {
   if (blindMode.value) return 0;
   return countedQuantity.value - props.item?.quantity;
 });
+
+const effectivePositionKey = computed(() => {
+  return (
+    props.item.position_key ||
+    props.item.path?.[props.item.path.length - 1]?.position_key ||
+    null
+  );
+});
+
+const lastCountedAt = computed(() => props.item.lastCountRecord?.counted_at || null);
+
+const {
+  movements,
+  loadingMovements,
+  hasMovements,
+  loadMovements,
+} = useInventoryMovements({
+  productKey: props.item.product_key,
+  positionKey: effectivePositionKey.value,
+  startFrom: lastCountedAt.value,
+});
+
+const showMovementsCallout = computed(
+  () => !!lastCountedAt.value && hasMovements.value,
+);
 
 async function loadCountRecord() {
    // Attempt to retrieve count record if existing, in case of page reload or previous count session
@@ -213,6 +247,11 @@ onMounted(async () => {
     // Load the count record key for cancellation
     await loadCountRecord();
     countStarted.value = true;
+  }
+
+  // Load movements only if the item has already been counted by the user
+  if (lastCountedAt.value && effectivePositionKey.value && props.item.product_key) {
+    await loadMovements();
   }
   // Otherwise, show the confirmation dialog (default behavior)
 });
@@ -303,7 +342,4 @@ function saveCount() {
   emit('close');
 }
 </script>
-
-<style lang="scss" scoped>
-</style>
 

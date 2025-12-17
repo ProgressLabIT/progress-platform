@@ -88,6 +88,15 @@
 
       <!-- COUNTING UI -->
       <template v-else>
+
+        <!-- MOVEMENTS CALLOUT -->
+        <CountMovementsCallout
+          :movements="movements"
+          :loading-movements="loadingMovements"
+          :show-movements-callout="showMovementsCallout"
+          display-mode="serial"
+        />
+
         <!-- HEADING -->
         <div class="row items-center q-mt-md">
           <div class="col-auto text-h3 q-mr-sm">
@@ -207,6 +216,8 @@ import { useCountingStore } from '@/stores/counting';
 import { sendEvent } from '@/composables/event';
 import { store } from '@/boot/store';
 import SlideUpCard from '@/components/SlideUpCard.vue';
+import { useInventoryMovements } from '@/composables/useInventoryMovements';
+import CountMovementsCallout from '@/components/counting/CountMovementsCallout.vue';
 
 const props = defineProps({
   item: {
@@ -236,6 +247,31 @@ const showZeroCountConfirmation = ref(false);
 const notes = ref('');
 const validatingSerial = ref(false);
 const codeSearch = ref('');
+
+const effectivePositionKey = computed(() => {
+  return (
+    props.item.position_key ||
+    props.item.path?.[props.item.path.length - 1]?.position_key ||
+    null
+  );
+});
+
+const lastCountedAt = computed(() => props.item.lastCountRecord?.counted_at || null);
+
+const {
+  movements,
+  loadingMovements,
+  hasMovements,
+  loadMovements,
+} = useInventoryMovements({
+  productKey: props.item.product_key,
+  positionKey: effectivePositionKey.value,
+  startFrom: lastCountedAt.value,
+});
+
+const showMovementsCallout = computed(
+  () => !!lastCountedAt.value && hasMovements.value,
+);
 
 const totalSerials = computed(() => {
   const nonBlindCount = existingSerials.value.length + addedSerials.value.length;
@@ -310,6 +346,10 @@ onMounted(async () => {
     // Load existing serials and pre-select from last count if available
     await loadExistingSerials();
     await preSelectLastCountSerials();
+  }
+  // Load movements only if the item has already been counted by the user
+  if (lastCountedAt.value && effectivePositionKey.value && props.item.product_key) {
+    await loadMovements();
   }
   // Otherwise, show the confirmation dialog (default behavior)
 });
@@ -632,8 +672,5 @@ async function cancelCount() {
   }
 }
 </script>
-
-<style lang="scss" scoped>
-</style>
 
 
