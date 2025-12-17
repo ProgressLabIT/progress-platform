@@ -24,6 +24,7 @@
       class="cursor-pointer q-my-md surface2 col"
       :class="{ 'warning-border': quantity > props.max }"
       id="qtyarea"
+      style="min-height: 45px;"
       :style="selectorStyle"
     >
 
@@ -52,10 +53,20 @@
 
     <!-- ±10/100 -->
     <template v-if="showButtons">
-      <div class="full-width row">
+      <div class="row q-col-gutter-x-sm">
         <div class="col">
           <q-btn
-            color="theme-blue"
+            color="low"
+            outline
+            label="-100"
+            size="md"
+            class="full-width"
+            v-touch-repeat:0:600:600:60.mouse="() => addQuantity(-100)"
+          />
+        </div>
+        <div class="col">
+          <q-btn
+            color="low"
             outline
             label="-10"
             size="md"
@@ -63,7 +74,6 @@
             v-touch-repeat:0:600:600:60.mouse="() => addQuantity(-10)"
           />
         </div>
-        <div class="q-mx-xs"></div>
         <div class="col">
           <q-btn
             color="theme-blue"
@@ -74,19 +84,6 @@
             v-touch-repeat:0:600:600:60.mouse="() => addQuantity(10)"
           />
         </div>
-      </div>
-      <div class="full-width row q-mt-md">
-        <div class="col">
-          <q-btn
-            color="theme-blue"
-            outline
-            label="-100"
-            size="md"
-            class="full-width"
-            v-touch-repeat:0:600:600:60.mouse="() => addQuantity(-100)"
-          />
-        </div>
-        <div class="q-mx-xs"></div>
         <div class="col">
           <q-btn
             color="theme-blue"

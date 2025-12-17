@@ -10,7 +10,7 @@
     @hide="handleHide"
   >
     <q-card
-      class="q-pa-lg absolute-bottom column"
+      class="q-px-lg q-py-md absolute-bottom column"
       style="width: 100%"
       :style="{ minHeight: props.minHeight, height: props.height}">
       <slot></slot>
