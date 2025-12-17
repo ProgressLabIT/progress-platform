@@ -63,31 +63,37 @@
         </q-card>
       </div>
 
-  </q-scroll-area>
+    </q-scroll-area>
 
-  <div class="row q-gutter-sm">
-    <q-btn
-      :disable="incoming.serials.length === 0 || loading"
-      color="theme-blue"
-      :label="$t('next')"
-      class="col"
-      @click="next"
-    />
-    <q-btn
-      color="grey"
-      :label="$t('back')"
-      class="col"
-      :disable="loading"
-      @click="back"
-    />
-    <q-btn
-      color="theme-blue"
-      :label="$t('print_label')"
-      unelevated
-      class="col-12"
-      @click="printProductLabel(incoming.product.code, incoming.product.description)"
-    />
-  </div>
+    <div class="row q-col-gutter-sm">
+      <div class="col-12">
+        <q-btn
+          color="theme-blue"
+          :label="$t('print_label')"
+          outline
+          class="full-width"
+          @click="printProductLabel(incoming.product.code, incoming.product.description)"
+        />
+      </div>
+      <div class="col">
+        <q-btn
+          color="grey"
+          :label="$t('back')"
+          :disable="loading"
+          class="full-width"
+          @click="back"
+        />
+      </div>
+      <div class="col">
+        <q-btn
+          :disable="incoming.serials.length === 0 || loading"
+          color="theme-blue"
+          :label="$t('next')"
+          class="full-width"
+          @click="next"
+        />
+      </div>
+    </div>
 
   </div>
 </template>
