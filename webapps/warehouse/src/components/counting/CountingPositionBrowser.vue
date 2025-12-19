@@ -1,5 +1,5 @@
 <template>
-  <div class="col column full-width q-pb-md">
+  <div class="col column q-pb-md">
 
     <!-- ================================ -->
     <!-- POSITION SELECTION -->
@@ -71,137 +71,136 @@
 
       <SearchOrScan
         v-model="filter"
-        class="q-mb-md"
+        class="q-mb-sm"
       />
 
-      <div class="text-h6" v-if="!loading && filteredContents.length === 0">{{ $t('no_contents') }}</div>
 
 
       <!-- ================================ -->
       <!-- ITEM LIST -->
       <!-- ================================ -->
-      <template v-else>
-        <div class="row items-center justify-between q-mb-md">
-          <div class="text-h6">{{ $t('contents') }}</div>
-          <q-checkbox
-            v-model="hideCountedFilter"
-            left-label
-            dense
-            :label="$t('hide_counted')"
-            :disable="loading"
-            class="text-body2"
-
-          />
+      <div class="row items-center justify-between q-mb-sm">
+        <div class="text-h6">
+          {{ !loading && positionContents.length === 0 ? $t('no_contents') : $t('contents') }}
         </div>
-        <q-virtual-scroll
-          :items="filteredContents"
-          v-slot="{ item }"
-          class="col q-mb-md thin-scrollbar"
+        <q-checkbox
+          v-model="hideCountedFilter"
+          left-label
+          dense
+          :label="$t('hide_counted')"
+          :disable="loading"
+          class="text-body2"
+
+        />
+      </div>
+      <q-virtual-scroll
+        :items="filteredContents"
+        v-slot="{ item }"
+        class="col q-mb-md thin-scrollbar"
+      >
+        <q-item
+          :key="item._key"
+          clickable
+          class="content-card q-my-xs q-py-sm text-body1"
+          style="height: 75px; max-width: 95vw"
+          :style="{ 'border-color': getCountInfo(item).hasStarted ? 'var(--theme-blue)' : null }"
+          :class="[getColor(item), {'locked-item': getCountInfo(item).hasStarted && getCountInfo(item).startedBy === store.state.session.user._key}]"
+          @click="selectItem(item)"
         >
-          <q-item
-            :key="item._key"
-            clickable
-            class="content-card q-my-xs q-pa-md text-body1"
-            style="height: 75px; max-width: 95vw"
-            :style="{ 'border-color': getCountInfo(item).hasStarted ? 'var(--theme-blue)' : null }"
-            :class="[getColor(item), {'locked-item': getCountInfo(item).hasStarted && getCountInfo(item).startedBy === store.state.session.user._key}]"
-            @click="selectItem(item)"
-          >
 
-            <!-- ICON -->
-            <q-item-section side class="col-auto">
-              <q-icon :name="contentIcon[item.type]" />
-            </q-item-section>
+          <!-- ICON -->
+          <q-item-section side class="col-auto">
+            <q-icon :name="contentIcon[item.type]" />
+          </q-item-section>
 
-            <!-- CODE AND DESCRIPTION -->
-            <q-item-section>
-              <div class="row items-center highlight">
-                <div class="col-auto q-mr-sm">{{ item.code }}</div>
-                <!-- Added Icon -->
-                <div class="col-auto column items-center">
+          <!-- CODE AND DESCRIPTION -->
+          <q-item-section>
+            <div class="row items-center highlight">
+              <div class="col-auto q-mr-sm">{{ item.code }}</div>
+              <!-- Added Icon -->
+              <div class="col-auto column items-center">
+              <q-icon
+                  v-if="item.isCountOnly"
+                  name="mdi-plus-circle"
+                  color="theme-orange"
+                  size="16px"
+              />
+              </div>
+              <!-- Resume/Active Icon -->
+              <div class="col-auto column items-center">
                 <q-icon
-                    v-if="item.isCountOnly"
-                    name="mdi-plus-circle"
-                    color="theme-orange"
+                    v-if="getCountInfo(item).hasStarted"
+                    :name="getCountInfo(item).startedBy === store.state.session.user._key ? 'mdi-progress-pencil' : 'mdi-lock'"
+                    :color="getCountInfo(item).startedBy === store.state.session.user._key ? 'theme-blue' : 'theme-orange'"
                     size="16px"
                 />
-                </div>
-                <!-- Resume/Active Icon -->
-                <div class="col-auto column items-center">
-                  <q-icon
-                      v-if="getCountInfo(item).hasStarted"
-                      :name="getCountInfo(item).startedBy === store.state.session.user._key ? 'mdi-progress-pencil' : 'mdi-lock'"
-                      :color="getCountInfo(item).startedBy === store.state.session.user._key ? 'theme-blue' : 'theme-orange'"
-                      size="16px"
-                  />
-                </div>
-                <!-- Completed Icon -->
-                <div class="col-auto column items-center">
-                  <q-icon
-                      v-if="getCountInfo(item).completedCount > 0 && !(getCountInfo(item).hasStarted && getCountInfo(item).startedBy === store.state.session.user._key)"
-                      name="mdi-check-circle"
-                      color="theme-green"
-                      size="16px"
-                  />
-                </div>
               </div>
-              <q-item-label v-if="item.product_description" caption class="ellipsis">
-                {{ item.product_description }}
-              </q-item-label>
-            </q-item-section>
-
-            <!-- QUANTITY -->
-            <q-item-section v-if="item.quantity && !blindQuantities" side class="col-auto">
-              <div class="text-body2">
-                {{ item.quantity }}
-                <span v-if="getCountedQuantity(item) !== null" class="text-low q-ml-xs">
-                  / {{ getCountedQuantity(item) }}
-                </span>
+              <!-- Completed Icon -->
+              <div class="col-auto column items-center">
+                <q-icon
+                    v-if="getCountInfo(item).completedCount > 0 && !(getCountInfo(item).hasStarted && getCountInfo(item).startedBy === store.state.session.user._key)"
+                    name="mdi-check-circle"
+                    color="theme-green"
+                    size="16px"
+                />
               </div>
-            </q-item-section>
+            </div>
+            <q-item-label v-if="item.product_description" caption lines="2">
+              {{ item.product_description }}
+            </q-item-label>
+          </q-item-section>
 
-            <!-- COUNTED QUANTITY (blind mode) -->
-            <q-item-section v-if="blindQuantities && getCountedQuantity(item) !== null" side class="col-auto">
-              <div class="text-body2 text-low">
-                {{ getCountedQuantity(item) }}
-              </div>
-            </q-item-section>
+          <!-- QUANTITY -->
+          <q-item-section v-if="item.quantity && !blindQuantities" side class="col-auto">
+            <div class="text-body2">
+              {{ item.quantity }}
+              <span v-if="getCountedQuantity(item) !== null" class="text-low q-ml-xs">
+                / {{ getCountedQuantity(item) }}
+              </span>
+            </div>
+          </q-item-section>
 
-            <!-- POSITION FULLY CHECKED -->
-            <q-item-section
-              v-if="item?.type === 'position' && item?.position_key && item.position_key in positionStatus"
-              side
-              class="col-auto"
-            >
-              <div class="row items-baseline">
-                <q-icon name="mdi-check-circle" :size="positionStatus[item.position_key] === 'empty' ? '10px' : '25px'"/>
-                <q-icon v-if="positionStatus[item.position_key] === 'empty'" name="mdi-package-variant-remove" size="27px"/>
-              </div>
-            </q-item-section>
+          <!-- COUNTED QUANTITY (blind mode) -->
+          <q-item-section v-if="blindQuantities && getCountedQuantity(item) !== null" side class="col-auto">
+            <div class="text-body2 text-low">
+              {{ getCountedQuantity(item) }}
+            </div>
+          </q-item-section>
 
-            <!-- COUNT NUMBER & USER -->
-            <q-item-section
-              v-if="getCountInfo(item).hasRecords && (getCountInfo(item).startedBy || getCountInfo(item).completedBy.length > 0)"
-              side
-              class="col-auto"
-            >
-              <q-icon
-                v-if="getCountInfo(item).completedBy.length > 1"
-                name="mdi-account-group"
-                size="20px"
-                color="theme-grey"
-              />
-              <BaseUserAvatar
-                v-else
-                :user="usersByKeys[getCountInfo(item).startedBy || getCountInfo(item).completedBy[0]]"
-                :show_name="false"
-                size="20px"
-                dense
-              />
-            </q-item-section>
-          </q-item>
-        </q-virtual-scroll>
-      </template>
+          <!-- POSITION FULLY CHECKED -->
+          <q-item-section
+            v-if="item?.type === 'position' && item?.position_key && item.position_key in positionStatus"
+            side
+            class="col-auto"
+          >
+            <div class="row items-baseline">
+              <q-icon name="mdi-check-circle" :size="positionStatus[item.position_key] === 'empty' ? '10px' : '25px'"/>
+              <q-icon v-if="positionStatus[item.position_key] === 'empty'" name="mdi-package-variant-remove" size="27px"/>
+            </div>
+          </q-item-section>
+
+          <!-- COUNT NUMBER & USER -->
+          <q-item-section
+            v-if="getCountInfo(item).hasRecords && (getCountInfo(item).startedBy || getCountInfo(item).completedBy.length > 0)"
+            side
+            class="col-auto"
+          >
+            <q-icon
+              v-if="getCountInfo(item).completedBy.length > 1"
+              name="mdi-account-group"
+              size="20px"
+              color="theme-grey"
+            />
+            <BaseUserAvatar
+              v-else
+              :user="usersByKeys[getCountInfo(item).startedBy || getCountInfo(item).completedBy[0]]"
+              :show_name="false"
+              size="20px"
+              dense
+            />
+          </q-item-section>
+        </q-item>
+      </q-virtual-scroll>
 
       <!-- ================================ -->
       <!-- ACTIONS -->
@@ -709,8 +708,7 @@ const filteredContents = computed(() => {
     : textFiltered;
 
   // 6) Sort by code attribute
-  const sortedItems = filteredItems.sort((a, b) => a.code.localeCompare(b.code));
-  return sortedItems;
+  return filteredItems.sort((a, b) => a.code.localeCompare(b.code));
 });
 
 
@@ -879,17 +877,6 @@ function handleEmptyPositionConfirmed() {
 <style lang="sass" scoped>
 .content-card
   border-radius: 5px
-  border: 1px solid transparent
-
-  // Ensure main content section labels always stack vertically
-  :deep(.q-item__section--main)
-    display: flex
-    flex-direction: column
-    min-width: 0
-
-    .q-item__label
-      display: block
-      width: 100%
 
 .locked-item
   border: 2px solid var(--theme-blue) !important
