@@ -157,7 +157,13 @@ export default {
               if (err.response.status === 400) {
                 window.alert(err.response.data.detail.message);
               } else {
-                window.alert('An error occurred');
+                this.$q.notify({
+                  message: err.response.data.detail,
+                  color: 'theme-red',
+                  position: 'top',
+                  icon: 'mdi-alert-circle',
+                  timeout: 3000,
+                });
               }
             });
         });
