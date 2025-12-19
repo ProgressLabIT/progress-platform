@@ -182,7 +182,7 @@ class InventoryCountRecord(ArangoDocument): # edge collection inventory_count_re
   def handle_serials(self):
     # Ensure actual counts are recorded correctly
     if self.status != InventoryCountStatus.STARTED:
-      if self.counted_serial_keys is not None:
+      if self.counted_serial_keys is not None and len(self.counted_serial_keys) > 0:
         serial_count = len(self.counted_serial_keys)
         if self.counted_qt is None:
           self.counted_qt = serial_count
