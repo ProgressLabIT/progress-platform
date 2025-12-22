@@ -46,10 +46,28 @@ class TaskCompletedEvent(BaseEvent):
     return self.tx.aql.execute(query, bind_vars=dict(task_key=self.info.task_key)).next()
 
 
+  @property
+  def _mandatory_fields_satisfied(self):
+    """
+    Ensure that all mandatory form fields have values.
+    Returns True if all mandatory fields are filled, False otherwise.
+    """
+    task = self.tx.collection('Task').get(self.info.task_key)
+    if not task:
+      return True  # Task doesn't exist, let other validations handle this
+
+    task_form_fields = task.get('form_fields', [])
+
+    # Check if all mandatory fields have valid (non-empty) values
+    return all(field.get('value') not in (None, '', []) for field in task_form_fields if field.get('mandatory'))
+
 
   def apply(self):
     if not self._mandatory_links_satisfied:
       raise ValueError('Task has missing mandatory links')
+
+    if not self._mandatory_fields_satisfied:
+      raise ValueError('Task has missing mandatory form fields')
 
     self.tx.collection('Task').update(dict(
       _key=self.info.task_key,
