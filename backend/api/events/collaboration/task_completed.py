@@ -1,6 +1,7 @@
 from events.base_event import BaseEvent, EventInfoModel
 from models.collaboration import TaskStatus
 from models.event import EventType
+from models.form import FieldType
 class TaskCompletedEvent(BaseEvent):
 
   class InfoModel(EventInfoModel):
@@ -57,9 +58,31 @@ class TaskCompletedEvent(BaseEvent):
       return True  # Task doesn't exist, let other validations handle this
 
     task_form_fields = task.get('form_fields', [])
+    mandatory_fields = [f for f in task_form_fields if f.get('mandatory')]
+    mandatory_fields_keys = [f.get('custom_field_key') for f in mandatory_fields]
+
+    CUSTOM_FIELDS_TYPE_QUERY = """
+      RETURN MERGE(
+        FOR f IN CustomField
+        FILTER f._key IN @mandatory_fields_keys
+        RETURN { [f._key]: f.type }
+      )
+    """
+    if len(mandatory_fields_keys) == 0:
+      return True
+
+    mandatory_fields_map = self.tx.aql.execute(CUSTOM_FIELDS_TYPE_QUERY, bind_vars=dict(mandatory_fields_keys=mandatory_fields_keys)).next()
 
     # Check if all mandatory fields have valid (non-empty) values
-    return all(field.get('value') not in (None, '', []) for field in task_form_fields if field.get('mandatory'))
+    for field in mandatory_fields:
+      field_type = mandatory_fields_map.get(field['custom_field_key'])
+      if field_type == FieldType.TERNARY.value and field.get('value') is None:
+        return False
+
+      if field_type != FieldType.TERNARY.value and field.get('value') in (None, '', [], False):
+        return False
+
+    return True
 
 
   def apply(self):

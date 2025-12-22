@@ -873,10 +873,23 @@ async function save() {
 
     // Prepare form fields data for the event
     const formFields = task.value.form_fields || [];
+    const originalFields = originalTaskData.value.form_fields || [];
     const formData = [];
 
     formFields.forEach(field => {
-      if (field.form_field_key && field.value !== undefined) {
+      if (!field.form_field_key) {
+        return;
+      }
+
+      // Find the original field value
+      const originalField = originalFields.find(f => f.form_field_key === field.form_field_key);
+      const originalValue = originalField?.value;
+
+      // Check if the value has changed (including when clearing to undefined/null)
+      const valueChanged = field.value !== originalValue;
+
+      // Include field if value has changed (even if new value is undefined/null)
+      if (valueChanged) {
         formData.push({
           form_field_key: field.form_field_key,
           custom_field_key: field.custom_field_key,
