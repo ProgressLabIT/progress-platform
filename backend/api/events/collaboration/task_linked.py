@@ -1,13 +1,13 @@
 from events.base_event import BaseEvent, EventInfoModel
 from models.collaboration import TaskLink
 from models.event import EventType
-from fastapi import HTTPException
+from typing import Literal
 
 class TaskLinkedEvent(BaseEvent):
 
   class InfoModel(EventInfoModel):
     task_key: str
-    link_type: str
+    link_type: Literal['issue', 'work_order', 'product', 'serial', 'task']
     link_key: str
 
   @classmethod
