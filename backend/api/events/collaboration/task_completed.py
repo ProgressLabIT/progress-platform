@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from events.base_event import BaseEvent, EventInfoModel
 from models.collaboration import TaskStatus
 from models.event import EventType
@@ -6,6 +8,8 @@ class TaskCompletedEvent(BaseEvent):
 
   class InfoModel(EventInfoModel):
     task_key: str
+    closed: datetime | None = None
+    closed_by: str | None = None
 
   @classmethod
   def get_tx_collections(self):
@@ -95,8 +99,8 @@ class TaskCompletedEvent(BaseEvent):
     self.tx.collection('Task').update(dict(
       _key=self.info.task_key,
       status=TaskStatus.COMPLETED,
-      closed=self.info.timestamp,
-      closed_by=self.info.user_key
+      closed=self.info.closed or self.info.timestamp,
+      closed_by=self.info.closed_by or self.info.user_key
     ))
 
     self.response = dict(
