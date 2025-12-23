@@ -480,6 +480,7 @@ export default {
   or: 'or',
   order: 'order | orders',
   people: 'people',
+  position_deleted: 'Position deleted',
   performance: {
     actual: 'actual',
     processing_cost: {
@@ -1184,6 +1185,7 @@ export default {
       position_data: 'Position data',
       position_delete_confirm_title: 'Delete position',
       position_delete_confirm_question: 'Do you want to delete this position?',
+      position_deleted: 'Position deleted',
     },
     movement: {
       product_code: 'Product Code',

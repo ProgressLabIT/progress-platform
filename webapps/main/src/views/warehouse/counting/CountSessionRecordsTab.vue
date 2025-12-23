@@ -42,8 +42,13 @@
         <template #body-cell-position="props">
           <q-td :props="props">
             <div v-if="props.row.position">
-              {{ props.row.position.code }}
+              <span :class="{ 'text-strike text-low': props.row.position.deleted }">
+                {{ props.row.position.code }}
+              </span>
               <q-tooltip anchor="top middle" self="bottom middle" :delay="500">
+                <template v-if="props.row.position.deleted">
+                  <div class="text-theme-orange">{{ $t('position_deleted') }}</div>
+                </template>
                 {{ props.row.pathString }}
               </q-tooltip>
             </div>
@@ -516,7 +521,8 @@ const aggregatedRecords = computed(() => {
         },
         position: record.position_key ? {
           key: record.position_key,
-          code: record.position_code
+          code: record.position_code,
+          deleted: record.position_deleted || false
         } : null,
         records: [],
         pathString: record.position_path?.join(' > ') || '',

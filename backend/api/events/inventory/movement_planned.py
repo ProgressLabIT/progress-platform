@@ -84,6 +84,14 @@ class MovementPlannedEvent(BaseInventoryEvent):
     if self.info.status != MovementStatus.PLANNED:
       raise ValueError("Movement status can only be `planned`.")
 
+    # Validate positions are not deleted
+    position_from = getattr(self.info, 'position_from', None)
+    position_to = getattr(self.info, 'position_to', None)
+    if position_from and position_from not in ['NULL', 'OUT', 'IN']:
+      self._ensure_position_not_deleted(position_from)
+    if position_to and position_to not in ['NULL', 'OUT', 'IN']:
+      self._ensure_position_not_deleted(position_to)
+
     # Check if product has traceability enabled
     self.product = self.tx.collection('Product').get(self.info.product_key)
     if self.product.get('traceability_level', False):

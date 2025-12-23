@@ -216,15 +216,16 @@ async def update_position(position_key: str, updated_fields: dict, parent_positi
     dependencies=[Depends(auth.verify_token)])
 async def delete_position(position_key):
   if position_key == 'IN':
-    raise HTTPException(status_code=500, detail='Cannot delete default position')
+    raise HTTPException(status_code=400, detail='Cannot delete default position')
 
   try:
     tx = db.begin_transaction(write=['Position', 'is_in_position'])
 
+    # Ensure position has no contents
     cursor = tx.aql.execute(Queries.GET_POSITION_CHILDREN_COUNT, bind_vars=dict(is_in_position = position_key))
     if cursor.next() > 0:
-      tx.abort_transaction();
-      raise HTTPException(status_code=500, detail='Cannot delete position with children')
+      tx.abort_transaction()
+      raise HTTPException(status_code=400, detail='Cannot delete position with existing contents')
 
     tx.collection('Position').update(dict(_key=position_key, deleted=True))
     tx.collection('is_in_position').delete_match(filters=dict(_from=f'Position/{position_key}'))

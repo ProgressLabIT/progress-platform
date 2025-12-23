@@ -126,6 +126,24 @@
                 </q-tooltip>
               </template>
 
+              <template v-else-if="column.name === 'position_from_code'">
+                <span :class="{ 'text-strike text-low': props.row.position_from_deleted }">
+                  {{ $capitalizeAll(props.row.position_from_code || '-') }}
+                </span>
+                <q-tooltip v-if="props.row.position_from_deleted" anchor="top middle" self="bottom middle" :delay="300">
+                  {{ $t('position_deleted') }}
+                </q-tooltip>
+              </template>
+
+              <template v-else-if="column.name === 'position_to_code'">
+                <span :class="{ 'text-strike text-low': props.row.position_to_deleted }">
+                  {{ $capitalizeAll(props.row.position_to_code || '-') }}
+                </span>
+                <q-tooltip v-if="props.row.position_to_deleted" anchor="top middle" self="bottom middle" :delay="300">
+                  {{ $t('position_deleted') }}
+                </q-tooltip>
+              </template>
+
               <template v-else>
                 {{ $capitalizeAll(props.row[column.field] || '-') }}
               </template>

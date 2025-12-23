@@ -80,6 +80,12 @@ class MovementCompletedEvent(BaseInventoryEvent):
     if self.info.movement_type == InventoryMovementType.REVERSAL:
       raise InventoryMovementException('Use MOVEMENT_REVERSED event to undo movements.')
 
+    # Validate positions are not deleted
+    if self.info.position_from and self.info.position_from not in ['NULL', 'OUT']:
+      self._ensure_position_not_deleted(self.info.position_from)
+    if self.info.position_to and self.info.position_to not in ['NULL', 'OUT']:
+      self._ensure_position_not_deleted(self.info.position_to)
+
     self.info.end = self.info.timestamp
     self.info.status = MovementStatus.COMPLETED
 

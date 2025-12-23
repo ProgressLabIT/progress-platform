@@ -54,6 +54,16 @@ class BaseInventoryEvent(BaseEvent, ABC):
     else:
       return f"Position/{position_string}"
 
+  def _ensure_position_not_deleted(self, position_key: str):
+    """Validate that a position exists and is not deleted."""
+    if position_key in ['NULL', 'OUT', 'IN']:
+      return  # Special positions
+    position = self.tx.collection('Position').get(position_key)
+    if position is None:
+      raise InventoryMovementException(f'Position {position_key} not found')
+    if position.get('deleted', False):
+      raise InventoryMovementException(f'Position {position["code"]} is deleted')
+
   def _get_production_position(self):
     wo = self.tx.collection('WorkOrder').get(self.info.references.work_order_key)
     return wo['output_position_key']

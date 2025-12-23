@@ -17,6 +17,7 @@ class Queries:
 
     FILTER
       IS_SAME_COLLECTION('Position', v)
+      && v.deleted != true
       && (@position_keys ? v._key IN @position_keys : true)
       && (@contains_position ? @contains_position IN p.vertices[*]._key : true)
       && (@search ? REGEX_TEST(v.code, @search, true) : true)
@@ -44,7 +45,7 @@ class Queries:
     // Get contents (products, serials, sub-positions)
     LET contents = (
       FOR v, e IN 1..1 INBOUND CONCAT('Position/', @position_key) is_in_position OPTIONS { uniqueVertices: "path" }
-      LET position = (IS_SAME_COLLECTION(Position, v)) ? MERGE({ type: 'position' }, v) : null
+      LET position = (IS_SAME_COLLECTION(Position, v) && v.deleted != true) ? MERGE({ type: 'position' }, v) : null
       LET product = IS_SAME_COLLECTION(Product, v) ? MERGE({ type: 'product', quantity: e.quantity }, v) : null
       LET serial = e.serial_key ? FIRST(
         FOR s IN Serial
@@ -94,6 +95,7 @@ class Queries:
 
     FILTER
       IS_SAME_COLLECTION('Product', v)
+      && position.deleted != true
       && (@position_key ? position._key == @position_key : true)
       && (@position_code ? position.code == @position_code : true)
       && (@serial_code ? serial.code == @serial_code : true)
@@ -185,6 +187,7 @@ class Queries:
 
     LET ancestors = (
         FOR v, e IN 0..9999 OUTBOUND start is_in_position OPTIONS { uniqueVertices: "path" }
+        FILTER v.deleted != true
         RETURN {
             position_id: v._id,
             position_key: v._key,
@@ -197,7 +200,7 @@ class Queries:
 
     LET descendants = (
         FOR v, e IN 0..9999 INBOUND start is_in_position OPTIONS { uniqueVertices: "path" }
-        FILTER IS_SAME_COLLECTION(Position, v)
+        FILTER IS_SAME_COLLECTION(Position, v) && v.deleted != true
         RETURN {
             position_id: v._id,
             position_key: v._key,
@@ -216,6 +219,7 @@ class Queries:
     LET start = CONCAT('Position/', NOT_NULL(@is_in_position, 'IN'))
 
     LET children = (FOR v IN 1..99 INBOUND start is_in_position
+          FILTER IS_SAME_COLLECTION(Position, v) && v.deleted != true
           RETURN v
     )
 
@@ -228,7 +232,7 @@ class Queries:
     FILTER @user_key ? m.user_key == @user_key : true
     COLLECT position = DOCUMENT(m[@position_type == 'from' ? '_from' : '_to'])
     AGGREGATE end = MAX(m.end)
-    FILTER position != null
+    FILTER position != null && position.deleted != true
     SORT end DESC
     LIMIT @limit
     RETURN position
@@ -321,12 +325,17 @@ class Queries:
 
     LIMIT @offset, @limit || null
 
+    LET position_from_doc = DOCUMENT(Position, m._from)
+    LET position_to_doc = DOCUMENT(Position, m._to)
+
     RETURN MERGE(m, {
       movement_list_code: m.movement_list_key ? FIRST(FOR ml IN MovementList FILTER ml._key == m.movement_list_key RETURN ml.code) : null,
       position_from_key: PARSE_IDENTIFIER(m._from).key,
-      position_from_code: DOCUMENT(Position, m._from).code,
+      position_from_code: position_from_doc.code,
+      position_from_deleted: position_from_doc.deleted == true,
       position_to_key: PARSE_IDENTIFIER(m._to).key,
-      position_to_code: DOCUMENT(Position, m._to).code,
+      position_to_code: position_to_doc.code,
+      position_to_deleted: position_to_doc.deleted == true,
       serial_code,
       product_code: product.code,
       product_description: product.description
@@ -343,7 +352,7 @@ class Queries:
       && (@product_code ? p.code == @product_code : true)
       && !p.trash
     FOR position, inventory IN 1..99 OUTBOUND p is_in_position
-    FILTER inventory.quantity > 0
+    FILTER position.deleted != true && inventory.quantity > 0
     RETURN MERGE(
       KEEP(p, '_key', 'code'), {
       position: position.code,
@@ -415,14 +424,14 @@ class Queries:
     FILTER @product_search ? REGEX_TEST(product.code, @product_search, true) : true
 
     // Position filters (with hierarchy consideration)
-    LET assigned_position = FIRST(FOR p IN Position FILTER p._key == ica.position_key RETURN p)
+    LET assigned_position = FIRST(FOR p IN Position FILTER p._key == ica.position_key && p.deleted != true RETURN p)
     FILTER !(@position_key || @position_search) ? true : (
       LET position_key_match = @position_key ? assigned_position._key == @position_key : true
       LET position_code_match = @position_search ? REGEX_TEST(assigned_position.code, @position_search, true) : true
 
       LET children = (
         FOR p IN 1..9999 INBOUND CONCAT('Position/', ica.position_key) is_in_position
-        FILTER IS_SAME_COLLECTION(Position, p)
+        FILTER IS_SAME_COLLECTION(Position, p) && p.deleted != true
         RETURN p
       )
 
@@ -505,6 +514,7 @@ class Queries:
       product_tags: product.tags,
       position_key: position._key,
       position_code: position.code,
+      position_deleted: position.deleted == true,
       position_path: path,
       system_serials,
       counted_serials
@@ -515,6 +525,7 @@ class Queries:
   CHECK_POSITION_COMPLETION = """
     LET items_to_count = (
       FOR i IN 1..1 INBOUND @position_id is_in_position
+      FILTER i.deleted != true // Avoid deleted positions
       RETURN DISTINCT i._id // Product ID or Position ID
     )
 

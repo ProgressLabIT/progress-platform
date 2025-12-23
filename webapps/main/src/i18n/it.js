@@ -494,6 +494,7 @@ export default {
   or: 'o',
   order: 'ordine | ordini',
   people: 'persone',
+  position_deleted: 'Posizione eliminata',
   performance: {
     actual: 'consuntivo',
     processing_cost: {
@@ -1204,6 +1205,7 @@ export default {
       position_delete_confirm_title: 'Cancella posizione',
       position_delete_confirm_question:
         'Sei sicuro di voler cancellare questa posizione?',
+      position_deleted: 'Posizione eliminata',
     },
     movement: {
       product_code: 'Codice Prodotto',

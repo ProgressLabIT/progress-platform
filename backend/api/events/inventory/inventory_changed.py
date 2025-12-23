@@ -19,6 +19,9 @@ class InventoryChangedEvent(BaseInventoryEvent):
     return EventType.INVENTORY_CHANGED
 
   def apply(self):
+    # Validate position is not deleted
+    self._ensure_position_not_deleted(self.info.position_key)
+
     match_criteria = dict(
       _from=f'Product/{self.info.product_key}',
       _to=f'Position/{self.info.position_key}',
