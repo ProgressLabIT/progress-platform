@@ -116,17 +116,29 @@ class CountCompletedEvent(BaseEvent):
   # ========================================================
 
   def _flag_position_as_counted_if_count_complete(self):
-    result = self.tx.aql.execute(Queries.CHECK_POSITION_COMPLETION, bind_vars=dict(
-      session_key=self.count_record.inventory_count_session_key,
-      position_id=self.count_record.position_id
-    )).next()
+    current_position_key = self.count_record.position_id.split('/')[-1]
 
-    if result:
-      # Do not indicate user since it's the system that flagged the position as counted
-      self.tx.collection('inventory_count_position_complete').insert(dict(
-        _from=f'InventoryCountSession/{self.count_record.inventory_count_session_key}',
-        _to=self.count_record.position_id,
-        status='counted',
-        completed_at=self.info.timestamp,
-        notes="Last position item counted"
-      ))
+    # Get the path keys from the root to the current position
+    path_keys = list(self.tx.aql.execute(
+      Queries.GET_POSITION_PATH,
+      bind_vars=dict(position_key=current_position_key)
+    ))
+
+    for key in reversed(path_keys): # Start from the current position and work up to the root
+      result = self.tx.aql.execute(Queries.CHECK_POSITION_COMPLETION, bind_vars=dict(
+        session_key=self.count_record.inventory_count_session_key,
+        position_key=key
+      )).next()
+
+      if result:
+        # Do not indicate user since it's the system that flagged the position as counted
+        self.tx.collection('inventory_count_position_complete').insert(dict(
+          _from=f'InventoryCountSession/{self.count_record.inventory_count_session_key}',
+          _to=f'Position/{key}',
+          status='counted',
+          completed_at=self.info.timestamp,
+          notes="Last position item checked"
+        ))
+
+      else:
+        break # Stop checking parent positions if current position is not complete

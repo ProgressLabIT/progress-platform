@@ -521,10 +521,17 @@ class Queries:
     })
   """
 
+  GET_POSITION_PATH = """
+    // Build path from root (IN) to current position using SHORTEST_PATH
+    // Path goes OUTBOUND from current position to root (Position/IN)
+    FOR v IN INBOUND SHORTEST_PATH
+    'Position/IN' TO CONCAT('Position/', @position_key) is_in_position
+    RETURN v._key
+  """
 
   CHECK_POSITION_COMPLETION = """
     LET items_to_count = (
-      FOR i IN 1..1 INBOUND @position_id is_in_position
+      FOR i IN 1..1 INBOUND CONCAT('Position/', @position_key) is_in_position
       FILTER i.deleted != true // Avoid deleted positions
       RETURN DISTINCT i._id // Product ID or Position ID
     )
@@ -533,7 +540,7 @@ class Queries:
       FOR cr IN inventory_count_record
       FILTER
         cr.inventory_count_session_key == @session_key
-        && cr._to == @position_id
+        && cr._to == CONCAT('Position/', @position_key)
         && cr.status == 'completed'
       RETURN DISTINCT cr._from // Product ID
     )
