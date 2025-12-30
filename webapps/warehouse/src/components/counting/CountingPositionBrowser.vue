@@ -825,19 +825,16 @@ function getCountedQuantity(item) {
   return lastRecord?.counted_qt ?? null;
 }
 
-// Helper function to get the last completed count record for the current user
+// Helper function to get the last completed count record (from any user)
 function getLastCountRecord(item) {
   const countInfo = getCountInfo(item);
   if (!countInfo.hasRecords || countInfo.allRecords.length === 0) {
     return null;
   }
 
-  const currentUserKey = store.state.session.user._key;
-
-  // Get completed/submitted/confirmed records by current user
+  // Get completed/submitted/confirmed records from any user
   const completedRecords = countInfo.allRecords.filter(
     r => (r.status === 'completed' || r.status === 'submitted' || r.status === 'confirmed')
-      && r.user_key === currentUserKey
   );
 
   if (completedRecords.length === 0) {
