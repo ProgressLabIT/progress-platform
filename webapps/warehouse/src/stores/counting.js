@@ -3,7 +3,9 @@ import { api } from '@/boot/axios';
 import { store } from '@/boot/store.js';
 import { sendEvent } from '@/composables/event';
 import { Notify } from 'quasar';
+import { i18n } from '@/boot/i18n';
 
+const { t } = i18n.global;
 
 export const useCountingStore = defineStore('counting', {
   state: () => ({
@@ -44,7 +46,7 @@ export const useCountingStore = defineStore('counting', {
           }
         });
         Notify.create({
-          message: $t('count_saved'),
+          message: t('count_saved'),
           color: 'theme-green',
           position: 'top',
         });

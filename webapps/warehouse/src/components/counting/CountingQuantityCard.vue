@@ -169,7 +169,9 @@ const notes = ref('');
 
 const blindMode = computed(() => countingStore.sessionData?.blind_quantities ?? true);
 const adjustmentQuantity = computed(() => {
-  if (blindMode.value) return 0;
+  if (blindMode.value) {
+    return 0;
+  }
   return countedQuantity.value - props.item?.quantity;
 });
 
@@ -222,7 +224,7 @@ async function loadCountRecord() {
         timeout: 3000
       });
     }
-  } catch (e) {
+  } catch (_e) {
     Notify.create({
       message: $t('count_record_key_fetch_error') || 'Error fetching count record key.',
       color: 'negative',

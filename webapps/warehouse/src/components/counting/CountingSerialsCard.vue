@@ -435,7 +435,9 @@ async function loadExistingSerials() {
 // Pre-select serials from the last completed count record
 async function preSelectLastCountSerials() {
   const lastSerialKeys = props.item.lastCountRecord?.counted_serial_keys;
-  if (!lastSerialKeys?.length) return;
+  if (!lastSerialKeys?.length) {
+    return;
+  }
 
   const existingKeys = new Set(existingSerials.value.map(s => s.serial_key));
 
@@ -618,11 +620,7 @@ function saveCount() {
   emit('close');
 }
 
-function handleClose() {
-  // This is only called when dialog is actually closing (not counting, or via button clicks)
-  selectedSerialKeys.value = [];
-  emit('close');
-}
+
 
 async function cancelCount() {
   cancelingCount.value = true;

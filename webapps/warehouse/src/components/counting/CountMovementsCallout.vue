@@ -70,26 +70,6 @@
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 
-const props = defineProps({
-  movements: {
-    type: Array,
-    default: () => []
-  },
-  loadingMovements: {
-    type: Boolean,
-    default: false
-  },
-  showMovementsCallout: {
-    type: Boolean,
-    default: false
-  },
-  displayMode: {
-    type: String,
-    default: 'serial',
-    validator: (value) => ['serial', 'quantity'].includes(value)
-  }
-});
-
 const { t: $t } = useI18n();
 const movementsExpanded = ref(false);
 
@@ -101,10 +81,14 @@ function formatMovementTimestamp(movement) {
     movement?.system_at ||
     null;
 
-  if (!raw) return '';
+  if (!raw) {
+    return '';
+  }
 
   const date = new Date(raw);
-  if (Number.isNaN(date.getTime())) return '';
+  if (Number.isNaN(date.getTime())) {
+    return '';
+  }
 
   return date.toLocaleString();
 }

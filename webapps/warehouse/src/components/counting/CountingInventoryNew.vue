@@ -80,7 +80,9 @@ const blindQuantities = computed(() => props.sessionData.blind_quantities ?? tru
 const blindSerials = computed(() => props.sessionData.blind_serials ?? true);
 
 const filteredContents = computed(() => {
-  if (!productSearch.value) return inventory.contents;
+  if (!productSearch.value) {
+    return inventory.contents;
+  }
   const search = productSearch.value.toLowerCase();
   return inventory.contents.filter(item => {
     const productCode = item.product_code?.toLowerCase() || '';

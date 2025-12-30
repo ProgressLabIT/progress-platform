@@ -7,7 +7,7 @@
       :key="countSession._key"
       outlined
       class="surface2 q-pa-md"
-      @click="$router.push({ name: 'InventoryCountSession', params: { countSessionKey: countSession._key }})"
+      @click="router.push({ name: 'InventoryCountSession', params: { countSessionKey: countSession._key }})"
     >
       <div class="text-h3">{{ countSession?.code }}</div>
       <div class="text-subtitle2 text-low">{{ countSession?.description }}</div>
@@ -33,7 +33,7 @@
           class="full-width"
           color="theme-blue"
           :label="t('product')"
-          @click="$router.push({ name: 'InventoryProduct' })"
+          @click="router.push({ name: 'InventoryProduct' })"
         />
       </div>
       <div class="col-4">
@@ -41,7 +41,7 @@
           class="full-width"
           color="theme-green"
           :label="t('serial', 2)"
-          @click="$router.push({ name: 'InventorySerial' })"
+          @click="router.push({ name: 'InventorySerial' })"
         />
       </div>
       <div class="col-4">
@@ -49,7 +49,7 @@
           class="full-width"
           color="theme-grey"
           :label="t('position')"
-          @click="$router.push({ name: 'InventoryPosition' })"
+          @click="router.push({ name: 'InventoryPosition' })"
         />
       </div>
     </div>
@@ -57,19 +57,22 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { api } from 'src/boot/axios';
 import { shortDateString } from 'src/lib/TimeHandling';
 
 const { t } = useI18n();
-const $router = useRouter();
+const router = useRouter();
 
 const countSessions = ref([]);
 
 const statusColor = (session) => {
-  if (!countSessions.value) return 'grey';
+  if (!countSessions.value) {
+    return 'grey';
+  }
+
   switch (session.status) {
     case 'started': return 'theme-blue';
     case 'completed': return 'theme-green';

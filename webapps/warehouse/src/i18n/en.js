@@ -1,5 +1,4 @@
 export default {
-  count_resume: 'Resume counting',
   add_count_for_product: 'Add count for product',
   added: 'added | added',
   adjust_quantity: 'Adjust quantity',

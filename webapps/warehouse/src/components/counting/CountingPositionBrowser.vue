@@ -531,7 +531,9 @@ async function loadPositionContents(positionKey) {
 }
 
 async function loadPositionCompletionStatus(positionKey) {
-  if (!props.sessionData?._key || !positionKey) return;
+  if (!props.sessionData?._key || !positionKey) {
+    return;
+  }
 
   try {
     const response = await api.get('/inventory/count-position-status', {
@@ -548,7 +550,9 @@ async function loadPositionCompletionStatus(positionKey) {
 }
 
 async function loadCountRecords(positionKey) {
-  if (!props.sessionData?._key) return;
+  if (!props.sessionData?._key) {
+    return;
+  }
 
   try {
     // The API expects full document IDs (e.g., "Position/KEY") for position_key
@@ -631,7 +635,9 @@ function buildCountInfoForItem(item, records) {
 // Helper: Build count info map from items and grouped records
 function buildCountInfoMap(items, recordsByKey, positionKey) {
   return items.reduce((map, item) => {
-    if (!item.product_key) return map;
+    if (!item.product_key) {
+      return map;
+    }
 
     const key = `${item.product_key}_${positionKey}`;
     const records = recordsByKey.get(key) || [];
@@ -796,7 +802,6 @@ function selectItem(item) {
 }
 
 function unselectItem() {
-  console.log('unselectItem');
   selectedItem.value = null;
   loadPositionContents(countingStore.selectedPosition._key);
 }
@@ -835,7 +840,9 @@ function getLastCountRecord(item) {
       && r.user_key === currentUserKey
   );
 
-  if (completedRecords.length === 0) return null;
+  if (completedRecords.length === 0) {
+    return null;
+  }
 
   // Sort by counted_at descending and return the most recent
   return completedRecords.sort((a, b) => {
