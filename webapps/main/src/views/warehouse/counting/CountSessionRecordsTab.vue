@@ -45,11 +45,32 @@
               <span :class="{ 'text-strike text-low': props.row.position.deleted }">
                 {{ props.row.position.code }}
               </span>
+              <!-- Badge showing count of aggregated positions -->
+              <q-badge
+                v-if="props.row.aggregatedPositionKeys?.length > 1"
+                color="primary"
+                class="q-ml-xs"
+              >
+                {{ props.row.aggregatedPositionKeys.length }}
+              </q-badge>
               <q-tooltip anchor="top middle" self="bottom middle" :delay="500">
                 <template v-if="props.row.position.deleted">
                   <div class="text-theme-orange">{{ $t('position_deleted') }}</div>
                 </template>
-                {{ props.row.pathString }}
+                <div>{{ props.row.pathString }}</div>
+                <!-- Show aggregated positions if more than one -->
+                <template v-if="props.row.aggregatedPositionCodes?.length > 1">
+                  <q-separator class="q-my-xs" />
+                  <div class="text-weight-bold">
+                    {{ $t('warehouse.counting.includes_positions', { count: props.row.aggregatedPositionCodes.length }) }}
+                  </div>
+                  <div v-for="code in props.row.aggregatedPositionCodes.slice(0, 10)" :key="code" class="text-caption">
+                    {{ code }}
+                  </div>
+                  <div v-if="props.row.aggregatedPositionCodes.length > 10" class="text-caption text-grey">
+                    +{{ props.row.aggregatedPositionCodes.length - 10 }} {{ $t('more') }}
+                  </div>
+                </template>
               </q-tooltip>
             </div>
             <div v-else class="text-grey">-</div>
@@ -59,15 +80,28 @@
         <!-- User Column -->
         <template #body-cell-user="props">
           <q-td :props="props">
-            <template v-if="props.row.user_key && !props.row.hasConflict">
+            <!-- Multiple users: show group icon -->
+            <template v-if="props.row.hasMultipleUsers">
+              <q-icon name="mdi-account-group" size="sm" color="primary">
+                <q-tooltip anchor="top middle" self="bottom middle" :delay="500">
+                  <div class="text-weight-bold q-mb-xs">{{ $t('warehouse.counting.multiple_users') }}</div>
+                  <div v-for="userKey in props.row.userKeys" :key="userKey">
+                    {{ store.getters.getUserByKey(userKey)?.name }}
+                    {{ store.getters.getUserByKey(userKey)?.surname }}
+                  </div>
+                </q-tooltip>
+              </q-icon>
+            </template>
+            <!-- Single user: show avatar -->
+            <template v-else-if="props.row.user_key && !props.row.hasConflict">
               <BaseUserAvatar
                 :user="store.getters.getUserByKey(props.row.user_key)"
                 :show_name="false"
                 dense
               />
               <q-tooltip anchor="top middle" self="bottom middle" :delay="500">
-                {{ store.getters.getUserByKey(props.row.user_key).name }}
-                {{ store.getters.getUserByKey(props.row.user_key).surname }}
+                {{ store.getters.getUserByKey(props.row.user_key)?.name }}
+                {{ store.getters.getUserByKey(props.row.user_key)?.surname }}
               </q-tooltip>
             </template>
             <span v-else class="text-grey">-</span>
@@ -87,7 +121,7 @@
         <!-- Counted Qt Column -->
         <template #body-cell-counted_qt="props">
           <q-td :props="props">
-            {{ getActiveRecord(props.row)?.counted_qt ?? '-' }}
+            {{ props.row.totalCountedQt ?? '-' }}
           </q-td>
         </template>
 
@@ -241,7 +275,7 @@
             class="full-width"
             dense
             filled
-            min="1"
+            min="0"
           >
             <template #append>
               <q-btn
@@ -436,13 +470,13 @@ const tableColumns = computed(() => [
   {
     name: 'system_qt',
     label: $t('warehouse.counting.system_qt'),
-    field: row => getActiveRecord(row)?.system_qt,
+    field: row => row.totalSystemQt,
     align: 'right',
   },
   {
     name: 'counted_qt',
     label: $t('warehouse.counting.counted_qt'),
-    field: row => getActiveRecord(row)?.counted_qt,
+    field: row => row.totalCountedQt,
     align: 'right',
   },
   {
@@ -488,26 +522,122 @@ function buildWildcardMatcher(pattern) {
 }
 
 /**
- * Aggregate records by product/position pair
+ * Determine the aggregate position key for a record based on the selected level.
+ * - If allLevels is true: use the record's actual position (no level aggregation)
+ * - If level is 0: aggregate at root (all positions for same product)
+ * - If level >= 1: use the ancestor at that level, or actual position if shallower
+ *
+ * Note on levels:
+ * - User expectation: IN = level 0, children of IN = level 1, grandchildren = level 2, etc.
+ * - positionLookup.level: children of IN = level 0, grandchildren = level 1, etc.
+ * - So: actualLevel = positionLookup.level + 1
+ *
+ * @param {Object} record - The count record
+ * @param {Map} lookup - The positionLookup map
+ * @returns {Object} { positionKey, positionCode, pathString }
+ */
+function getAggregatePosition(record, lookup) {
+  // If "All" is toggled, use the actual position (most granular)
+  // Path should NOT include IN (it's implied)
+  if (allLevels.value) {
+    return {
+      positionKey: record.position_key,
+      positionCode: record.position_code,
+      pathString: record.position_path?.join(' > ') || record.position_code || '',
+      deleted: record.position_deleted || false,
+    };
+  }
+
+  const targetLevel = selectedLevel.value;
+
+  // Level 0 means aggregate everything (total inventory for product)
+  if (targetLevel === 0) {
+    return {
+      positionKey: 'IN',
+      positionCode: 'IN',
+      pathString: 'IN',
+      deleted: false,
+    };
+  }
+
+  // Fallback: use position_path from record (array of codes, excluding IN)
+  // position_path[0] = level 1 position, position_path[1] = level 2 position, etc.
+  // This is the most reliable source as it comes directly from the backend
+  const path = record.position_path || [];
+
+  if (path.length === 0) {
+    // No path data, use actual position
+    return {
+      positionKey: record.position_key,
+      positionCode: record.position_code,
+      pathString: record.position_code || '',
+      deleted: record.position_deleted || false,
+    };
+  }
+
+  // The actual level of this position is path.length (since path excludes IN which is level 0)
+  const actualLevel = path.length;
+
+  if (actualLevel <= targetLevel) {
+    // Position is at or shallower than target level, use actual position
+    // Path string should not include IN
+    return {
+      positionKey: record.position_key,
+      positionCode: record.position_code,
+      pathString: path.join(' > '),
+      deleted: record.position_deleted || false,
+    };
+  }
+
+  // Position is deeper than target level, use position at target level from path
+  // targetLevel 1 → path[0], targetLevel 2 → path[1], etc.
+  const targetIndex = targetLevel - 1;
+  const targetCode = path[targetIndex];
+
+  // Try to get the position key from positionLookup using code
+  // Build a code-to-key map from lookup if available
+  let targetKey = targetCode; // Default to code if we can't find key
+  if (lookup && lookup.size > 0) {
+    for (const [key, data] of lookup.entries()) {
+      if (data.code === targetCode) {
+        targetKey = key;
+        break;
+      }
+    }
+  }
+
+  // Build path string up to target level (not including IN)
+  const pathString = path.slice(0, targetLevel).join(' > ');
+
+  // Get additional data from lookup if available
+  const targetData = lookup?.get(targetKey);
+
+  return {
+    positionKey: targetKey,
+    positionCode: targetCode,
+    pathString: pathString,
+    deleted: targetData?.deleted || false,
+  };
+}
+
+/**
+ * Aggregate records by product and position (at selected level).
+ * Supports level-based aggregation where records are grouped by their ancestor position
+ * at the specified hierarchy level.
  */
 const aggregatedRecords = computed(() => {
   const records = rawRecords.value;
   if (!records || records.length === 0) return [];
 
+  const lookup = positionLookup.value;
   const aggregateMap = new Map();
 
   for (const record of records) {
-    // Build aggregate key based on display mode
-    let aggregateKey;
-    if (displayMode.value === 'pair') {
-      aggregateKey = `${record.product_key}_${record.position_key}`;
-    } else if (displayMode.value === 'product') {
-      aggregateKey = record.product_key;
-    } else {
-      // position_level mode - would need position hierarchy data
-      // For now, fall back to pair mode
-      aggregateKey = `${record.product_key}_${record.position_key}`;
-    }
+    // Determine aggregate position based on level settings
+    const aggPos = getAggregatePosition(record, lookup);
+
+    // Build aggregate key: product + aggregated position
+    const aggregateKey = `${record.product_key}_${aggPos.positionKey}`;
 
     if (!aggregateMap.has(aggregateKey)) {
       aggregateMap.set(aggregateKey, {
@@ -519,27 +649,47 @@ const aggregatedRecords = computed(() => {
           traceability_level: record.product_traceability_level,
           tags: record.product_tags || [],
         },
-        position: record.position_key ? {
-          key: record.position_key,
-          code: record.position_code,
-          deleted: record.position_deleted || false
+        position: aggPos.positionKey ? {
+          key: aggPos.positionKey,
+          code: aggPos.positionCode,
+          deleted: aggPos.deleted,
         } : null,
         records: [],
-        pathString: record.position_path?.join(' > ') || '',
-        activeRecordKey: null,
+        pathString: aggPos.pathString,
+        // Aggregated quantities (summed across all records)
+        totalSystemQt: 0,
+        totalCountedQt: 0,
         delta: null,
+        // Serial tracking for aggregation
+        allSystemSerialCodes: new Set(),
+        allCountedSerialCodes: new Set(),
         serialDelta: { added: [], removed: [] },
+        // Conflict and notes
         hasConflict: false,
         hasNotes: false,
         notesCount: 0,
         allNotes: [],
+        // User tracking for multi-user display
+        userKeys: new Set(),
+        hasMultipleUsers: false,
         user_key: null,
         counted_at: null,
+        // Track unique positions being aggregated
+        aggregatedPositionKeys: new Set(),
+        aggregatedPositionCodes: new Set(),
+        // For compatibility with existing code
+        activeRecordKey: null,
       });
     }
 
     const aggregate = aggregateMap.get(aggregateKey);
     aggregate.records.push(record);
+
+    // Track aggregated positions
+    if (record.position_key) {
+      aggregate.aggregatedPositionKeys.add(record.position_key);
+      aggregate.aggregatedPositionCodes.add(record.position_code);
+    }
 
     // Collect notes
     if (record.notes) {
@@ -547,67 +697,108 @@ const aggregatedRecords = computed(() => {
       aggregate.notesCount++;
       aggregate.hasNotes = true;
     }
+
+    // Track users
+    if (record.user_key) {
+      aggregate.userKeys.add(record.user_key);
+    }
+
+    // Sum quantities (only from non-discarded records)
+    if (record.status !== 'discarded') {
+      aggregate.totalSystemQt += record.system_qt || 0;
+      aggregate.totalCountedQt += record.counted_qt || 0;
+
+      // Collect serials for union
+      if (record.system_serials) {
+        record.system_serials.forEach(s => aggregate.allSystemSerialCodes.add(s.serial_code));
+      }
+      if (record.counted_serials) {
+        record.counted_serials.forEach(s => aggregate.allCountedSerialCodes.add(s.serial_code));
+      }
+    }
   }
 
-  // Process each aggregate to determine active record and conflicts
+  // Process each aggregate to finalize calculations
   for (const aggregate of aggregateMap.values()) {
     const nonDiscardedRecords = aggregate.records.filter(r => r.status !== 'discarded');
-    let activeRecord = null;
 
-    if (nonDiscardedRecords.length === 0) {
-      // All records discarded, use the most recent discarded one for display
-      activeRecord = aggregate.records.filter(r => r.status === 'discarded').sort(
-        (a, b) => new Date(b.counted_at) - new Date(a.counted_at)
-      )[0] || null;
-    } else if (nonDiscardedRecords.length === 1) {
-      activeRecord = nonDiscardedRecords[0];
-    } else {
-      // Multiple non-discarded records - check if they match
-      const firstQt = nonDiscardedRecords[0].counted_qt;
-      const allMatch = nonDiscardedRecords.every(r => r.counted_qt === firstQt);
+    // Check for conflicts within this aggregate (same product/position pair with different counts)
+    // Group by original position to detect pair-level conflicts
+    const pairMap = new Map();
+    for (const record of nonDiscardedRecords) {
+      const pairKey = `${record.product_key}_${record.position_key}`;
+      if (!pairMap.has(pairKey)) {
+        pairMap.set(pairKey, []);
+      }
+      pairMap.get(pairKey).push(record);
+    }
 
-      if (allMatch) {
-        // All counts match, use the first one
-        activeRecord = nonDiscardedRecords[0];
+    // Check each pair for conflicts
+    for (const pairRecords of pairMap.values()) {
+      if (pairRecords.length > 1) {
+        const firstQt = pairRecords[0].counted_qt;
+        const hasConflict = !pairRecords.every(r => r.counted_qt === firstQt);
+        if (hasConflict) {
+          aggregate.hasConflict = true;
+          break;
+        }
+      }
+    }
+
+    // Calculate aggregated delta
+    aggregate.delta = aggregate.totalCountedQt - aggregate.totalSystemQt;
+
+    // Calculate serial delta from unioned sets
+    if (aggregate.allSystemSerialCodes.size > 0 || aggregate.allCountedSerialCodes.size > 0) {
+      aggregate.serialDelta = {
+        added: [...aggregate.allCountedSerialCodes].filter(s => !aggregate.allSystemSerialCodes.has(s)),
+        removed: [...aggregate.allSystemSerialCodes].filter(s => !aggregate.allCountedSerialCodes.has(s)),
+      };
+    }
+
+    // Convert userKeys Set to array and determine if multiple users
+    const userKeysArray = [...aggregate.userKeys];
+    aggregate.userKeys = userKeysArray;
+    aggregate.hasMultipleUsers = userKeysArray.length > 1;
+
+    // Determine user and timestamp to display
+    const isAggregatingMultiplePositions = aggregate.aggregatedPositionKeys.size > 1;
+
+    if (aggregate.hasConflict || aggregate.hasMultipleUsers) {
+      // Don't show single user/timestamp when there's conflict or multiple users
+      aggregate.user_key = null;
+      aggregate.counted_at = null;
+    } else if (userKeysArray.length === 1) {
+      aggregate.user_key = userKeysArray[0];
+      // If single user but multiple positions, don't show timestamp
+      if (isAggregatingMultiplePositions) {
+        aggregate.counted_at = null;
       } else {
-        // Conflict - different counts
-        aggregate.hasConflict = true;
-        // Show the most recent one but mark as conflict
-        activeRecord = nonDiscardedRecords.sort(
+        // Single user, single position - use the most recent timestamp
+        const latestRecord = nonDiscardedRecords.sort(
           (a, b) => new Date(b.counted_at) - new Date(a.counted_at)
         )[0];
+        aggregate.counted_at = latestRecord?.counted_at || null;
       }
     }
 
-    if (activeRecord) {
-      aggregate.activeRecordKey = activeRecord._key;
-
-      // Only expose user and timestamp when there is no conflict
-      if (!aggregate.hasConflict) {
-        aggregate.user_key = activeRecord.user_key || null;
-        aggregate.counted_at = activeRecord.counted_at || null;
-      } else {
-        aggregate.user_key = null;
-        aggregate.counted_at = null;
-      }
-
-      // Calculate serial delta for products with serial keys
-      const hasSystemSerials = activeRecord.system_serial_keys && activeRecord.system_serial_keys.length > 0;
-      const hasCountedSerials = activeRecord.counted_serial_keys && activeRecord.counted_serial_keys.length > 0;
-
-      if (hasSystemSerials || hasCountedSerials) {
-        const systemSerialsCodes = new Set(activeRecord.system_serials?.map(s => s.serial_code) || []);
-        const countedSerialsCodes = new Set(activeRecord.counted_serials?.map(s => s.serial_code) || []);
-
-        aggregate.serialDelta = {
-          added: [...countedSerialsCodes].filter(s => !systemSerialsCodes.has(s)),
-          removed: [...systemSerialsCodes].filter(s => !countedSerialsCodes.has(s)),
-        };
-      }
-
-      // Calculate delta for active record
-      aggregate.delta = (activeRecord.counted_qt ?? 0) - (activeRecord.system_qt ?? 0);
+    // Set activeRecordKey for compatibility (use most recent non-discarded)
+    if (nonDiscardedRecords.length > 0) {
+      const latestRecord = nonDiscardedRecords.sort(
+        (a, b) => new Date(b.counted_at) - new Date(a.counted_at)
+      )[0];
+      aggregate.activeRecordKey = latestRecord._key;
+    } else if (aggregate.records.length > 0) {
+      // All discarded - use most recent discarded
+      const latestDiscarded = aggregate.records.filter(r => r.status === 'discarded').sort(
+        (a, b) => new Date(b.counted_at) - new Date(a.counted_at)
+      )[0];
+      aggregate.activeRecordKey = latestDiscarded?._key || null;
     }
+
+    // Convert position Sets to arrays for template use
+    aggregate.aggregatedPositionKeys = [...aggregate.aggregatedPositionKeys];
+    aggregate.aggregatedPositionCodes = [...aggregate.aggregatedPositionCodes];
   }
 
   return Array.from(aggregateMap.values());
@@ -631,8 +822,7 @@ const filteredRecords = computed(() => {
       if (!r.activeRecordKey) return false;
       const delta = Math.abs(r.delta || r.serialDelta?.added?.length + r.serialDelta?.removed?.length || 0);
       if (filters.value.varianceType === 'percentage') {
-        const activeRecord = r.records.find(rec => rec._key === r.activeRecordKey);
-        const systemQt = activeRecord?.system_qt || 1;
+        const systemQt = r.totalSystemQt || 1;
         const percentVariance = (delta / systemQt) * 100;
         return percentVariance >= threshold;
       }
@@ -669,15 +859,20 @@ const filteredRecords = computed(() => {
     );
   }
 
-  // Serial filter
+  // Serial filter - use aggregated serial sets
   if (filters.value.serial) {
     result = result.filter(r => {
-      const activeRecord = r.records.find(rec => rec._key === r.activeRecordKey);
-      const allSerials = [
-        ...(activeRecord?.system_serial_keys || []),
-        ...(activeRecord?.counted_serial_keys || []),
-      ];
-      return allSerials.some(s => serialMatcher(s));
+      // Check all serials across all records in the aggregate
+      for (const record of r.records) {
+        const allSerials = [
+          ...(record.system_serial_keys || []),
+          ...(record.counted_serial_keys || []),
+        ];
+        if (allSerials.some(s => serialMatcher(s))) {
+          return true;
+        }
+      }
+      return false;
     });
   }
 
@@ -685,20 +880,46 @@ const filteredRecords = computed(() => {
   if (filters.value.position) {
     result = result.filter(r => {
       if (!r.position) return false;
-      const lookup = positionLookup.value;
-      const posData = lookup ? lookup.get(r.position.key) : null;
-      const pathString = posData?.pathString || r.position.code;
 
-      if (filters.value.positionIncludePath) {
-        return positionMatcher(pathString);
+      // Always check the aggregate position code
+      if (positionMatcher(r.position.code)) {
+        return true;
       }
-      return positionMatcher(r.position.code);
+
+      // If include path toggle is active, also match ancestors and underlying positions
+      if (filters.value.positionIncludePath) {
+        // Check the path string of the aggregate position
+        if (positionMatcher(r.pathString)) {
+          return true;
+        }
+
+        // Check each individual position code in the path
+        // The path is stored as "Code1 > Code2 > Code3", split and check each
+        const pathCodes = r.pathString?.split(' > ') || [];
+        if (pathCodes.some(code => positionMatcher(code))) {
+          return true;
+        }
+
+        // Also check all underlying position codes (when aggregating multiple positions)
+        if (r.aggregatedPositionCodes?.some(code => positionMatcher(code))) {
+          return true;
+        }
+
+        // Check paths of all underlying records
+        for (const record of r.records) {
+          if (record.position_path?.some(code => positionMatcher(code))) {
+            return true;
+          }
+        }
+      }
+
+      return false;
     });
   }
 
-  // User filter
+  // User filter - check if user is in the aggregate's userKeys array
   if (filters.value.userKey) {
-    result = result.filter(r => r.user_key === filters.value.userKey);
+    result = result.filter(r => r.userKeys?.includes(filters.value.userKey));
   }
 
   return result;
@@ -751,6 +972,8 @@ async function handleConflictResolved() {
 // Load records on mount
 onMounted(() => {
   loadRecords();
+  // Load position hierarchy to enable level-based aggregation
+  countSessionStore.loadPositions();
 
   // Subscribe to inventory notifications so records update automatically
   const eventURL = `${api.defaults.baseURL}/notification/inventory-notification`;

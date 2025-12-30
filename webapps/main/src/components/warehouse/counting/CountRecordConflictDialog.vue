@@ -7,27 +7,36 @@
     @cancel="handleClose"
   >
     <template #title>
-      {{ $t('warehouse.counting.select_count') }}
+      <div class="row items-center justify-between full-width">
+        <span>{{ $t('warehouse.counting.select_count') }}</span>
+        <!-- Navigation indicator when multiple conflicts -->
+        <q-badge v-if="conflictingPairs.length > 1" color="primary" class="q-ml-md">
+          {{ currentIndex + 1 }} / {{ conflictingPairs.length }}
+        </q-badge>
+      </div>
     </template>
 
     <template #form>
       <div class="column q-gutter-md">
-        <!-- Product/Position Info -->
-        <div v-if="aggregate" class="q-mb-md">
-          <div class="text-subtitle1 text-weight-medium">{{ aggregate.product.code }}</div>
-          <div class="text-caption text-grey">{{ aggregate.product.description }}</div>
-          <div v-if="aggregate.position" class="text-caption q-mt-xs">
+        <!-- Product/Position Info for current pair -->
+        <div v-if="currentPair" class="q-mb-md">
+          <div class="text-subtitle1 text-weight-medium">{{ currentPair.product.code }}</div>
+          <div class="text-caption text-grey">{{ currentPair.product.description }}</div>
+          <div v-if="currentPair.position" class="text-caption q-mt-xs">
             <q-icon name="mdi-map-marker" size="xs" class="q-mr-xs" />
-            {{ aggregate.position.code }}
+            {{ currentPair.position.code }}
+            <span v-if="currentPair.pathString" class="text-grey q-ml-xs">
+              ({{ currentPair.pathString }})
+            </span>
           </div>
         </div>
 
         <q-separator />
 
-        <!-- Count Records List -->
-        <q-list v-if="nonDiscardedRecords.length" separator class="q-mt-none">
+        <!-- Count Records List for current pair -->
+        <q-list v-if="currentNonDiscardedRecords.length" separator class="q-mt-none">
           <q-item
-            v-for="record in nonDiscardedRecords"
+            v-for="record in currentNonDiscardedRecords"
             :key="record._key"
             clickable
             :active="selectedRecordKey === record._key"
@@ -76,15 +85,15 @@
           {{ $t('no_data') }}
         </div>
 
-        <!-- Discarded Records Info -->
-        <div v-if="discardedRecords.length > 0" class="q-mt-md">
+        <!-- Discarded Records Info for current pair -->
+        <div v-if="currentDiscardedRecords.length > 0" class="q-mt-md">
           <q-expansion-item
-            :label="$t('warehouse.counting.discarded_records', { count: discardedRecords.length })"
+            :label="$t('warehouse.counting.discarded_records', { count: currentDiscardedRecords.length })"
             header-class="text-grey"
             dense
           >
             <q-list separator dense>
-              <q-item v-for="record in discardedRecords" :key="record._key" class="text-grey">
+              <q-item v-for="record in currentDiscardedRecords" :key="record._key" class="text-grey">
                 <q-item-section>
                   <q-item-label>
                     {{ $t('warehouse.counting.counted_qt') }}: {{ record.counted_qt }}
@@ -106,20 +115,40 @@
     </template>
 
     <template #actions>
-      <div class="col-auto">
+      <div class="row full-width items-center q-gutter-md">
+        <!-- Navigation arrows -->
+        <template v-if="conflictingPairs.length > 1">
+          <q-btn
+            v-if="currentIndex > 0"
+            icon="mdi-arrow-left-bold"
+            color="theme-blue"
+            flat
+            round
+            @click="goToPrevious"
+          />
+          <q-btn
+            v-if="currentIndex < conflictingPairs.length - 1"
+            icon="mdi-arrow-right-bold"
+            color="theme-blue"
+            flat
+            round
+            @click="goToNext"
+          />
+        </template>
+
+        <q-space />
+
         <q-btn
           :label="$t('cancel')"
           color="theme-grey"
           flat
           @click="handleClose"
         />
-      </div>
-      <div class="col-auto">
         <q-btn
-          :label="$t('warehouse.counting.discard_others')"
+          :label="isLastConflict ? $t('warehouse.counting.discard_others') : $t('warehouse.counting.resolve_and_next')"
           color="theme-orange"
           :loading="loading"
-          :disable="!selectedRecordKey || nonDiscardedRecords.length < 2"
+          :disable="!selectedRecordKey || currentNonDiscardedRecords.length < 2"
           @click="handleResolve"
         />
       </div>
@@ -142,6 +171,10 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  /**
+   * The aggregate object from the parent.
+   * Used to extract conflicting pairs at the product/position level.
+   */
   aggregate: {
     type: Object,
     default: null,
@@ -151,38 +184,126 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue', 'resolve']);
 
 const { t: $t } = useI18n();
-const store = useStore(); // Used for getUserByKey
+const store = useStore();
 const countSessionStore = useCountSessionStore();
 
 const loading = ref(false);
 const selectedRecordKey = ref(null);
+const currentIndex = ref(0);
 
-// Computed
-const nonDiscardedRecords = computed(() => {
+/**
+ * Extract conflicting pairs from the aggregate.
+ * A pair is a unique product_key + position_key combination.
+ * A conflict exists when there are multiple non-discarded records with different counted_qt.
+ */
+const conflictingPairs = computed(() => {
   if (!props.aggregate) return [];
-  return props.aggregate.records.filter(r => r.status !== 'discarded');
+
+  // Group records by original product/position pair
+  const pairMap = new Map();
+
+  for (const record of props.aggregate.records) {
+    const pairKey = `${record.product_key}_${record.position_key}`;
+
+    if (!pairMap.has(pairKey)) {
+      pairMap.set(pairKey, {
+        pairKey,
+        product: {
+          key: record.product_key,
+          code: record.product_code,
+          description: record.product_description,
+        },
+        position: record.position_key ? {
+          key: record.position_key,
+          code: record.position_code,
+        } : null,
+        pathString: record.position_path?.join(' > ') || '',
+        records: [],
+      });
+    }
+
+    pairMap.get(pairKey).records.push(record);
+  }
+
+  // Filter to only pairs that have conflicts (multiple non-discarded with different counts)
+  const pairs = [];
+  for (const pair of pairMap.values()) {
+    const nonDiscarded = pair.records.filter(r => r.status !== 'discarded');
+    if (nonDiscarded.length > 1) {
+      const firstQt = nonDiscarded[0].counted_qt;
+      const hasConflict = !nonDiscarded.every(r => r.counted_qt === firstQt);
+      if (hasConflict) {
+        pairs.push(pair);
+      }
+    }
+  }
+
+  return pairs;
 });
 
-const discardedRecords = computed(() => {
-  if (!props.aggregate) return [];
-  return props.aggregate.records.filter(r => r.status === 'discarded');
+// Current pair being resolved
+const currentPair = computed(() => {
+  if (conflictingPairs.value.length === 0) return null;
+  return conflictingPairs.value[currentIndex.value] || null;
 });
 
-// Watch for dialog open to reset selection
+// Records for current pair
+const currentNonDiscardedRecords = computed(() => {
+  if (!currentPair.value) return [];
+  return currentPair.value.records.filter(r => r.status !== 'discarded');
+});
+
+const currentDiscardedRecords = computed(() => {
+  if (!currentPair.value) return [];
+  return currentPair.value.records.filter(r => r.status === 'discarded');
+});
+
+// Check if this is the last conflict to resolve
+const isLastConflict = computed(() => {
+  return currentIndex.value >= conflictingPairs.value.length - 1;
+});
+
+// Watch for dialog open to reset state
 watch(
   () => props.modelValue,
   (isOpen) => {
-    if (isOpen && props.aggregate) {
-      // Pre-select the most recent record
-      const sorted = [...nonDiscardedRecords.value].sort(
-        (a, b) => new Date(b.counted_at) - new Date(a.counted_at)
-      );
-      selectedRecordKey.value = sorted[0]?._key || null;
+    if (isOpen) {
+      currentIndex.value = 0;
+      preselectRecord();
     }
   }
 );
 
+// Watch for index change to preselect record
+watch(currentIndex, () => {
+  preselectRecord();
+});
+
 // Methods
+function preselectRecord() {
+  if (currentNonDiscardedRecords.value.length > 0) {
+    // Pre-select the most recent record
+    const sorted = [...currentNonDiscardedRecords.value].sort(
+      (a, b) => new Date(b.counted_at) - new Date(a.counted_at)
+    );
+    selectedRecordKey.value = sorted[0]?._key || null;
+  } else {
+    selectedRecordKey.value = null;
+  }
+}
+
+function goToPrevious() {
+  if (currentIndex.value > 0) {
+    currentIndex.value--;
+  }
+}
+
+function goToNext() {
+  if (currentIndex.value < conflictingPairs.value.length - 1) {
+    currentIndex.value++;
+  }
+}
+
 function handleClose() {
   emit('update:modelValue', false);
 }
@@ -193,19 +314,37 @@ async function handleResolve() {
   loading.value = true;
 
   try {
-    // Discard all non-selected records using bulk event
-    const recordKeysToDiscard = nonDiscardedRecords.value
+    // Discard all non-selected records for the current pair
+    const recordKeysToDiscard = currentNonDiscardedRecords.value
       .filter(r => r._key !== selectedRecordKey.value)
       .map(r => r._key);
 
     await countSessionStore.discardRecords(recordKeysToDiscard);
 
-    Notify.create({
-      message: $t('warehouse.counting.conflict_resolved'),
-      color: 'theme-green',
-    });
+    // Update local state - mark records as discarded
+    for (const key of recordKeysToDiscard) {
+      const record = currentPair.value.records.find(r => r._key === key);
+      if (record) {
+        record.status = 'discarded';
+      }
+    }
 
-    emit('resolve');
+    if (isLastConflict.value) {
+      // All conflicts resolved
+      Notify.create({
+        message: $t('warehouse.counting.conflict_resolved'),
+        color: 'theme-green',
+      });
+      emit('resolve');
+    } else {
+      // Move to next conflict
+      Notify.create({
+        message: $t('warehouse.counting.conflict_resolved_next'),
+        color: 'theme-green',
+        timeout: 1500,
+      });
+      currentIndex.value++;
+    }
   } catch (error) {
     console.error('Error resolving conflict:', error);
     Notify.create({
@@ -235,23 +374,6 @@ function formatDate(date) {
   if (!date) return '-';
   return DateTime.fromISO(date).toFormat('dd/MM/yyyy HH:mm');
 }
-
-function getUserName(record) {
-  if (!record.user_key) return null;
-  const user = store.getters.getUserByKey(record.user_key);
-  return user?.name || user?.username || record.user_key;
-}
-
-function getStatusColor(status) {
-  switch (status) {
-    case 'completed': return 'positive';
-    case 'submitted': return 'info';
-    case 'confirmed': return 'positive';
-    case 'started': return 'warning';
-    case 'discarded': return 'grey';
-    default: return 'grey';
-  }
-}
 </script>
 
 <style scoped lang="sass">
@@ -261,4 +383,3 @@ function getStatusColor(status) {
 .text-theme-red
   color: var(--theme-red)
 </style>
-
