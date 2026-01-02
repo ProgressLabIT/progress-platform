@@ -41,6 +41,7 @@ from events.inventory.count_started import CountStartedEvent
 from events.inventory.count_completed import CountCompletedEvent
 from events.inventory.count_canceled import CountCanceledEvent
 from events.inventory.count_discarded import CountDiscardedEvent
+from events.inventory.count_imported import CountImportedEvent
 from events.inventory.count_session_started import CountSessionStartedEvent
 from events.inventory.count_session_completed import CountSessionCompletedEvent
 from events.inventory.count_session_applied import CountSessionAppliedEvent

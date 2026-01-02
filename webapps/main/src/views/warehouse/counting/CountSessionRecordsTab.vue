@@ -218,6 +218,45 @@
     <template #after>
       <div class="column q-gutter-md q-pa-md">
 
+        <!-- Export/Import Actions -->
+        <div class="col-auto row q-gutter-sm">
+          <q-btn-dropdown
+            :label="$t('export')"
+            icon="mdi-download"
+            color="primary"
+            outline
+            dense
+            no-caps
+            :loading="exporting"
+          >
+            <q-list>
+              <q-item clickable v-close-popup @click="handleExportXLSX">
+                <q-item-section avatar>
+                  <q-icon name="mdi-file-excel" color="green" />
+                </q-item-section>
+                <q-item-section>Excel (.xlsx)</q-item-section>
+              </q-item>
+              <q-item clickable v-close-popup @click="handleExportCSV">
+                <q-item-section avatar>
+                  <q-icon name="mdi-file-delimited" color="blue" />
+                </q-item-section>
+                <q-item-section>CSV (.csv)</q-item-section>
+              </q-item>
+            </q-list>
+          </q-btn-dropdown>
+          <q-btn
+            :label="$t('import')"
+            icon="mdi-upload"
+            color="primary"
+            outline
+            dense
+            no-caps
+            @click="importDialogOpen = true"
+          />
+        </div>
+
+        <q-separator />
+
         <!-- Variance & only-with-variance -->
         <div class="col-auto row items-center">
           <div class="col-6">
@@ -354,6 +393,13 @@
       :aggregate="selectedConflictAggregate"
       @resolve="handleConflictResolved"
     />
+
+    <!-- IMPORT DIALOG -->
+    <CountRecordImportDialog
+      v-model="importDialogOpen"
+      :session-key="countSessionStore.currentSession"
+      @imported="handleImportCompleted"
+    />
   </div>
 </template>
 
@@ -365,10 +411,12 @@ import { useCountSessionStore } from '@/stores/countSession';
 import { api } from '@/boot/axios.js';
 import { useWildcardToRegex } from '@/composables/useWildcardToRegex';
 import CountRecordConflictDialog from '@/components/warehouse/counting/CountRecordConflictDialog.vue';
+import CountRecordImportDialog from '@/components/warehouse/counting/CountRecordImportDialog.vue';
 import BaseAutocompleteTag from '@/components/BaseAutocompleteTag.vue';
 import BaseAutocompleteUser from '@/components/BaseAutocompleteUser.vue';
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue';
 import { formatDateTime } from '@/lib/TimeHandling';
+import { useCountRecordExport } from '@/composables/useCountRecordExport';
 
 const { t: $t, locale } = useI18n();
 const store = useStore();
@@ -397,6 +445,10 @@ const setPositionLevel = (value) => {
 const conflictDialogOpen = ref(false);
 const selectedConflictAggregate = ref(null);
 const events = ref(null);
+const importDialogOpen = ref(false);
+
+// Export composable
+const { exporting, exportToXLSX, exportToCSV } = useCountRecordExport();
 
 // Filters
 const filters = ref({
@@ -967,6 +1019,32 @@ async function handleConflictResolved() {
   await loadRecords();
   conflictDialogOpen.value = false;
   selectedConflictAggregate.value = null;
+}
+
+// Export/Import handlers
+function getUserName(userKey) {
+  const user = store.getters.getUserByKey(userKey);
+  if (user) {
+    return `${user.name || ''} ${user.surname || ''}`.trim() || userKey;
+  }
+  return userKey || '';
+}
+
+function handleExportXLSX() {
+  const sessionKey = countSessionStore.currentSession;
+  const sessionCode = countSessionStore.sessionData?.code || sessionKey;
+  exportToXLSX(sessionKey, sessionCode, getUserName);
+}
+
+function handleExportCSV() {
+  const sessionKey = countSessionStore.currentSession;
+  const sessionCode = countSessionStore.sessionData?.code || sessionKey;
+  exportToCSV(sessionKey, sessionCode, getUserName);
+}
+
+async function handleImportCompleted() {
+  // Reload records after import
+  await loadRecords();
 }
 
 // Load records on mount
