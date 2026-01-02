@@ -186,7 +186,6 @@ import { ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Notify } from 'quasar';
 import { api } from '@/boot/axios.js';
-import { sendEvent } from '@/composables/event.js';
 import BaseModalForm from '@/components/BaseModalForm.vue';
 
 const props = defineProps({
@@ -320,8 +319,9 @@ async function handleValidate() {
     formData.append('file', selectedFile.value);
     formData.append('count_session_key', props.sessionKey);
     formData.append('import_mode', importMode.value);
+    formData.append('dry_run', 'true');
 
-    const response = await api.post('/inventory/count-record/import/validate', formData, {
+    const response = await api.post('/inventory/count-record/import', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -383,13 +383,15 @@ async function handleImport() {
   loading.value = true;
 
   try {
-    await sendEvent({
-      event_type: 'COUNT_IMPORTED',
-      event_data: {
-        count_session_key: props.sessionKey,
-        import_mode: importMode.value,
-        import_file_key: validationResult.value.file_key,
-        import_filename: validationResult.value.filename,
+    const formData = new FormData();
+    formData.append('file_key', validationResult.value.file_key);
+    formData.append('count_session_key', props.sessionKey);
+    formData.append('import_mode', importMode.value);
+    formData.append('dry_run', 'false');
+
+    await api.post('/inventory/count-record/import', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
       },
     });
 
@@ -406,11 +408,11 @@ async function handleImport() {
   } catch (error) {
     console.error('Import error:', error);
     Notify.create({
-      message: error.response?.data?.detail?.message || $t('error'),
+      message: error.response?.data?.detail || $t('error'),
       color: 'negative',
       position: 'top',
     });
-  }   finally {
+  } finally {
     loading.value = false;
   }
 }

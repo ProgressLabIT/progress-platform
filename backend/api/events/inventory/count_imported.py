@@ -84,14 +84,7 @@ def _parse_import_file(file_content: bytes, filename: str) -> list[dict]:
       row_dict = {}
       for idx, value in enumerate(row):
         if idx < len(headers) and headers[idx]:
-          # Ensure numeric values are converted to strings properly
-          # (e.g., 123.0 -> "123", not "123.0")
-          if isinstance(value, float) and value.is_integer():
-            row_dict[headers[idx]] = str(int(value))
-          elif value is not None:
-            row_dict[headers[idx]] = str(value).strip()
-          else:
-            row_dict[headers[idx]] = ''
+          row_dict[headers[idx]] = str(value).strip() if value is not None else ''
       if any(row_dict.values()):  # Skip empty rows
         rows.append(row_dict)
 
@@ -270,12 +263,7 @@ def _validate_import_rows(tx, rows: list[dict], session_key: str) -> tuple[list[
       errors.append('Missing counted_qt')
     else:
       try:
-        counted_qt_value = float(counted_qt_str)
-        row_with_keys['counted_qt_parsed'] = counted_qt_value
-
-        # For serialized products, counted_qt must be 0 or 1
-        if serial_code and counted_qt_value not in (0, 1):
-          errors.append(f"Invalid counted_qt for serial: must be 0 or 1, got '{counted_qt_str}'")
+        row_with_keys['counted_qt_parsed'] = float(counted_qt_str)
       except ValueError:
         errors.append(f"Invalid counted_qt value: '{counted_qt_str}'")
 
@@ -416,6 +404,9 @@ class CountImportedEvent(BaseEvent):
     return ['inventory_count_record', 'Product', 'Position', 'Serial', 'is_in_position']
 
   def apply(self):
+    # Verify file metadata first (security check)
+    metadata = self._verify_file_metadata()
+
     # Read file from media storage
     file_content = self._read_file_from_media()
 
@@ -426,13 +417,13 @@ class CountImportedEvent(BaseEvent):
     # Detect ignored columns and store warning
     self.info.ignored_columns = _detect_ignored_columns(rows)
 
-    # Validate rows
+    # Validate rows (re-validation for safety, but should pass since endpoint validated)
     valid_rows, error_rows = _validate_import_rows(self.tx, rows, self.info.count_session_key)
 
     if error_rows:
       raise ValueError(
         f"Import validation failed: {len(error_rows)} rows have errors. "
-        f"Use the validation endpoint first to get detailed error report."
+        f"Use the import endpoint with dry_run=True first to get detailed error report."
       )
 
     # Aggregate rows by product/position
@@ -465,6 +456,49 @@ class CountImportedEvent(BaseEvent):
       self.response['warnings'] = [
         f"The following columns were ignored (system quantities are fetched from database): {', '.join(self.info.ignored_columns)}"
       ]
+
+  def _verify_file_metadata(self) -> dict:
+    """
+    Verify file metadata for security.
+
+    Checks:
+    - Metadata file exists
+    - File was validated (validated=True)
+    - File was validated for this session (session_key matches)
+
+    Returns:
+      The metadata dict if valid
+
+    Raises:
+      ValueError if validation fails
+    """
+    import json
+    import os
+
+    media_path = os.environ.get('MEDIA_PATH', '/app/media')
+    meta_path = os.path.join(media_path, 'count_import', f'{self.info.import_file_key}.meta.json')
+
+    if not os.path.exists(meta_path):
+      raise ValueError(
+        f"File metadata not found for: {self.info.import_file_key}. "
+        f"Use the import endpoint with dry_run=True to validate the file first."
+      )
+
+    with open(meta_path, 'r') as f:
+      metadata = json.load(f)
+
+    if not metadata.get('validated'):
+      raise ValueError(
+        f"File was not validated. Use the import endpoint with dry_run=True first."
+      )
+
+    if metadata.get('session_key') != self.info.count_session_key:
+      raise ValueError(
+        f"File was validated for a different session. "
+        f"Expected session: {metadata.get('session_key')}, got: {self.info.count_session_key}"
+      )
+
+    return metadata
 
   def _read_file_from_media(self) -> bytes:
     """Read the import file from media storage."""

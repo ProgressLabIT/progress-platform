@@ -14,6 +14,50 @@ This enables offline counting workflows, data correction, and integration with e
 
 ---
 
+## Architecture
+
+```mermaid
+flowchart TB
+    subgraph frontend [Frontend]
+        UI[CountSessionRecordsTab]
+        Dialog[CountRecordImportDialog]
+        Composable[useCountRecordExport]
+    end
+
+    subgraph backend [Backend]
+        Endpoint["/import/validate"]
+        Event[COUNT_IMPORTED Event]
+        Media[Media Storage]
+    end
+
+    subgraph database [Database]
+        Sessions[(InventoryCountSession)]
+        Records[(InventoryCountRecord)]
+        Products[(Product)]
+        Positions[(Position)]
+        Serials[(Serial)]
+    end
+
+    UI -->|Export| Composable
+    Composable -->|Fetch records| Records
+    Composable -->|Download| FileOut[XLSX/CSV]
+
+    UI -->|Import| Dialog
+    Dialog -->|Upload file| Endpoint
+    Endpoint -->|Validate codes| Products
+    Endpoint -->|Validate codes| Positions
+    Endpoint -->|Validate codes| Serials
+    Endpoint -->|Store valid file| Media
+    Endpoint -->|Return errors| Dialog
+
+    Dialog -->|Send event| Event
+    Event -->|Read file| Media
+    Event -->|Discard existing| Records
+    Event -->|Create new| Records
+```
+
+---
+
 ## Export
 
 ### Supported Formats
@@ -120,6 +164,45 @@ A warning is displayed if these columns are present in the import file.
 2. **Import Phase** - Validated file is processed
    - Records are created via `COUNT_IMPORTED` event
    - Existing records are discarded based on import mode
+
+### Import Flow Sequence
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Dialog as ImportDialog
+    participant API as /validate Endpoint
+    participant DB as Database
+    participant Media as Media Storage
+    participant Event as COUNT_IMPORTED
+
+    User->>Dialog: Drop/select file
+    User->>Dialog: Select mode
+    User->>Dialog: Click Validate
+
+    Dialog->>API: POST file + session_key + mode
+    API->>API: Parse CSV/XLSX
+    API->>DB: Bulk lookup products
+    API->>DB: Bulk lookup positions
+    API->>DB: Bulk lookup serials
+
+    alt Validation errors found
+        API->>API: Generate error Excel
+        API-->>Dialog: Return error file
+        Dialog-->>User: Auto-download errors
+    else All rows valid
+        API->>Media: Store validated file
+        API-->>Dialog: Return summary stats
+        Dialog-->>User: Show confirmation
+        User->>Dialog: Click Import
+        Dialog->>Event: Send COUNT_IMPORTED
+        Event->>Media: Read stored file
+        Event->>DB: Discard existing records
+        Event->>DB: Create new records
+        Event-->>Dialog: Return success
+        Dialog-->>User: Close and refresh
+    end
+```
 
 ### Validation Rules
 
@@ -379,10 +462,40 @@ A1,PROD001,,abc
 
 ---
 
+## Design Rationale
+
+### Why Event-Based Import?
+
+- **Audit trail**: The `COUNT_IMPORTED` event captures who imported what and when
+- **Consistency**: Uses the same event system as manual counts (`COUNT_STARTED`, `COUNT_COMPLETED`)
+- **Atomicity**: All records are created in a single transaction
+- **File reference**: Original file stored in media for future reference
+
+### Why Strict Validation (All-or-Nothing)?
+
+- **Data integrity**: Partial imports could leave session in inconsistent state
+- **User clarity**: Clear feedback via annotated error file
+- **Simpler recovery**: User fixes file and re-uploads, no orphaned records
+
+### Why Two-Phase (Validate then Import)?
+
+- **User confirmation**: Especially important for Replace mode
+- **Preview stats**: User sees impact before committing
+- **File storage**: Validated file stored once, reused by event
+
+### Why Fetch System Quantities from Database?
+
+- **Accuracy**: System quantities may have changed since export
+- **Simplicity**: Single source of truth for inventory state
+- **Safety**: Prevents stale data from corrupting delta calculations
+
+---
+
 ## Related Components
 
 - `CountRecordImportDialog.vue` - UI dialog for import
 - `useCountRecordExport.js` - Composable for export functionality
 - `count_imported.py` - Backend event handler
 - `counting.py` - API endpoints
+- [Test Cases](count-import-test-cases.md) - Comprehensive test scenarios
 

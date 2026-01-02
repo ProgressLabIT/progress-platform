@@ -1,19 +1,22 @@
+import json
 import os
 import traceback
 import uuid
-from typing import Annotated
+from typing import Annotated, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Body, UploadFile, File, Form
 from fastapi.responses import Response
 
 from models.inventory import *
 from models.auth import TokenData
+from models.event import EventInfoModel
 from utils.inventory import Queries
 from utils.db import db
 from utils import auth
 from utils.api import APIResponse
 from utils.counter import _generate_counter
 from events.inventory.count_imported import (
+  CountImportedEvent,
   _parse_import_file,
   _validate_columns,
   _validate_import_rows,
@@ -294,20 +297,26 @@ async def get_count_position_status(
 # COUNT RECORD IMPORT
 # ========================================================
 
-@router.post('/inventory/count-record/import/validate')
-async def validate_count_import(
-  file: UploadFile = File(...),
+@router.post('/inventory/count-record/import')
+async def import_count_records(
   count_session_key: str = Form(...),
   import_mode: str = Form(...),
+  dry_run: bool = Form(True),
+  file: Optional[UploadFile] = File(None),
+  file_key: Optional[str] = Form(None),
   token: TokenData = Depends(auth.verify_token)
 ):
   """
-  Validate a count record import file.
+  Import count records from a CSV/XLSX file.
 
-  - Parses the uploaded CSV/XLSX file
-  - Validates all product, position, and serial codes exist
-  - If valid: stores file in media and returns file_key + summary
-  - If errors: returns annotated Excel file with error details
+  Two modes of operation:
+  - dry_run=True: Validate file and return summary. Requires 'file' upload.
+  - dry_run=False: Execute import using previously validated file. Requires 'file_key'.
+
+  Returns:
+  - If errors: annotated Excel file with error details
+  - If dry_run=True and valid: file_key + summary for subsequent import
+  - If dry_run=False and valid: import result from event
   """
   try:
     # Validate import mode
@@ -319,110 +328,173 @@ async def validate_count_import(
     if not session:
       raise HTTPException(status_code=404, detail="Counting session not found")
 
-    # Read file content
-    file_content = await file.read()
-    filename = file.filename or 'import.csv'
-
-    # Parse file
-    try:
-      rows = _parse_import_file(file_content, filename)
-    except ValueError as e:
-      raise HTTPException(status_code=400, detail=str(e))
-
-    if not rows:
-      raise HTTPException(status_code=400, detail="No data rows found in file")
-
-    # Validate required columns
-    missing_columns = _validate_columns(rows)
-    if missing_columns:
-      raise HTTPException(
-        status_code=400,
-        detail=f"Missing required columns: {', '.join(missing_columns)}"
-      )
-
-    # Validate rows using a read-only transaction
-    tx = db.begin_transaction(read=['Product', 'Position', 'Serial'])
-    try:
-      valid_rows, error_rows = _validate_import_rows(tx, rows, count_session_key)
-    finally:
-      tx.abort_transaction()  # Read-only, always abort
-
-    # If errors, return annotated Excel file
-    if error_rows:
-      error_file_bytes = _generate_error_file(rows, error_rows)
-      return Response(
-        content=error_file_bytes,
-        media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        headers={
-          'Content-Disposition': f'attachment; filename="import_errors.xlsx"',
-          'X-Import-Status': 'error',
-          'X-Error-Count': str(len(error_rows)),
-          'X-Valid-Count': str(len(valid_rows)),
-        }
-      )
-
-    # All valid - store file in media
-    file_key = str(uuid.uuid4())
     media_path = os.environ.get('MEDIA_PATH', '/app/media')
     import_dir = os.path.join(media_path, 'count_import')
-    os.makedirs(import_dir, exist_ok=True)
 
-    file_path = os.path.join(import_dir, file_key)
-    with open(file_path, 'wb') as f:
-      f.write(file_content)
+    if dry_run:
+      # === DRY RUN MODE: Validate file and store for later import ===
+      if not file:
+        raise HTTPException(status_code=400, detail="File is required for validation (dry_run=True)")
 
-    # Count existing records that would be affected
-    existing_count = 0
-    if import_mode == 'replace':
-      cursor = db.aql.execute('''
-        FOR r IN inventory_count_record
-        FILTER r.inventory_count_session_key == @session_key
-          AND r.status IN ['completed', 'submitted', 'confirmed']
-        RETURN 1
-      ''', bind_vars={'session_key': count_session_key})
-      existing_count = len(list(cursor))
-    else:
-      # Update mode - count matching product/position pairs
-      product_position_pairs = set()
-      for row in valid_rows:
-        product_position_pairs.add((row['product_key'], row['position_key']))
+      # Read file content
+      file_content = await file.read()
+      filename = file.filename or 'import.csv'
 
-      for product_key, position_key in product_position_pairs:
+      # Parse file
+      try:
+        rows = _parse_import_file(file_content, filename)
+      except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+      if not rows:
+        raise HTTPException(status_code=400, detail="No data rows found in file")
+
+      # Validate required columns
+      missing_columns = _validate_columns(rows)
+      if missing_columns:
+        raise HTTPException(
+          status_code=400,
+          detail=f"Missing required columns: {', '.join(missing_columns)}"
+        )
+
+      # Validate rows using a read-only transaction
+      tx = db.begin_transaction(read=['Product', 'Position', 'Serial'])
+      try:
+        valid_rows, error_rows = _validate_import_rows(tx, rows, count_session_key)
+      finally:
+        tx.abort_transaction()  # Read-only, always abort
+
+      # If errors, return annotated Excel file
+      if error_rows:
+        error_file_bytes = _generate_error_file(rows, error_rows)
+        return Response(
+          content=error_file_bytes,
+          media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          headers={
+            'Content-Disposition': 'attachment; filename="import_errors.xlsx"',
+            'X-Import-Status': 'error',
+            'X-Error-Count': str(len(error_rows)),
+            'X-Valid-Count': str(len(valid_rows)),
+          }
+        )
+
+      # All valid - store file in media with metadata
+      new_file_key = str(uuid.uuid4())
+      os.makedirs(import_dir, exist_ok=True)
+
+      file_path = os.path.join(import_dir, new_file_key)
+      with open(file_path, 'wb') as f:
+        f.write(file_content)
+
+      # Store metadata sidecar for security validation
+      metadata = {
+        'session_key': count_session_key,
+        'user_key': token.consumer_key,
+        'import_mode': import_mode,
+        'filename': filename,
+        'validated': True,
+      }
+      meta_path = os.path.join(import_dir, f'{new_file_key}.meta.json')
+      with open(meta_path, 'w') as f:
+        json.dump(metadata, f)
+
+      # Count existing records that would be affected
+      existing_count = 0
+      if import_mode == 'replace':
         cursor = db.aql.execute('''
           FOR r IN inventory_count_record
-          FILTER r._from == @product_id
-            AND r._to == @position_id
-            AND r.inventory_count_session_key == @session_key
+          FILTER r.inventory_count_session_key == @session_key
             AND r.status IN ['completed', 'submitted', 'confirmed']
           RETURN 1
-        ''', bind_vars={
-          'product_id': f'Product/{product_key}',
-          'position_id': f'Position/{position_key}',
-          'session_key': count_session_key,
-        })
-        existing_count += len(list(cursor))
+        ''', bind_vars={'session_key': count_session_key})
+        existing_count = len(list(cursor))
+      else:
+        # Update mode - count matching product/position pairs
+        product_position_pairs = set()
+        for row in valid_rows:
+          product_position_pairs.add((row['product_key'], row['position_key']))
 
-    # Count unique product/position pairs for import
-    unique_pairs = set()
-    for row in valid_rows:
-      unique_pairs.add((row['product_key'], row['position_key']))
+        for product_key, position_key in product_position_pairs:
+          cursor = db.aql.execute('''
+            FOR r IN inventory_count_record
+            FILTER r._from == @product_id
+              AND r._to == @position_id
+              AND r.inventory_count_session_key == @session_key
+              AND r.status IN ['completed', 'submitted', 'confirmed']
+            RETURN 1
+          ''', bind_vars={
+            'product_id': f'Product/{product_key}',
+            'position_id': f'Position/{position_key}',
+            'session_key': count_session_key,
+          })
+          existing_count += len(list(cursor))
 
-    # Detect columns that will be ignored
-    ignored_columns = _detect_ignored_columns(rows)
+      # Count unique product/position pairs for import
+      unique_pairs = set()
+      for row in valid_rows:
+        unique_pairs.add((row['product_key'], row['position_key']))
 
-    return {
-      'status': 'valid',
-      'file_key': file_key,
-      'filename': filename,
-      'rows_total': len(rows),
-      'rows_valid': len(valid_rows),
-      'records_to_add': len(unique_pairs),
-      'records_to_discard': existing_count,
-      'import_mode': import_mode,
-      'ignored_columns': ignored_columns,
-    }
+      # Detect columns that will be ignored
+      ignored_columns = _detect_ignored_columns(rows)
+
+      return {
+        'status': 'valid',
+        'file_key': new_file_key,
+        'filename': filename,
+        'rows_total': len(rows),
+        'rows_valid': len(valid_rows),
+        'records_to_add': len(unique_pairs),
+        'records_to_discard': existing_count,
+        'import_mode': import_mode,
+        'ignored_columns': ignored_columns,
+      }
+
+    else:
+      # === EXECUTE MODE: Import using previously validated file ===
+      if not file_key:
+        raise HTTPException(status_code=400, detail="file_key is required for import (dry_run=False)")
+
+      # Verify file and metadata exist
+      file_path = os.path.join(import_dir, file_key)
+      meta_path = os.path.join(import_dir, f'{file_key}.meta.json')
+
+      if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="Import file not found. Please validate again.")
+
+      if not os.path.exists(meta_path):
+        raise HTTPException(status_code=400, detail="File metadata not found. Please validate again.")
+
+      # Load and verify metadata
+      with open(meta_path, 'r') as f:
+        metadata = json.load(f)
+
+      if not metadata.get('validated'):
+        raise HTTPException(status_code=400, detail="File was not validated. Please validate first.")
+
+      if metadata.get('session_key') != count_session_key:
+        raise HTTPException(status_code=403, detail="File was validated for a different session.")
+
+      # Trigger the import event
+      event = CountImportedEvent(
+        info=EventInfoModel(
+          event_type=CountImportedEvent.get_event_type(),
+          user_key=token.consumer_key,
+          count_session_key=count_session_key,
+          import_mode=import_mode,
+          import_file_key=file_key,
+          import_filename=metadata.get('filename', 'import.csv'),
+        ).model_dump()
+      )
+      event.save()
+
+      return APIResponse(
+        message=event.response.get('message', 'Import completed'),
+        detail=event.response
+      )
 
   except HTTPException:
     raise
+  except ValueError as e:
+    raise HTTPException(status_code=422, detail=str(e))
   except Exception:
     raise HTTPException(status_code=500, detail=traceback.format_exc())
