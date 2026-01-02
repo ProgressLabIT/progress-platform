@@ -84,7 +84,14 @@ def _parse_import_file(file_content: bytes, filename: str) -> list[dict]:
       row_dict = {}
       for idx, value in enumerate(row):
         if idx < len(headers) and headers[idx]:
-          row_dict[headers[idx]] = str(value).strip() if value is not None else ''
+          # Ensure numeric values are converted to strings properly
+          # (e.g., 123.0 -> "123", not "123.0")
+          if isinstance(value, float) and value.is_integer():
+            row_dict[headers[idx]] = str(int(value))
+          elif value is not None:
+            row_dict[headers[idx]] = str(value).strip()
+          else:
+            row_dict[headers[idx]] = ''
       if any(row_dict.values()):  # Skip empty rows
         rows.append(row_dict)
 
