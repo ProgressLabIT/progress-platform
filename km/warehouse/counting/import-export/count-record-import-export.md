@@ -155,6 +155,7 @@ A warning is displayed if these columns are present in the import file.
 |-------|--------------|
 | Quantity missing | "Missing counted_qt" |
 | Non-numeric value | "Invalid counted_qt value: 'abc'" |
+| Serial with invalid qty | "Invalid counted_qt for serial: must be 0 or 1, got '5'" |
 
 ---
 

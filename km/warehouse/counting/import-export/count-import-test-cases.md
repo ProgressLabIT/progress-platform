@@ -83,8 +83,10 @@ This document outlines test cases for the count record import functionality.
 | 2.5.4 | Negative quantity | `counted_qt = -5` | Row validated (or error based on business rules) |
 | 2.5.5 | Empty quantity | Blank counted_qt | Error file with "Missing counted_qt" |
 | 2.5.6 | Non-numeric quantity | `counted_qt = "abc"` | Error file with "Invalid counted_qt value" |
-| 2.5.7 | Serial with qty > 1 | Serial row with `counted_qt = 2` | Should treat as found (qty > 0) |
+| 2.5.7 | Serial with qty = 1 | Serial row with `counted_qt = 1` | Serial marked as found/counted |
 | 2.5.8 | Serial with qty = 0 | Serial row with `counted_qt = 0` | Serial marked as not found/removed |
+| 2.5.9 | Serial with qty > 1 | Serial row with `counted_qt = 2` | Error: "Invalid counted_qt for serial: must be 0 or 1" |
+| 2.5.10 | Serial with negative qty | Serial row with `counted_qt = -1` | Error: "Invalid counted_qt for serial: must be 0 or 1" |
 
 ---
 

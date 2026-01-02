@@ -270,7 +270,12 @@ def _validate_import_rows(tx, rows: list[dict], session_key: str) -> tuple[list[
       errors.append('Missing counted_qt')
     else:
       try:
-        row_with_keys['counted_qt_parsed'] = float(counted_qt_str)
+        counted_qt_value = float(counted_qt_str)
+        row_with_keys['counted_qt_parsed'] = counted_qt_value
+
+        # For serialized products, counted_qt must be 0 or 1
+        if serial_code and counted_qt_value not in (0, 1):
+          errors.append(f"Invalid counted_qt for serial: must be 0 or 1, got '{counted_qt_str}'")
       except ValueError:
         errors.append(f"Invalid counted_qt value: '{counted_qt_str}'")
 
