@@ -46,6 +46,23 @@ class ImportMode(str, Enum):
 # UTILITY FUNCTIONS
 # ============================================================
 
+def _cell_value_to_string(value) -> str:
+  """
+  Convert a cell value to string, handling numeric codes correctly.
+
+  Excel stores numeric-looking codes (like "12345") as floats (12345.0).
+  This function converts them back to clean strings without the ".0" suffix.
+  """
+  if value is None:
+    return ''
+  if isinstance(value, float):
+    # Check if it's a whole number (no decimal part)
+    if value.is_integer():
+      return str(int(value))
+    return str(value)
+  return str(value).strip()
+
+
 def _parse_import_file(file_content: bytes, filename: str) -> list[dict]:
   """
   Parse CSV or XLSX file content to list of dicts.
@@ -84,7 +101,7 @@ def _parse_import_file(file_content: bytes, filename: str) -> list[dict]:
       row_dict = {}
       for idx, value in enumerate(row):
         if idx < len(headers) and headers[idx]:
-          row_dict[headers[idx]] = str(value).strip() if value is not None else ''
+          row_dict[headers[idx]] = _cell_value_to_string(value)
       if any(row_dict.values()):  # Skip empty rows
         rows.append(row_dict)
 
@@ -263,7 +280,11 @@ def _validate_import_rows(tx, rows: list[dict], session_key: str) -> tuple[list[
       errors.append('Missing counted_qt')
     else:
       try:
-        row_with_keys['counted_qt_parsed'] = float(counted_qt_str)
+        counted_qt = float(counted_qt_str)
+        row_with_keys['counted_qt_parsed'] = counted_qt
+        # Validate serial quantity is 0 or 1
+        if serial_code and counted_qt not in (0, 1):
+          errors.append(f"Invalid counted_qt for serial: must be 0 or 1, got '{counted_qt_str}'")
       except ValueError:
         errors.append(f"Invalid counted_qt value: '{counted_qt_str}'")
 

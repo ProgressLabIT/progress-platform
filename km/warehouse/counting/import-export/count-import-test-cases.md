@@ -175,6 +175,9 @@ This document outlines test cases for the count record import functionality.
 | 7.2.2 | Position code with spaces | Code contains spaces | Matched correctly (trimmed) |
 | 7.2.3 | Serial with unicode | Serial contains unicode chars | Matched correctly |
 | 7.2.4 | Commas in CSV fields | Field contains comma (quoted) | Parsed correctly |
+| 7.2.5 | Numeric codes in Excel | Excel stores "12345" as number 12345.0 | Parsed as "12345" without ".0" suffix |
+| 7.2.6 | Alphanumeric codes in Excel | "ABC123" as text | Matched correctly |
+| 7.2.7 | Leading zeros in codes | Excel stores "00123" | May lose leading zeros (Excel limitation) |
 
 ### 7.3 Concurrent Operations
 
@@ -206,6 +209,7 @@ This document outlines test cases for the count record import functionality.
 | 8.2.3 | Try again after error | Validation returned errors | Try again button appears |
 | 8.2.4 | Replace checkbox | Replace mode + validated | Checkbox must be checked to import |
 | 8.2.5 | Dialog close resets | Close and reopen dialog | All state reset |
+| 8.2.6 | File reset after validation errors | Validation returns errors | Error file downloaded, file upload area reset, ready for new file |
 
 ---
 
