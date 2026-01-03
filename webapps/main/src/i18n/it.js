@@ -1308,6 +1308,7 @@ export default {
       discard_others: 'Scarta gli altri',
       discarded_records: 'Registrazioni scartate ({count})',
       records_discarded: '{count} registrazione/i scartata/e',
+      discarded_records_hidden: '{count} conteggi scartati non visualizzati',
       conflict_resolved: 'Conflitto risolto con successo',
       conflict_resolved_next: 'Conflitto risolto, prossimo...',
       resolve_and_next: 'Risolvi e Avanti',

@@ -7,8 +7,13 @@
         <q-linear-progress v-if="loading" indeterminate absolute-top color="primary" />
 
         <!-- EMPTY STATE -->
-        <div v-if="aggregatedRecords.length === 0 && !loading" class="full-height row flex-center text-grey">
-          {{ $t('no_data') }}
+        <div v-if="visibleAggregates.length === 0 && !loading" class="full-height row flex-center text-grey">
+          <div class="text-center">
+            <div>{{ $t('no_data') }}</div>
+            <div v-if="discardedOnlyCount > 0" class="text-caption q-mt-sm">
+              {{ $t('warehouse.counting.discarded_records_hidden', { count: discardedOnlyCount }) }}
+            </div>
+          </div>
         </div>
 
         <!-- RECORDS TABLE -->
@@ -209,6 +214,22 @@
               </q-tooltip>
             </q-btn>
           </q-td>
+        </template>
+
+        <!-- Table Footer - Row counts and discarded info -->
+        <template #bottom>
+          <div class="full-width q-py-sm text-caption text-grey row items-center">
+            <!-- Discarded records info -->
+            <div v-if="discardedOnlyCount > 0" class="row items-center q-gutter-x-xs">
+              <q-icon name="mdi-information-outline" size="xs" />
+              <span>{{ $t('warehouse.counting.discarded_records_hidden', { count: discardedOnlyCount }) }}</span>
+            </div>
+            <q-space />
+            <!-- Row counts -->
+            <div>
+              {{ filteredRecords.length }} / {{ visibleAggregates.length }}
+            </div>
+          </div>
         </template>
         </q-table>
       </div>
@@ -857,10 +878,28 @@ const aggregatedRecords = computed(() => {
 });
 
 /**
- * Apply filters to aggregated records
+ * Filter aggregatedRecords to only show those with active (non-discarded) records
+ */
+const visibleAggregates = computed(() => {
+  return aggregatedRecords.value.filter(aggregate => {
+    return aggregate.records.some(r => r.status !== 'discarded');
+  });
+});
+
+/**
+ * Count of aggregates that only have discarded records (hidden from view)
+ */
+const discardedOnlyCount = computed(() => {
+  return aggregatedRecords.value.filter(aggregate => {
+    return !aggregate.records.some(r => r.status !== 'discarded');
+  }).length;
+});
+
+/**
+ * Apply filters to visible aggregated records
  */
 const filteredRecords = computed(() => {
-  let result = aggregatedRecords.value;
+  let result = visibleAggregates.value;
 
   // Pre-build wildcard matchers
   const productMatcher = buildWildcardMatcher(filters.value.product);

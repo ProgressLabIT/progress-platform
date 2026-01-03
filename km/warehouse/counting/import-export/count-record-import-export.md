@@ -151,6 +151,18 @@ A warning is displayed if these columns are present in the import file.
 - **Use case**: Full re-import from external system
 - **Requires confirmation**: User must check a confirmation box
 
+### Discarded Records Display
+
+When records are discarded (either via Update or Replace mode), they are **not deleted** from the database but marked with `status: discarded`. The UI handles these as follows:
+
+| Scenario | UI Behavior |
+|----------|-------------|
+| Aggregate has ONLY discarded records | **Hidden from table** |
+| Hidden discarded records exist | Footer shows count: "X discarded record(s) not shown" |
+| All records discarded (empty table) | Empty state shows discarded count |
+
+**Rationale**: Showing aggregates with only discarded records (0/0 quantities) creates UX confusion. The footer informs users that discarded records exist. Full history is preserved in the database for audit purposes.
+
 ---
 
 ## Import Validation
