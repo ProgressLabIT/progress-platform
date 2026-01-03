@@ -350,7 +350,8 @@ async function handleValidate() {
         timeout: 5000,
       });
 
-      validationResult.value = { status: 'error' };
+      // Reset file upload so user can upload a corrected file
+      clearFile();
     } else {
       // Parse JSON response
       const textDecoder = new TextDecoder('utf-8');

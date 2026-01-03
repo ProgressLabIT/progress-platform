@@ -190,6 +190,7 @@ sequenceDiagram
         API->>API: Generate error Excel
         API-->>Dialog: Return error file
         Dialog-->>User: Auto-download errors
+        Dialog->>Dialog: Reset file upload
     else All rows valid
         API->>Media: Store validated file
         API-->>Dialog: Return summary stats
@@ -385,10 +386,13 @@ File Selected → [Validate] → Validation Success
                     ▼              ▼
               Error File      [Import] → Success → Dialog closes
               Downloaded           │
-                    │              ▼ (Replace mode)
-                    ▼         ☑ Confirm checkbox required
-              [Try Again]
+              + File reset         ▼ (Replace mode)
+                    │         ☑ Confirm checkbox required
+                    ▼
+              Ready for new file
 ```
+
+**Note**: When validation errors are found, the file upload area is automatically reset after downloading the error file, allowing the user to immediately upload a corrected version.
 
 ---
 
