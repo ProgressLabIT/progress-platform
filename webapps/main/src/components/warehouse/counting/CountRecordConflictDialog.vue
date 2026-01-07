@@ -38,17 +38,19 @@
           <q-item
             v-for="record in currentNonDiscardedRecords"
             :key="record._key"
-            clickable
-            :active="selectedRecordKey === record._key"
+            :clickable="hasActualConflict"
+            :active="hasActualConflict && selectedRecordKey === record._key"
             active-class="text-white"
-            @click="selectedRecordKey = record._key"
+            @click="hasActualConflict ? (selectedRecordKey = record._key) : null"
           >
             <q-item-section avatar>
               <q-radio
+                v-if="hasActualConflict"
                 v-model="selectedRecordKey"
                 :val="record._key"
                 color="primary"
               />
+              <q-icon v-else name="mdi-check-circle" color="theme-green" size="sm" />
             </q-item-section>
 
             <q-item-section>
@@ -121,17 +123,13 @@
           <q-btn
             v-if="currentIndex > 0"
             icon="mdi-arrow-left-bold"
-            color="theme-blue"
-            flat
-            round
+            color="theme-grey"
             @click="goToPrevious"
           />
           <q-btn
             v-if="currentIndex < conflictingPairs.length - 1"
             icon="mdi-arrow-right-bold"
-            color="theme-blue"
-            flat
-            round
+            color="theme-grey"
             @click="goToNext"
           />
         </template>
@@ -141,10 +139,10 @@
         <q-btn
           :label="$t('cancel')"
           color="theme-grey"
-          flat
           @click="handleClose"
         />
         <q-btn
+          v-if="hasActualConflict"
           :label="isLastConflict ? $t('warehouse.counting.discard_others') : $t('warehouse.counting.resolve_and_next')"
           color="theme-orange"
           :loading="loading"
@@ -192,9 +190,11 @@ const selectedRecordKey = ref(null);
 const currentIndex = ref(0);
 
 /**
- * Extract conflicting pairs from the aggregate.
+ * Extract pairs from the aggregate that should be shown in the dialog.
  * A pair is a unique product_key + position_key combination.
- * A conflict exists when there are multiple non-discarded records with different counted_qt.
+ * Pairs are included if they have:
+ * - Conflicts (multiple non-discarded records with different counted_qt), OR
+ * - Discarded records (so users can see what was discarded)
  */
 const conflictingPairs = computed(() => {
   if (!props.aggregate) return [];
@@ -225,16 +225,22 @@ const conflictingPairs = computed(() => {
     pairMap.get(pairKey).records.push(record);
   }
 
-  // Filter to only pairs that have conflicts (multiple non-discarded with different counts)
+  // Include pairs that have conflicts OR discarded records
   const pairs = [];
   for (const pair of pairMap.values()) {
     const nonDiscarded = pair.records.filter(r => r.status !== 'discarded');
+    const discarded = pair.records.filter(r => r.status === 'discarded');
+
+    // Check for conflicts (multiple non-discarded with different counts)
+    let hasConflict = false;
     if (nonDiscarded.length > 1) {
       const firstQt = nonDiscarded[0].counted_qt;
-      const hasConflict = !nonDiscarded.every(r => r.counted_qt === firstQt);
-      if (hasConflict) {
-        pairs.push(pair);
-      }
+      hasConflict = !nonDiscarded.every(r => r.counted_qt === firstQt);
+    }
+
+    // Include if there's a conflict OR if there are discarded records
+    if (hasConflict || discarded.length > 0) {
+      pairs.push(pair);
     }
   }
 
@@ -261,6 +267,15 @@ const currentDiscardedRecords = computed(() => {
 // Check if this is the last conflict to resolve
 const isLastConflict = computed(() => {
   return currentIndex.value >= conflictingPairs.value.length - 1;
+});
+
+// Check if current pair has an actual conflict (multiple non-discarded with different counts)
+const hasActualConflict = computed(() => {
+  if (!currentPair.value) return false;
+  const nonDiscarded = currentPair.value.records.filter(r => r.status !== 'discarded');
+  if (nonDiscarded.length < 2) return false;
+  const firstQt = nonDiscarded[0].counted_qt;
+  return !nonDiscarded.every(r => r.counted_qt === firstQt);
 });
 
 // Watch for dialog open to reset state

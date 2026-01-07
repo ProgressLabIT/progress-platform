@@ -123,18 +123,37 @@
           </q-td>
         </template>
 
+        <!-- System Qt Column -->
+        <template #body-cell-system_qt="props">
+          <q-td :props="props">
+            {{ props.row.totalSystemQt ?? '-' }}
+          </q-td>
+        </template>
+
         <!-- Counted Qt Column -->
         <template #body-cell-counted_qt="props">
           <q-td :props="props">
-            {{ props.row.totalCountedQt ?? '-' }}
+            <div class="row items-center q-gutter-x-xs justify-end">
+              <span v-if="props.row.totalCountedQt !== null">{{ props.row.totalCountedQt }}</span>
+              <q-btn
+                v-else-if="props.row.hasConflict"
+                icon="mdi-alert"
+                color="theme-orange"
+                round
+                size="xs"
+                @click="openConflictDialog(props.row)"
+              />
+              <span v-else class="text-grey">-</span>
+            </div>
           </q-td>
         </template>
 
         <!-- Delta Column -->
         <template #body-cell-delta="props">
           <q-td :props="props">
-            <template v-if="props.row.hasConflict">
-              <q-btn icon="mdi-alert" color="theme-orange" round size="xs" @click="openConflictDialog(props.row)" />
+            <!-- Show question mark when quantities don't match (non-matching records) -->
+            <template v-if="props.row.totalSystemQt === null || props.row.totalCountedQt === null">
+              <span class="text-grey">?</span>
             </template>
             <template v-else-if="props.row.activeRecordKey">
               <!-- For products with serial keys, show serial-based delta -->
@@ -729,9 +748,9 @@ const aggregatedRecords = computed(() => {
         } : null,
         records: [],
         pathString: aggPos.pathString,
-        // Aggregated quantities (summed across all records)
-        totalSystemQt: 0,
-        totalCountedQt: 0,
+        // Aggregated quantities (set to matching value if all records match, null otherwise)
+        totalSystemQt: null,
+        totalCountedQt: null,
         delta: null,
         // Serial tracking for aggregation
         allSystemSerialCodes: new Set(),
@@ -776,11 +795,8 @@ const aggregatedRecords = computed(() => {
       aggregate.userKeys.add(record.user_key);
     }
 
-    // Sum quantities (only from non-discarded records)
+    // Collect serials for union (only from non-discarded records)
     if (record.status !== 'discarded') {
-      aggregate.totalSystemQt += record.system_qt || 0;
-      aggregate.totalCountedQt += record.counted_qt || 0;
-
       // Collect serials for union
       if (record.system_serials) {
         record.system_serials.forEach(s => aggregate.allSystemSerialCodes.add(s.serial_code));
@@ -795,8 +811,9 @@ const aggregatedRecords = computed(() => {
   for (const aggregate of aggregateMap.values()) {
     const nonDiscardedRecords = aggregate.records.filter(r => r.status !== 'discarded');
 
-    // Check for conflicts within this aggregate (same product/position pair with different counts)
-    // Group by original position to detect pair-level conflicts
+    // Group records by their ORIGINAL product+position pair (base pair)
+    // This is important: conflicts only occur when multiple records exist for the SAME base pair
+    // When aggregating across different positions, we should SUM the quantities
     const pairMap = new Map();
     for (const record of nonDiscardedRecords) {
       const pairKey = `${record.product_key}_${record.position_key}`;
@@ -806,20 +823,56 @@ const aggregatedRecords = computed(() => {
       pairMap.get(pairKey).push(record);
     }
 
-    // Check each pair for conflicts
-    for (const pairRecords of pairMap.values()) {
+    // Process each base pair: check for conflicts and get representative values
+    let totalSystemQt = 0;
+    let totalCountedQt = 0;
+    let hasConflict = false;
+
+    for (const [pairKey, pairRecords] of pairMap.entries()) {
       if (pairRecords.length > 1) {
-        const firstQt = pairRecords[0].counted_qt;
-        const hasConflict = !pairRecords.every(r => r.counted_qt === firstQt);
-        if (hasConflict) {
-          aggregate.hasConflict = true;
-          break;
+        // Multiple records for the same base pair - check if they match
+        const firstSystemQt = pairRecords[0].system_qt ?? null;
+        const firstCountedQt = pairRecords[0].counted_qt ?? null;
+
+        const allSystemQtMatch = pairRecords.every(r => (r.system_qt ?? null) === firstSystemQt);
+        const allCountedQtMatch = pairRecords.every(r => (r.counted_qt ?? null) === firstCountedQt);
+
+        if (!allCountedQtMatch) {
+          // Conflict: same product+position has different counted quantities
+          hasConflict = true;
+        }
+
+        // Use the matching value (or first value if they match)
+        // If they don't match, we still need a value for summing - use null to indicate conflict
+        if (allSystemQtMatch && firstSystemQt !== null) {
+          totalSystemQt += firstSystemQt;
+        }
+        if (allCountedQtMatch && firstCountedQt !== null) {
+          totalCountedQt += firstCountedQt;
+        } else if (!allCountedQtMatch) {
+          // Can't sum counted quantities when there's a conflict
+          totalCountedQt = null;
+        }
+      } else {
+        // Single record for this base pair - no conflict possible
+        const record = pairRecords[0];
+        totalSystemQt += record.system_qt || 0;
+        if (totalCountedQt !== null) {
+          totalCountedQt += record.counted_qt || 0;
         }
       }
     }
 
-    // Calculate aggregated delta
-    aggregate.delta = aggregate.totalCountedQt - aggregate.totalSystemQt;
+    aggregate.hasConflict = hasConflict;
+    aggregate.totalSystemQt = pairMap.size > 0 ? totalSystemQt : null;
+    aggregate.totalCountedQt = hasConflict ? null : (pairMap.size > 0 ? totalCountedQt : null);
+
+    // Calculate aggregated delta (only if both quantities are available)
+    if (aggregate.totalSystemQt !== null && aggregate.totalCountedQt !== null) {
+      aggregate.delta = aggregate.totalCountedQt - aggregate.totalSystemQt;
+    } else {
+      aggregate.delta = null;
+    }
 
     // Calculate serial delta from unioned sets
     if (aggregate.allSystemSerialCodes.size > 0 || aggregate.allCountedSerialCodes.size > 0) {
