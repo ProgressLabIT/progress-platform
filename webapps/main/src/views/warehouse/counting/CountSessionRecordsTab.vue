@@ -297,6 +297,8 @@
 
         <q-separator />
 
+        <div class="text-h5 uppercase">{{ $t('filter', 2) }}</div>
+
         <!-- Variance & only-with-variance -->
         <div class="col-auto row items-center">
           <div class="col-6">
@@ -311,6 +313,14 @@
             <q-checkbox
               v-model="filters.hasNotes"
               :label="$t('warehouse.counting.with_notes_only')"
+              dense
+            />
+          </div>
+          <div class="col-6">
+            <!-- Only Conflicts -->
+            <q-checkbox
+              v-model="filters.onlyConflicts"
+              :label="$t('warehouse.counting.conflicts_only')"
               dense
             />
           </div>
@@ -495,6 +505,7 @@ const filters = ref({
   variance: null,
   varianceType: 'absolute',
   onlyWithVariance: false,
+  onlyConflicts: false,
   hasNotes: false,
   product: '',
   serial: '',
@@ -985,6 +996,11 @@ const filteredRecords = computed(() => {
   // Has notes filter
   if (filters.value.hasNotes) {
     result = result.filter(r => r.hasNotes);
+  }
+
+  // Only conflicts filter
+  if (filters.value.onlyConflicts) {
+    result = result.filter(r => r.hasConflict);
   }
 
   // Product tag filter

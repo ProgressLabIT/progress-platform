@@ -1297,6 +1297,7 @@ export default {
       includes_positions: 'Includes {count} positions',
       variance_only: 'With variance only',
       with_notes_only: 'With notes only',
+      conflicts_only: 'With conflicts only',
       // Export/Import
       import_records: 'Import Count Records',
       select_file: 'Select file',

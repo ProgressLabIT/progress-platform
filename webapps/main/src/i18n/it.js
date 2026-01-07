@@ -1297,6 +1297,7 @@ export default {
       variance_only: 'Solo con variazione',
       absolute: 'Quantità',
       with_notes_only: 'Solo con note',
+      conflicts_only: 'Solo con conflitti',
       include_path: 'Includi percorso',
       counted_qt: 'Qt Contata',
       system_qt: 'Qt Sistema',
