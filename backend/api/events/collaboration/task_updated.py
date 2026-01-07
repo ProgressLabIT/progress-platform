@@ -8,6 +8,10 @@ from models.event import EventType
 from models.form import TaskFormFieldValue
 from models.collaboration import TaskAssignment, TaskAssignmentRole
 
+
+class TaskFieldUpdate(BaseModel):
+  form_field_key: str
+  value: Any | None = None
 class TaskUpdatedEvent(BaseEvent):
 
   class InfoModel(EventInfoModel):
@@ -17,7 +21,7 @@ class TaskUpdatedEvent(BaseEvent):
     assigned_to: list[TaskAssignment] | None = None
     start_from: date | None = None
     due_by: date | None = None
-    form_fields: list[TaskFormFieldValue] | None = None
+    form_fields: list[TaskFieldUpdate] | None = None
 
     @model_validator(mode='after')
     def validate_assignments(self):
