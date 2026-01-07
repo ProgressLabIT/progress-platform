@@ -1,11 +1,11 @@
 from datetime import date
 
 from fastapi import HTTPException
-from pydantic import model_validator
+from pydantic import BaseModel, model_validator
+from typing import Any
 
 from events.base_event import BaseEvent, EventInfoModel
 from models.event import EventType
-from models.form import TaskFormFieldValue
 from models.collaboration import TaskAssignment, TaskAssignmentRole
 
 
