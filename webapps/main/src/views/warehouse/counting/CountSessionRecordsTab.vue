@@ -893,29 +893,55 @@ const aggregatedRecords = computed(() => {
       };
     }
 
-    // Convert userKeys Set to array and determine if multiple users
-    const userKeysArray = [...aggregate.userKeys];
+    // Recalculate users from non-discarded records only
+    const activeUserKeys = new Set();
+    for (const record of nonDiscardedRecords) {
+      if (record.user_key) {
+        activeUserKeys.add(record.user_key);
+      }
+    }
+    const userKeysArray = [...activeUserKeys];
     aggregate.userKeys = userKeysArray;
     aggregate.hasMultipleUsers = userKeysArray.length > 1;
 
     // Determine user and timestamp to display
-    const isAggregatingMultiplePositions = aggregate.aggregatedPositionKeys.size > 1;
-
     if (aggregate.hasConflict || aggregate.hasMultipleUsers) {
       // Don't show single user/timestamp when there's conflict or multiple users
       aggregate.user_key = null;
       aggregate.counted_at = null;
     } else if (userKeysArray.length === 1) {
       aggregate.user_key = userKeysArray[0];
-      // If single user but multiple positions, don't show timestamp
-      if (isAggregatingMultiplePositions) {
-        aggregate.counted_at = null;
+
+      // Show timestamp if:
+      // 1. There's only one non-discarded record, OR
+      // 2. All records' timestamps match at the minute level
+      if (nonDiscardedRecords.length === 1) {
+        aggregate.counted_at = nonDiscardedRecords[0]?.counted_at || null;
+      } else if (nonDiscardedRecords.length > 1) {
+        // Check if all timestamps match at the minute level
+        const timestamps = nonDiscardedRecords
+          .map(r => r.counted_at)
+          .filter(Boolean)
+          .map(ts => {
+            const d = new Date(ts);
+            // Truncate to minute by zeroing out seconds and milliseconds
+            return new Date(d.getFullYear(), d.getMonth(), d.getDate(), d.getHours(), d.getMinutes()).getTime();
+          });
+
+        const allMatchAtMinute = timestamps.length > 0 &&
+          timestamps.every(ts => ts === timestamps[0]);
+
+        if (allMatchAtMinute) {
+          // Use the most recent timestamp
+          const latestRecord = nonDiscardedRecords.sort(
+            (a, b) => new Date(b.counted_at) - new Date(a.counted_at)
+          )[0];
+          aggregate.counted_at = latestRecord?.counted_at || null;
+        } else {
+          aggregate.counted_at = null;
+        }
       } else {
-        // Single user, single position - use the most recent timestamp
-        const latestRecord = nonDiscardedRecords.sort(
-          (a, b) => new Date(b.counted_at) - new Date(a.counted_at)
-        )[0];
-        aggregate.counted_at = latestRecord?.counted_at || null;
+        aggregate.counted_at = null;
       }
     }
 
