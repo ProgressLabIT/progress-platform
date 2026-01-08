@@ -1276,6 +1276,7 @@ export default {
       },
       // Status actions
       complete_session: 'Complete Session',
+      complete_confirmation_message: 'Are you sure you want to complete this counting session? Counting will be stopped and you will be able to review the results.',
       resume_counting: 'Resume Counting',
       apply_adjustments: 'Apply Adjustments',
       apply_confirmation_message: 'This will create inventory adjustment movements based on count variances. This action cannot be undone. Do you want to continue?',

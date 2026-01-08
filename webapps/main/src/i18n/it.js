@@ -1296,6 +1296,7 @@ export default {
       },
       // Azioni di stato
       complete_session: 'Completa Sessione',
+      complete_confirmation_message: 'Sei sicuro di voler completare questa sessione di conteggio? Il conteggio verrà interrotto e potrai revisionare i risultati.',
       resume_counting: 'Riprendi Conteggio',
       apply_adjustments: 'Applica Rettifiche',
       apply_confirmation_message: 'Verranno creati movimenti di rettifica inventario basati sulle differenze di conteggio. Questa azione non può essere annullata. Vuoi continuare?',

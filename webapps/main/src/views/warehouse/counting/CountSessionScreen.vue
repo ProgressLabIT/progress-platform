@@ -29,43 +29,6 @@
               <q-icon name="mdi-play" class="q-mr-sm"/>
               {{ $t('warehouse.counting.start_session') }}
             </q-btn>
-
-            <!-- Complete Session (started -> completed) -->
-            <q-btn
-              v-if="sessionStatus === 'started'"
-              color="theme-orange"
-              :loading="completing"
-              size="sm"
-              @click="completeSession"
-            >
-              <q-icon name="mdi-check" class="q-mr-sm"/>
-              {{ $t('warehouse.counting.complete_session') }}
-            </q-btn>
-
-            <!-- Resume Counting (completed -> started) -->
-            <q-btn
-              v-if="sessionStatus === 'completed'"
-              color="primary"
-              :loading="resuming"
-              size="sm"
-              outline
-              @click="resumeSession"
-            >
-              <q-icon name="mdi-play" class="q-mr-sm"/>
-              {{ $t('warehouse.counting.resume_counting') }}
-            </q-btn>
-
-            <!-- Apply Adjustments (completed -> applied) -->
-            <q-btn
-              v-if="sessionStatus === 'completed'"
-              color="theme-green"
-              :loading="applying"
-              size="sm"
-              @click="confirmApplyAdjustments"
-            >
-              <q-icon name="mdi-check-all" class="q-mr-sm"/>
-              {{ $t('warehouse.counting.apply_adjustments') }}
-            </q-btn>
           </div>
         </div>
 
@@ -161,6 +124,37 @@
               color="primary"
               :loading="saving"
               @click="saveSession"
+            />
+
+            <!-- Complete Session -->
+            <q-btn
+              v-if="sessionStatus === 'started'"
+              color="theme-orange"
+              :loading="completing"
+              icon="mdi-check"
+              :label="$t('warehouse.counting.complete_session')"
+              @click="confirmCompleteSession"
+            />
+
+            <!-- Resume Counting -->
+            <q-btn
+              v-if="sessionStatus === 'completed'"
+              color="primary"
+              :loading="resuming"
+              outline
+              icon="mdi-play"
+              :label="$t('warehouse.counting.resume_counting')"
+              @click="resumeSession"
+            />
+
+            <!-- Apply Adjustments -->
+            <q-btn
+              v-if="sessionStatus === 'completed'"
+              color="theme-green"
+              :loading="applying"
+              icon="mdi-check-all"
+              :label="$t('warehouse.counting.apply_adjustments')"
+              @click="confirmApplyAdjustments"
             />
           </div>
         </div>
@@ -317,6 +311,25 @@ async function startSession() {
   } finally {
     starting.value = false;
   }
+}
+
+function confirmCompleteSession() {
+  $q.dialog({
+    title: $t('warehouse.counting.complete_session'),
+    message: $t('warehouse.counting.complete_confirmation_message'),
+    cancel: {
+      label: $t('cancel'),
+      color: 'theme-grey',
+      flat: true,
+    },
+    ok: {
+      label: $t('warehouse.counting.complete_session'),
+      color: 'theme-orange',
+    },
+    persistent: true,
+  }).onOk(() => {
+    completeSession();
+  });
 }
 
 async function completeSession() {
