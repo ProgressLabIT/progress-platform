@@ -414,7 +414,7 @@ async function loadExistingSerials() {
         product_key: props.item.product_key,
         position_key: props.item.position_key || props.item.path?.[props.item.path.length - 1]?.position_key,
         serials_only: true,
-        limit: null
+        limit: 0  // 0 disables the limit in the AQL query (0 || null = null)
       }
     });
     existingSerials.value = response.data;
