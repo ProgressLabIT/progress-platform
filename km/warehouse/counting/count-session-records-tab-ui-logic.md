@@ -188,6 +188,10 @@ Each aggregate object contains:
   
   // For compatibility
   activeRecordKey: String | null,
+  
+  // Uncounted inventory tracking (Phase 3)
+  // Note: These are computed dynamically from cache, not stored on aggregate
+  // Use helper functions: getUncountedQt(), getTotalSystemQt(), getEffectiveDelta()
 }
 ```
 
@@ -238,6 +242,78 @@ Coverage is determined using the `inventory_count_position_complete` edge collec
 | Position fully counted | `mdi-check-circle` | `positive` (green) | "Position fully counted" |
 | Position NOT fully counted | `mdi-alert-circle-outline` | `warning` (orange) | "Position not fully counted - data may be incomplete" |
 | "All levels" mode | No icon | - | Coverage is implicit (each row is granular) |
+
+---
+
+## Uncounted Inventory Tracking (Phase 3)
+
+When aggregating records at a specific level (not "All levels" mode), the displayed data may not represent the complete inventory picture because some positions may not have been counted. Phase 3 adds visibility into inventory that exists in positions that weren't counted.
+
+### Data Flow
+
+1. For each aggregate where `coverage.isAggregated && !coverage.isComplete`:
+   - Fetch current inventory via `/inventory?root_position_key={positionKey}&product_key={productKey}`
+   - Filter results to exclude positions in `aggregatedPositionKeys` (already counted)
+   - Sum remaining quantities = `uncountedQt`
+   - Calculate `totalSystemQt = systemQt + uncountedQt`
+
+2. Fetching is sequential (one aggregate at a time) to avoid overwhelming the backend
+
+3. Results are cached in `countSessionStore.uncountedInventoryCache` by `positionKey_productKey` and persist across level changes
+
+4. Cache is cleared when records change (via SSE inventory notifications)
+
+### Store State
+
+```javascript
+// countSessionStore
+uncountedInventoryCache: new Map(), // key: "positionKey_productKey" -> { qt, positions, loading, error }
+// positions: Array<{ key, code, quantity }> - sorted by quantity descending
+```
+
+### Helper Functions
+
+| Function | Returns | Description |
+|----------|---------|-------------|
+| `getUncountedData(row)` | `{ qt, positions, loading, error }` | Get cached data for a row |
+| `getUncountedQt(row)` | `number \| null` | Get uncounted quantity (0 if complete) |
+| `getUncountedPositions(row)` | `Array<{ key, code, quantity }>` | Get uncounted positions for tooltip |
+| `getTotalSystemQt(row)` | `number \| null` | System Qt + Uncounted Qt |
+| `getEffectiveDelta(row)` | `number \| null` | Delta using total system when aggregating |
+| `isUncountedLoading(row)` | `boolean` | Check if data is loading |
+| `getUncountedError(row)` | `string \| null` | Get error message if fetch failed |
+| `retryUncountedFetch(row)` | `Promise<void>` | Retry failed fetch |
+
+### Column Display (Aggregating Mode Only)
+
+| Column | Source | When Shown |
+|--------|--------|------------|
+| System Qt | Sum of `system_qt` from count records | Always |
+| Uncounted Qt | Fetched inventory in uncounted positions | Only when aggregating (not "All levels") |
+| Total System Qt | System Qt + Uncounted Qt | Only when aggregating (not "All levels") |
+
+### Delta Calculation
+
+| Mode | Delta Calculation |
+|------|-------------------|
+| "All levels" | `counted_qt - system_qt` (from records) |
+| Aggregating, complete coverage | `counted_qt - system_qt` (uncounted = 0) |
+| Aggregating, incomplete coverage | `counted_qt - totalSystemQt` |
+
+### Loading States
+
+| State | Uncounted Qt | Total System Qt | Delta |
+|-------|--------------|-----------------|-------|
+| Loading | `q-spinner-tail` | `q-spinner-tail` | `q-spinner-tail` |
+| Error | Error icon (clickable to retry) | `?` | `?` |
+| Complete | Numeric value (warning color if > 0) + tooltip with positions | Numeric value | Colored numeric value |
+
+### Uncounted Qt Tooltip
+
+When hovering over a non-zero uncounted quantity, a tooltip displays:
+- Header: "Uncounted Positions"
+- List of positions with their quantities (up to 10, sorted by quantity descending)
+- "+N more" indicator if more than 10 positions exist
 
 ---
 
@@ -294,8 +370,10 @@ Uses the `useWildcardToRegex` composable for pattern matching:
 | **User** | Avatar or group icon | Group icon when multiple users |
 | **Counted At** | Formatted datetime | Hidden when conflict or multiple users |
 | **System Qt** | Total or `-` | Shows `-` if records don't match |
+| **Uncounted Qt** | Number or spinner | Hidden in "All levels" mode; 0 if coverage.isComplete; warning color if > 0 |
+| **Total System Qt** | Number or spinner | Hidden in "All levels" mode; equals System Qt if coverage.isComplete |
 | **Counted Qt** | Total or conflict button | Alert button opens conflict dialog |
-| **Delta** | Colored value or serial diff | Green for +, red for -, serial adds/removes shown separately |
+| **Delta** | Colored value or serial diff | Green for +, red for -, uses total system when aggregating |
 | **Notes** | Icon with badge | Badge shows count, tooltip lists all notes |
 | **Conflict** | Info button | Shows discarded records count |
 
@@ -440,6 +518,19 @@ Matchers are built once at filter computation time via `buildWildcardMatcher()`.
 - [ ] Tooltip shows appropriate message for each state
 - [ ] Completed positions refresh on inventory-notification event
 
+### Uncounted Inventory (Phase 3)
+- [ ] Uncounted Qt column hidden in "All levels" mode
+- [ ] Total System Qt column hidden in "All levels" mode
+- [ ] Uncounted Qt shows 0 when position is fully counted (coverage.isComplete)
+- [ ] Uncounted Qt fetches correctly for incomplete positions
+- [ ] Spinner shown while fetching uncounted inventory
+- [ ] Cache prevents re-fetching on level changes
+- [ ] Sequential fetching (not parallel) prevents backend overload
+- [ ] Error state shows error icon with retry option
+- [ ] Total System Qt = System Qt + Uncounted Qt
+- [ ] Delta uses Total System Qt when aggregating with incomplete coverage
+- [ ] Cache clears when records change via SSE notification
+
 ### Filtering
 - [ ] Variance threshold filters correctly (absolute)
 - [ ] Variance threshold filters correctly (percentage)
@@ -494,4 +585,8 @@ Matchers are built once at filter computation time via `buildWildcardMatcher()`.
 | Filter matches no records | Table shows empty with "No data" message |
 | Export with zero records | Warning notification shown |
 | Conflict in aggregated view but not at pair level | No conflict button (aggregation masks pair-level match) |
+| Uncounted inventory fetch fails | Show error icon in Uncounted Qt, `?` in Total System and Delta, retry available |
+| Product only exists in uncounted positions | System Qt = 0 from records, Uncounted Qt = fetched value, row won't appear (no count records) |
+| Session has no incomplete positions | Uncounted columns show 0, no fetches needed |
+| Inventory moved after counting | Uncounted Qt reflects current inventory, may show discrepancy |
 

@@ -145,6 +145,85 @@
           </q-td>
         </template>
 
+        <!-- Uncounted Qt Column (only visible when aggregating) -->
+        <template #body-cell-uncounted_qt="props">
+          <q-td :props="props">
+            <!-- If position is fully counted, show 0 -->
+            <template v-if="props.row.coverage?.isComplete">
+              <span class="text-grey">0</span>
+            </template>
+            <!-- Loading state -->
+            <template v-else-if="isUncountedLoading(props.row)">
+              <q-spinner-tail size="xs" color="primary" />
+            </template>
+            <!-- Error state -->
+            <template v-else-if="getUncountedError(props.row)">
+              <q-icon
+                name="mdi-alert-circle-outline"
+                color="negative"
+                size="xs"
+                class="cursor-pointer"
+                @click="retryUncountedFetch(props.row)"
+              >
+                <q-tooltip>
+                  {{ getUncountedError(props.row) }}
+                  <br />
+                  {{ $t('click_to_retry') }}
+                </q-tooltip>
+              </q-icon>
+            </template>
+            <!-- Value with tooltip showing positions -->
+            <template v-else>
+              <span :class="{ 'text-warning': getUncountedQt(props.row) > 0 }">
+                {{ getUncountedQt(props.row) ?? '-' }}
+              </span>
+              <!-- Tooltip with uncounted positions -->
+              <q-tooltip
+                v-if="getUncountedPositions(props.row).length > 0"
+                anchor="top middle"
+                self="bottom middle"
+                :delay="500">
+                <div class="text-weight-bold q-mb-xs">
+                  {{ $t('warehouse.counting.uncounted_positions') }}
+                </div>
+                <div
+                  v-for="pos in getUncountedPositions(props.row).slice(0, 10)"
+                  :key="pos.key"
+                  class="row justify-between q-gutter-x-md"
+                >
+                  <span>{{ pos.code }}</span>
+                  <span class="text-weight-medium">{{ pos.quantity }}</span>
+                </div>
+                <div v-if="getUncountedPositions(props.row).length > 10" class="text-caption text-grey q-mt-xs">
+                  +{{ getUncountedPositions(props.row).length - 10 }} {{ $t('more') }}
+                </div>
+              </q-tooltip>
+            </template>
+          </q-td>
+        </template>
+
+        <!-- Total System Qt Column (only visible when aggregating) -->
+        <template #body-cell-total_system_qt="props">
+          <q-td :props="props">
+            <!-- If position is fully counted, show same as system qt -->
+            <template v-if="props.row.coverage?.isComplete">
+              {{ props.row.totalSystemQt ?? '-' }}
+            </template>
+            <!-- Loading state -->
+            <template v-else-if="isUncountedLoading(props.row)">
+              <q-spinner-tail size="xs" color="primary" />
+            </template>
+            <!-- Error state -->
+            <template v-else-if="getUncountedError(props.row)">
+              <span class="text-grey">?</span>
+            </template>
+            <!-- Value -->
+            <template v-else>
+              {{ getTotalSystemQt(props.row) ?? '-' }}
+            </template>
+          </q-td>
+        </template>
+
         <!-- Counted Qt Column -->
         <template #body-cell-counted_qt="props">
           <q-td :props="props">
@@ -168,6 +247,14 @@
           <q-td :props="props">
             <!-- Show question mark when quantities don't match (non-matching records) -->
             <template v-if="props.row.totalSystemQt === null || props.row.totalCountedQt === null">
+              <span class="text-grey">?</span>
+            </template>
+            <!-- Loading uncounted inventory - show spinner (only when aggregating) -->
+            <template v-else-if="!allLevels && isUncountedLoading(props.row)">
+              <q-spinner-tail size="xs" color="primary" />
+            </template>
+            <!-- Error fetching uncounted - show question mark (only when aggregating) -->
+            <template v-else-if="!allLevels && getUncountedError(props.row) && !props.row.coverage?.isComplete">
               <span class="text-grey">?</span>
             </template>
             <template v-else-if="props.row.activeRecordKey">
@@ -203,8 +290,8 @@
               </template>
               <!-- For non-serialized products, show quantity delta -->
               <template v-else>
-                <span :class="getDeltaClass(props.row.delta)">
-                  {{ formatDelta(props.row.delta) }}
+                <span :class="getDeltaClass(getEffectiveDelta(props.row))">
+                  {{ formatDelta(getEffectiveDelta(props.row)) }}
                 </span>
               </template>
             </template>
@@ -556,68 +643,210 @@ function getDiscardedRecords(row) {
   return row.records.filter(r => r.status === 'discarded');
 }
 
+/**
+ * Get cached uncounted inventory data for an aggregate row
+ * @param {Object} row - The aggregate row
+ * @returns {Object|null} { qt, loading, error } or null
+ */
+function getUncountedData(row) {
+  if (!row.position?.key || !row.product?.key) return null;
+  return countSessionStore.getUncountedInventory(row.position.key, row.product.key);
+}
+
+/**
+ * Get uncounted quantity for display in the table
+ * @param {Object} row - The aggregate row
+ * @returns {number|null} The uncounted quantity or null if not available
+ */
+function getUncountedQt(row) {
+  // If position is fully counted, uncounted = 0
+  if (row.coverage?.isComplete) return 0;
+  const data = getUncountedData(row);
+  return data?.qt ?? null;
+}
+
+/**
+ * Get total system quantity (system_qt from records + uncounted)
+ * @param {Object} row - The aggregate row
+ * @returns {number|null} The total system quantity or null if not available
+ */
+function getTotalSystemQt(row) {
+  const systemQt = row.totalSystemQt;
+  if (systemQt === null) return null;
+
+  // If position is fully counted, total = system
+  if (row.coverage?.isComplete) return systemQt;
+
+  const uncountedQt = getUncountedQt(row);
+  if (uncountedQt === null) return null;
+
+  return systemQt + uncountedQt;
+}
+
+/**
+ * Check if uncounted data is currently loading for a row
+ * @param {Object} row - The aggregate row
+ * @returns {boolean} True if loading
+ */
+function isUncountedLoading(row) {
+  if (row.coverage?.isComplete) return false;
+  const data = getUncountedData(row);
+  return data?.loading ?? false;
+}
+
+/**
+ * Check if uncounted data fetch had an error
+ * @param {Object} row - The aggregate row
+ * @returns {string|null} Error message or null
+ */
+function getUncountedError(row) {
+  const data = getUncountedData(row);
+  return data?.error ?? null;
+}
+
+/**
+ * Get uncounted positions for tooltip display
+ * @param {Object} row - The aggregate row
+ * @returns {Array} Array of { key, code, quantity } for uncounted positions
+ */
+function getUncountedPositions(row) {
+  if (row.coverage?.isComplete) return [];
+  const data = getUncountedData(row);
+  return data?.positions ?? [];
+}
+
+/**
+ * Retry fetching uncounted inventory for a row
+ * @param {Object} row - The aggregate row
+ */
+async function retryUncountedFetch(row) {
+  if (!row.position?.key || !row.product?.key) return;
+  try {
+    await countSessionStore.fetchUncountedInventory(
+      row.position.key,
+      row.product.key,
+      row.aggregatedPositionKeys || []
+    );
+  } catch (error) {
+    console.error('Error retrying uncounted fetch:', error);
+  }
+}
+
+/**
+ * Get effective delta for display
+ * When aggregating with incomplete coverage, uses total system quantity instead of just counted system quantity
+ * @param {Object} row - The aggregate row
+ * @returns {number|null} The effective delta
+ */
+function getEffectiveDelta(row) {
+  // If in "All levels" mode, use the regular delta
+  if (allLevels.value) {
+    return row.delta;
+  }
+
+  // If position is fully counted, use regular delta
+  if (row.coverage?.isComplete) {
+    return row.delta;
+  }
+
+  // When aggregating with incomplete coverage, use total system quantity
+  const totalSystemQt = getTotalSystemQt(row);
+  const countedQt = row.totalCountedQt;
+
+  if (totalSystemQt === null || countedQt === null) {
+    return null;
+  }
+
+  return countedQt - totalSystemQt;
+}
+
 // Table columns
-const tableColumns = computed(() => [
-  {
-    name: 'product',
-    label: $t('product.label'),
-    field: 'product',
-    align: 'left',
-    sortable: true,
-  },
-  {
-    name: 'position',
-    label: $t('warehouse.inventory.position'),
-    field: 'position',
-    align: 'left',
-    sortable: true,
-  },
-  {
-    name: 'user',
-    label: $t('warehouse.counting.user'),
-    field: row => row.user_key,
-    align: 'center',
-  },
-  {
-    name: 'counted_at',
-    label: $t('warehouse.counting.counted_at'),
-    field: row => row.counted_at,
-    align: 'left',
-    sortable: true,
-  },
-  {
-    name: 'system_qt',
-    label: $t('warehouse.counting.system_qt'),
-    field: row => row.totalSystemQt,
-    align: 'right',
-  },
-  {
-    name: 'counted_qt',
-    label: $t('warehouse.counting.counted_qt'),
-    field: row => row.totalCountedQt,
-    align: 'right',
-  },
-  {
-    name: 'delta',
-    label: $t('warehouse.counting.delta'),
-    field: row => row.delta,
-    align: 'right',
-    sortable: true,
-  },
-  {
-    name: 'notes',
-    label: $t('notes'),
-    field: 'notes',
-    align: 'center',
-  },
-  {
-    name: 'conflict',
-    label: '',
-    field: 'conflict',
-    align: 'center',
-    style: 'width: 50px',
-  },
-]);
+const tableColumns = computed(() => {
+  const columns = [
+    {
+      name: 'product',
+      label: $t('product.label'),
+      field: 'product',
+      align: 'left',
+      sortable: true,
+    },
+    {
+      name: 'position',
+      label: $t('warehouse.inventory.position'),
+      field: 'position',
+      align: 'left',
+      sortable: true,
+    },
+    {
+      name: 'user',
+      label: $t('warehouse.counting.user'),
+      field: row => row.user_key,
+      align: 'center',
+    },
+    {
+      name: 'counted_at',
+      label: $t('warehouse.counting.counted_at'),
+      field: row => row.counted_at,
+      align: 'left',
+      sortable: true,
+    },
+    {
+      name: 'system_qt',
+      label: $t('warehouse.counting.system_qt'),
+      field: row => row.totalSystemQt,
+      align: 'right',
+    },
+  ];
+
+  // Add uncounted and total system columns only when aggregating (not in "All levels" mode)
+  if (!allLevels.value) {
+    columns.push(
+      {
+        name: 'uncounted_qt',
+        label: $t('warehouse.counting.uncounted_qt'),
+        field: row => getUncountedQt(row),
+        align: 'right',
+      },
+      {
+        name: 'total_system_qt',
+        label: $t('warehouse.counting.total_system_qt'),
+        field: row => getTotalSystemQt(row),
+        align: 'right',
+      },
+    );
+  }
+
+  columns.push(
+    {
+      name: 'counted_qt',
+      label: $t('warehouse.counting.counted_qt'),
+      field: row => row.totalCountedQt,
+      align: 'right',
+    },
+    {
+      name: 'delta',
+      label: $t('warehouse.counting.delta'),
+      field: row => row.delta,
+      align: 'right',
+      sortable: true,
+    },
+    {
+      name: 'notes',
+      label: $t('notes'),
+      field: 'notes',
+      align: 'center',
+    },
+    {
+      name: 'conflict',
+      label: '',
+      field: 'conflict',
+      align: 'center',
+      style: 'width: 50px',
+    },
+  );
+
+  return columns;
+});
 
 /**
  * Build a case-insensitive matcher using the shared wildcard-to-regex composable.
@@ -1231,4 +1460,94 @@ watch(displayMode, () => {
 watch(filters, () => {
   loadRecords();
 });
+
+// ============================================================
+// UNCOUNTED INVENTORY FETCHING (Phase 3)
+// ============================================================
+
+// Track if fetching is in progress to prevent concurrent fetch loops
+const fetchingUncounted = ref(false);
+
+/**
+ * Aggregates that need uncounted inventory data fetched
+ * Only includes rows that:
+ * - Are aggregated (not in "All levels" mode)
+ * - Have incomplete coverage
+ * - Don't already have cached data
+ */
+const aggregatesNeedingFetch = computed(() => {
+  if (allLevels.value) return []; // No fetching needed in "All levels" mode
+
+  return visibleAggregates.value.filter(agg => {
+    // Skip if position is fully counted
+    if (agg.coverage?.isComplete) return false;
+
+    // Skip if missing position or product key
+    if (!agg.position?.key || !agg.product?.key) return false;
+
+    // Skip if already cached (not in error state)
+    const cached = countSessionStore.getUncountedInventory(agg.position.key, agg.product.key);
+    if (cached && !cached.error && !cached.loading) return false;
+
+    // Skip if currently loading
+    if (cached?.loading) return false;
+
+    return true;
+  });
+});
+
+/**
+ * Sequential fetch of uncounted inventory for visible aggregates
+ * Processes one at a time to avoid overwhelming the backend
+ */
+async function fetchUncountedInventorySequentially() {
+  if (fetchingUncounted.value) return; // Already fetching
+
+  const toFetch = aggregatesNeedingFetch.value;
+  if (toFetch.length === 0) return;
+
+  fetchingUncounted.value = true;
+
+  try {
+    for (const agg of toFetch) {
+      // Re-check if still needs fetching (could have been fetched by retry)
+      const cached = countSessionStore.getUncountedInventory(agg.position.key, agg.product.key);
+      if (cached && !cached.error && !cached.loading) continue;
+
+      try {
+        await countSessionStore.fetchUncountedInventory(
+          agg.position.key,
+          agg.product.key,
+          agg.aggregatedPositionKeys || []
+        );
+      } catch (error) {
+        // Error is already stored in cache, continue with next
+        console.warn('Failed to fetch uncounted inventory:', error);
+      }
+    }
+  } finally {
+    fetchingUncounted.value = false;
+  }
+}
+
+// Watch for aggregates needing fetch and trigger sequential fetching
+watch(
+  aggregatesNeedingFetch,
+  (newVal) => {
+    if (newVal.length > 0) {
+      fetchUncountedInventorySequentially();
+    }
+  },
+  { immediate: true }
+);
+
+// Clear uncounted cache when inventory changes (via SSE notification)
+// This is handled by watching the records/completedPositions changes
+watch(
+  () => countSessionStore.records,
+  () => {
+    // Clear cache when records change - inventory may have moved
+    countSessionStore.clearUncountedInventoryCache();
+  }
+);
 </script>

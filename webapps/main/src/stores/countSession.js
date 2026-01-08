@@ -30,6 +30,10 @@ export const useCountSessionStore = defineStore('countSession', {
 
     // Completed positions for coverage tracking
     completedPositions: new Set(),
+
+    // Uncounted inventory cache for Phase 3
+    // key: "positionKey_productKey" -> { qt, loading, error }
+    uncountedInventoryCache: new Map(),
   }),
 
   getters: {
@@ -588,6 +592,101 @@ export const useCountSessionStore = defineStore('countSession', {
      */
     clearCompletedPositions() {
       this.completedPositions = new Set();
+    },
+
+    /**
+     * Fetch uncounted inventory for a specific position and product
+     * Used for showing inventory in positions that weren't counted during the session
+     * @param {string} positionKey - The aggregated position key to fetch inventory for
+     * @param {string} productKey - The product key to fetch inventory for
+     * @param {Array<string>} countedPositionKeys - Position keys that were already counted (to exclude)
+     * @returns {Promise<number>} The uncounted quantity
+     */
+    async fetchUncountedInventory(positionKey, productKey, countedPositionKeys = []) {
+      const cacheKey = `${positionKey}_${productKey}`;
+
+      // Check if already cached and not in error state
+      const cached = this.uncountedInventoryCache.get(cacheKey);
+      if (cached && !cached.error && !cached.loading) {
+        return cached.qt;
+      }
+
+      // Mark as loading
+      this.uncountedInventoryCache.set(cacheKey, { qt: null, positions: [], loading: true, error: null });
+
+      try {
+        // Fetch all inventory for this position subtree and product
+        const { data } = await api.get('/inventory', {
+          params: {
+            root_position_key: positionKey,
+            product_key: productKey,
+            limit: null, // Get all inventory records
+          },
+        });
+
+        // Filter out positions that were already counted and collect uncounted positions
+        const countedSet = new Set(countedPositionKeys);
+        let uncountedQt = 0;
+        const uncountedPositions = new Map(); // key -> { code, quantity }
+
+        for (const item of data || []) {
+          // Get the position key and code from the path (last position in path)
+          const lastPathItem = item.path?.[item.path.length - 1];
+          const itemPositionKey = lastPathItem?.position_key;
+          const itemPositionCode = lastPathItem?.position_code;
+
+          if (itemPositionKey && !countedSet.has(itemPositionKey)) {
+            uncountedQt += item.quantity || 0;
+
+            // Aggregate by position (multiple inventory records can be in same position)
+            if (uncountedPositions.has(itemPositionKey)) {
+              uncountedPositions.get(itemPositionKey).quantity += item.quantity || 0;
+            } else {
+              uncountedPositions.set(itemPositionKey, {
+                key: itemPositionKey,
+                code: itemPositionCode,
+                quantity: item.quantity || 0,
+              });
+            }
+          }
+        }
+
+        // Convert to array sorted by quantity descending
+        const positions = Array.from(uncountedPositions.values())
+          .sort((a, b) => b.quantity - a.quantity);
+
+        // Store in cache with positions data
+        this.uncountedInventoryCache.set(cacheKey, {
+          qt: uncountedQt,
+          positions,
+          loading: false,
+          error: null,
+        });
+        return uncountedQt;
+      } catch (error) {
+        console.error('Error fetching uncounted inventory:', error);
+        this.uncountedInventoryCache.set(cacheKey, { qt: null, positions: [], loading: false, error: error.message || 'Failed to fetch' });
+        throw error;
+      }
+    },
+
+    /**
+     * Get cached uncounted inventory data
+     * @param {string} positionKey - The position key
+     * @param {string} productKey - The product key
+     * @returns {Object|null} The cached data { qt, loading, error } or null if not cached
+     */
+    getUncountedInventory(positionKey, productKey) {
+      const cacheKey = `${positionKey}_${productKey}`;
+      return this.uncountedInventoryCache.get(cacheKey) || null;
+    },
+
+    /**
+     * Clear uncounted inventory cache
+     * Called when session changes or when inventory is updated
+     */
+    clearUncountedInventoryCache() {
+      this.uncountedInventoryCache = new Map();
     },
   },
 })
