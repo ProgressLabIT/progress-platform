@@ -591,7 +591,7 @@ const positionLevel = computed({
 });
 
 const setPositionLevel = (value) => {
-  selectedLevel.value = value;
+  selectedLevel.value = Number(value);
   allLevels.value = false;
 };
 
