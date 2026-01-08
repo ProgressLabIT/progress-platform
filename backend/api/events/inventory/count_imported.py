@@ -19,7 +19,7 @@ from pydantic import Field
 from events.base_event import BaseEvent
 from events.inventory.count_discarded import CountDiscardedEvent
 from models.event import EventInfoModel, EventType
-from models.inventory.counting import InventoryCountRecord, InventoryCountStatus
+from models.inventory.counting import InventoryCountRecord, InventoryCountStatus, InventoryCountSessionStatus
 from utils.dt import timestamp
 
 
@@ -422,9 +422,21 @@ class CountImportedEvent(BaseEvent):
 
   @classmethod
   def get_tx_collections(cls):
-    return ['inventory_count_record', 'Product', 'Position', 'Serial', 'is_in_position']
+    return ['inventory_count_record', 'Product', 'Position', 'Serial', 'is_in_position', 'InventoryCountSession']
 
   def apply(self):
+    # Validate session is in COMPLETED status (review mode)
+    session = self.tx.collection('InventoryCountSession').get(self.info.count_session_key)
+    if session is None:
+      raise ValueError(f"Count session {self.info.count_session_key} not found")
+
+    session_status = session.get('status')
+    if session_status != InventoryCountSessionStatus.COMPLETED.value:
+      raise ValueError(
+        f"Cannot import counts: session is in '{session_status}' status. "
+        f"Importing is only allowed when session is in 'completed' status (review mode)."
+      )
+
     # Verify file metadata first (security check)
     metadata = self._verify_file_metadata()
 
