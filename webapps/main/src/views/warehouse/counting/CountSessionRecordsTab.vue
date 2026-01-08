@@ -560,6 +560,7 @@
 import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useStore } from 'vuex';
+import { useQuasar, Notify } from 'quasar';
 import { useCountSessionStore } from '@/stores/countSession';
 import { api } from '@/boot/axios.js';
 import { useWildcardToRegex } from '@/composables/useWildcardToRegex';
@@ -572,6 +573,7 @@ import { formatDateTime } from '@/lib/TimeHandling';
 import { useCountRecordExport } from '@/composables/useCountRecordExport';
 
 const { t: $t, locale } = useI18n();
+const $q = useQuasar();
 const store = useStore();
 const countSessionStore = useCountSessionStore();
 const { wildcardToRegex } = useWildcardToRegex();
@@ -896,7 +898,7 @@ function getAggregatePosition(record, lookup) {
     };
   }
 
-  const targetLevel = selectedLevel.value;
+  const targetLevel = Number(selectedLevel.value);
 
   // Level 0 means aggregate everything (total inventory for product)
   if (targetLevel === 0) {
@@ -1359,12 +1361,61 @@ const filteredRecords = computed(() => {
 
 // Methods
 async function loadRecords() {
+  let timer10s = null;
+  let timer20s = null;
+  let timeoutOccurred = false;
+
   try {
+    $q.loading.show({
+      message: 'Fetching records...',
+      boxClass: 'bg-grey-2 text-grey-9',
+      spinnerColor: 'primary'
+    });
+
+    // Timer for "Please wait" message after 10s
+    timer10s = setTimeout(() => {
+      if ($q.loading.isActive) {
+        $q.loading.show({
+          message: 'Please wait... Processing large dataset.',
+          boxClass: 'bg-grey-2 text-grey-9',
+          spinnerColor: 'primary'
+        });
+      }
+    }, 10000);
+
+    // Timer for timeout error after 20s
+    timer20s = setTimeout(() => {
+      timeoutOccurred = true;
+      $q.loading.hide();
+      Notify.create({
+        type: 'negative',
+        message: 'Request timed out. The dataset is too large or the connection is slow. Please try filtering your search.'
+      });
+    }, 20000);
+
     await countSessionStore.loadRecords(null, { // current session is stored in the store
       include_started: false,
+      limit: 0, // Fetch effectively "all" records (backend limit is 500 by default)
     });
+
+    // Allow a small delay for reactivity (aggregation) to kick in before hiding loader
+    // This ensures the spinner stays visible during the heavy computation
+    await new Promise(resolve => setTimeout(resolve, 100));
+
   } catch (error) {
-    console.error('Error loading records:', error);
+    if (!timeoutOccurred) {
+      console.error('Error loading records:', error);
+      Notify.create({
+        type: 'negative',
+        message: 'Failed to load records'
+      });
+    }
+  } finally {
+    clearTimeout(timer10s);
+    clearTimeout(timer20s);
+    if (!timeoutOccurred) {
+      $q.loading.hide();
+    }
   }
 }
 
