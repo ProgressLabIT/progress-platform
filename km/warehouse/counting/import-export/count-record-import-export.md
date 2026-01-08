@@ -472,9 +472,14 @@ A1,PROD001,,abc
 ## Permissions & Prerequisites
 
 - User must have access to the count session
-- Session must be in "started" status
+- Session must be in "completed" status (review mode)
 - Products, positions, and serials must exist in the database
 - For serialized products, valid serial codes are required
+
+**Note**: Import is only available when the session is in review mode (COMPLETED status). This ensures that:
+- All active counting has finished
+- Imported data can be reviewed before applying adjustments
+- Data corrections can be made during the review phase
 
 ---
 

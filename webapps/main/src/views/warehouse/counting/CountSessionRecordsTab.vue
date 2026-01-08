@@ -387,6 +387,7 @@
             </q-list>
           </q-btn-dropdown>
           <q-btn
+            v-if="countSessionStore.sessionData?.status === 'completed'"
             :label="$t('import')"
             icon="mdi-upload"
             color="primary"
