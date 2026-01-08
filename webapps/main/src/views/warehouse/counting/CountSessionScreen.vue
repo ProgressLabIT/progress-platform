@@ -18,6 +18,7 @@
             >
               {{ $t(`warehouse.counting.${sessionStatus}`) }}
             </q-chip>
+            <!-- Start Session (planned -> started) -->
             <q-btn
               v-if="sessionStatus === 'planned'"
               color="theme-green"
@@ -27,6 +28,43 @@
             >
               <q-icon name="mdi-play" class="q-mr-sm"/>
               {{ $t('warehouse.counting.start_session') }}
+            </q-btn>
+
+            <!-- Complete Session (started -> completed) -->
+            <q-btn
+              v-if="sessionStatus === 'started'"
+              color="theme-orange"
+              :loading="completing"
+              size="sm"
+              @click="completeSession"
+            >
+              <q-icon name="mdi-check" class="q-mr-sm"/>
+              {{ $t('warehouse.counting.complete_session') }}
+            </q-btn>
+
+            <!-- Resume Counting (completed -> started) -->
+            <q-btn
+              v-if="sessionStatus === 'completed'"
+              color="primary"
+              :loading="resuming"
+              size="sm"
+              outline
+              @click="resumeSession"
+            >
+              <q-icon name="mdi-play" class="q-mr-sm"/>
+              {{ $t('warehouse.counting.resume_counting') }}
+            </q-btn>
+
+            <!-- Apply Adjustments (completed -> applied) -->
+            <q-btn
+              v-if="sessionStatus === 'completed'"
+              color="theme-green"
+              :loading="applying"
+              size="sm"
+              @click="confirmApplyAdjustments"
+            >
+              <q-icon name="mdi-check-all" class="q-mr-sm"/>
+              {{ $t('warehouse.counting.apply_adjustments') }}
             </q-btn>
           </div>
         </div>
@@ -136,7 +174,7 @@ import { ref, watch, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useStore } from 'vuex';
-import { Notify } from 'quasar';
+import { Notify, useQuasar } from 'quasar';
 import { useCountSessionStore } from '@/stores/countSession';
 import { sendEvent } from '@/composables/event.js';
 import BaseDialog from '@/components/BaseDialog.vue';
@@ -152,12 +190,16 @@ const props = defineProps({
 });
 
 const { t: $t } = useI18n();
+const $q = useQuasar();
 const store = useStore();
 const countSessionStore = useCountSessionStore();
 const router = useRouter();
 const step = ref(1);
 const saving = ref(false);
 const starting = ref(false);
+const completing = ref(false);
+const resuming = ref(false);
+const applying = ref(false);
 const disableAssignedItems = ref(false);
 const isEditMode = computed(() => !!props.countSessionKey);
 const originalSessionType = ref(null);
@@ -179,6 +221,7 @@ const statusColor = computed(() => {
     case 'started':
       return 'primary';
     case 'completed':
+      return 'theme-orange';
     case 'applied':
       return 'theme-green';
     case 'canceled':
@@ -273,6 +316,132 @@ async function startSession() {
     });
   } finally {
     starting.value = false;
+  }
+}
+
+async function completeSession() {
+  if (sessionStatus.value !== 'started' || !props.countSessionKey) {
+    return;
+  }
+
+  completing.value = true;
+
+  try {
+    await sendEvent({
+      event_type: 'COUNT_SESSION_COMPLETED',
+      event_data: {
+        session_key: props.countSessionKey,
+      },
+    });
+
+    await countSessionStore.loadSessionData(props.countSessionKey);
+
+    Notify.create({
+      message: $t('warehouse.counting.session.completed_successfully'),
+      color: 'theme-green',
+    });
+  } catch (error) {
+    console.error('Error completing session:', error);
+    Notify.create({
+      type: 'negative',
+      message: error.response?.data?.detail || $t('warehouse.counting.session.complete_error'),
+      color: 'theme-red',
+      timeout: 0,
+      actions: [{ label: 'CLOSE', color: 'white', handler: () => {} }],
+    });
+  } finally {
+    completing.value = false;
+  }
+}
+
+async function resumeSession() {
+  if (sessionStatus.value !== 'completed' || !props.countSessionKey) {
+    return;
+  }
+
+  resuming.value = true;
+
+  try {
+    await sendEvent({
+      event_type: 'COUNT_SESSION_RESUMED',
+      event_data: {
+        session_key: props.countSessionKey,
+      },
+    });
+
+    await countSessionStore.loadSessionData(props.countSessionKey);
+
+    Notify.create({
+      message: $t('warehouse.counting.session.resumed_successfully'),
+      color: 'theme-green',
+    });
+  } catch (error) {
+    console.error('Error resuming session:', error);
+    Notify.create({
+      type: 'negative',
+      message: error.response?.data?.detail || $t('warehouse.counting.session.resume_error'),
+      color: 'theme-red',
+      timeout: 0,
+      actions: [{ label: 'CLOSE', color: 'white', handler: () => {} }],
+    });
+  } finally {
+    resuming.value = false;
+  }
+}
+
+function confirmApplyAdjustments() {
+  $q.dialog({
+    title: $t('warehouse.counting.apply_adjustments'),
+    message: $t('warehouse.counting.apply_confirmation_message'),
+    cancel: {
+      label: $t('cancel'),
+      color: 'theme-grey',
+      flat: true,
+    },
+    ok: {
+      label: $t('warehouse.counting.apply_adjustments'),
+      color: 'theme-green',
+    },
+    persistent: true,
+  }).onOk(() => {
+    applyAdjustments();
+  });
+}
+
+async function applyAdjustments() {
+  if (sessionStatus.value !== 'completed' || !props.countSessionKey) {
+    return;
+  }
+
+  applying.value = true;
+
+  try {
+    const response = await sendEvent({
+      event_type: 'COUNT_SESSION_APPLIED',
+      event_data: {
+        session_key: props.countSessionKey,
+      },
+    });
+
+    await countSessionStore.loadSessionData(props.countSessionKey);
+
+    const adjustmentsCount = response?.adjustments_count || 0;
+
+    Notify.create({
+      message: $t('warehouse.counting.session.applied_successfully', { count: adjustmentsCount }),
+      color: 'theme-green',
+    });
+  } catch (error) {
+    console.error('Error applying adjustments:', error);
+    Notify.create({
+      type: 'negative',
+      message: error.response?.data?.detail || $t('warehouse.counting.session.apply_error'),
+      color: 'theme-red',
+      timeout: 0,
+      actions: [{ label: 'CLOSE', color: 'white', handler: () => {} }],
+    });
+  } finally {
+    applying.value = false;
   }
 }
 

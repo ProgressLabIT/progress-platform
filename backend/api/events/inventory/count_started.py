@@ -4,7 +4,7 @@ from pydantic import Field
 
 from events.base_event import BaseEvent
 from models.event import EventInfoModel, EventType
-from models.inventory.counting import InventoryCountRecord, InventoryCountStatus
+from models.inventory.counting import InventoryCountRecord, InventoryCountStatus, InventoryCountSessionStatus
 from models.inventory.inventory import Inventory
 from utils.dt import timestamp
 
@@ -25,9 +25,21 @@ class CountStartedEvent(BaseEvent):
 
   @classmethod
   def get_tx_collections(cls):
-    return ['is_in_position', 'inventory_count_record', 'Product']
+    return ['is_in_position', 'inventory_count_record', 'Product', 'InventoryCountSession']
 
   def apply(self):
+    # Validate session is in STARTED status (not completed/applied/canceled)
+    session = self.tx.collection('InventoryCountSession').get(self.info.inventory_count_session_key)
+    if session is None:
+      raise ValueError(f"Count session {self.info.inventory_count_session_key} not found")
+
+    session_status = session.get('status')
+    if session_status != InventoryCountSessionStatus.STARTED.value:
+      raise ValueError(
+        f"Cannot start count: session is in '{session_status}' status. "
+        f"Counting is only allowed when session is in 'started' status."
+      )
+
     # Validate inputs
     has_inventory_keys = self.info.inventory_keys and len(self.info.inventory_keys) > 0
     has_product_position = self.info.product_key and self.info.position_key

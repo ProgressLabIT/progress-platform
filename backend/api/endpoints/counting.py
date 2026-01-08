@@ -343,10 +343,18 @@ async def import_count_records(
     if import_mode not in ['update', 'replace']:
       raise HTTPException(status_code=400, detail="import_mode must be 'update' or 'replace'")
 
-    # Validate session exists
+    # Validate session exists and is in COMPLETED status
     session = db.collection('InventoryCountSession').get(count_session_key)
     if not session:
       raise HTTPException(status_code=404, detail="Counting session not found")
+
+    session_status = session.get('status')
+    if session_status != 'completed':
+      raise HTTPException(
+        status_code=400,
+        detail=f"Cannot import counts: session is in '{session_status}' status. "
+               f"Importing is only allowed when session is in 'completed' status (review mode)."
+      )
 
     media_path = os.environ.get('MEDIA_PATH', '/app/media')
     import_dir = os.path.join(media_path, 'count_import')

@@ -236,6 +236,13 @@ class MovementCompletedEvent(BaseInventoryEvent):
 
   def _handle_adjustment(self):
     self._get_product()
+
+    # Validate serial exists if adjustment involves a serial
+    if self.requires_serial and self.info.serial_key:
+      serial_exists = self.tx.collection('Serial').has(self.info.serial_key)
+      if not serial_exists:
+        raise InventoryMovementException(f'Serial {self.info.serial_key} not found')
+
     InventoryChangedEvent.create_as_child(self, dict(
       position_key = self.info.position_to,
       product_key = self.info.product_key,
