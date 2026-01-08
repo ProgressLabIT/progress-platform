@@ -179,6 +179,13 @@ Each aggregate object contains:
   aggregatedPositionKeys: [],
   aggregatedPositionCodes: [],
   
+  // Coverage tracking
+  coverage: {
+    positionKey: String,    // The aggregated position key being checked
+    isComplete: Boolean,    // true if position is in completedPositions
+    isAggregated: Boolean,  // true when aggregating (not in "All levels" mode)
+  },
+  
   // For compatibility
   activeRecordKey: String | null,
 }
@@ -204,6 +211,33 @@ Conflicts are detected at the **original product/position pair level** (not at t
 1. Group records by `product_key + position_key`
 2. For each pair, check if multiple non-discarded records have different `counted_qt`
 3. If any pair has conflicts, set `hasConflict = true` on the aggregate
+
+### Coverage Tracking
+
+When aggregating records at a specific level (not "All levels"), the displayed data may not include all inventory in that position because not all sub-positions have been counted.
+
+#### Data Source
+
+Coverage is determined using the `inventory_count_position_complete` edge collection, which tracks positions that have been fully counted for a session. This collection is populated by:
+- `CountCompletedEvent`: When a count is completed, it checks if all items in the position have been counted
+- `PositionConfirmedEmptyEvent`: When a position is confirmed as empty
+
+#### Coverage Logic
+
+1. On component mount, `loadCompletedPositions()` fetches all completed position keys for the session via `GET /inventory/count-session/{key}/completed-positions`
+2. Results are stored as a `Set` in `countSessionStore.completedPositions` for O(1) lookups
+3. Each aggregate object includes a `coverage` property with:
+   - `positionKey`: The aggregated position key being checked
+   - `isComplete`: `true` if the position is in `completedPositions`
+   - `isAggregated`: `true` when aggregating (not in "All levels" mode)
+
+#### UI Display
+
+| State | Icon | Color | Tooltip |
+|-------|------|-------|---------|
+| Position fully counted | `mdi-check-circle` | `positive` (green) | "Position fully counted" |
+| Position NOT fully counted | `mdi-alert-circle-outline` | `warning` (orange) | "Position not fully counted - data may be incomplete" |
+| "All levels" mode | No icon | - | Coverage is implicit (each row is granular) |
 
 ---
 
@@ -396,6 +430,15 @@ Matchers are built once at filter computation time via `buildWildcardMatcher()`.
 - [ ] Conflict dialog opens with correct data
 - [ ] Multi-pair navigation works
 - [ ] Discard resolution updates records
+
+### Coverage Indicator
+- [ ] Completed positions loaded on mount via `loadCompletedPositions()`
+- [ ] Coverage icon shown when aggregating (not in "All levels" mode)
+- [ ] Green check icon for fully counted positions
+- [ ] Orange warning icon for incomplete positions
+- [ ] Coverage icon hidden in "All levels" mode
+- [ ] Tooltip shows appropriate message for each state
+- [ ] Completed positions refresh on inventory-notification event
 
 ### Filtering
 - [ ] Variance threshold filters correctly (absolute)

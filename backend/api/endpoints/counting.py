@@ -293,6 +293,26 @@ async def get_count_position_status(
   return results
 
 
+@router.get('/inventory/count-session/{session_key}/completed-positions')
+async def get_session_completed_positions(session_key: str) -> list[str]:
+  """Get all position keys that have been marked as fully counted for a session."""
+
+  session_id = f"InventoryCountSession/{session_key}"
+
+  query = """
+    FOR record IN inventory_count_position_complete
+    FILTER record._from == @session_id
+    RETURN PARSE_IDENTIFIER(record._to).key
+  """
+
+  try:
+    results = list(db.aql.execute(query, bind_vars=dict(session_id=session_id)))
+  except Exception:
+    raise HTTPException(status_code=500, detail=traceback.format_exc())
+
+  return results
+
+
 # ========================================================
 # COUNT RECORD IMPORT
 # ========================================================

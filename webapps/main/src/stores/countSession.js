@@ -27,6 +27,9 @@ export const useCountSessionStore = defineStore('countSession', {
     // Count records state
     records: [],
     recordsLoading: false,
+
+    // Completed positions for coverage tracking
+    completedPositions: new Set(),
   }),
 
   getters: {
@@ -554,6 +557,37 @@ export const useCountSessionStore = defineStore('countSession', {
     clearRecords() {
       this.records = [];
       this.recordsLoading = false;
+    },
+
+    /**
+     * Load completed positions for a session
+     * Used for coverage indicator in aggregated views
+     * @param {string} sessionKey - The session key to load completed positions for
+     * @returns {Promise<Set>} Set of completed position keys
+     */
+    async loadCompletedPositions(sessionKey = null) {
+      const key = sessionKey || this.currentSession;
+      if (!key) {
+        console.warn('No session key provided for loading completed positions');
+        return new Set();
+      }
+
+      try {
+        const { data } = await api.get(`/inventory/count-session/${key}/completed-positions`);
+        this.completedPositions = new Set(data || []);
+        return this.completedPositions;
+      } catch (error) {
+        console.error('Error loading completed positions:', error);
+        this.completedPositions = new Set();
+        throw error;
+      }
+    },
+
+    /**
+     * Clear completed positions state
+     */
+    clearCompletedPositions() {
+      this.completedPositions = new Set();
     },
   },
 })

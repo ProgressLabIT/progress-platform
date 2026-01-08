@@ -1317,6 +1317,8 @@ export default {
       serials_removed: 'Rimossi',
       multiple_users: 'Utenti multipli',
       includes_positions: 'Include {count} posizioni',
+      position_fully_counted: 'Posizione completamente contata',
+      position_not_fully_counted: 'Posizione non completamente contata - i dati potrebbero essere incompleti',
       // Export/Import
       import_records: 'Importa Conteggi',
       select_file: 'Seleziona file',

@@ -1295,6 +1295,8 @@ export default {
       serials_removed: 'Removed',
       multiple_users: 'Multiple users',
       includes_positions: 'Includes {count} positions',
+      position_fully_counted: 'Position fully counted',
+      position_not_fully_counted: 'Position not fully counted - data may be incomplete',
       variance_only: 'With variance only',
       with_notes_only: 'With notes only',
       conflicts_only: 'With conflicts only',

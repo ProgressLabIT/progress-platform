@@ -46,7 +46,7 @@
         <!-- Position Column -->
         <template #body-cell-position="props">
           <q-td :props="props">
-            <div v-if="props.row.position">
+            <div v-if="props.row.position" class="row items-center no-wrap">
               <span :class="{ 'text-strike text-low': props.row.position.deleted }">
                 {{ props.row.position.code }}
               </span>
@@ -58,6 +58,21 @@
               >
                 {{ props.row.aggregatedPositionKeys.length }}
               </q-badge>
+              <!-- Coverage indicator (only shown when aggregating, not in "All levels" mode) -->
+              <q-icon
+                v-if="props.row.coverage?.isAggregated"
+                :name="props.row.coverage.isComplete ? 'mdi-check-circle' : 'mdi-alert-circle-outline'"
+                :color="props.row.coverage.isComplete ? 'positive' : 'warning'"
+                size="xs"
+                class="q-ml-xs"
+              >
+                <q-tooltip>
+                  {{ props.row.coverage.isComplete
+                    ? $t('warehouse.counting.position_fully_counted')
+                    : $t('warehouse.counting.position_not_fully_counted')
+                  }}
+                </q-tooltip>
+              </q-icon>
               <q-tooltip anchor="top middle" self="bottom middle" :delay="500">
                 <template v-if="props.row.position.deleted">
                   <div class="text-theme-orange">{{ $t('position_deleted') }}</div>
@@ -663,10 +678,11 @@ function getAggregatePosition(record, lookup) {
     };
   }
 
-  // Fallback: use position_path from record (array of codes, excluding IN)
-  // position_path[0] = level 1 position, position_path[1] = level 2 position, etc.
-  // This is the most reliable source as it comes directly from the backend
+  // Use position_path (codes) and position_path_keys (keys) from record
+  // position_path[0] = level 1 position code, position_path[1] = level 2 position code, etc.
+  // position_path_keys[0] = level 1 position key, etc.
   const path = record.position_path || [];
+  const pathKeys = record.position_path_keys || [];
 
   if (path.length === 0) {
     // No path data, use actual position
@@ -693,21 +709,10 @@ function getAggregatePosition(record, lookup) {
   }
 
   // Position is deeper than target level, use position at target level from path
-  // targetLevel 1 → path[0], targetLevel 2 → path[1], etc.
+  // targetLevel 1 → index 0, targetLevel 2 → index 1, etc.
   const targetIndex = targetLevel - 1;
   const targetCode = path[targetIndex];
-
-  // Try to get the position key from positionLookup using code
-  // Build a code-to-key map from lookup if available
-  let targetKey = targetCode; // Default to code if we can't find key
-  if (lookup && lookup.size > 0) {
-    for (const [key, data] of lookup.entries()) {
-      if (data.code === targetCode) {
-        targetKey = key;
-        break;
-      }
-    }
-  }
+  const targetKey = pathKeys[targetIndex] || targetCode; // Fallback to code if keys missing
 
   // Build path string up to target level (not including IN)
   const pathString = path.slice(0, targetLevel).join(' > ');
@@ -962,6 +967,17 @@ const aggregatedRecords = computed(() => {
     // Convert position Sets to arrays for template use
     aggregate.aggregatedPositionKeys = [...aggregate.aggregatedPositionKeys];
     aggregate.aggregatedPositionCodes = [...aggregate.aggregatedPositionCodes];
+
+    // Coverage tracking: check if the aggregated position has been fully counted
+    // Only relevant when aggregating (not in "All levels" mode)
+    const completedPositions = countSessionStore.completedPositions;
+    const positionKey = aggregate.position?.key;
+    aggregate.coverage = {
+      positionKey: positionKey,
+      isComplete: positionKey ? completedPositions.has(positionKey) : false,
+      // In "All levels" mode, coverage is implicit (each row is granular)
+      isAggregated: !allLevels.value,
+    };
   }
 
   return Array.from(aggregateMap.values());
@@ -1186,6 +1202,8 @@ onMounted(() => {
   loadRecords();
   // Load position hierarchy to enable level-based aggregation
   countSessionStore.loadPositions();
+  // Load completed positions for coverage tracking
+  countSessionStore.loadCompletedPositions();
 
   // Subscribe to inventory notifications so records update automatically
   const eventURL = `${api.defaults.baseURL}/notification/inventory-notification`;
@@ -1194,6 +1212,8 @@ onMounted(() => {
   });
   events.value.addEventListener('inventory-notification', () => {
     loadRecords();
+    // Also refresh completed positions when inventory changes
+    countSessionStore.loadCompletedPositions();
   });
 });
 
