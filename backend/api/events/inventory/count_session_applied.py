@@ -4,8 +4,6 @@ from models.event import EventInfoModel, EventType
 from models.inventory.counting import InventoryCountSessionStatus
 from models.inventory.movement import (
   InventoryMovementType,
-  InventoryMovementReferences,
-  InventoryMovementNew,
   MovementListNew,
   MovementListNewStatus,
 )
@@ -179,10 +177,10 @@ class CountSessionAppliedEvent(BaseEvent):
       bind_vars={'session_key': self.info.session_key}
     ))
 
-  def _build_adjustment_movements(self, records) -> list[InventoryMovementNew]:
+  def _build_adjustment_movements(self, records) -> list[dict]:
     """
     Build adjustment movements for all records.
-    Returns a list of InventoryMovementNew objects.
+    Returns a list of movement dictionaries.
     """
     movements = []
     movement_item = 1
@@ -202,25 +200,26 @@ class CountSessionAppliedEvent(BaseEvent):
 
     return movements
 
-  def _build_quantity_adjustment(self, record, movement_item) -> InventoryMovementNew:
+  def _build_quantity_adjustment(self, record, movement_item) -> dict:
     """Build a single adjustment movement for a non-serialized product."""
-    return InventoryMovementNew(
-      movement_type=InventoryMovementType.ADJUSTMENT,
+    return dict(
+      movement_type=InventoryMovementType.ADJUSTMENT.value,
       product_key=record['product_key'],
+      position_from=record['position_key'],
       position_to=record['position_key'],
       qt_planned=record['delta'],
       qt_confirmed=record['delta'],
       movement_list_item=movement_item,
-      references=InventoryMovementReferences(
+      references=dict(
         inventory_count_session_key=self.info.session_key
       ),
       reason=f"Stock count adjustment (delta: {record['delta']})"
     )
 
-  def _build_serial_adjustments(self, record, movement_item) -> list[InventoryMovementNew]:
+  def _build_serial_adjustments(self, record, movement_item) -> list[dict]:
     """
     Build adjustment movements for a serialized product.
-    Returns a list of InventoryMovementNew objects.
+    Returns a list of movement dictionaries.
     """
     system_serials = set(record.get('system_serial_keys') or [])
     counted_serials = set(record.get('counted_serial_keys') or [])
@@ -232,15 +231,16 @@ class CountSessionAppliedEvent(BaseEvent):
 
     # Create +1 adjustments for added serials
     for serial_key in added_serials:
-      movements.append(InventoryMovementNew(
-        movement_type=InventoryMovementType.ADJUSTMENT,
+      movements.append(dict(
+        movement_type=InventoryMovementType.ADJUSTMENT.value,
         product_key=record['product_key'],
+        position_from=record['position_key'],
         position_to=record['position_key'],
         serial_key=serial_key,
         qt_planned=1,
         qt_confirmed=1,
         movement_list_item=movement_item,
-        references=InventoryMovementReferences(
+        references=dict(
           inventory_count_session_key=self.info.session_key
         ),
         reason="Stock count adjustment (serial found)"
@@ -248,15 +248,16 @@ class CountSessionAppliedEvent(BaseEvent):
 
     # Create -1 adjustments for removed serials
     for serial_key in removed_serials:
-      movements.append(InventoryMovementNew(
-        movement_type=InventoryMovementType.ADJUSTMENT,
+      movements.append(dict(
+        movement_type=InventoryMovementType.ADJUSTMENT.value,
         product_key=record['product_key'],
+        position_from=record['position_key'],
         position_to=record['position_key'],
         serial_key=serial_key,
         qt_planned=-1,
         qt_confirmed=-1,
         movement_list_item=movement_item,
-        references=InventoryMovementReferences(
+        references=dict(
           inventory_count_session_key=self.info.session_key
         ),
         reason="Stock count adjustment (serial missing)"
@@ -264,7 +265,7 @@ class CountSessionAppliedEvent(BaseEvent):
 
     return movements
 
-  def _create_warehouse_list(self, movements: list[InventoryMovementNew]) -> str:
+  def _create_warehouse_list(self, movements: list[dict]) -> str:
     """Create the adjustment MovementList via WarehouseListCreatedEvent."""
     # Generate list code using counter
     try:
@@ -280,7 +281,7 @@ class CountSessionAppliedEvent(BaseEvent):
       type=InventoryMovementType.ADJUSTMENT,
       status=MovementListNewStatus.COMPLETED,
       notes=f"Adjustments from count session {self.session.get('code', self.info.session_key)}",
-      references=InventoryMovementReferences(
+      references=dict(
         inventory_count_session_key=self.info.session_key
       ),
       created=self.info.timestamp,
