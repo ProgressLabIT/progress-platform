@@ -546,7 +546,7 @@ class CountImportedEvent(BaseEvent):
 
   def _discard_all_session_records(self):
     """Discard all existing count records for the session (replace mode)."""
-    discard_note = f"Discarded by import of {self.info.import_filename} at {self.info.timestamp[:19]} (event key: {self.event_key})"
+    discard_note = f"Discarded by import of {self.info.import_filename} on {str(self.info.timestamp)[:19]} (event key: {self.event_key})"
 
     result = self.tx.aql.execute('''
       FOR r IN inventory_count_record
@@ -566,7 +566,7 @@ class CountImportedEvent(BaseEvent):
 
   def _discard_matching_records(self, product_key: str, position_key: str) -> int:
     """Discard existing records matching product/position (update mode)."""
-    discard_note = f"Discarded by import of {self.info.import_filename} at {self.info.timestamp[:19]} (event key: {self.event_key})"
+    discard_note = f"Discarded by import of {self.info.import_filename} on {str(self.info.timestamp)[:19]} (event key: {self.event_key})"
 
     result = self.tx.aql.execute('''
       FOR r IN inventory_count_record
