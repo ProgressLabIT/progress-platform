@@ -116,6 +116,7 @@ class WarehouseListCreatedEvent(BaseInventoryEvent):
         raise ValueError(f"Invalid movement list status: {self.info.new_movement_list.status}")
 
       event_class.create_as_child(self, event_args)
+      print("Created movement: from {m.position_from} to {m.position_to} for product {m.product_key} and serial {m.serial_key} with quantity {m.qt_confirmed}")
 
     self.response = new_list_key
 
