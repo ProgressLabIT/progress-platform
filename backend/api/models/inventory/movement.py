@@ -268,22 +268,18 @@ class MovementListNewStatus(str, Enum):
 
 class MovementListNew(MovementList):
   status: MovementListNewStatus | None = MovementListNewStatus.PLANNED
-  movements: list[InventoryMovementNew]
+  movements: list[InventoryMovementNew] | None = []
   by_code: bool | None = False
 
   @model_validator(mode='before')
   def validate(cls, values):
-    # Ensure the list contains at least one movement
-    no_movements = values.get('movements') is None or len(values.get('movements')) == 0
-    if no_movements:
-      raise ValueError("A movement list must have at least one movement")
 
     # Ensure the list has a valid type
     if values.get('type', None) not in [t.value for t in InventoryMovementType]:
       raise ValueError("A movement list must have a valid type: valid types are: " + ", ".join([t.value for t in InventoryMovementType]))
 
     items_product = {}
-    for movement in values.get('movements'):
+    for movement in values.get('movements', []):
 
       # Ensure all movements in the list are of the same type
       if movement.get('movement_type') is not None and movement.get('movement_type') != values.get('type'):
