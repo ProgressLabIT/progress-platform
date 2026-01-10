@@ -17,7 +17,6 @@ from openpyxl.styles import Font, PatternFill
 from pydantic import Field
 
 from events.base_event import BaseEvent
-from events.inventory.count_discarded import CountDiscardedEvent
 from models.event import EventInfoModel, EventType
 from models.inventory.counting import InventoryCountRecord, InventoryCountStatus, InventoryCountSessionStatus
 from utils.dt import timestamp
@@ -547,44 +546,47 @@ class CountImportedEvent(BaseEvent):
 
   def _discard_all_session_records(self):
     """Discard all existing count records for the session (replace mode)."""
-    cursor = self.tx.aql.execute('''
+    discard_note = f"Discarded by import of {self.info.import_filename} at {self.info.timestamp[:19]} (event key: {self.event_key})"
+
+    result = self.tx.aql.execute('''
       FOR r IN inventory_count_record
       FILTER r.inventory_count_session_key == @session_key
         AND r.status IN ['completed', 'submitted', 'confirmed']
-      RETURN r._key
-    ''', bind_vars={'session_key': self.info.count_session_key})
+      UPDATE r WITH {
+        status: 'discarded',
+        notes: @discard_note
+      } IN inventory_count_record
+      RETURN 1
+    ''', bind_vars={
+      'session_key': self.info.count_session_key,
+      'discard_note': discard_note
+    })
 
-    # Consume cursor to list to avoid write-lock conflict when creating child events
-    record_keys = list(cursor)
-
-    for record_key in record_keys:
-      CountDiscardedEvent.create_as_child(self, {'count_key': record_key})
-      self.info.rows_discarded += 1
+    self.info.rows_discarded = sum(result)
 
   def _discard_matching_records(self, product_key: str, position_key: str) -> int:
     """Discard existing records matching product/position (update mode)."""
-    cursor = self.tx.aql.execute('''
+    discard_note = f"Discarded by import of {self.info.import_filename} at {self.info.timestamp[:19]} (event key: {self.event_key})"
+
+    result = self.tx.aql.execute('''
       FOR r IN inventory_count_record
       FILTER r._from == @product_id
         AND r._to == @position_id
         AND r.inventory_count_session_key == @session_key
         AND r.status IN ['completed', 'submitted', 'confirmed']
-      RETURN r._key
+      UPDATE r WITH {
+        status: 'discarded',
+        notes: @discard_note
+      } IN inventory_count_record
+      RETURN 1
     ''', bind_vars={
       'product_id': f'Product/{product_key}',
       'position_id': f'Position/{position_key}',
       'session_key': self.info.count_session_key,
+      'discard_note': discard_note
     })
 
-    # Consume cursor to list to avoid write-lock conflict when creating child events
-    record_keys = list(cursor)
-
-    discarded = 0
-    for record_key in record_keys:
-      CountDiscardedEvent.create_as_child(self, {'count_key': record_key})
-      discarded += 1
-
-    return discarded
+    return sum(result)
 
   def _create_count_record(self, data: dict):
     """Create a new count record from aggregated import data."""
