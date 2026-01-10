@@ -582,7 +582,7 @@ const splitterModel = ref(70);
 // State
 const displayMode = ref('pair');
 const selectedLevel = ref(1);
-const allLevels = ref(false);
+const allLevels = ref(true);
 const positionLevel = computed({
   get() {
     return allLevels.value ? null : selectedLevel.value;
