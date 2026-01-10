@@ -554,7 +554,10 @@ class CountImportedEvent(BaseEvent):
       RETURN r._key
     ''', bind_vars={'session_key': self.info.count_session_key})
 
-    for record_key in cursor:
+    # Consume cursor to list to avoid write-lock conflict when creating child events
+    record_keys = list(cursor)
+
+    for record_key in record_keys:
       CountDiscardedEvent.create_as_child(self, {'count_key': record_key})
       self.info.rows_discarded += 1
 
@@ -573,8 +576,11 @@ class CountImportedEvent(BaseEvent):
       'session_key': self.info.count_session_key,
     })
 
+    # Consume cursor to list to avoid write-lock conflict when creating child events
+    record_keys = list(cursor)
+
     discarded = 0
-    for record_key in cursor:
+    for record_key in record_keys:
       CountDiscardedEvent.create_as_child(self, {'count_key': record_key})
       discarded += 1
 

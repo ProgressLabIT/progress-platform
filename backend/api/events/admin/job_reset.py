@@ -206,9 +206,12 @@ class JobResetEvent(BaseAdmin):
       RETURN link
     """, bind_vars=dict(batch_keys=self.job_batch_keys))
 
+    # Consume cursor to list to avoid write-lock conflict when creating child events
+    links = list(job_component_links)
+
     temp_links = []
 
-    for link in job_component_links:
+    for link in links:
       if link['confirmed']:
         parent_type, parent_key = link['_from'].split('/')
         SerialUnlinkedEvent.create_as_child(self, dict(
@@ -249,7 +252,10 @@ class JobResetEvent(BaseAdmin):
       RETURN m._key
     """, bind_vars=dict(job_key=self.job.key))
 
-    for m in movement_to_reverse:
+    # Consume cursor to list to avoid write-lock conflict when creating child events
+    movement_keys = list(movement_to_reverse)
+
+    for m in movement_keys:
       MovementReversedEvent.create_as_child(self, dict(original_movement_key = m))
 
   # =================================================================================================
