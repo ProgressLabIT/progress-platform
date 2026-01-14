@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 from typing import Any
 
 from events.base_event import BaseEvent, EventInfoModel
