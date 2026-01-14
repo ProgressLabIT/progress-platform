@@ -19,6 +19,8 @@ class TaskCreatedEvent(BaseEvent):
     assigned_to: list[TaskAssignment] | None = []
     start_from: date | None = None
     due_by: date | None = None
+    created: datetime | None = None
+    created_by: str | None = None
     extra: Any | None = None
 
   @classmethod
@@ -58,8 +60,8 @@ class TaskCreatedEvent(BaseEvent):
     ]
 
     # set created and created_by
-    task_data.created = self.info.timestamp
-    task_data.created_by = self.info.user_key
+    task_data.created = self.info.created or self.info.timestamp
+    task_data.created_by = self.info.created_by or self.info.user_key
 
     # insert task
     task_key = self.tx.collection('Task').insert(task_data.model_dump())['_key']
