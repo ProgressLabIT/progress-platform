@@ -11,7 +11,7 @@ from utils.counter import _generate_counter
 class TaskCreatedEvent(BaseEvent):
 
   class InfoModel(EventInfoModel):
-    task_key: str | None = None
+    task_key: str | None = None # So it appears in the event record
     task_type_key: str
     code: str | None = None
     title: str | None = None
@@ -41,6 +41,11 @@ class TaskCreatedEvent(BaseEvent):
         task_data.code = _generate_counter(self.tx, counter_key)
       except Exception as e:
         raise Exception("Cannot generate task code. Please check if the counter is configured correctly.") from e
+
+    else:
+      # Check if task with the same code already exists
+      if self.tx.collection('Task').find(dict(code=self.info.code)).count() > 0:
+        raise ValueError(f"Task with code {self.info.code} already exists")
 
     # Prepare form fields
     task_type = self.tx.collection('TaskType').get(self.info.task_type_key)
