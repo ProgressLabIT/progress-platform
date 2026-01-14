@@ -267,6 +267,9 @@ async function save() {
       form_data.push({
         form_field_key: field_data.form_field_key,
         custom_field_key: field_data.custom_field_key,
+        label: field_data.label,
+        hint: field_data.hint,
+        mandatory: field_data.mandatory,
         value:
           getFieldType(field_data) === 'files'
             ? field_data.value

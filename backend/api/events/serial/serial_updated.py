@@ -23,16 +23,28 @@ class SerialUpdatedEvent(BaseSerialEvent):
 
   def _merge_serial_data(self):
     # Merge data from the original serial with the new data
-    merged_data = []
-    for existing_field in self.original['data']:
-      new_field = existing_field
-      for field in self.info.serial_data:
-        if field.form_field_key == existing_field['form_field_key'] and field.value != existing_field['value']:
-          new_field['value'] = field.value
-          new_field['last_updated'] = self.event_key
-          break
-      merged_data.append(new_field)
-    return merged_data
+    # Start with a dict for efficient lookup (handle empty/None data)
+    original_data = self.original.get('data') or []
+    merged_data_map = {
+      field['form_field_key']: field
+      for field in original_data
+    }
+
+    # Process new data - update existing or add new fields
+    for field in self.info.serial_data:
+      if field.form_field_key in merged_data_map:
+        # Update existing field if value changed
+        existing = merged_data_map[field.form_field_key]
+        if field.value != existing['value']:
+          existing['value'] = field.value
+          existing['last_updated'] = self.event_key
+      else:
+        # Add new field
+        new_field = field.model_dump()
+        new_field['last_updated'] = self.event_key
+        merged_data_map[field.form_field_key] = new_field
+
+    return list(merged_data_map.values())
 
 
   def apply(self):

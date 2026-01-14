@@ -1,5 +1,13 @@
 <template>
   <div class="column q-px-md fit q-col-gutter-md">
+    <!-- ADD FIELD DIALOG -->
+    <BaseDialog :show="showAddFieldDialog" @close="showAddFieldDialog = false">
+      <FormFieldSearch
+        :exclude-keys="existingFieldKeys"
+        @select="onFieldSelected"
+      />
+    </BaseDialog>
+
     <!-- HEADER -->
     <div class="row items-center">
       <div
@@ -95,7 +103,7 @@
       <q-tab-panels v-model="tab" class="transparent">
         <!-- SERIAL FORM DATA -->
         <q-tab-panel name="form">
-          <template v-if="serial?.data?.length > 0">
+          <template v-if="serial?.data?.length > 0 || (edit_mode && can_edit)">
             <div class="column col scroll q-pt-sm q-gutter-y-md">
               <div
                 v-for="field in serial?.data"
@@ -135,6 +143,16 @@
                   </q-tooltip>
                 </q-icon>
               </div>
+              <!-- ADD FIELD BUTTON -->
+              <q-btn
+                v-if="edit_mode && can_edit"
+                flat
+                color="theme-blue"
+                icon="mdi-plus"
+                :label="$t('add_field')"
+                class="q-mt-md"
+                @click="showAddFieldDialog = true"
+              />
             </div>
           </template>
           <div v-else class="col-auto text-italic">No data</div>
@@ -165,8 +183,10 @@ import { useRouter, useRoute } from 'vue-router';
 import { useStore } from 'vuex';
 import { api as $api } from '@/boot/axios';
 import { capitalize } from '@/boot/filters';
+import BaseDialog from '@/components/BaseDialog.vue';
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue';
 import FormField from '@/components/FormField.vue';
+import FormFieldSearch from '@/components/FormFieldSearch.vue';
 import TimelineItem from '@/components/TimelineItem.vue';
 import { formatDateTime } from '@/lib/TimeHandling';
 import { usePrintDialog } from '@/lib/print';
@@ -207,9 +227,15 @@ const history = ref([]);
 const base_path = ref('/media/user/');
 const events = ref(null);
 const serialAvailable = ref(false);
+const showAddFieldDialog = ref(false);
 
 // Computed properties
 const serial = computed(() => store.getters.getSerialData(props.serial_key));
+
+// Get existing field keys to exclude from the search
+const existingFieldKeys = computed(() => {
+  return serial.value?.data?.map(field => field.custom_field_key) || [];
+});
 
 const serialTimeString = (isoString) => {
   const config = {
@@ -312,6 +338,28 @@ const getFieldTimestamp = (field) => {
     hour: '2-digit',
     minute: '2-digit',
   });
+};
+
+// Handle field selection from the search dialog
+const onFieldSelected = (customField) => {
+  // Create a new field entry with the selected custom field
+  const newField = {
+    form_field_key: customField._key, // Use custom field key as form_field_key for manual additions
+    custom_field_key: customField._key,
+    label: customField.default_label || customField.name,
+    hint: customField.default_hint,
+    mandatory: false,
+    value: null,
+  };
+
+  // Initialize data array if it doesn't exist
+  if (!serial.value.data) {
+    serial.value.data = [];
+  }
+
+  // Add the new field to serial data
+  serial.value.data.push(newField);
+  showAddFieldDialog.value = false;
 };
 
 // Watchers and lifecycle hooks
