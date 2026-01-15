@@ -171,7 +171,7 @@ async def force_delete_work_order_data(work_order_key: str):
     # TODO: Use named graphs to have this done automatically when deleting batches
     tx.aql.execute("""
       FOR b in batch_serial
-      FILTER DOCUMENT(s._from) == null
+      FILTER DOCUMENT(b._from) == null
       REMOVE b IN batch_serial
     """)
 
