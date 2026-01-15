@@ -11,19 +11,15 @@ class SerialReleasedEvent(BaseSerialEvent):
   class InfoModel(BaseSerialModel):
     released: datetime | None = None
 
-    @field_validator('released', mode='after')
-    @classmethod
-    def validate_released(cls, v):
-      # Use timestamp if released is explicitly set to None
-      if v is None:
-        return timestamp()
-      return v
-
   @classmethod
   def get_event_type(cls):
     return EventType.SERIAL_RELEASED
 
   def apply(self):
+    # Set released date if not provided
+    if self.info.released is None:
+      self.info.released = self.info.timestamp
+
     # Update released date
     self.tx.collection('Serial').update(dict(
       _key=self.info.serial_key,
