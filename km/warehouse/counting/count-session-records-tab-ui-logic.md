@@ -12,11 +12,120 @@ The `CountSessionRecordsTab.vue` component provides a tabular view of count reco
 - **Conflict detection and resolution** (when multiple users count the same item differently)
 - **Export/Import functionality** (XLSX, CSV)
 
+### Architecture
+
+The component follows a composable-based architecture for separation of concerns:
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│  CountSessionRecordsTab.vue (~500 lines)                                │
+│  - Orchestrates composables                                             │
+│  - Manages lifecycle & SSE subscription                                 │
+│  - Renders table with cell templates                                    │
+└───────────────────────────────────┬─────────────────────────────────────┘
+                                    │
+        ┌───────────────────────────┼───────────────────────────┐
+        │                           │                           │
+        ▼                           ▼                           ▼
+┌───────────────────┐   ┌───────────────────┐   ┌───────────────────────┐
+│ useCountRecord    │   │ useCountRecord    │   │ useUncounted          │
+│ Aggregation.js    │   │ Filters.js        │   │ Inventory.js          │
+│ - Level selection │   │ - Filter state    │   │ - Uncounted fetching  │
+│ - Aggregation     │   │ - Filtering logic │   │ - Cache management    │
+│ - Coverage calc   │   │ - Wildcard match  │   │ - Delta calculation   │
+└───────────────────┘   └───────────────────┘   └───────────────────────┘
+
+Child Components:
+┌───────────────────────────────────────────────────────────────────────────┐
+│ CountRecordFilterSidebar.vue - Export/Import buttons, all filter inputs   │
+│ CountRecordConflictDialog.vue - Conflict resolution UI (existing)         │
+│ CountRecordImportDialog.vue - Import UI (existing)                        │
+└───────────────────────────────────────────────────────────────────────────┘
+```
+
+### Composables
+
+| Composable | Responsibility |
+|------------|----------------|
+| `useCountRecordAggregation` | Level-based aggregation, grouping records by product+position at hierarchy level |
+| `useCountRecordFilters` | Filter state management and filtering logic with wildcard matching |
+| `useUncountedInventory` | Fetching/caching uncounted inventory, calculating effective deltas |
+| `useCountRecordExport` | Export to XLSX/CSV (existing) |
+
 ### State Management
 The component uses:
 - **Pinia** (`useCountSessionStore`) for session data and raw records
-- **Local refs** for UI state (filters, display mode, selected level)
+- **Composables** for domain-specific logic (aggregation, filtering, uncounted inventory)
 - **Vuex** for user data lookup (`store.getters.getUserByKey`)
+
+---
+
+## File Structure
+
+```
+webapps/main/src/
+├── composables/
+│   ├── useCountRecordAggregation.js  # Level-based aggregation logic
+│   ├── useCountRecordFilters.js      # Filter state and filtering
+│   ├── useCountRecordExport.js       # Export to XLSX/CSV
+│   └── useUncountedInventory.js      # Uncounted inventory fetching
+├── components/warehouse/counting/
+│   ├── CountRecordFilterSidebar.vue  # Filter sidebar UI
+│   ├── CountRecordConflictDialog.vue # Conflict resolution dialog
+│   └── CountRecordImportDialog.vue   # Import dialog
+└── views/warehouse/counting/
+    └── CountSessionRecordsTab.vue    # Main component
+```
+
+---
+
+## Composable Interfaces
+
+### useCountRecordAggregation
+
+```javascript
+import { useCountRecordAggregation, getDiscardedRecords } from '@/composables/useCountRecordAggregation';
+
+const {
+  allLevels,           // Ref<boolean> - "All levels" mode toggle
+  selectedLevel,       // Ref<number> - Currently selected level (1-N)
+  positionLevel,       // ComputedRef<number|null> - Level or null if allLevels
+  setPositionLevel,    // (value: number) => void - Set level and disable allLevels
+  aggregatedRecords,   // ComputedRef<Aggregate[]> - All aggregates
+  visibleAggregates,   // ComputedRef<Aggregate[]> - Excluding discarded-only
+  discardedOnlyCount,  // ComputedRef<number> - Count of hidden aggregates
+  getActiveRecord,     // (row) => Record|null - Get most recent non-discarded
+  getDiscardedRecords, // (row) => Record[] - Get discarded records
+} = useCountRecordAggregation(rawRecords, positionLookup, completedPositions);
+```
+
+### useCountRecordFilters
+
+```javascript
+import { useCountRecordFilters } from '@/composables/useCountRecordFilters';
+
+const {
+  filters,             // Ref<FilterState> - All filter criteria
+  filteredRecords,     // ComputedRef<Aggregate[]> - Filtered results
+  resetFilters,        // () => void - Reset to defaults
+} = useCountRecordFilters(visibleAggregates);
+```
+
+### useUncountedInventory
+
+```javascript
+import { useUncountedInventory } from '@/composables/useUncountedInventory';
+
+const {
+  getUncountedQt,          // (row) => number|null
+  getTotalSystemQt,        // (row) => number|null
+  isUncountedLoading,      // (row) => boolean
+  getUncountedError,       // (row) => string|null
+  getUncountedPositions,   // (row) => Array<{key, code, quantity}>
+  retryUncountedFetch,     // (row) => Promise<void>
+  getEffectiveDelta,       // (row) => number|null
+} = useUncountedInventory(visibleAggregates, allLevels, countSessionStore);
+```
 
 ---
 
@@ -412,6 +521,50 @@ Uses the `useWildcardToRegex` composable for pattern matching:
 | Pre-selection | Most recent record is pre-selected |
 | Discarded records | Shown in collapsible section for reference |
 | Read-only mode | If no actual conflict (just discarded records), no selection UI |
+
+---
+
+## CountRecordFilterSidebar Component
+
+The filter sidebar is extracted into a dedicated component for cleaner separation.
+
+### Props
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `modelValue` | `Object` | Filter state (v-model) |
+| `positionLevel` | `Number` | Current position level |
+| `allLevels` | `Boolean` | Whether "All levels" mode is active |
+| `sessionStatus` | `String` | Session status (for import button visibility) |
+| `exporting` | `Boolean` | Export loading state |
+
+### Events
+
+| Event | Payload | Description |
+|-------|---------|-------------|
+| `update:modelValue` | `Object` | Filter state changed |
+| `update:positionLevel` | `Number` | Level selector changed |
+| `update:allLevels` | `Boolean` | "All" toggle changed |
+| `export-xlsx` | - | Export XLSX requested |
+| `export-csv` | - | Export CSV requested |
+| `import` | - | Import requested |
+
+### Usage
+
+```vue
+<CountRecordFilterSidebar
+  v-model="filters"
+  :position-level="selectedLevel"
+  :all-levels="allLevels"
+  :session-status="countSessionStore.sessionData?.status"
+  :exporting="exporting"
+  @update:position-level="setPositionLevel"
+  @update:all-levels="allLevels = $event"
+  @export-xlsx="handleExportXLSX"
+  @export-csv="handleExportCSV"
+  @import="importDialogOpen = true"
+/>
+```
 
 ---
 

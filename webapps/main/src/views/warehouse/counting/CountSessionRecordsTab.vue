@@ -358,185 +358,18 @@
 
     <!-- FILTER SIDEBAR -->
     <template #after>
-      <div class="column q-gutter-md q-pa-md">
-
-        <!-- Export/Import Actions -->
-        <div class="col-auto row q-gutter-sm">
-          <q-btn-dropdown
-            :label="$t('export')"
-            icon="mdi-download"
-            color="primary"
-            outline
-            dense
-            no-caps
-            :loading="exporting"
-          >
-            <q-list>
-              <q-item clickable v-close-popup @click="handleExportXLSX">
-                <q-item-section avatar>
-                  <q-icon name="mdi-file-excel" color="green" />
-                </q-item-section>
-                <q-item-section>Excel (.xlsx)</q-item-section>
-              </q-item>
-              <q-item clickable v-close-popup @click="handleExportCSV">
-                <q-item-section avatar>
-                  <q-icon name="mdi-file-delimited" color="blue" />
-                </q-item-section>
-                <q-item-section>CSV (.csv)</q-item-section>
-              </q-item>
-            </q-list>
-          </q-btn-dropdown>
-          <q-btn
-            v-if="countSessionStore.sessionData?.status === 'completed'"
-            :label="$t('import')"
-            icon="mdi-upload"
-            color="primary"
-            outline
-            dense
-            no-caps
-            @click="importDialogOpen = true"
-          />
-        </div>
-
-        <q-separator />
-
-        <div class="text-h5 uppercase">{{ $t('filter', 2) }}</div>
-
-        <!-- Variance & only-with-variance -->
-        <div class="col-auto row items-center">
-          <div class="col-6">
-            <q-checkbox
-              v-model="filters.onlyWithVariance"
-              :label="$t('warehouse.counting.variance_only')"
-              dense
-            />
-          </div>
-          <div class="col-6">
-            <!-- Has Notes -->
-            <q-checkbox
-              v-model="filters.hasNotes"
-              :label="$t('warehouse.counting.with_notes_only')"
-              dense
-            />
-          </div>
-          <div class="col-6">
-            <!-- Only Conflicts -->
-            <q-checkbox
-              v-model="filters.onlyConflicts"
-              :label="$t('warehouse.counting.conflicts_only')"
-              dense
-            />
-          </div>
-        </div>
-
-        <div class="col-auto">
-          <q-input
-          v-model="filters.variance"
-          type="number"
-            class="full-width"
-            min="0"
-            :max="filters.varianceType === 'percentage' ? 100 : null"
-            :label="$t('warehouse.counting.variance_threshold')"
-            stack-label
-            dense
-            filled
-          >
-            <template #append>
-              <q-btn-toggle
-                v-model="filters.varianceType"
-                map-options
-                emit-value
-                dense
-                flat
-                size="md"
-                :options="[
-                  { label: $t('quantity.short'), value: 'absolute' },
-                  { label: '%', value: 'percentage' },
-                ]"/>
-            </template>
-          </q-input>
-        </div>
-
-        <!-- Position Level -->
-        <div class="col-auto">
-          <q-input
-            :model-value.number="positionLevel"
-            @update:model-value="setPositionLevel"
-            type="number"
-            :label="$t('warehouse.counting.position_level')"
-            class="full-width"
-            dense
-            filled
-            min="0"
-          >
-            <template #append>
-              <q-btn
-                :color="allLevels ? 'primary' : 'white-low'"
-                size="sm"
-                padding="xs md"
-                outline
-                dense
-                @click="allLevels = !allLevels">
-                <div class="q-mr-sm">{{ $t('all') }}</div>
-                <q-icon name="mdi-family-tree" size="xs" />
-              </q-btn>
-            </template>
-          </q-input>
-        </div>
-
-        <!-- Text & tag filters -->
-
-        <!-- Product Tag Filter -->
-        <BaseAutocompleteTag
-          :value="filters.productTag"
-          :key-only="true"
-          :label="$t('search_tags')"
-          dense
-          @select="val => (filters.productTag = val)"
-        />
-
-        <!-- User Filter -->
-        <BaseAutocompleteUser
-          :value="filters.userKey"
-          :key-only="true"
-          :operator-only="false"
-          dense
-          :label="$t('warehouse.counting.user')"
-          @select="val => (filters.userKey = val)"
-        />
-
-        <!-- Product Filter -->
-        <q-input
-          v-model="filters.product"
-          :label="$t('product.label')"
-          dense
-          filled
-          clearable
-        />
-
-        <!-- Serial Filter -->
-        <q-input
-          v-model="filters.serial"
-          :label="$t('serial')"
-          dense
-          filled
-          clearable
-        />
-
-        <!-- Position / Path Filter -->
-          <q-input
-            v-model="filters.position"
-            :label="$t('warehouse.inventory.position')"
-            dense
-            filled
-            clearable
-          />
-          <q-toggle
-            v-model="filters.positionIncludePath"
-            :label="$t('warehouse.counting.include_path')"
-            dense
-          />
-      </div>
+      <CountRecordFilterSidebar
+        v-model="filters"
+        :position-level="selectedLevel"
+        :all-levels="allLevels"
+        :session-status="countSessionStore.sessionData?.status"
+        :exporting="exporting"
+        @update:position-level="setPositionLevel"
+        @update:all-levels="allLevels = $event"
+        @export-xlsx="handleExportXLSX"
+        @export-csv="handleExportCSV"
+        @import="importDialogOpen = true"
+      />
     </template>
     </q-splitter>
 
@@ -563,207 +396,80 @@ import { useStore } from 'vuex';
 import { useQuasar, Notify } from 'quasar';
 import { useCountSessionStore } from '@/stores/countSession';
 import { api } from '@/boot/axios.js';
-import { useWildcardToRegex } from '@/composables/useWildcardToRegex';
+
+// Composables
+import { useCountRecordAggregation, getDiscardedRecords } from '@/composables/useCountRecordAggregation';
+import { useCountRecordFilters } from '@/composables/useCountRecordFilters';
+import { useUncountedInventory } from '@/composables/useUncountedInventory';
+import { useCountRecordExport } from '@/composables/useCountRecordExport';
+
+// Components
 import CountRecordConflictDialog from '@/components/warehouse/counting/CountRecordConflictDialog.vue';
 import CountRecordImportDialog from '@/components/warehouse/counting/CountRecordImportDialog.vue';
-import BaseAutocompleteTag from '@/components/BaseAutocompleteTag.vue';
-import BaseAutocompleteUser from '@/components/BaseAutocompleteUser.vue';
+import CountRecordFilterSidebar from '@/components/warehouse/counting/CountRecordFilterSidebar.vue';
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue';
+
+// Utils
 import { formatDateTime } from '@/lib/TimeHandling';
-import { useCountRecordExport } from '@/composables/useCountRecordExport';
 
 const { t: $t, locale } = useI18n();
 const $q = useQuasar();
 const store = useStore();
 const countSessionStore = useCountSessionStore();
-const { wildcardToRegex } = useWildcardToRegex();
+
+// ============================================================
+// UI STATE
+// ============================================================
 
 const splitterModel = ref(70);
-// State
-const displayMode = ref('pair');
-const selectedLevel = ref(1);
-const allLevels = ref(true);
-const positionLevel = computed({
-  get() {
-    return allLevels.value ? null : selectedLevel.value;
-  },
-  set(value) {
-    selectedLevel.value = value;
-  },
-});
-
-const setPositionLevel = (value) => {
-  selectedLevel.value = Number(value);
-  allLevels.value = false;
-};
-
 const conflictDialogOpen = ref(false);
 const selectedConflictAggregate = ref(null);
 const events = ref(null);
 const importDialogOpen = ref(false);
 
+// ============================================================
+// STORE DATA (reactive)
+// ============================================================
+
+const loading = computed(() => countSessionStore.recordsLoading);
+const rawRecords = computed(() => countSessionStore.records);
+const positionLookup = computed(() => countSessionStore.positionLookup);
+const completedPositions = computed(() => countSessionStore.completedPositions);
+
+// ============================================================
+// COMPOSABLES
+// ============================================================
+
+// Aggregation composable
+const {
+  allLevels,
+  selectedLevel,
+  setPositionLevel,
+  visibleAggregates,
+  discardedOnlyCount,
+} = useCountRecordAggregation(rawRecords, positionLookup, completedPositions);
+
+// Filter composable
+const { filters, filteredRecords } = useCountRecordFilters(visibleAggregates);
+
+// Uncounted inventory composable
+const {
+  getUncountedQt,
+  getTotalSystemQt,
+  isUncountedLoading,
+  getUncountedError,
+  getUncountedPositions,
+  retryUncountedFetch,
+  getEffectiveDelta,
+} = useUncountedInventory(visibleAggregates, allLevels, countSessionStore);
+
 // Export composable
 const { exporting, exportToXLSX, exportToCSV } = useCountRecordExport();
 
-// Filters
-const filters = ref({
-  variance: null,
-  varianceType: 'absolute',
-  onlyWithVariance: false,
-  onlyConflicts: false,
-  hasNotes: false,
-  product: '',
-  serial: '',
-  position: '',
-  positionIncludePath: false,
-  productTag: null,
-  userKey: null,
-});
+// ============================================================
+// TABLE COLUMNS
+// ============================================================
 
-// Display mode options
-const displayModeOptions = computed(() => [
-  { label: $t('warehouse.counting.by_pair'), value: 'pair' },
-  { label: $t('warehouse.counting.by_product'), value: 'product' },
-  { label: $t('warehouse.counting.by_position_level'), value: 'position_level' },
-]);
-
-
-// Loading state from store
-const loading = computed(() => countSessionStore.recordsLoading);
-
-// Raw records from store
-const rawRecords = computed(() => countSessionStore.records);
-
-// Position lookup (for path-based search)
-const positionLookup = computed(() => countSessionStore.positionLookup);
-
-function getActiveRecord(row) {
-  if (!row.activeRecordKey) return null;
-  return row.records.find(r => r._key === row.activeRecordKey);
-}
-
-function getDiscardedRecords(row) {
-  return row.records.filter(r => r.status === 'discarded');
-}
-
-/**
- * Get cached uncounted inventory data for an aggregate row
- * @param {Object} row - The aggregate row
- * @returns {Object|null} { qt, loading, error } or null
- */
-function getUncountedData(row) {
-  if (!row.position?.key || !row.product?.key) return null;
-  return countSessionStore.getUncountedInventory(row.position.key, row.product.key);
-}
-
-/**
- * Get uncounted quantity for display in the table
- * @param {Object} row - The aggregate row
- * @returns {number|null} The uncounted quantity or null if not available
- */
-function getUncountedQt(row) {
-  // If position is fully counted, uncounted = 0
-  if (row.coverage?.isComplete) return 0;
-  const data = getUncountedData(row);
-  return data?.qt ?? null;
-}
-
-/**
- * Get total system quantity (system_qt from records + uncounted)
- * @param {Object} row - The aggregate row
- * @returns {number|null} The total system quantity or null if not available
- */
-function getTotalSystemQt(row) {
-  const systemQt = row.totalSystemQt;
-  if (systemQt === null) return null;
-
-  // If position is fully counted, total = system
-  if (row.coverage?.isComplete) return systemQt;
-
-  const uncountedQt = getUncountedQt(row);
-  if (uncountedQt === null) return null;
-
-  return systemQt + uncountedQt;
-}
-
-/**
- * Check if uncounted data is currently loading for a row
- * @param {Object} row - The aggregate row
- * @returns {boolean} True if loading
- */
-function isUncountedLoading(row) {
-  if (row.coverage?.isComplete) return false;
-  const data = getUncountedData(row);
-  return data?.loading ?? false;
-}
-
-/**
- * Check if uncounted data fetch had an error
- * @param {Object} row - The aggregate row
- * @returns {string|null} Error message or null
- */
-function getUncountedError(row) {
-  const data = getUncountedData(row);
-  return data?.error ?? null;
-}
-
-/**
- * Get uncounted positions for tooltip display
- * @param {Object} row - The aggregate row
- * @returns {Array} Array of { key, code, quantity } for uncounted positions
- */
-function getUncountedPositions(row) {
-  if (row.coverage?.isComplete) return [];
-  const data = getUncountedData(row);
-  return data?.positions ?? [];
-}
-
-/**
- * Retry fetching uncounted inventory for a row
- * @param {Object} row - The aggregate row
- */
-async function retryUncountedFetch(row) {
-  if (!row.position?.key || !row.product?.key) return;
-  try {
-    await countSessionStore.fetchUncountedInventory(
-      row.position.key,
-      row.product.key,
-      row.aggregatedPositionKeys || []
-    );
-  } catch (error) {
-    console.error('Error retrying uncounted fetch:', error);
-  }
-}
-
-/**
- * Get effective delta for display
- * When aggregating with incomplete coverage, uses total system quantity instead of just counted system quantity
- * @param {Object} row - The aggregate row
- * @returns {number|null} The effective delta
- */
-function getEffectiveDelta(row) {
-  // If in "All levels" mode, use the regular delta
-  if (allLevels.value) {
-    return row.delta;
-  }
-
-  // If position is fully counted, use regular delta
-  if (row.coverage?.isComplete) {
-    return row.delta;
-  }
-
-  // When aggregating with incomplete coverage, use total system quantity
-  const totalSystemQt = getTotalSystemQt(row);
-  const countedQt = row.totalCountedQt;
-
-  if (totalSystemQt === null || countedQt === null) {
-    return null;
-  }
-
-  return countedQt - totalSystemQt;
-}
-
-// Table columns
 const tableColumns = computed(() => {
   const columns = [
     {
@@ -851,515 +557,35 @@ const tableColumns = computed(() => {
   return columns;
 });
 
-/**
- * Build a case-insensitive matcher using the shared wildcard-to-regex composable.
- * If pattern is empty/null, matcher always returns true.
- */
-function buildWildcardMatcher(pattern) {
-  if (!pattern) {
-    return () => true;
-  }
+// ============================================================
+// DISPLAY HELPERS
+// ============================================================
 
-  const regex = wildcardToRegex(pattern.toString().trim());
-  if (!regex) {
-    return () => true;
-  }
-
-  return (text) => {
-    if (text == null) return false;
-    return regex.test(String(text));
-  };
+function getDeltaClass(delta) {
+  if (delta === null || delta === undefined) return 'text-grey';
+  if (delta > 0) return 'text-theme-green text-weight-bold';
+  if (delta < 0) return 'text-theme-red text-weight-bold';
+  return 'text-grey';
 }
 
-/**
- * Determine the aggregate position key for a record based on the selected level.
- * - If allLevels is true: use the record's actual position (no level aggregation)
- * - If level is 0: aggregate at root (all positions for same product)
- * - If level >= 1: use the ancestor at that level, or actual position if shallower
- *
- * Note on levels:
- * - User expectation: IN = level 0, children of IN = level 1, grandchildren = level 2, etc.
- * - positionLookup.level: children of IN = level 0, grandchildren = level 1, etc.
- * - So: actualLevel = positionLookup.level + 1
- *
- * @param {Object} record - The count record
- * @param {Map} lookup - The positionLookup map
- * @returns {Object} { positionKey, positionCode, pathString }
- */
-function getAggregatePosition(record, lookup) {
-  // If "All" is toggled, use the actual position (most granular)
-  // Path should NOT include IN (it's implied)
-  if (allLevels.value) {
-    return {
-      positionKey: record.position_key,
-      positionCode: record.position_code,
-      pathString: record.position_path?.join(' > ') || record.position_code || '',
-      deleted: record.position_deleted || false,
-    };
-  }
-
-  const targetLevel = Number(selectedLevel.value);
-
-  // Level 0 means aggregate everything (total inventory for product)
-  if (targetLevel === 0) {
-    return {
-      positionKey: 'IN',
-      positionCode: 'IN',
-      pathString: 'IN',
-      deleted: false,
-    };
-  }
-
-  // Use position_path (codes) and position_path_keys (keys) from record
-  // position_path[0] = level 1 position code, position_path[1] = level 2 position code, etc.
-  // position_path_keys[0] = level 1 position key, etc.
-  const path = record.position_path || [];
-  const pathKeys = record.position_path_keys || [];
-
-  if (path.length === 0) {
-    // No path data, use actual position
-    return {
-      positionKey: record.position_key,
-      positionCode: record.position_code,
-      pathString: record.position_code || '',
-      deleted: record.position_deleted || false,
-    };
-  }
-
-  // The actual level of this position is path.length (since path excludes IN which is level 0)
-  const actualLevel = path.length;
-
-  if (actualLevel <= targetLevel) {
-    // Position is at or shallower than target level, use actual position
-    // Path string should not include IN
-    return {
-      positionKey: record.position_key,
-      positionCode: record.position_code,
-      pathString: path.join(' > '),
-      deleted: record.position_deleted || false,
-    };
-  }
-
-  // Position is deeper than target level, use position at target level from path
-  // targetLevel 1 → index 0, targetLevel 2 → index 1, etc.
-  const targetIndex = targetLevel - 1;
-  const targetCode = path[targetIndex];
-  const targetKey = pathKeys[targetIndex] || targetCode; // Fallback to code if keys missing
-
-  // Build path string up to target level (not including IN)
-  const pathString = path.slice(0, targetLevel).join(' > ');
-
-  // Get additional data from lookup if available
-  const targetData = lookup?.get(targetKey);
-
-  return {
-    positionKey: targetKey,
-    positionCode: targetCode,
-    pathString: pathString,
-    deleted: targetData?.deleted || false,
-  };
+function formatDelta(delta) {
+  if (delta === null || delta === undefined) return '-';
+  if (delta > 0) return `+${delta}`;
+  return String(delta);
 }
 
-/**
- * Aggregate records by product and position (at selected level).
- * Supports level-based aggregation where records are grouped by their ancestor position
- * at the specified hierarchy level.
- */
-const aggregatedRecords = computed(() => {
-  const records = rawRecords.value;
-  if (!records || records.length === 0) return [];
+function formatDate(date) {
+  return formatDateTime(
+    date,
+    locale.value,
+    { dateStyle: 'short', timeStyle: 'short' }
+  );
+}
 
-  const lookup = positionLookup.value;
-  const aggregateMap = new Map();
+// ============================================================
+// DATA LOADING
+// ============================================================
 
-  for (const record of records) {
-    // Determine aggregate position based on level settings
-    const aggPos = getAggregatePosition(record, lookup);
-
-    // Build aggregate key: product + aggregated position
-    const aggregateKey = `${record.product_key}_${aggPos.positionKey}`;
-
-    if (!aggregateMap.has(aggregateKey)) {
-      aggregateMap.set(aggregateKey, {
-        aggregateKey,
-        product: {
-          key: record.product_key,
-          code: record.product_code,
-          description: record.product_description,
-          traceability_level: record.product_traceability_level,
-          tags: record.product_tags || [],
-        },
-        position: aggPos.positionKey ? {
-          key: aggPos.positionKey,
-          code: aggPos.positionCode,
-          deleted: aggPos.deleted,
-        } : null,
-        records: [],
-        pathString: aggPos.pathString,
-        // Aggregated quantities (set to matching value if all records match, null otherwise)
-        totalSystemQt: null,
-        totalCountedQt: null,
-        delta: null,
-        // Serial tracking for aggregation
-        allSystemSerialCodes: new Set(),
-        allCountedSerialCodes: new Set(),
-        serialDelta: { added: [], removed: [] },
-        // Conflict and notes
-        hasConflict: false,
-        hasNotes: false,
-        notesCount: 0,
-        allNotes: [],
-        // User tracking for multi-user display
-        userKeys: new Set(),
-        hasMultipleUsers: false,
-        user_key: null,
-        counted_at: null,
-        // Track unique positions being aggregated
-        aggregatedPositionKeys: new Set(),
-        aggregatedPositionCodes: new Set(),
-        // For compatibility with existing code
-        activeRecordKey: null,
-      });
-    }
-
-    const aggregate = aggregateMap.get(aggregateKey);
-    aggregate.records.push(record);
-
-    // Track aggregated positions
-    if (record.position_key) {
-      aggregate.aggregatedPositionKeys.add(record.position_key);
-      aggregate.aggregatedPositionCodes.add(record.position_code);
-    }
-
-    // Collect notes
-    if (record.notes) {
-      aggregate.allNotes.push(record.notes);
-      aggregate.notesCount++;
-      aggregate.hasNotes = true;
-    }
-
-    // Track users
-    if (record.user_key) {
-      aggregate.userKeys.add(record.user_key);
-    }
-
-    // Collect serials for union (only from non-discarded records)
-    if (record.status !== 'discarded') {
-      // Collect serials for union
-      if (record.system_serials) {
-        record.system_serials.forEach(s => aggregate.allSystemSerialCodes.add(s.serial_code));
-      }
-      if (record.counted_serials) {
-        record.counted_serials.forEach(s => aggregate.allCountedSerialCodes.add(s.serial_code));
-      }
-    }
-  }
-
-  // Process each aggregate to finalize calculations
-  for (const aggregate of aggregateMap.values()) {
-    const nonDiscardedRecords = aggregate.records.filter(r => r.status !== 'discarded');
-
-    // Group records by their ORIGINAL product+position pair (base pair)
-    // This is important: conflicts only occur when multiple records exist for the SAME base pair
-    // When aggregating across different positions, we should SUM the quantities
-    const pairMap = new Map();
-    for (const record of nonDiscardedRecords) {
-      const pairKey = `${record.product_key}_${record.position_key}`;
-      if (!pairMap.has(pairKey)) {
-        pairMap.set(pairKey, []);
-      }
-      pairMap.get(pairKey).push(record);
-    }
-
-    // Process each base pair: check for conflicts and get representative values
-    let totalSystemQt = 0;
-    let totalCountedQt = 0;
-    let hasConflict = false;
-
-    for (const [pairKey, pairRecords] of pairMap.entries()) {
-      if (pairRecords.length > 1) {
-        // Multiple records for the same base pair - check if they match
-        const firstSystemQt = pairRecords[0].system_qt ?? null;
-        const firstCountedQt = pairRecords[0].counted_qt ?? null;
-
-        const allSystemQtMatch = pairRecords.every(r => (r.system_qt ?? null) === firstSystemQt);
-        const allCountedQtMatch = pairRecords.every(r => (r.counted_qt ?? null) === firstCountedQt);
-
-        if (!allCountedQtMatch) {
-          // Conflict: same product+position has different counted quantities
-          hasConflict = true;
-        }
-
-        // Use the matching value (or first value if they match)
-        // If they don't match, we still need a value for summing - use null to indicate conflict
-        if (allSystemQtMatch && firstSystemQt !== null) {
-          totalSystemQt += firstSystemQt;
-        }
-        if (allCountedQtMatch && firstCountedQt !== null) {
-          totalCountedQt += firstCountedQt;
-        } else if (!allCountedQtMatch) {
-          // Can't sum counted quantities when there's a conflict
-          totalCountedQt = null;
-        }
-      } else {
-        // Single record for this base pair - no conflict possible
-        const record = pairRecords[0];
-        totalSystemQt += record.system_qt || 0;
-        if (totalCountedQt !== null) {
-          totalCountedQt += record.counted_qt || 0;
-        }
-      }
-    }
-
-    aggregate.hasConflict = hasConflict;
-    aggregate.totalSystemQt = pairMap.size > 0 ? totalSystemQt : null;
-    aggregate.totalCountedQt = hasConflict ? null : (pairMap.size > 0 ? totalCountedQt : null);
-
-    // Calculate aggregated delta (only if both quantities are available)
-    if (aggregate.totalSystemQt !== null && aggregate.totalCountedQt !== null) {
-      aggregate.delta = aggregate.totalCountedQt - aggregate.totalSystemQt;
-    } else {
-      aggregate.delta = null;
-    }
-
-    // Calculate serial delta from unioned sets
-    if (aggregate.allSystemSerialCodes.size > 0 || aggregate.allCountedSerialCodes.size > 0) {
-      aggregate.serialDelta = {
-        added: [...aggregate.allCountedSerialCodes].filter(s => !aggregate.allSystemSerialCodes.has(s)),
-        removed: [...aggregate.allSystemSerialCodes].filter(s => !aggregate.allCountedSerialCodes.has(s)),
-      };
-    }
-
-    // Recalculate users from non-discarded records only
-    const activeUserKeys = new Set();
-    for (const record of nonDiscardedRecords) {
-      if (record.user_key) {
-        activeUserKeys.add(record.user_key);
-      }
-    }
-    const userKeysArray = [...activeUserKeys];
-    aggregate.userKeys = userKeysArray;
-    aggregate.hasMultipleUsers = userKeysArray.length > 1;
-
-    // Determine user and timestamp to display
-    if (aggregate.hasConflict || aggregate.hasMultipleUsers) {
-      // Don't show single user/timestamp when there's conflict or multiple users
-      aggregate.user_key = null;
-      aggregate.counted_at = null;
-    } else if (userKeysArray.length === 1) {
-      aggregate.user_key = userKeysArray[0];
-
-      // Show timestamp if:
-      // 1. There's only one non-discarded record, OR
-      // 2. All records' timestamps match at the minute level
-      if (nonDiscardedRecords.length === 1) {
-        aggregate.counted_at = nonDiscardedRecords[0]?.counted_at || null;
-      } else if (nonDiscardedRecords.length > 1) {
-        // Check if all timestamps match at the minute level
-        const timestamps = nonDiscardedRecords
-          .map(r => r.counted_at)
-          .filter(Boolean)
-          .map(ts => {
-            const d = new Date(ts);
-            // Truncate to minute by zeroing out seconds and milliseconds
-            return new Date(d.getFullYear(), d.getMonth(), d.getDate(), d.getHours(), d.getMinutes()).getTime();
-          });
-
-        const allMatchAtMinute = timestamps.length > 0 &&
-          timestamps.every(ts => ts === timestamps[0]);
-
-        if (allMatchAtMinute) {
-          // Use the most recent timestamp
-          const latestRecord = nonDiscardedRecords.sort(
-            (a, b) => new Date(b.counted_at) - new Date(a.counted_at)
-          )[0];
-          aggregate.counted_at = latestRecord?.counted_at || null;
-        } else {
-          aggregate.counted_at = null;
-        }
-      } else {
-        aggregate.counted_at = null;
-      }
-    }
-
-    // Set activeRecordKey for compatibility (use most recent non-discarded)
-    if (nonDiscardedRecords.length > 0) {
-      const latestRecord = nonDiscardedRecords.sort(
-        (a, b) => new Date(b.counted_at) - new Date(a.counted_at)
-      )[0];
-      aggregate.activeRecordKey = latestRecord._key;
-    } else if (aggregate.records.length > 0) {
-      // All discarded - use most recent discarded
-      const latestDiscarded = aggregate.records.filter(r => r.status === 'discarded').sort(
-        (a, b) => new Date(b.counted_at) - new Date(a.counted_at)
-      )[0];
-      aggregate.activeRecordKey = latestDiscarded?._key || null;
-    }
-
-    // Convert position Sets to arrays for template use
-    aggregate.aggregatedPositionKeys = [...aggregate.aggregatedPositionKeys];
-    aggregate.aggregatedPositionCodes = [...aggregate.aggregatedPositionCodes];
-
-    // Coverage tracking: check if the aggregated position has been fully counted
-    // Only relevant when aggregating (not in "All levels" mode)
-    const completedPositions = countSessionStore.completedPositions;
-    const positionKey = aggregate.position?.key;
-    aggregate.coverage = {
-      positionKey: positionKey,
-      isComplete: positionKey ? completedPositions.has(positionKey) : false,
-      // In "All levels" mode, coverage is implicit (each row is granular)
-      isAggregated: !allLevels.value,
-    };
-  }
-
-  return Array.from(aggregateMap.values());
-});
-
-/**
- * Filter aggregatedRecords to only show those with active (non-discarded) records
- */
-const visibleAggregates = computed(() => {
-  return aggregatedRecords.value.filter(aggregate => {
-    return aggregate.records.some(r => r.status !== 'discarded');
-  });
-});
-
-/**
- * Count of aggregates that only have discarded records (hidden from view)
- */
-const discardedOnlyCount = computed(() => {
-  return aggregatedRecords.value.filter(aggregate => {
-    return !aggregate.records.some(r => r.status !== 'discarded');
-  }).length;
-});
-
-/**
- * Apply filters to visible aggregated records
- */
-const filteredRecords = computed(() => {
-  let result = visibleAggregates.value;
-
-  // Pre-build wildcard matchers
-  const productMatcher = buildWildcardMatcher(filters.value.product);
-  const serialMatcher = buildWildcardMatcher(filters.value.serial);
-  const positionMatcher = buildWildcardMatcher(filters.value.position);
-
-  // Variance filter
-  if (filters.value.variance !== null && filters.value.variance !== '') {
-    const threshold = Number(filters.value.variance);
-    result = result.filter(r => {
-      if (!r.activeRecordKey) return false;
-      const delta = Math.abs(r.delta || r.serialDelta?.added?.length + r.serialDelta?.removed?.length || 0);
-      if (filters.value.varianceType === 'percentage') {
-        const systemQt = r.totalSystemQt || 1;
-        const percentVariance = (delta / systemQt) * 100;
-        return percentVariance >= threshold;
-      }
-      return delta >= threshold;
-    });
-  }
-
-  // Only with variance filter
-  if (filters.value.onlyWithVariance) {
-    result = result.filter((r) => {
-      const delta = Math.abs(r.delta || r.serialDelta?.added?.length + r.serialDelta?.removed?.length || 0);
-      return delta > 0;
-    });
-  }
-
-  // Has notes filter
-  if (filters.value.hasNotes) {
-    result = result.filter(r => r.hasNotes);
-  }
-
-  // Only conflicts filter
-  if (filters.value.onlyConflicts) {
-    result = result.filter(r => r.hasConflict);
-  }
-
-  // Product tag filter
-  if (filters.value.productTag) {
-    const selectedTagKey = filters.value.productTag;
-    result = result.filter((r) =>
-      (r.product.tags || []).some(tag => tag._key === selectedTagKey)
-    );
-  }
-
-  // Product filter
-  if (filters.value.product) {
-    result = result.filter(r =>
-      productMatcher(r.product.code) ||
-      productMatcher(r.product.description)
-    );
-  }
-
-  // Serial filter - use aggregated serial sets
-  if (filters.value.serial) {
-    result = result.filter(r => {
-      // Check all serials across all records in the aggregate
-      for (const record of r.records) {
-        const allSerials = [
-          ...(record.system_serial_keys || []),
-          ...(record.counted_serial_keys || []),
-        ];
-        if (allSerials.some(s => serialMatcher(s))) {
-          return true;
-        }
-      }
-      return false;
-    });
-  }
-
-  // Position filter
-  if (filters.value.position) {
-    result = result.filter(r => {
-      if (!r.position) return false;
-
-      // Always check the aggregate position code
-      if (positionMatcher(r.position.code)) {
-        return true;
-      }
-
-      // If include path toggle is active, also match ancestors and underlying positions
-      if (filters.value.positionIncludePath) {
-        // Check the path string of the aggregate position
-        if (positionMatcher(r.pathString)) {
-          return true;
-        }
-
-        // Check each individual position code in the path
-        // The path is stored as "Code1 > Code2 > Code3", split and check each
-        const pathCodes = r.pathString?.split(' > ') || [];
-        if (pathCodes.some(code => positionMatcher(code))) {
-          return true;
-        }
-
-        // Also check all underlying position codes (when aggregating multiple positions)
-        if (r.aggregatedPositionCodes?.some(code => positionMatcher(code))) {
-          return true;
-        }
-
-        // Check paths of all underlying records
-        for (const record of r.records) {
-          if (record.position_path?.some(code => positionMatcher(code))) {
-            return true;
-          }
-        }
-      }
-
-      return false;
-    });
-  }
-
-  // User filter - check if user is in the aggregate's userKeys array
-  if (filters.value.userKey) {
-    result = result.filter(r => r.userKeys?.includes(filters.value.userKey));
-  }
-
-  return result;
-});
-
-// Methods
 async function loadRecords() {
   let timer10s = null;
   let timer20s = null;
@@ -1419,26 +645,9 @@ async function loadRecords() {
   }
 }
 
-function getDeltaClass(delta) {
-  if (delta === null || delta === undefined) return 'text-grey';
-  if (delta > 0) return 'text-theme-green text-weight-bold';
-  if (delta < 0) return 'text-theme-red text-weight-bold';
-  return 'text-grey';
-}
-
-function formatDelta(delta) {
-  if (delta === null || delta === undefined) return '-';
-  if (delta > 0) return `+${delta}`;
-  return String(delta);
-}
-
-function formatDate(date) {
-  return formatDateTime(
-    date,
-    locale.value,
-    { dateStyle: 'short', timeStyle: 'short' }
-  );
-}
+// ============================================================
+// CONFLICT DIALOG
+// ============================================================
 
 function openConflictDialog(aggregate) {
   selectedConflictAggregate.value = aggregate;
@@ -1452,7 +661,10 @@ async function handleConflictResolved() {
   selectedConflictAggregate.value = null;
 }
 
-// Export/Import handlers
+// ============================================================
+// EXPORT/IMPORT HANDLERS
+// ============================================================
+
 function getUserName(userKey) {
   const user = store.getters.getUserByKey(userKey);
   if (user) {
@@ -1478,7 +690,10 @@ async function handleImportCompleted() {
   await loadRecords();
 }
 
-// Load records on mount
+// ============================================================
+// LIFECYCLE
+// ============================================================
+
 onMounted(() => {
   loadRecords();
   // Load position hierarchy to enable level-based aggregation
@@ -1504,94 +719,14 @@ onBeforeUnmount(() => {
   }
 });
 
-// Reload when display mode changes
-watch(displayMode, () => {
-  // Records stay the same, just re-aggregate
-});
+// ============================================================
+// WATCHERS
+// ============================================================
 
+// Reload records when filters change (for server-side filtering if needed)
 watch(filters, () => {
   loadRecords();
 });
-
-// ============================================================
-// UNCOUNTED INVENTORY FETCHING (Phase 3)
-// ============================================================
-
-// Track if fetching is in progress to prevent concurrent fetch loops
-const fetchingUncounted = ref(false);
-
-/**
- * Aggregates that need uncounted inventory data fetched
- * Only includes rows that:
- * - Are aggregated (not in "All levels" mode)
- * - Have incomplete coverage
- * - Don't already have cached data
- */
-const aggregatesNeedingFetch = computed(() => {
-  if (allLevels.value) return []; // No fetching needed in "All levels" mode
-
-  return visibleAggregates.value.filter(agg => {
-    // Skip if position is fully counted
-    if (agg.coverage?.isComplete) return false;
-
-    // Skip if missing position or product key
-    if (!agg.position?.key || !agg.product?.key) return false;
-
-    // Skip if already cached (not in error state)
-    const cached = countSessionStore.getUncountedInventory(agg.position.key, agg.product.key);
-    if (cached && !cached.error && !cached.loading) return false;
-
-    // Skip if currently loading
-    if (cached?.loading) return false;
-
-    return true;
-  });
-});
-
-/**
- * Sequential fetch of uncounted inventory for visible aggregates
- * Processes one at a time to avoid overwhelming the backend
- */
-async function fetchUncountedInventorySequentially() {
-  if (fetchingUncounted.value) return; // Already fetching
-
-  const toFetch = aggregatesNeedingFetch.value;
-  if (toFetch.length === 0) return;
-
-  fetchingUncounted.value = true;
-
-  try {
-    for (const agg of toFetch) {
-      // Re-check if still needs fetching (could have been fetched by retry)
-      const cached = countSessionStore.getUncountedInventory(agg.position.key, agg.product.key);
-      if (cached && !cached.error && !cached.loading) continue;
-
-      try {
-        await countSessionStore.fetchUncountedInventory(
-          agg.position.key,
-          agg.product.key,
-          agg.aggregatedPositionKeys || []
-        );
-      } catch (error) {
-        // Error is already stored in cache, continue with next
-        console.warn('Failed to fetch uncounted inventory:', error);
-      }
-    }
-  } finally {
-    fetchingUncounted.value = false;
-  }
-}
-
-// Watch for aggregates needing fetch and trigger sequential fetching
-watch(
-  aggregatesNeedingFetch,
-  (newVal) => {
-    if (newVal.length > 0) {
-      fetchUncountedInventorySequentially();
-    }
-  },
-  { immediate: true }
-);
 
 // Clear uncounted cache when inventory changes (via SSE notification)
 // This is handled by watching the records/completedPositions changes
@@ -1602,4 +737,11 @@ watch(
     countSessionStore.clearUncountedInventoryCache();
   }
 );
+
+// Set level to null when toggling allLevels to true
+watch(allLevels, (newValue) => {
+  if (newValue) {
+    selectedLevel.value = null;
+  }
+});
 </script>
