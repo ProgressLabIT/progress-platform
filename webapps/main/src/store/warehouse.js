@@ -2,9 +2,12 @@ import { cloneDeep as _cloneDeep } from 'lodash';
 import { Notify } from 'quasar';
 import { api } from '@/boot/axios.js';
 
+const pendingRequests = new Map();
+
 const warehouse = {
   state: {
     positions: [],
+    position_cache: {}, // Cache for key -> code mapping
     temp_print_templates: [],
     saved_print_templates: [],
     position_search_params: undefined,
@@ -17,6 +20,10 @@ const warehouse = {
   },
 
   getters: {
+    getPositionCode: (state) => (position_key) => {
+      return state.position_cache[position_key];
+    },
+
     getPositionCount: (state) => () => {
       return state.positions.length;
     },
@@ -47,8 +54,16 @@ const warehouse = {
   },
   mutations: {
     // POSITION
+    CACHE_POSITION(state, { key, code }) {
+      state.position_cache = { ...state.position_cache, [key]: code };
+    },
     LOAD_POSITIONS(state, positions) {
       state.positions = positions;
+      const newCache = { ...state.position_cache };
+      positions.forEach(p => {
+        if (p._key && p.code) newCache[p._key] = p.code;
+      });
+      state.position_cache = newCache;
     },
     APPEND_POSITIONS(state, positions) {
       if (state.positions) {
@@ -58,6 +73,11 @@ const warehouse = {
       } else {
         state.positions = positions;
       }
+      const newCache = { ...state.position_cache };
+      positions.forEach(p => {
+        if (p._key && p.code) newCache[p._key] = p.code;
+      });
+      state.position_cache = newCache;
     },
     SET_POSITION_SEARCH_PARAMS(state, params) {
       state.position_search_params = params;
@@ -147,10 +167,62 @@ const warehouse = {
 
   actions: {
     // POSITIONS
+    async resolvePositionCode({ state, commit }, position_key) {
+      if (!position_key) return null;
+
+      // Return cached code if available
+      if (state.position_cache[position_key]) {
+        return state.position_cache[position_key];
+      }
+
+      // Check for pending request
+      if (pendingRequests.has(position_key)) {
+        return pendingRequests.get(position_key);
+      }
+
+      const requestPromise = (async () => {
+        try {
+          const { data } = await api.get(`position/${position_key}`);
+          // Handle both old (array/direct) and new (object with position field) structures
+          const position = data.position || data;
+          const code = position?.code;
+
+          if (code) {
+            commit('CACHE_POSITION', { key: position_key, code });
+            return code;
+          }
+        } catch (e) {
+          console.warn(`Failed to resolve position code for key ${position_key}`, e);
+        } finally {
+          pendingRequests.delete(position_key);
+        }
+        return position_key; // Fallback to key
+      })();
+
+      pendingRequests.set(position_key, requestPromise);
+      return requestPromise;
+    },
+
     async getPositions({ commit }, search_params) {
-      const { data } = await api.get('position', { params: search_params });
-      commit('LOAD_POSITIONS', data);
-      commit('SET_POSITION_SEARCH_PARAMS', search_params);
+      const requestKey = `getPositions:${JSON.stringify(search_params)}`;
+
+      if (pendingRequests.has(requestKey)) {
+        return pendingRequests.get(requestKey);
+      }
+
+      const requestPromise = (async () => {
+        try {
+          const { data } = await api.get('position', { params: search_params });
+          commit('LOAD_POSITIONS', data);
+          commit('SET_POSITION_SEARCH_PARAMS', search_params);
+          return data;
+        } finally {
+          pendingRequests.delete(requestKey);
+        }
+      })();
+
+      pendingRequests.set(requestKey, requestPromise);
+      return requestPromise;
     },
 
     async appendPositions({ commit }, search_params) {
