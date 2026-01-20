@@ -45,6 +45,7 @@ from events.inventory.count_imported import CountImportedEvent
 from events.inventory.count_session_started import CountSessionStartedEvent
 from events.inventory.count_session_completed import CountSessionCompletedEvent
 from events.inventory.count_session_applied import CountSessionAppliedEvent
+from events.inventory.count_session_resumed import CountSessionResumedEvent
 from events.inventory.position_confirmed_empty import PositionConfirmedEmptyEvent
 
 #PRODUCTION EVENTS
@@ -107,4 +108,3 @@ for cls in all_classes:
     hasattr(cls, 'get_event_type')):  # Has get_event_type method
     # Register the event class with its type
     register_event_class(cls.get_event_type(), cls)
-
