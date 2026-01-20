@@ -75,6 +75,9 @@ class ProductDetails(ProductBaseData):
 
   metadata: List[ProductMetadataField] | None = None
 
+  default_production_position_key: str | None = None
+  default_consumption_position_key: str | None = None
+
 class ProductDoc(FlexModel):
   name: str
   size: ByteSize

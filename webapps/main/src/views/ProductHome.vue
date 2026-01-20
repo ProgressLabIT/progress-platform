@@ -360,6 +360,30 @@
             :disable="!editMode"
             @update:model-value="updateField('manage_inventory', $event)"
           />
+          <div v-if="product.manage_inventory" class="q-mt-md column q-gutter-md">
+            <BaseAutocompletePosition
+              :label="$t('settings.defaultProductionPosition')"
+              :value="product.default_production_position_key"
+              key-only
+              clearable
+              :disable="!editMode"
+              @select="
+                (positionKey) =>
+                  updateField('default_production_position_key', positionKey)
+              "
+            />
+            <BaseAutocompletePosition
+              :label="$t('settings.defaultConsumptionPosition')"
+              :value="product.default_consumption_position_key"
+              key-only
+              clearable
+              :disable="!editMode"
+              @select="
+                (positionKey) =>
+                  updateField('default_consumption_position_key', positionKey)
+              "
+            />
+          </div>
           <!-- <q-toggle
             filled
             clearable
@@ -564,6 +588,7 @@ import { useRoute } from 'vue-router';
 import { useStore, mapState /*, mapActions */ } from 'vuex';
 import { api } from '@/boot/axios';
 import BaseAutocompleteTemplate from '@/components/BaseAutocompleteTemplate.vue';
+import BaseAutocompletePosition from '@/components/BaseAutocompletePosition.vue';
 import BaseDialog from '@/components/BaseDialog.vue';
 // import BaseConfirmationDialog from '@/components/BaseConfirmationDialog.vue'
 import BaseTooltipIcon from '@/components/BaseTooltipIcon.vue';
@@ -582,6 +607,7 @@ export default {
   components: {
     // BaseConfirmationDialog,
     FormField,
+    BaseAutocompletePosition,
     MediaViewer,
     BaseDialog,
     BaseAutocompleteTemplate,

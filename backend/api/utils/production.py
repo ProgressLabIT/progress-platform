@@ -435,7 +435,13 @@ def _get_production_position(tx, wo: WorkOrderNew):
   if wo.output_position_key:
     return wo.output_position_key
   else:
-    return tx.collection('Config').get('default_production_position').get('value', 'IN')
+    # Return product default production position key if provided
+    product_data = tx.collection('Product').get(wo.product_key)
+    if product_data and (product_production_position_key := product_data.get('default_production_position_key')) is not None:
+      return product_production_position_key
+    else:
+      # Return global default production position key
+      return tx.collection('Config').get('default_production_position').get('value', 'IN')
 
 
 def _define_wo_bom(tx, wo: WorkOrderNew):
