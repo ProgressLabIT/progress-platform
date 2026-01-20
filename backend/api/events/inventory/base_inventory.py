@@ -64,6 +64,8 @@ class BaseInventoryEvent(BaseEvent, ABC):
     if position.get('deleted', False):
       raise InventoryMovementException(f'Position {position["code"]} is deleted')
 
+    return position
+
   def _get_production_position(self):
     wo = self.tx.collection('WorkOrder').get(self.info.references.work_order_key)
     return wo['output_position_key']

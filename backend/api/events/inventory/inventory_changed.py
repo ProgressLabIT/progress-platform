@@ -20,7 +20,7 @@ class InventoryChangedEvent(BaseInventoryEvent):
 
   def apply(self):
     # Validate position is not deleted
-    self._ensure_position_not_deleted(self.info.position_key)
+    position = self._ensure_position_not_deleted(self.info.position_key)
 
     match_criteria = dict(
       _from=f'Product/{self.info.product_key}',
@@ -29,11 +29,14 @@ class InventoryChangedEvent(BaseInventoryEvent):
     )
     try:
       current_record = self.tx.collection('is_in_position').find(match_criteria).next()
+      if current_record.get('counting', False):
+        self._get_product()
+        raise InventoryMovementException(f'Inventory for product {self.product.code} in position {position["code"]} is being counted and cannot be changed.')
+
       final_qty = current_record['quantity'] + self.info.quantity_change
 
       if final_qty < 0:
         self._get_product()
-        position = self.tx.collection('Position').get(self.info.position_key)
         raise InventoryMovementException(f'Cannot reduce inventory for product {self.product.code} in position {position["code"]} of quantity {self.info.quantity_change}: only {current_record["quantity"]} left.')
 
       elif final_qty == 0:
