@@ -8,4 +8,7 @@ def register_event_class(event_type: EventType, event_class):
   _event_map[event_type] = event_class
 
 def get_event_class(event_type: EventType):
-  return _event_map[event_type]
+  try:
+    return _event_map[event_type]
+  except KeyError:
+    raise ValueError(f'Event type {event_type.value} not found')
