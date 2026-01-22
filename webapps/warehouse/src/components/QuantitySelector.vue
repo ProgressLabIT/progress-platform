@@ -35,13 +35,9 @@
         size="50px"
         style="opacity: .3"
       />
-      <q-input
-        class="absolute-center"
-        type="number"
-        v-model.number="quantity"
-        borderless
-        input-class="text-center text-h1"
-      />
+      <div
+        class="absolute-center text-center text-h1"
+      > {{ quantity }} </div>
       <q-icon
         color="theme-blue"
         class="absolute-top-right"
