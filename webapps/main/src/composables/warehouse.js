@@ -283,6 +283,8 @@ export function useInventoryColumns() {
       label: t('warehouse.inventory.position').toUpperCase(),
       align: 'left',
       style: 'max-width: 40vw',
+      format: (val, row) =>
+        row.path ? row.path.map((p) => p.position_code).join(' > ') : '-',
     },
     {
       name: 'quantity',

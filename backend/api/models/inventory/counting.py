@@ -20,6 +20,7 @@ class InventoryCountSessionStatus(str, Enum):
   PLANNED = 'planned'
   STARTED = 'started'
   COMPLETED = 'completed'
+  PROCESSING = 'processing'
   APPLIED = 'applied'
   CANCELED = 'canceled'
 
@@ -163,6 +164,8 @@ class InventoryCountRecord(ArangoDocument): # edge collection inventory_count_re
   user_key: str | None = None # User who started the count
   status: InventoryCountStatus = InventoryCountStatus.STARTED
   reviewed_at: datetime | None = None # Either confirmed or discarded
+  processed: bool | None = False  # True when record has been evaluated by CountAppliedEvent
+  movement_keys: list[str] | None = None
   notes: str | None = None
   extra: Any = None
 

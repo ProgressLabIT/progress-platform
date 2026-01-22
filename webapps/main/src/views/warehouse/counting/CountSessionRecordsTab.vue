@@ -290,9 +290,11 @@
               </template>
               <!-- For non-serialized products, show quantity delta -->
               <template v-else>
-                <span :class="getDeltaClass(getEffectiveDelta(props.row))">
-                  {{ formatDelta(getEffectiveDelta(props.row)) }}
-                </span>
+                <div class="row items-center q-gutter-x-xs justify-end">
+                  <span :class="getDeltaClass(getEffectiveDelta(props.row))">
+                    {{ formatDelta(getEffectiveDelta(props.row)) }}
+                  </span>
+                </div>
               </template>
             </template>
             <span v-else class="text-grey">-</span>
@@ -315,6 +317,13 @@
                 </q-tooltip>
               </q-icon>
             </template>
+            <q-icon v-if="props.row.allErrorDetails.length > 0" name="mdi-alert" color="theme-orange" size="xs">
+              <q-tooltip>
+                <div v-for="error in props.row.allErrorDetails" :key="error">
+                  {{ error }}
+                </div>
+              </q-tooltip>
+            </q-icon>
           </q-td>
         </template>
 
@@ -395,7 +404,6 @@ import { useI18n } from 'vue-i18n';
 import { useStore } from 'vuex';
 import { useQuasar, Notify } from 'quasar';
 import { useCountSessionStore } from '@/stores/countSession';
-import { api } from '@/boot/axios.js';
 
 // Composables
 import { useCountRecordAggregation, getDiscardedRecords } from '@/composables/useCountRecordAggregation';
@@ -435,6 +443,14 @@ const loading = computed(() => countSessionStore.recordsLoading);
 const rawRecords = computed(() => countSessionStore.records);
 const positionLookup = computed(() => countSessionStore.positionLookup);
 const completedPositions = computed(() => countSessionStore.completedPositions);
+
+// Error detection
+const hasFailedRecords = computed(() => {
+  return rawRecords.value.some(r => r.error_details);
+});
+const failedRecordsCount = computed(() => {
+  return rawRecords.value.filter(r => r.error_details).length;
+});
 
 // ============================================================
 // COMPOSABLES
@@ -587,62 +603,10 @@ function formatDate(date) {
 // ============================================================
 
 async function loadRecords() {
-  let timer10s = null;
-  let timer20s = null;
-  let timeoutOccurred = false;
-
-  try {
-    $q.loading.show({
-      message: 'Fetching records...',
-      boxClass: 'bg-grey-2 text-grey-9',
-      spinnerColor: 'primary'
-    });
-
-    // Timer for "Please wait" message after 10s
-    timer10s = setTimeout(() => {
-      if ($q.loading.isActive) {
-        $q.loading.show({
-          message: 'Please wait... Processing large dataset.',
-          boxClass: 'bg-grey-2 text-grey-9',
-          spinnerColor: 'primary'
-        });
-      }
-    }, 10000);
-
-    // Timer for timeout error after 20s
-    timer20s = setTimeout(() => {
-      timeoutOccurred = true;
-      $q.loading.hide();
-      Notify.create({
-        type: 'negative',
-        message: 'Request timed out. The dataset is too large or the connection is slow. Please try filtering your search.'
-      });
-    }, 20000);
-
-    await countSessionStore.loadRecords(null, { // current session is stored in the store
-      include_started: false,
-      limit: 0, // Fetch effectively "all" records (backend limit is 500 by default)
-    });
-
-    // Allow a small delay for reactivity (aggregation) to kick in before hiding loader
-    // This ensures the spinner stays visible during the heavy computation
-    await new Promise(resolve => setTimeout(resolve, 100));
-
-  } catch (error) {
-    if (!timeoutOccurred) {
-      console.error('Error loading records:', error);
-      Notify.create({
-        type: 'negative',
-        message: 'Failed to load records'
-      });
-    }
-  } finally {
-    clearTimeout(timer10s);
-    clearTimeout(timer20s);
-    if (!timeoutOccurred) {
-      $q.loading.hide();
-    }
-  }
+  await countSessionStore.loadRecords(null, { // current session is stored in the store
+    include_started: false,
+    limit: 0, // Fetch effectively "all" records (backend limit is 500 by default)
+  });
 }
 
 // ============================================================
@@ -695,29 +659,12 @@ async function handleImportCompleted() {
 // ============================================================
 
 onMounted(() => {
-  loadRecords();
   // Load position hierarchy to enable level-based aggregation
   countSessionStore.loadPositions();
   // Load completed positions for coverage tracking
   countSessionStore.loadCompletedPositions();
-
-  // Subscribe to inventory notifications so records update automatically
-  const eventURL = `${api.defaults.baseURL}/notification/inventory-notification`;
-  events.value = new EventSource(eventURL, {
-    withCredentials: false,
-  });
-  events.value.addEventListener('inventory-notification', () => {
-    loadRecords();
-    // Also refresh completed positions when inventory changes
-    countSessionStore.loadCompletedPositions();
-  });
 });
 
-onBeforeUnmount(() => {
-  if (events.value) {
-    events.value.close();
-  }
-});
 
 // ============================================================
 // WATCHERS

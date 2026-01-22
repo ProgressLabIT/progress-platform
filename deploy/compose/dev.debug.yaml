@@ -51,11 +51,13 @@ services:
     environment:
       - PROGRESS_DB_NAME=PROGRESS_PROD
       - PROGRESS_WEBAPP_URL=http://localhost:9000
+      - PREFECT_API_URL=${PREFECT_API_URL:-http://host.docker.internal:4200/api}
     command:
       - "sh"
       - "-c"
       - |
-        pip install debugpy -t /tmp \
+        pip install -r /api/requirements.txt \
+        && pip install debugpy -t /tmp \
         && python /tmp/debugpy --wait-for-client --listen 0.0.0.0:5678 \
         -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload --log-level debug --use-colors --timeout-graceful-shutdown 1
     ports:
@@ -67,36 +69,36 @@ services:
       - "traefik.http.middlewares.strip_api_prefix.stripprefix.forceslash=false"
       - "traefik.http.routers.api.middlewares=strip_api_prefix"
 
-  robot:
-    restart: unless-stopped
-    build:
-      context: ./testing/robot-test #root folder for build
-    volumes:
-      - ./testing/robot-test/data:/robot-framework/data
-      - ./testing/robot-test/resources:/robot-framework/resources
-      - ./testing/robot-test/tests:/robot-framework/tests
-      - robot_reports:/robot-framework/reports
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "1k"
-        max-file: "3"
-    environment:
-      - PROGRESS_DB_NAME=PROGRESS_PROD
-      - PROGRESS_ARANGO_URL=http://db:8529
-    #ports:
-    #  - 6612:6612
-    #command: >
-    #  robot --outputdir reports tests
-    command:
-      - "sh"
-      - "-c"
-      - |
-        pip install debugpy -t /tmp \
-        && python /tmp/debugpy --wait-for-client --listen 0.0.0.0:5680 \
-        -m robot --outputdir reports tests
-    ports:
-      - 5680:5680
+  # robot:
+  #   restart: unless-stopped
+  #   build:
+  #     context: ./testing/robot-test #root folder for build
+  #   volumes:
+  #     - ./testing/robot-test/data:/robot-framework/data
+  #     - ./testing/robot-test/resources:/robot-framework/resources
+  #     - ./testing/robot-test/tests:/robot-framework/tests
+  #     - robot_reports:/robot-framework/reports
+  #   logging:
+  #     driver: "json-file"
+  #     options:
+  #       max-size: "1k"
+  #       max-file: "3"
+  #   environment:
+  #     - PROGRESS_DB_NAME=PROGRESS_PROD
+  #     - PROGRESS_ARANGO_URL=http://db:8529
+  #   #ports:
+  #   #  - 6612:6612
+  #   #command: >
+  #   #  robot --outputdir reports tests
+  #   command:
+  #     - "sh"
+  #     - "-c"
+  #     - |
+  #       pip install debugpy -t /tmp \
+  #       && python /tmp/debugpy --wait-for-client --listen 0.0.0.0:5680 \
+  #       -m robot --outputdir reports tests
+  #   ports:
+  #     - 5680:5680
 
   #traceability-service:
   #  restart: unless-stopped
@@ -129,6 +131,8 @@ services:
     restart: unless-stopped
     environment:
       - ARANGO_NO_AUTH=1
+    ports:
+      - 8529:8529
     labels:
       - "traefik.http.routers.db.rule=Host(`${PROGRESS_ADDRESS:-progress.localhost}`) && PathPrefix(`/_db`)"
       - "traefik.http.middlewares.db_root.replacepathregex.regex=^/_db/?$$"

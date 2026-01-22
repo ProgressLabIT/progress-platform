@@ -43,6 +43,10 @@ import { ref, computed } from 'vue';
  * @property {Array} aggregatedPositionCodes - Position codes included in aggregate
  * @property {string|null} activeRecordKey - Key of most recent non-discarded record
  * @property {Object} coverage - Coverage tracking for incomplete position counts
+ * @property {boolean} hasError - Whether any record has error_details
+ * @property {Array<string>} allErrorDetails - All error details from records in this aggregate
+ * @property {string|null} errorMessage - First error message (for backward compatibility)
+ * @property {string|null} error_details - First error details (for backward compatibility)
  */
 
 /**
@@ -236,6 +240,11 @@ export function useCountRecordAggregation(rawRecords, positionLookup, completedP
           hasNotes: false,
           notesCount: 0,
           allNotes: [],
+          // Error tracking
+          hasError: false,
+          allErrorDetails: [],
+          errorMessage: null,
+          error_details: null,
           // User tracking for multi-user display
           userKeys: new Set(),
           hasMultipleUsers: false,
@@ -263,6 +272,12 @@ export function useCountRecordAggregation(rawRecords, positionLookup, completedP
         aggregate.allNotes.push(record.notes);
         aggregate.notesCount++;
         aggregate.hasNotes = true;
+      }
+
+      // Collect error details
+      if (record.error_details) {
+        aggregate.allErrorDetails.push(record.error_details);
+        aggregate.hasError = true;
       }
 
       // Track users

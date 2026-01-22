@@ -28,7 +28,7 @@ class CountCompletedEvent(BaseEvent):
 
     self._fetch_and_validate_count_record()
     self._update_count_record()
-    self._discard_previous_counts_by_same_user()
+    self._discard_duplicate_counts()
     self._unlock_inventory_records()
     self._flag_position_as_counted_if_count_complete()
 
@@ -70,8 +70,17 @@ class CountCompletedEvent(BaseEvent):
 
   # ========================================================
 
-  def _discard_previous_counts_by_same_user(self):
-    # Find previous counts by the same user for the same product/position/session
+  def _discard_duplicate_counts(self):
+    """
+    Discard duplicate count records:
+    1. Always discard previous counts by the SAME user (regardless of values)
+    2. Discard counts by OTHER users only if they MATCH exactly (quantity and serials)
+    """
+    self._discard_same_user_counts()
+    self._discard_matching_counts_from_other_users()
+
+  def _discard_same_user_counts(self):
+    """Discard all previous counts by the same user for the same product/position/session."""
     previous_counts = self.tx.aql.execute(
       """
       FOR r IN inventory_count_record
@@ -93,6 +102,49 @@ class CountCompletedEvent(BaseEvent):
     )
 
     for record_key in previous_counts:
+      CountDiscardedEvent.create_as_child(self, dict(count_key=record_key))
+
+  def _discard_matching_counts_from_other_users(self):
+    """
+    Discard counts from other users only if they match exactly:
+    - Same counted_qt
+    - Same counted_serial_keys (when sorted)
+    
+    This prevents duplicate records when different users count the same item
+    and arrive at the same result.
+    """
+    matching_counts = self.tx.aql.execute(
+      """
+      FOR r IN inventory_count_record
+      FILTER r._from == @product_id
+         AND r._to == @position_id
+         AND r.inventory_count_session_key == @session_key
+         AND r.user_key != @user_key
+         AND r.status IN ['completed', 'submitted', 'confirmed']
+         AND r._key != @current_key
+         AND r.counted_qt == @counted_qt
+         AND (
+           (@counted_serials == null AND r.counted_serial_keys == null)
+           OR (
+             @counted_serials != null 
+             AND r.counted_serial_keys != null
+             AND SORTED(@counted_serials) == SORTED(r.counted_serial_keys)
+           )
+         )
+      RETURN r._key
+      """,
+      bind_vars=dict(
+        product_id=self.count_record.product_id,
+        position_id=self.count_record.position_id,
+        session_key=self.count_record.inventory_count_session_key,
+        user_key=self.count_record.user_key,
+        current_key=self.info.count_key,
+        counted_qt=self.info.count_qt,
+        counted_serials=self.info.count_serial_keys,
+      )
+    )
+
+    for record_key in matching_counts:
       CountDiscardedEvent.create_as_child(self, dict(count_key=record_key))
 
 

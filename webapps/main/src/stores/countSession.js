@@ -510,8 +510,8 @@ export const useCountSessionStore = defineStore('countSession', {
       try {
         const params = {
           count_session_key: key,
-          limit: null,
           ...filters,
+          limit: 0,
         };
 
         const { data } = await api.get('/inventory/count-record', { params });
@@ -522,7 +522,9 @@ export const useCountSessionStore = defineStore('countSession', {
         this.records = [];
         throw error;
       } finally {
-        this.recordsLoading = false;
+        setTimeout(() => {
+          this.recordsLoading = false;
+        }, 1000);
       }
     },
 

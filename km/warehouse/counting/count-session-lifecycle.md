@@ -7,7 +7,7 @@ This document describes the lifecycle of inventory count sessions, including sta
 ## Status Flow
 
 ```
-PLANNED → STARTED → COMPLETED → APPLIED
+PLANNED → STARTED → COMPLETED → PROCESSING → APPLIED
               ↑          ↓
               └──────────┘
                 (resume)
@@ -18,8 +18,13 @@ PLANNED → STARTED → COMPLETED → APPLIED
 | PLANNED | Session created, not yet active | No | Yes (full) |
 | STARTED | Active counting in progress | Yes | Limited |
 | COMPLETED | Counting finished, ready for review/application | No | No |
+| PROCESSING | Async workflow applying adjustments | No | No |
 | APPLIED | Adjustments generated, session closed | No | No |
 | CANCELED | Session canceled | No | No |
+
+**Note:** The transition from COMPLETED to APPLIED involves asynchronous processing. See [Async Count Session Application](./async-count-session-application.md) for details.
+
+**Count Record Status:** Individual count records remain in `confirmed` status throughout processing. A `processed: bool` field tracks whether a record has been evaluated, and `movement_keys` indicates which movements were created.
 
 ---
 
@@ -93,6 +98,55 @@ Since session completion is blocked when active counts exist, there's no scenari
 
 ---
 
+## Duplicate Count Handling
+
+When a count is completed (`CountCompletedEvent`), the system automatically discards duplicate count records to keep the records table clean and prevent confusion.
+
+### Auto-Discard Rules
+
+The system discards previous count records for the same product/position pair based on two rules:
+
+#### Rule 1: Same User (Always Discard)
+**All** previous counts by the **same user** are automatically discarded when they complete a new count, regardless of whether the values match.
+
+**Rationale:** The latest count from a user always supersedes their previous attempts. Users may recount for various reasons (mistake, rechecking, etc.), and we assume their most recent count is correct.
+
+#### Rule 2: Different Users (Discard if Matching)
+Previous counts by **different users** are automatically discarded **only if** the new count matches exactly:
+
+**Matching criteria (all must be true):**
+- `counted_qt` is identical
+- `counted_serial_keys` are identical (when sorted) for serialized products
+- Both null or both present for serial keys
+
+**Rationale:** When different users independently arrive at the same count result, keeping both records creates unnecessary duplicates. The matching count validates the accuracy, so only one record is needed.
+
+**Non-matching counts (conflicts):** If counts from different users **don't** match, both records are kept and flagged as a conflict that requires manual resolution.
+
+### Implementation
+
+Located in `backend/api/events/inventory/count_completed.py`:
+
+```python
+def _discard_duplicate_counts(self):
+    # 1. Always discard previous counts by SAME user
+    self._discard_same_user_counts()
+    
+    # 2. Discard counts by OTHER users only if they MATCH
+    self._discard_matching_counts_from_other_users()
+```
+
+### Examples
+
+| Scenario | User A Count | User B Count | Result |
+|----------|-------------|-------------|---------|
+| Same user recounts | 100 → 95 | - | First count (100) discarded, keep 95 |
+| Different users, matching | 95 | 95 | First count discarded, keep one copy |
+| Different users, different qty | 95 | 98 | Both kept, flagged as conflict |
+| Different users, same qty, different serials | 2 (S001, S002) | 2 (S001, S003) | Both kept, flagged as conflict |
+
+---
+
 ## Conflict Detection
 
 A **conflict** exists when multiple non-discarded count records for the same product/position pair have different `counted_qt` values.
@@ -109,7 +163,7 @@ FILTER LENGTH(records) > 1 AND LENGTH(counted_values) > 1
 RETURN { product_id, position_id }
 ```
 
-The `LENGTH(UNIQUE(...)) > 1` check ensures we only flag conflicts when the counted quantities actually differ. Multiple records with the same count value (from different users) are not conflicts.
+The `LENGTH(UNIQUE(...)) > 1` check ensures we only flag conflicts when the counted quantities actually differ. After the auto-discard logic runs, matching counts from different users are eliminated, so this query only finds true conflicts.
 
 ### Resolution
 Conflicts must be resolved in the UI before applying adjustments:

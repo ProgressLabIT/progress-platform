@@ -4,20 +4,50 @@
       <q-card-section class="row items-center justify-between col-auto q-pb-none">
         <div class="row items-center col">
           <div class="display text-h3 q-mr-md">
-            {{ isEditMode ? $t('warehouse.counting.session_edit') : $t('warehouse.counting.session_new') }}
+            {{ isEditMode ? $t('warehouse.counting.label') : $t('warehouse.counting.session_new') }}
           </div>
           <div class="row items-center q-gutter-x-sm" v-if="sessionStatus">
             <div class="text-caption text-low">
               {{ $t('warehouse.counting.status') }}
             </div>
             <q-chip
-              dense
               :color="statusColor"
+              size="sm"
               text-color="white"
-              class="text-caption"
+              class="uppercase highlight"
             >
-              {{ $t(`warehouse.counting.${sessionStatus}`) }}
+              {{ statusLabel }}
             </q-chip>
+
+            <!-- Processing - Progress Display (moved to header) -->
+            <div
+              v-if="sessionStatus === 'processing' &&
+                    !errorStates.includes(flowRunStatus)"
+              class="row items-center q-gutter-sm"
+            >
+              <q-spinner-dots color="theme-blue" size="sm" />
+              <div class="text-caption">
+                {{ $t('warehouse.counting.processing_progress', {
+                  processed: processedRecords,
+                  total: countSessionStore.records.filter(r => r.status !== 'discarded').length
+                }) }}
+              </div>
+            </div>
+
+            <!-- Processing Errors -->
+            <template v-if="sessionStatus === 'applied' && processingErrors > 0">
+              <q-icon
+                color="theme-orange"
+                size="xs"
+                round
+                name="mdi-alert"
+              />
+              <div class="text-caption highlight">
+                {{ $t('warehouse.counting.processing_errors', { count: processingErrors }) }}
+              </div>
+            </template>
+
+
             <!-- Start Session (planned -> started) -->
             <q-btn
               v-if="sessionStatus === 'planned'"
@@ -39,57 +69,70 @@
           indicator-color="primary"
           class="col-auto"
           align="right"
+          :disable="isProcessing"
         >
           <q-tab
             :name="1"
             :label="$t('warehouse.counting.session_data')"
             icon="mdi-information"
+            :disable="isProcessing"
           />
           <q-tab
             :name="2"
             :label="$t('warehouse.counting.assignments')"
             icon="mdi-account-multiple"
+            :disable="isProcessing"
           />
           <q-tab
             v-if="showRecordsTab"
             :name="3"
             :label="$t('warehouse.counting.records')"
             icon="mdi-clipboard-list"
+            :disable="isProcessing"
           />
         </q-tabs>
       </q-card-section>
 
       <q-separator />
 
-      <q-linear-progress v-if="loading" indeterminate color="primary" />
+      <q-linear-progress v-if="loading || showProcessingOverlay" indeterminate color="primary" />
 
-      <q-tab-panels
-        v-model="step"
-        class="col surface1"
-      >
-        <!-- TAB 1: SESSION DATA -->
-        <q-tab-panel :name="1" class="q-px-none">
-          <CountSessionDataTab
-            v-model:session-data="sessionData"
-            :session-status="sessionData.status || 'planned'"
-          />
-        </q-tab-panel>
-        <!-- TAB 2: ASSIGNMENTS -->
-        <q-tab-panel :name="2" class="q-px-none">
-          <CountSessionAssignmentsTab
-            v-model:assignments="assignments"
-            :session-type="sessionData.type"
-            :disable-assigned-items="disableAssignedItems"
-          />
-        </q-tab-panel>
-        <!-- TAB 3: RECORDS -->
-        <q-tab-panel v-if="showRecordsTab" :name="3" class="q-pa-none">
-          <CountSessionRecordsTab />
-        </q-tab-panel>
-      </q-tab-panels>
+      <q-card-section class="col column q-pa-none" style="position: relative">
+        <q-tab-panels
+          v-model="step"
+          class="surface1 col"
+        >
+
+          <!-- TAB 1: SESSION DATA -->
+          <q-tab-panel :name="1" class="q-px-none">
+            <CountSessionDataTab
+              v-model:session-data="sessionData"
+              :session-status="sessionData.status || 'planned'"
+            />
+          </q-tab-panel>
+          <!-- TAB 2: ASSIGNMENTS -->
+          <q-tab-panel :name="2" class="q-px-none">
+            <CountSessionAssignmentsTab
+              v-model:assignments="assignments"
+              :session-type="sessionData.type"
+              :disable-assigned-items="disableAssignedItems"
+            />
+          </q-tab-panel>
+          <!-- TAB 3: RECORDS -->
+          <q-tab-panel v-if="showRecordsTab" :name="3" class="q-pa-none">
+            <CountSessionRecordsTab />
+          </q-tab-panel>
+        </q-tab-panels>
+
+        <q-inner-loading :showing="showProcessingOverlay" />
+
+      </q-card-section>
+
+
 
       <q-separator />
 
+      <!-- SCREEN FOOTER -->
       <q-card-section class="col-auto">
         <div class="row items-center q-gutter-x-sm justify-between">
           <div class="col-auto">
@@ -97,6 +140,7 @@
               v-if="step === 2"
               v-model="disableAssignedItems"
               :label="$t('warehouse.counting.disable_assigned_items')"
+              :disable="isProcessing"
               dense
             />
           </div>
@@ -110,19 +154,22 @@
               v-if="step > 1"
               :label="$t('back')"
               color="theme-grey"
+              :disable="isProcessing"
               @click="step--"
             />
             <q-btn
               v-if="step < maxStep"
               :label="$t('next')"
               color="primary"
+              :disable="isProcessing"
               @click="step++"
             />
             <q-btn
-              v-if="step !== 3"
+              v-if="step !== 3 && sessionStatus !== 'applied'"
               :label="isEditMode ? $t('save') : $t('create')"
               color="primary"
               :loading="saving"
+              :disable="isProcessing"
               @click="saveSession"
             />
 
@@ -131,6 +178,7 @@
               v-if="sessionStatus === 'started'"
               color="theme-orange"
               :loading="completing"
+              :disable="isProcessing"
               icon="mdi-check"
               :label="$t('warehouse.counting.complete_session')"
               @click="confirmCompleteSession"
@@ -141,6 +189,7 @@
               v-if="sessionStatus === 'completed'"
               color="primary"
               :loading="resuming"
+              :disable="isProcessing"
               outline
               icon="mdi-play"
               :label="$t('warehouse.counting.resume_counting')"
@@ -152,9 +201,21 @@
               v-if="sessionStatus === 'completed'"
               color="theme-green"
               :loading="applying"
+              :disable="isProcessing"
               icon="mdi-check-all"
               :label="$t('warehouse.counting.apply_adjustments')"
               @click="confirmApplyAdjustments"
+            />
+
+            <!-- Processing with Error - Resume Button -->
+            <q-btn
+              v-if="sessionStatus === 'processing' &&
+                    errorStates.includes(flowRunStatus)"
+              color="theme-orange"
+              :loading="applying"
+              icon="mdi-replay"
+              :label="$t('warehouse.counting.resume_processing')"
+              @click="resumeProcessing"
             />
           </div>
         </div>
@@ -164,17 +225,19 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted, computed } from 'vue';
+import { ref, watch, onMounted, onBeforeUnmount, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useStore } from 'vuex';
 import { Notify, useQuasar } from 'quasar';
 import { useCountSessionStore } from '@/stores/countSession';
+import { usePrefectAPI } from '@/composables/usePrefectAPI';
 import { sendEvent } from '@/composables/event.js';
 import BaseDialog from '@/components/BaseDialog.vue';
 import CountSessionDataTab from './CountSessionDataTab.vue';
 import CountSessionAssignmentsTab from './CountSessionAssignmentsTab.vue';
 import CountSessionRecordsTab from './CountSessionRecordsTab.vue';
+import { api } from 'app/src/boot/axios';
 
 const props = defineProps({
   countSessionKey: {
@@ -187,6 +250,7 @@ const { t: $t } = useI18n();
 const $q = useQuasar();
 const store = useStore();
 const countSessionStore = useCountSessionStore();
+const prefectAPI = usePrefectAPI();
 const router = useRouter();
 const step = ref(1);
 const saving = ref(false);
@@ -197,6 +261,20 @@ const applying = ref(false);
 const disableAssignedItems = ref(false);
 const isEditMode = computed(() => !!props.countSessionKey);
 const originalSessionType = ref(null);
+const errorStates = ['FAILED', 'CRASHED', 'NOT_FOUND', 'API_ERROR', 'CANCELLED'];
+const processedRecords = ref(0);
+const processingErrors = computed(() => {
+  return countSessionStore.records.filter(r => r.error_details).length;
+});
+
+// Prefect workflow monitoring state
+const flowRunStatus = ref(null); // 'RUNNING', 'FAILED', 'CRASHED', 'COMPLETED', 'NOT_FOUND', 'API_ERROR', null
+
+// Computed to check if actively processing (used to disable UI)
+const isProcessing = computed(() => {
+  return sessionStatus.value === 'processing' &&
+         !errorStates.includes(flowRunStatus.value);
+});
 
 // Show records tab only when session has been started (not in 'planned' status)
 const showRecordsTab = computed(() => {
@@ -216,6 +294,12 @@ const statusColor = computed(() => {
       return 'primary';
     case 'completed':
       return 'theme-orange';
+    case 'processing':
+      // Check flow run status for error indication
+      if (errorStates.includes(flowRunStatus.value)) {
+        return 'theme-red';
+      }
+      return 'theme-blue';
     case 'applied':
       return 'theme-green';
     case 'canceled':
@@ -224,6 +308,22 @@ const statusColor = computed(() => {
       return 'theme-grey';
   }
 });
+
+
+const showProcessingOverlay = computed(() => {
+  return sessionStatus.value === 'processing' &&
+         !errorStates.includes(flowRunStatus.value);
+});
+
+const statusLabel = computed(() => {
+  if (sessionStatus.value === 'processing') {
+    if (errorStates.includes(flowRunStatus.value)) {
+      return $t('error');
+    }
+  }
+  return $t(`warehouse.counting.${sessionStatus.value}`);
+});
+
 
 // Use store state with computed get/set for proper v-model binding
 const sessionData = computed({
@@ -386,17 +486,12 @@ async function resumeSession() {
 
     Notify.create({
       message: $t('warehouse.counting.session.resumed_successfully'),
+      position: 'top',
+      timeout: 1500,
       color: 'theme-green',
     });
   } catch (error) {
     console.error('Error resuming session:', error);
-    Notify.create({
-      type: 'negative',
-      message: error.response?.data?.detail || $t('warehouse.counting.session.resume_error'),
-      color: 'theme-red',
-      timeout: 0,
-      actions: [{ label: 'CLOSE', color: 'white', handler: () => {} }],
-    });
   } finally {
     resuming.value = false;
   }
@@ -430,7 +525,7 @@ async function applyAdjustments() {
 
   try {
     const response = await sendEvent({
-      event_type: 'COUNT_SESSION_APPLIED',
+      event_type: 'COUNT_SESSION_CONFIRMED',
       event_data: {
         session_key: props.countSessionKey,
       },
@@ -438,12 +533,8 @@ async function applyAdjustments() {
 
     await countSessionStore.loadSessionData(props.countSessionKey);
 
-    const adjustmentsCount = response?.adjustments_count || 0;
+    const recordsToProcess = response?.records_to_process || 0;
 
-    Notify.create({
-      message: $t('warehouse.counting.session.applied_successfully', { count: adjustmentsCount }),
-      color: 'theme-green',
-    });
   } catch (error) {
     console.error('Error applying adjustments:', error);
     Notify.create({
@@ -458,10 +549,116 @@ async function applyAdjustments() {
   }
 }
 
+async function resumeProcessing() {
+  applying.value = true;
+
+  try {
+    // Find deployment and trigger new flow run
+    const deployment = await prefectAPI.findDeploymentByName('apply_inventory_counts');
+    if (!deployment) {
+      throw new Error('Deployment not found');
+    }
+
+    await prefectAPI.triggerFlowRun(deployment.id, {
+      session_key: props.countSessionKey
+    });
+
+    // Restart polling
+    flowRunStatus.value = 'RUNNING';
+    showProcessingOverlay.value = true;
+
+    if (!processingPollInterval) {
+      processingPollInterval = setInterval(async () => {
+        await checkProcessingStatus();
+      }, 3000);
+    }
+
+  } catch (error) {
+    console.error('Error resuming processing:', error);
+    Notify.create({
+      type: 'negative',
+      message: error.message || $t('warehouse.counting.resume_error'),
+      color: 'theme-red',
+    });
+  } finally {
+    applying.value = false;
+  }
+}
+
+// Enhanced polling for processing status with Prefect flow run monitoring
+let processingPollInterval = null;
+
+async function checkProcessingStatus() {
+  // If no longer processing, stop polling
+  api.get(`/inventory/count-session/${props.countSessionKey}/processed-records`).then(response => {
+    processedRecords.value = response.data;
+  });
+
+  if (sessionData.value.status !== 'processing') {
+    clearInterval(processingPollInterval);
+    processingPollInterval = null;
+    showProcessingOverlay.value = false;
+    flowRunStatus.value = null;
+
+    if (sessionData.value.status === 'applied') {
+      Notify.create({
+        message: $t('warehouse.counting.session.processing_completed'),
+        color: 'theme-green',
+      });
+    }
+    return;
+  }
+
+  // 3. Check Prefect flow run status
+  try {
+    const flowRun = await prefectAPI.getFlowRunsForSession(props.countSessionKey);
+
+    if (!flowRun) {
+      // No flow run found - workflow failed to start or crashed
+      flowRunStatus.value = 'NOT_FOUND';
+      showProcessingOverlay.value = false;
+      // Stop polling on error
+      clearInterval(processingPollInterval);
+      processingPollInterval = null;
+    } else {
+      flowRunStatus.value = flowRun.state_type;
+
+      // Show overlay if workflow is actively running
+      if (['SCHEDULED', 'PENDING', 'RUNNING'].includes(flowRun.state_type)) {
+        showProcessingOverlay.value = true;
+      } else if (['FAILED', 'CRASHED', 'CANCELLED'].includes(flowRun.state_type)) {
+        showProcessingOverlay.value = false;
+        // Stop polling on error
+        clearInterval(processingPollInterval);
+        processingPollInterval = null;
+      }
+    }
+  } catch (error) {
+    console.error('Error checking flow run status:', error);
+    // If Prefect API is unreachable, assume error state
+    flowRunStatus.value = 'API_ERROR';
+    showProcessingOverlay.value = false;
+    // Stop polling on error
+    clearInterval(processingPollInterval);
+    processingPollInterval = null;
+  }
+}
+
+watch(sessionStatus, (newStatus, oldStatus) => {
+  if (newStatus === 'processing' && !processingPollInterval) {
+    // Start enhanced polling
+    processingPollInterval = setInterval(async () => {
+      await checkProcessingStatus();
+    }, 3000);
+
+    // Check immediately
+    checkProcessingStatus();
+  }
+});
+
 // Load data on mount
 onMounted(async () => {
   store.dispatch('loadUsers');
-
   if (isEditMode.value) {
     // Load session and assignment data
     try {
@@ -477,6 +674,14 @@ onMounted(async () => {
   } else {
     // Initialize new session
     countSessionStore.initializeSession();
+  }
+  await countSessionStore.loadRecords(props.countSessionKey);
+
+});
+
+onBeforeUnmount(() => {
+  if (processingPollInterval) {
+    clearInterval(processingPollInterval);
   }
 });
 

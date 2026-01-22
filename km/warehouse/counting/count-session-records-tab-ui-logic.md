@@ -272,8 +272,9 @@ Each aggregate object contains:
   allCountedSerialCodes: Set,
   serialDelta: { added: [], removed: [] },
   
-  // Conflict and notes
+  // Conflict, notes, and errors
   hasConflict: Boolean,
+  hasError: Boolean,       // True if any record has error_details
   hasNotes: Boolean,
   notesCount: Number,
   allNotes: [],
@@ -436,6 +437,7 @@ filters: {
   varianceType: 'absolute' | 'percentage',
   onlyWithVariance: Boolean,    // Only show records with delta != 0
   onlyConflicts: Boolean,       // Only show records with conflicts
+  onlyErrors: Boolean,          // Only show records with processing errors
   hasNotes: Boolean,            // Only show records with notes
   product: String,              // Product code/description filter
   serial: String,               // Serial code filter
@@ -453,6 +455,7 @@ filters: {
 | **Variance threshold** | `abs(delta) >= threshold` (absolute) or `(abs(delta) / system_qt) * 100 >= threshold` (percentage) |
 | **Only with variance** | `abs(delta) > 0` |
 | **Only conflicts** | `aggregate.hasConflict === true` |
+| **Only errors** | `aggregate.hasError === true` (any record has `error_details`) |
 | **Has notes** | `aggregate.hasNotes === true` |
 | **Product** | Wildcard match on `product.code` OR `product.description` |
 | **Serial** | Wildcard match on any serial in any record of aggregate |
@@ -689,6 +692,7 @@ Matchers are built once at filter computation time via `buildWildcardMatcher()`.
 - [ ] Variance threshold filters correctly (percentage)
 - [ ] "Only with variance" hides zero-delta rows
 - [ ] "Only conflicts" filters to rows with hasConflict = true
+- [ ] "Only errors" filters to rows with hasError = true (processing errors)
 - [ ] "Has notes" filters to rows with notes
 - [ ] Product text filter matches code and description
 - [ ] Serial filter matches across all records in aggregate

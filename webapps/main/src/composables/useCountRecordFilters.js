@@ -69,6 +69,7 @@ export function useCountRecordFilters(visibleAggregates) {
     varianceType: 'absolute',
     onlyWithVariance: false,
     onlyConflicts: false,
+    onlyErrors: false,
     hasNotes: false,
     product: '',
     serial: '',
@@ -87,6 +88,7 @@ export function useCountRecordFilters(visibleAggregates) {
       varianceType: 'absolute',
       onlyWithVariance: false,
       onlyConflicts: false,
+      onlyErrors: false,
       hasNotes: false,
       product: '',
       serial: '',
@@ -139,6 +141,11 @@ export function useCountRecordFilters(visibleAggregates) {
     // Only conflicts filter
     if (filters.value.onlyConflicts) {
       result = result.filter(r => r.hasConflict);
+    }
+
+    // Only errors filter
+    if (filters.value.onlyErrors) {
+      result = result.filter(r => r.hasError);
     }
 
     // Product tag filter

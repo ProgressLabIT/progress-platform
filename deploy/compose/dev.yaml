@@ -47,6 +47,7 @@ services:
     environment:
       - PROGRESS_DB_NAME=PROGRESS_PROD
       - PROGRESS_WEBAPP_URL=http://localhost:9000
+      - PREFECT_API_URL=${PREFECT_API_URL:-http://host.docker.internal:4200/api}
     command: >
       uvicorn main:app --host 0.0.0.0 --reload --log-level debug --use-colors  --timeout-graceful-shutdown 1
     labels:

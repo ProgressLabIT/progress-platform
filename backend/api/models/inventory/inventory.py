@@ -23,6 +23,9 @@ class Inventory(BaseModel): # edge is_in_position
   count_by: str | None = None # inventory count key or other entity counting the inventory (e.g. inventory count session)
   last_counted: datetime | None = None
 
+  locked: bool = False # True means inventory is locked during adjustment processing
+  locked_by: str | None = None # count session key that locked this inventory
+
   value: float | None = None
   extra: Any = None
 

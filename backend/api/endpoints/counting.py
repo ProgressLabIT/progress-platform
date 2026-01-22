@@ -113,6 +113,21 @@ def get_counting_session(session_key: str):
 
 # ========================================================
 
+@router.get('/inventory/count-session/{session_key}/processed-records', dependencies=[Depends(auth.verify_token)])
+def get_counting_session_processed_records(session_key: str):
+  try:
+    query = """
+      FOR r IN inventory_count_record
+      FILTER r.inventory_count_session_key == @session_key && r.processed == true
+      RETURN 1
+    """
+    result = db.aql.execute(query, bind_vars=dict(session_key=session_key), count=True).count()
+    return result
+  except:
+    raise HTTPException(status_code=500, detail=traceback.format_exc())
+
+# ========================================================
+
 
 @router.put('/inventory/count-session/{session_key}', dependencies=[Depends(auth.verify_token)])
 def update_counting_session(
@@ -256,6 +271,8 @@ def get_counting_record(params: Annotated[InventoryCountRecordSearchParams, Quer
     return list(cursor)
   except:
     raise HTTPException(status_code=500, detail=traceback.format_exc())
+
+
 
 
 @router.get('/inventory/count-position-status')

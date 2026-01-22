@@ -70,6 +70,15 @@
           dense
         />
       </div>
+      <div class="col-6">
+        <!-- Only Errors -->
+        <q-checkbox
+          :model-value="modelValue.onlyErrors"
+          @update:model-value="updateFilter('onlyErrors', $event)"
+          :label="$t('warehouse.counting.errors_only')"
+          dense
+        />
+      </div>
     </div>
 
     <div class="col-auto">

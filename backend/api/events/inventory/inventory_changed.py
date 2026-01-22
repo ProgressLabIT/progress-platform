@@ -33,6 +33,10 @@ class InventoryChangedEvent(BaseInventoryEvent):
         self._get_product()
         raise InventoryMovementException(f'Inventory for product {self.product.code} in position {position["code"]} is being counted and cannot be changed.')
 
+      if current_record.get('locked', False):
+        self._get_product()
+        raise InventoryMovementException(f'Inventory for product {self.product.code} in position {position["code"]} is locked during adjustment processing and cannot be changed.')
+
       final_qty = current_record['quantity'] + self.info.quantity_change
 
       if final_qty < 0:
