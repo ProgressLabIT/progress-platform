@@ -159,11 +159,9 @@ function search() {
 }
 
 const serialList = computed(() => {
-  return [
-    ...results.value
-    .filter(s => s.product_code.includes(productCodeFilter.value))
-    .filter(item => !transfer.contents.find(serial => serial._key === item._key))
-  ];
+  // Server-side filtering is handled by the API via product_search parameter
+  // Only filter out already selected items (UI state)
+  return results.value.filter(item => !transfer.contents.find(serial => serial._key === item._key));
 });
 
 

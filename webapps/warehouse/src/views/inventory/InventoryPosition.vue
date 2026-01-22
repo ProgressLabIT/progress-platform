@@ -64,7 +64,7 @@
       <template v-else>
         <div class="text-h6 q-mb-md">{{ $t('contents') }}</div>
         <q-virtual-scroll
-          :items="filteredContents"
+          :items="positionContents"
           v-slot="{ item }"
           class="col q-mb-md"
         >
@@ -246,13 +246,6 @@ function backToPositionSelection() {
   positionContents.value = [];
   stage.value = 'position';
 }
-
-const filteredContents = computed(() => {
-  return positionContents.value.filter(item => {
-    const searchContext = item.code + ' ' + item.product_code;
-    return searchContext.toLowerCase().includes(filter.value.toLowerCase());
-  });
-});
 
 onMounted(() => {
   loadLatestUsedPositions();

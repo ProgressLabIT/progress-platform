@@ -32,7 +32,7 @@
         <div class="smaller highlight">{{ serialList.length }}</div>
       </q-chip>
       <q-space />
-      <template v-if="results.length > 0">
+      <template v-if="serialList.length > 0">
         <q-btn
           v-if="!editMode"
           @click="editMode = true"
@@ -137,14 +137,11 @@ const { t: $t } = useI18n();
 const { config } = useConfigStore();
 const serialCodeFilter = ref('');
 const productCodeFilter = ref('');
-const results = ref([]);
+const serialList = ref([]);
 const editMode = ref(false);
 const deleteDialogShow = ref(false);
 const deleteReason = ref('');
 
-const serialList = computed(() => {
-  return results.value.filter(s => s.product_code.includes(productCodeFilter.value));
-});
 
 const selectedSerials = ref([]);
 
@@ -163,7 +160,7 @@ function search() {
     serials_only: true
   }})
   .then(response => {
-    results.value = response.data;
+    serialList.value = response.data;
   })
   .catch(error => {
     Notify.create({
