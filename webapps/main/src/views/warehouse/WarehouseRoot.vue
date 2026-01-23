@@ -142,7 +142,8 @@
 </template>
 
 <script>
-import { Dialog } from 'quasar';
+import { Dialog, Notify } from 'quasar';
+import { api } from '@/boot/axios';
 import CountingFilter from '@/components/warehouse/counting/CountingFilter.vue';
 import InventoryFilter from '@/components/warehouse/inventory/InventoryFilter.vue';
 import MovementFilter from '@/components/warehouse/movement/MovementFilter.vue';
@@ -199,6 +200,45 @@ export default {
         document.documentElement.clientHeight - header_plus_footer_height;
     },
 
+    hasActiveFilters(params) {
+      const filterKeys = [
+        'product_search',
+        'serial_search',
+        'work_order_search',
+        'list_search',
+        'position_to',
+        'position_from',
+        'movement_type',
+        'movement_status',
+        'start_from',
+        'start_to',
+        'end_from',
+        'end_to',
+      ];
+      return filterKeys.some((key) => !!params[key]);
+    },
+
+    hasActiveInventoryFilters(params) {
+      const filterKeys = [
+        'product_search',
+        'serial_search',
+        'position_search',
+        'root_position_key',
+      ];
+      return filterKeys.some((key) => !!params[key]);
+    },
+
+    hasActivePositionFilters(params) {
+      const filterKeys = [
+        'search',
+        'is_in_position',
+        'contains_position',
+        'created_min',
+        'created_max',
+      ];
+      return filterKeys.some((key) => !!params[key]);
+    },
+
     exportExcel() {
       switch (this.$route.name) {
         case 'inventory':
@@ -213,63 +253,153 @@ export default {
       }
     },
 
-    exportPositions() {
-      XLSXDownload(
-        XLSXGetData(
-          this.$store.state.warehouse.positions,
-          this.positionColumns,
-        ),
-        'positions',
-        'positions',
-      );
+    async exportPositions() {
+      const params = {
+        ...this.$store.state.warehouse.position_search_params,
+        limit: 50000,
+        offset: 0,
+      };
+
+      const maxRecordsWarning = this.$t('warehouse.export_max_records_warning', { max: 50000 });
+
+      if (!this.hasActivePositionFilters(params)) {
+        Dialog.create({
+          title: this.$t('warehouse.export_without_filters_title'),
+          message: this.$t('warehouse.export_without_filters_message') + ' ' + maxRecordsWarning,
+          cancel: true,
+          persistent: true,
+        }).onOk(() => {
+          this.executeExportPositions(params);
+        });
+      } else {
+        Dialog.create({
+          title: this.$t('warehouse.export_limit_warning_title') || 'Export Limit',
+          message: maxRecordsWarning,
+          cancel: false,
+          persistent: false,
+        }).onOk(() => {
+          this.executeExportPositions(params);
+        });
+      }
     },
 
-    exportMovements() {
-      XLSXDownload(
-        XLSXGetData(
-          this.$store.state.warehouse.movements,
-          this.movementColumns,
-        ),
-        'movements',
-        'movements',
-      );
+    async executeExportPositions(params) {
+      try {
+        this.$q.loading.show();
+        const { data } = await api.get('position', { params });
+        XLSXDownload(
+          XLSXGetData(data, this.positionColumns),
+          'positions',
+          'positions',
+        );
+      } catch (e) {
+        console.error(e);
+        Notify.create({
+          message: 'Export failed',
+          color: 'negative',
+        });
+      } finally {
+        this.$q.loading.hide();
+      }
     },
 
-    exportInventory() {
-      XLSXDownload(
-        XLSXGetData(
-          this.$store.state.warehouse.inventory,
-          this.inventorColumns,
-        ),
-        'inventory',
-        'inventory',
-      );
-      /* XLSXDownload(
-        this.$store.state.warehouse.inventory.map((entry) => {
-          return {
-            [this.$t('warehouse.inventory.position').toUpperCase()]:
-              entry.position_code,
-            [this.$t('warehouse.inventory.product_code').toUpperCase()]:
-              entry.product_code,
-            [this.$t('warehouse.inventory.serial').toUpperCase()]:
-              entry.serial_code,
-            [this.$t('warehouse.inventory.quantity').toUpperCase()]:
-              entry.quantity,
-            [this.$t('warehouse.inventory.owned').toUpperCase()]: entry.owned,
-            [this.$t('warehouse.inventory.date_received').toUpperCase()]:
-              this.$shortDateString(entry.date_received, this.$i18n.locale),
-            [this.$t('warehouse.inventory.expiration_date').toUpperCase()]:
-              this.$shortDateString(entry.expiration_date, this.$i18n.locale),
-          };
-          let row = {};
-          this.inventorColumns.map((col) => {
-            row[col.label] = entry[col.field];
-          });
-          return row;
-        }),
-        'inventory',
-        'inventory',
-      );*/
+    async exportMovements() {
+      const params = {
+        ...this.$store.state.warehouse.movement_search_params,
+        limit: 50000,
+        offset: 0,
+      };
+
+      const maxRecordsWarning = this.$t('warehouse.export_max_records_warning', { max: 50000 });
+
+      if (!this.hasActiveFilters(params)) {
+        Dialog.create({
+          title: this.$t('warehouse.export_without_filters_title'),
+          message: this.$t('warehouse.export_without_filters_message') + ' ' + maxRecordsWarning,
+          cancel: true,
+          persistent: true,
+        }).onOk(() => {
+          this.executeExportMovements(params);
+        });
+      } else {
+        Dialog.create({
+          title: this.$t('warehouse.export_limit_warning_title') || 'Export Limit',
+          message: maxRecordsWarning,
+          cancel: false,
+          persistent: false,
+        }).onOk(() => {
+          this.executeExportMovements(params);
+        });
+      }
+    },
+
+    async executeExportMovements(params) {
+      try {
+        this.$q.loading.show();
+        const { data } = await api.get('movement', { params });
+        XLSXDownload(
+          XLSXGetData(data, this.movementColumns),
+          'movements',
+          'movements',
+        );
+      } catch (e) {
+        console.error(e);
+        Notify.create({
+          message: 'Export failed',
+          color: 'negative',
+        });
+      } finally {
+        this.$q.loading.hide();
+      }
+    },
+
+    async exportInventory() {
+      const params = {
+        ...this.$store.state.warehouse.inventory_search_params,
+        limit: 50000,
+        offset: 0,
+      };
+
+      if (!this.hasActiveInventoryFilters(params)) {
+        Dialog.create({
+          title: this.$t('warehouse.export_without_filters_title'),
+          message: this.$t('warehouse.export_without_filters_message') + ' ' + this.$t('warehouse.export_max_records_warning', { max: 50000 }),
+          cancel: true,
+          persistent: true,
+        }).onOk(() => {
+          this.executeExportInventory(params);
+        });
+      } else {
+        // Show warning about 50k limit even when filters are present
+        Dialog.create({
+          title: this.$t('warehouse.export_limit_warning_title') || 'Export Limit',
+          message: this.$t('warehouse.export_max_records_warning', { max: 50000 }),
+          cancel: false,
+          persistent: false,
+        }).onOk(() => {
+          this.executeExportInventory(params);
+        });
+      }
+    },
+
+    async executeExportInventory(params) {
+      try {
+        this.$q.loading.show();
+        const { data } = await api.get('inventory', { params });
+        XLSXDownload(
+          XLSXGetData(data, this.inventorColumns),
+          'inventory',
+          'inventory',
+        );
+      } catch (e) {
+        console.error(e);
+        Notify.create({
+          message: 'Export failed',
+          color: 'negative',
+        });
+      } finally {
+        this.$q.loading.hide();
+      }
     },
   },
 };

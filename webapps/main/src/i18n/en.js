@@ -1364,6 +1364,10 @@ export default {
       export_col_counted_at: 'counted_at',
     },
     output_position: 'Output position',
+    export_without_filters_title: 'Export without filters',
+    export_without_filters_message: 'Exporting without filters may fetch a large amount of data. Do you want to proceed?',
+    export_limit_warning_title: 'Export Limit',
+    export_max_records_warning: 'The export will include a maximum of {max} records to prevent performance issues.',
   },
   release_date: 'release date',
   dhr: {
