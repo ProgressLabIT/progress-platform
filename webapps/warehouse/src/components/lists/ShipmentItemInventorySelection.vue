@@ -152,7 +152,7 @@ const shipment = useShipmentStore();
 const lists = useListsStore();
 
 shipment.product = { _key: lists.selectedItem.product_key };
-shipment.loadInventory();
+shipment.loadInventory({ limit: 0 });
 
 const serialSearch = ref(undefined);
 const positionSearch = ref(undefined);
