@@ -29,7 +29,7 @@
               <div class="text-caption">
                 {{ $t('warehouse.counting.processing_progress', {
                   processed: processedRecords,
-                  total: countSessionStore.records.filter(r => r.status !== 'discarded').length
+                  total: toBeProcessedRecords
                 }) }}
               </div>
             </div>
@@ -265,6 +265,9 @@ const errorStates = ['FAILED', 'CRASHED', 'NOT_FOUND', 'API_ERROR', 'CANCELLED']
 const processedRecords = ref(0);
 const processingErrors = computed(() => {
   return countSessionStore.records.filter(r => r.error_details).length;
+});
+const toBeProcessedRecords = computed(() => {
+  return countSessionStore.records.filter(r => r.status !== 'discarded').length;
 });
 
 // Prefect workflow monitoring state
@@ -588,11 +591,11 @@ async function resumeProcessing() {
 let processingPollInterval = null;
 
 async function checkProcessingStatus() {
-  // If no longer processing, stop polling
-  api.get(`/inventory/count-session/${props.countSessionKey}/processed-records`).then(response => {
-    processedRecords.value = response.data;
-  });
+  // Fetch processed records count for progress display
+  const response = await api.get(`/inventory/count-session/${props.countSessionKey}/processed-records`);
+  processedRecords.value = response.data;
 
+  // If no longer processing, stop polling
   if (sessionData.value.status !== 'processing') {
     clearInterval(processingPollInterval);
     processingPollInterval = null;
@@ -608,7 +611,7 @@ async function checkProcessingStatus() {
     return;
   }
 
-  // 3. Check Prefect flow run status
+  // Check Prefect flow run status
   try {
     const flowRun = await prefectAPI.getFlowRunsForSession(props.countSessionKey);
 
@@ -625,6 +628,10 @@ async function checkProcessingStatus() {
       // Show overlay if workflow is actively running
       if (['SCHEDULED', 'PENDING', 'RUNNING'].includes(flowRun.state_type)) {
         showProcessingOverlay.value = true;
+      } else if (flowRun.state_type === 'COMPLETED') {
+        // Flow completed - reload session to get updated status
+        await countSessionStore.loadSessionData(props.countSessionKey);
+        // Status check at the start of next poll iteration will handle cleanup
       } else if (['FAILED', 'CRASHED', 'CANCELLED'].includes(flowRun.state_type)) {
         showProcessingOverlay.value = false;
         // Stop polling on error
