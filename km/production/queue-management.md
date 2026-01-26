@@ -75,7 +75,7 @@ if self.info.quantity_change < 0 and was_closed:
 
 The following endpoints handle job closing/removal but do NOT reopen jobs:
 
-- `POST /job/update` (lines 775-810 in `endpoints/production.py`)
+- `POST /job/update` (lines 737-837 in `endpoints/production.py`)
 - `PATCH /work-order/{wo_key}/update-quantities` (lines 269-297 in `endpoints/production.py`)
 
 **This is intentional behavior:**
@@ -83,8 +83,12 @@ The following endpoints handle job closing/removal but do NOT reopen jobs:
 - If work order quantity is increased and existing jobs are closed, a NEW job should be created
 - The client is expected to send the appropriate job inserts along with updates
 
-**Validation:**
-After processing all job updates, the endpoint validates that the sum of `qt_planned` for all jobs in each phase equals the work order's new `qt_planned`. If validation fails, the transaction is aborted with a 422 error.
+**Multi-Work Order Support:**
+The `/job/update` endpoint supports updating jobs across multiple work orders in a single request. The endpoint:
+1. Tracks all affected work orders during job processing
+2. Updates each affected work order's calculated status and quantities
+3. Manages queue operations (add/remove) for each work order based on status transitions
+4. Commits all changes atomically in a single transaction
 
 ## ⚠️ Critical: Queue Operation Ordering
 

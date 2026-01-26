@@ -744,18 +744,9 @@ async def update_jobs(job_updates:List[JobUpdate]):
   results = []
 
   try:
-    # Enforce single Work Order per request
-    wo_keys = set()
-    for u in job_updates:
-      if u.action == JobUpdateType.INSERT:
-        wo_keys.add(u.data['work_order_key'])
-      elif u.action in [JobUpdateType.UPDATE, JobUpdateType.CLOSE]:
-        job_key = u.data['_key']
-        job_doc = job_db.get(job_key)
-        wo_keys.add(job_doc['wo_key'])
-    if len(wo_keys) != 1:
-      raise HTTPError(422, 'Please provide updates for a single work order per request')
-
+    # Collect affected work orders to update them after job modifications
+    affected_wo_keys = set()
+    
     for u in job_updates:
 
       if u.action == JobUpdateType.INSERT:
@@ -774,6 +765,7 @@ async def update_jobs(job_updates:List[JobUpdate]):
             tx=tx
           )
 
+        affected_wo_keys.add(new_job_data.wo_key)
         results.append(new_job_data)
 
       elif u.action == JobUpdateType.UPDATE:
@@ -790,6 +782,7 @@ async def update_jobs(job_updates:List[JobUpdate]):
         if 'assigned_to' in u.data:
           reassign_job_in_queues(tx, job_key=u.data['_key'], old_assignee=getattr(old_job_data, 'assigned_to', None), new_assignee=u.data['assigned_to'])
 
+        affected_wo_keys.add(new_job_data.wo_key)
         results.append(new_job_data)
 
       elif u.action == JobUpdateType.CLOSE:
@@ -801,35 +794,37 @@ async def update_jobs(job_updates:List[JobUpdate]):
           job_db.delete(job_key)
           # This is just a formality to pass on the WorkOrder code later on for wip update
           current_job_data.stage = WorkStatus.CLOSED
+          affected_wo_keys.add(current_job_data.wo_key)
           results.append(current_job_data)
 
         else:
           new_job_data = close_job_and_update_queues(tx, current_job_data, notes=u.data.get('notes'))
-
+          affected_wo_keys.add(new_job_data.wo_key)
           results.append(new_job_data)
 
 
-    wo_key = results[0].wo_key
-    work_order_data = tx.collection('WorkOrder').get(wo_key)
+    # Update all affected work orders
+    for wo_key in affected_wo_keys:
+      work_order_data = tx.collection('WorkOrder').get(wo_key)
 
-    # Update work order
-    updated_wo_data = tx.aql.execute(
-      TraceabilityQueries.UPDATE_WORK_ORDER,
-      bind_vars = dict(wo_key = wo_key)
-    ).next()
+      # Update work order
+      updated_wo_data = tx.aql.execute(
+        TraceabilityQueries.UPDATE_WORK_ORDER,
+        bind_vars = dict(wo_key = wo_key)
+      ).next()
 
-    # Handle work order status changes in the queue
-    if work_order_data['status'] != WorkStatus.CLOSED and updated_wo_data['status'] == WorkStatus.CLOSED:
-      tx.aql.execute(
-        Queries.REMOVE_WORK_ORDER_FROM_QUEUE,
-        bind_vars=dict(wo_key=wo_key)
-      )
+      # Handle work order status changes in the queue
+      if work_order_data['status'] != WorkStatus.CLOSED and updated_wo_data['status'] == WorkStatus.CLOSED:
+        tx.aql.execute(
+          Queries.REMOVE_WORK_ORDER_FROM_QUEUE,
+          bind_vars=dict(wo_key=wo_key)
+        )
 
-    if work_order_data['status'] == WorkStatus.CLOSED and updated_wo_data['status'] != WorkStatus.CLOSED:
-      tx.aql.execute(
-        Queries.ADD_WORK_ORDER_TO_QUEUE,
-        bind_vars=dict(new_wo_key=wo_key)
-      )
+      if work_order_data['status'] == WorkStatus.CLOSED and updated_wo_data['status'] != WorkStatus.CLOSED:
+        tx.aql.execute(
+          Queries.ADD_WORK_ORDER_TO_QUEUE,
+          bind_vars=dict(new_wo_key=wo_key)
+        )
 
     tx.commit_transaction()
     return APIResponse(detail=results, message="Jobs updated successfully")
