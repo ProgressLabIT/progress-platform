@@ -13,6 +13,7 @@ class BatchCanceledEvent(BaseAdmin):
 
   class InfoModel(EventInfoModel):
     job_key: str
+    batch_key: str | None = None
 
   @classmethod
   def get_tx_collections(cls):
@@ -44,9 +45,9 @@ class BatchCanceledEvent(BaseAdmin):
       raise JobHasNoActiveBatchError("The job has no active batch to cancel")
 
     # Cancel batch
-    batch_key = self.job.active_batch_key
+    self.info.batch_key = self.job.active_batch_key
     batch_update = dict(
-      _key = batch_key,
+      _key = self.info.batch_key,
       active = False,
       end = self.info.timestamp,
       canceled = self.event_key
@@ -54,7 +55,7 @@ class BatchCanceledEvent(BaseAdmin):
     self.tx.collection('Batch').update(batch_update)
 
     # Cancel StepExecutionData & WorkSession records
-    match = dict(batch_key = batch_key, canceled = None)
+    match = dict(batch_key = self.info.batch_key, canceled = None)
     update = dict(canceled = self.event_key)
     self.tx.collection('StepExecutionData').update_match(match, update)
     self.tx.collection('WorkSession').update_match(match, update)
@@ -76,12 +77,12 @@ class BatchCanceledEvent(BaseAdmin):
         FOR c IN 1..1 OUTBOUND CONCAT('Batch/', @batch_key) contains
         FILTER c.batch_key == @batch_key
         RETURN c._key
-      """, bind_vars=dict(batch_key=batch_key))
+      """, bind_vars=dict(batch_key=self.info.batch_key))
 
       for component_key in batch_serial_components_keys:
         SerialUnlinkedEvent.create_as_child(self, dict(
           serial_key = component_key,
-          batch_key = batch_key,
+          batch_key = self.info.batch_key,
           reason = 'Batch canceled',
         ))
 
@@ -111,7 +112,7 @@ class BatchCanceledEvent(BaseAdmin):
       REMOVE bs IN batch_serial
       LET removed = OLD
       RETURN PARSE_IDENTIFIER(OLD._to).key
-    """, bind_vars=dict(batch_key=self.info.active_batch_key))
+    """, bind_vars=dict(batch_key=self.info.batch_key))
 
     batch_serial_keys = [serial_key for serial_key in serials_cursor]
 
@@ -121,7 +122,7 @@ class BatchCanceledEvent(BaseAdmin):
       FOR c, e IN 1..1 OUTBOUND CONCAT('Serial/', s) contains
       FILTER e.batch_key == @batch_key
       REMOVE e IN contains
-    """, bind_vars=dict(batch_key=self.job.active_batch_key, batch_serial_keys=batch_serial_keys))
+    """, bind_vars=dict(batch_key=self.info.batch_key, batch_serial_keys=batch_serial_keys))
 
     if self.job.first_phase:
       # Delete partial serials
