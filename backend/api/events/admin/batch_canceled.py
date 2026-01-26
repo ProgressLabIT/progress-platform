@@ -15,7 +15,7 @@ class BatchCanceledEvent(BaseAdmin):
     job_key: str
 
   @classmethod
-  def get_tx_collections(self):
+  def get_tx_collections(cls):
     return [
       'Batch',
       'batch_serial',

@@ -24,7 +24,7 @@ class TaskCreatedEvent(BaseEvent):
     extra: Any | None = None
 
   @classmethod
-  def get_tx_collections(self):
+  def get_tx_collections(cls):
     return ['Task', 'Counter']
 
   @classmethod

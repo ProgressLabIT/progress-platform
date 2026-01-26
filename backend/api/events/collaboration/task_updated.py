@@ -44,7 +44,7 @@ class TaskUpdatedEvent(BaseEvent):
       return self
 
   @classmethod
-  def get_tx_collections(self):
+  def get_tx_collections(cls):
     return ['Task']
 
   @classmethod

@@ -9,7 +9,7 @@ class TaskCanceledEvent(BaseEvent):
     reason: str | None = None
 
   @classmethod
-  def get_tx_collections(self):
+  def get_tx_collections(cls):
     return ['Task']
 
   @classmethod

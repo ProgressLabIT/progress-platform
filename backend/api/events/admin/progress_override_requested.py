@@ -44,7 +44,7 @@ class ProgressOverrideRequestedEvent(BaseAdmin):
 
 
   @classmethod
-  def get_tx_collections(self):
+  def get_tx_collections(cls):
     return [
       'Batch',
       'is_in_position',

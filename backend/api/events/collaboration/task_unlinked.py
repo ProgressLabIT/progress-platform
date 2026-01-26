@@ -11,7 +11,7 @@ class TaskUnlinkedEvent(BaseEvent):
     link_key: str
 
   @classmethod
-  def get_tx_collections(self):
+  def get_tx_collections(cls):
     return ['task_rel']
 
   @classmethod

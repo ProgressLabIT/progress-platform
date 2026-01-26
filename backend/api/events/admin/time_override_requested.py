@@ -12,7 +12,7 @@ class TimeOverrideRequested(BaseAdmin):
     new_job_duration: int| None = None # milliseconds
 
   @classmethod
-  def get_tx_collections(self):
+  def get_tx_collections(cls):
     return ['Batch', 'Job', 'WorkOrder', 'WorkSession']
 
   @classmethod
