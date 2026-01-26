@@ -535,6 +535,9 @@ async function applyAdjustments() {
 
     const recordsToProcess = response?.records_to_process || 0;
 
+    // Start polling if status changed to processing
+    startProcessingPoll();
+
   } catch (error) {
     console.error('Error applying adjustments:', error);
     Notify.create({
@@ -567,11 +570,7 @@ async function resumeProcessing() {
     flowRunStatus.value = 'RUNNING';
     showProcessingOverlay.value = true;
 
-    if (!processingPollInterval) {
-      processingPollInterval = setInterval(async () => {
-        await checkProcessingStatus();
-      }, 3000);
-    }
+    startProcessingPoll();
 
   } catch (error) {
     console.error('Error resuming processing:', error);
@@ -644,8 +643,9 @@ async function checkProcessingStatus() {
   }
 }
 
-watch(sessionStatus, (newStatus, oldStatus) => {
-  if (newStatus === 'processing' && !processingPollInterval) {
+function startProcessingPoll() {
+  // Only start if status is processing and polling is not already active
+  if (sessionStatus.value === 'processing' && !processingPollInterval) {
     // Start enhanced polling
     processingPollInterval = setInterval(async () => {
       await checkProcessingStatus();
@@ -653,6 +653,12 @@ watch(sessionStatus, (newStatus, oldStatus) => {
 
     // Check immediately
     checkProcessingStatus();
+  }
+}
+
+watch(sessionStatus, (newStatus, oldStatus) => {
+  if (newStatus === 'processing' && !processingPollInterval) {
+    startProcessingPoll();
   }
 });
 
@@ -677,6 +683,8 @@ onMounted(async () => {
   }
   await countSessionStore.loadRecords(props.countSessionKey);
 
+  // Start polling if status is already processing on mount
+  startProcessingPoll();
 });
 
 onBeforeUnmount(() => {
