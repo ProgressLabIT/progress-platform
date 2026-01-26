@@ -156,13 +156,16 @@ class CountSessionConfirmedEvent(BaseEvent):
 
   def _create_empty_movement_list(self) -> str:
     """Create an empty MovementList to be populated asynchronously."""
-    # Generate list code using counter
+    # Generate list code using counter - default to session code if counter is not configured
+    session_code = self.session.get('code', self.info.session_key)
     try:
-      counter_key = self.tx.collection('Config').get('system_counters').get('movement_lists', 'default')
-      list_code = _generate_counter(self.tx, counter_key)
+      counter_key = self.tx.collection('Config').get('system_counters').get('movement_lists', None)
+      if counter_key is not None:
+        list_code = _generate_counter(self.tx, counter_key)
+      else:
+        list_code = session_code
     except Exception:
-      session_code = self.session.get('code', self.info.session_key)
-      list_code = f"ADJ-{session_code}"
+      list_code = session_code
 
     # Create EMPTY list
     list_record = dict(
