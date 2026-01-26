@@ -39,7 +39,33 @@
       input-debounce="100"
       class="q-mb-md col"
       :label="$capitalize($t('warehouse.movement.movement_type'))"
-    />
+      option-label="label"
+      option-value="value"
+      emit-value
+      map-options
+    >
+      <template #option="scope">
+        <q-item v-bind="scope.itemProps">
+          <q-item-section side>
+            <q-icon :name="scope.opt.icon" size="xs" />
+          </q-item-section>
+          <q-item-section>
+            <q-item-label>{{ scope.opt.label }}</q-item-label>
+          </q-item-section>
+        </q-item>
+      </template>
+      <template #selected-item="scope">
+        <div class="row items-center no-wrap">
+          <q-icon
+            v-if="selectedMovementType"
+            :name="selectedMovementType.icon"
+            size="xs"
+            class="q-mr-xs"
+          />
+          <span>{{ scope.opt?.label || '' }}</span>
+        </div>
+      </template>
+    </q-select>
 
     <!-- STATUS -->
     <q-select
@@ -292,7 +318,7 @@ export default {
   data() {
     return {
       bool_filters: ['search_graph'],
-      movement_type_options: [
+      movement_type_keys: [
         'transfer',
         'receipt',
         'shipment',
@@ -301,12 +327,34 @@ export default {
         'adjustment',
         'reversal',
       ],
+      typeIconMap: {
+        'receipt': 'mdi-import',
+        'transfer': 'mdi-swap-horizontal',
+        'shipment': 'mdi-export',
+        'adjustment': 'mdi-plus-minus-variant',
+        'production': 'mdi-package-variant-closed-plus',
+        'consumption': 'mdi-package-variant-closed-minus',
+        'reversal': 'mdi-undo-variant'
+      },
       status_options: ['planned', 'started', 'completed', 'canceled'],
       showFilter: false,
     };
   },
 
   computed: {
+    movement_type_options() {
+      return this.movement_type_keys.map(key => ({
+        label: this.$t(`warehouse.movement.${key}`),
+        value: key,
+        icon: this.typeIconMap[key]
+      }));
+    },
+
+    selectedMovementType() {
+      if (!this.movement_type) return null;
+      return this.movement_type_options.find(opt => opt.value === this.movement_type);
+    },
+
     // Filters
     product_search: queryModel(String, 'product_search', null),
     serial_search: queryModel(String, 'serial_search', null),
