@@ -4,7 +4,7 @@
       <div class="col-6">
         <SearchOrScan
           v-model="serialCodeFilter"
-          label="Seriale"
+          :label="$t('serial')"
           @update:model-value="search"
         />
       </div>
@@ -14,7 +14,7 @@
           dense
           clearable
           input-class="text-uppercase"
-          label="Prodotto"
+          :label="$t('product')"
           :debounce="300"
           v-model="productCodeFilter"
           @update:model-value="search"

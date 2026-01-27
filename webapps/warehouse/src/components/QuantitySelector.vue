@@ -7,7 +7,7 @@
       </slot>
       <div class="col-auto" v-if="quantity > props.max">
         <span class="text-h6 text-theme-orange q-mr-sm">
-          Max {{ props.max }}
+          {{ $t('max') }} {{ props.max }}
         </span>
         <q-icon
           name="mdi-alert"
@@ -101,7 +101,7 @@
             @click="setQuantity(props.max)"
           >
             <div class="row full-width justify-between">
-              <div class="col">MAX</div>
+              <div class="col">{{ $t('max') }}</div>
               <div class="col-1"></div>
               <div class="col">{{ props.max }}</div>
             </div>

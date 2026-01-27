@@ -78,7 +78,7 @@
 
     <!-- PRINT_DONE -->
     <template v-else-if="stage === 'print_done'">
-      <div class="text-subtitle1 q-py-xl text-center">Print done!</div>
+      <div class="text-subtitle1 q-py-xl text-center">{{ $t('print_success') }}</div>
     </template>
 
     <div class="fit row justify-center items-start content-center">

@@ -29,7 +29,7 @@
     <div class="text-h3 q-mt-lg">{{ $t(list.message) }}</div>
     <SearchOrScan v-model="filter" @update:model-value="searchPositions" />
 
-    <div class="text-h6 q-mt-md">POSIZIONI {{ list.type }}</div>
+    <div class="text-h6 q-mt-md">{{ $t('positions_label_prefix') }} {{ list.type }}</div>
     <div class="col scroll">
       <div class="row q-col-gutter-sm">
         <div v-for="pos in list.items" :key="pos._key" class="col-auto">

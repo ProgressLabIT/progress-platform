@@ -9,7 +9,7 @@
       </div>
       <div class="col-auto">
         <div class="text-h5 text-low">
-          {{ list?.type === 'receipt' ? 'Verificati' : 'Completati' }}
+          {{ list?.type === 'receipt' ? $t('rows_checked') : $t('rows_completed') }}
         </div>
         <div class="text-right text-body1">
           {{ listItems?.filter(i => i.qt_confirmed >= i.qt_planned).length }} / {{  listItems?.length }}
@@ -17,7 +17,7 @@
       </div>
     </div>
 
-    <SearchOrScan v-model="productSearch" label="Filtra prodotti" class="q-mt-md" />
+    <SearchOrScan v-model="productSearch" :label="$t('filter_products')" class="q-mt-md" />
 
     <q-scroll-area class="col q-my-md">
 

@@ -12,7 +12,7 @@
         v-model="positionFilter"
         filled
         dense
-        label="Filtro posizione"
+        :label="$t('position_filter')"
         class="col"
         :debounce="300"
         @update:model-value="loadInventory"
@@ -22,7 +22,7 @@
         v-model="serialFilter"
         filled
         dense
-        label="Filtro seriale"
+        :label="$t('serial_filter')"
         class="col"
         :debounce="300"
         @update:model-value="loadInventory"
@@ -30,7 +30,7 @@
     </div>
 
     <div class="text-h6 col-auto q-mt-sm">
-      {{ inventory.length ? 'Materiale disponibile' : 'Nessun materiale disponibile' }}
+      {{ inventory.length ? $t('material_available') : $t('no_material_available') }}
     </div>
 
     <q-scroll-area class="col">
@@ -86,12 +86,17 @@
         <!-- QUANTITY -->
       <QuantitySelector
         v-model="inventoryItemTempQuantity"
-        heading="Quantità da confermare"
+        :heading="$t('quantity_to_confirm')"
         :max="cardItem.quantity"
         show-buttons
         class="col"
       />
-      <q-btn color="theme-blue" class="q-mt-md" label="seleziona" @click="selectItemQuantity" />
+      <q-btn
+        color="theme-blue"
+        class="q-mt-md"
+        :label="$t('select')"
+        @click="selectItemQuantity"
+      />
 
     </SlideUpCard>
   </div>

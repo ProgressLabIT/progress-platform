@@ -1,7 +1,7 @@
 <template>
   <q-page class="q-px-md q-py-md column fit q-gutter-y-sm">
     <div class="text-h1 q-mb-sm col-auto">
-      Liste di carico
+      {{ $t('incoming_lists_title') }}
     </div>
 
     <q-scroll-area v-if="lists.headers.length" class="col">
@@ -50,12 +50,12 @@
     </q-scroll-area>
 
     <div v-else class="col">
-      Nessuna lista di carico disponibile
+      {{ $t('incoming_no_lists') }}
     </div>
 
     <q-btn
       color="theme-blue"
-      label="NUOVO RICEVIMENTO"
+      :label="$t('incoming_new')"
       @click="$router.push({ name: 'IncomingManual' })"
     />
   </q-page>

@@ -1,7 +1,7 @@
 <template>
   <q-page class="q-px-md q-py-md column fit q-gutter-y-sm">
     <div class="text-h1 q-mb-sm col-auto">
-      Liste di spedizione
+      {{ $t('shipment_lists_title') }}
     </div>
 
     <q-scroll-area v-if="lists.headers.length" class="col">
@@ -26,7 +26,7 @@
               </span>
             </div>
             <div class="col-auto smaller text-low">
-              Righe controllate / totali
+              {{ $t('rows_checked_total') }}
             </div>
           </div>
 
@@ -50,12 +50,12 @@
     </q-scroll-area>
 
     <div v-else class="col">
-      Nessuna lista di spedizione disponibile
+      {{ $t('shipment_no_lists') }}
     </div>
 
     <q-btn
       color="theme-blue"
-      label="NUOVA SPEDIZIONE"
+      :label="$t('shipment_new')"
       @click="$router.push({ name: 'ShipmentManual' })"
     />
   </q-page>

@@ -2,7 +2,7 @@
   <q-page class="q-px-md q-py-lg column fit">
 
     <!-- HERE SHOW TRANSFER REQUESTS (PLANNED MOVEMENTS) -->
-    <div class="text-h1">Trasferimenti pianificati</div>
+    <div class="text-h1">{{ $t('planned_transfers') }}</div>
 
     <q-space></q-space>
     <!-- BUTTON FOR MANUAL TRANSFER -->

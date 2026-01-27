@@ -14,7 +14,7 @@
         <div class="col">
           <q-btn
             color="theme-blue"
-            label="etichetta"
+            :label="$t('print_label')"
             unelevated
             class="full-width"
             @click="printProductLabel(lists.selectedItem.product_code, lists.selectedItem.product_description)"

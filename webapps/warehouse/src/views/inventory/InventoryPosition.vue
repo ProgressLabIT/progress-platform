@@ -104,7 +104,7 @@
       <QuantitySelector v-model="itemQuantity" show-buttons>
         <template #heading>
             <div class="col">
-              <div class="text-h3">Modifica quantità</div>
+              <div class="text-h3">{{ $t('adjust_quantity') }}</div>
               <div class="text-h3">{{ selectedItem.code }}</div>
             </div>
             <div class="col-auto highlight">
@@ -290,7 +290,7 @@ function confirmQuantity() {
     loadPositionContents(selectedPosition.value._key);
     unselectItem();
     Notify.create({
-      message: 'Quantità aggiornata',
+      message: $t('quantity_updated'),
       color: 'theme-green',
       position: 'top',
     });

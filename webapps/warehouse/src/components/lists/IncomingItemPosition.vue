@@ -38,7 +38,7 @@
 
     <!-- SELECTED POSITIONS -->
     <div class="col-auto q-mt-md">
-      <div class="text-h6 q-mb-xs">POSIZIONI SELEZIONATE</div>
+      <div class="text-h6 q-mb-xs">{{ $t('selected_positions') }}</div>
       <div class="row col-auto q-gutter-sm">
         <div
           v-for="selected in tempPositions"
@@ -59,7 +59,7 @@
 
     <!-- AVAILABLE POSITIONS -->
     <div class="col q-mt-lg column">
-      <div class="text-h6 q-mb-sm">POSIZIONI {{ positionResultsType }}</div>
+      <div class="text-h6 q-mb-sm">{{ $t('positions_label_prefix') }} {{ positionResultsType }}</div>
       <q-scroll-area class="col q-pb-md">
         <div class="row q-gutter-sm">
           <div v-for="pos in availablePositions" :key="pos._key" class="col-auto">

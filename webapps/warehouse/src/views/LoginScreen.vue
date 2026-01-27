@@ -27,9 +27,7 @@
                     <template #error>
                       <q-avatar size="180" color="blue">
                         <div class="column text-center highlight">
-                          <div>IL</div>
-                          <div>VOSTRO</div>
-                          <div>LOGO</div>
+                          <div>{{ $t('your_logo') }}</div>
                         </div>
                       </q-avatar>
                     </template>

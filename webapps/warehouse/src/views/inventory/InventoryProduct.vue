@@ -18,7 +18,7 @@
           filled
           dense
           :debounce="300"
-          label="Filtra per posizione"
+          :label="$t('filter_by_position')"
           @update:model-value="loadInventory"
         />
         <q-input
@@ -27,14 +27,14 @@
           class="q-my-sm col"
           filled
           dense
-          label="Filtra per seriale"
+          :label="$t('filter_by_serial')"
           :debounce="300"
           @update:model-value="loadInventory"
         />
       </div>
 
       <div class="text-h6 col-auto q-mt-sm">
-        {{ inventory.contents.length ? 'Materiale disponibile' : 'Nessun materiale disponibile' }}
+        {{ inventory.contents.length ? $t('material_available') : $t('no_material_available') }}
       </div>
 
       <q-scroll-area v-if="inventory.contents.length > 0" class="col q-mt-md">
@@ -79,13 +79,13 @@
           <!-- QUANTITY -->
         <QuantitySelector
           v-model="inventoryItemTempQuantity"
-          heading="Quantità da confermare"
+          :heading="$t('quantity_to_confirm')"
           show-buttons
           class="col"
         >
           <template #heading>
             <div class="col">
-              <div class="text-h3">Modifica quantità</div>
+              <div class="text-h3">{{ $t('adjust_quantity') }}</div>
               <div class="text-h3">{{ cardItem.code }}</div>
             </div>
             <div class="col-auto highlight">
@@ -99,8 +99,19 @@
           </template>
         </QuantitySelector>
 
-        <q-btn color="theme-blue" outline class="q-mt-md" label="Reimposta" @click="inventoryItemTempQuantity = cardItem.quantity" />
-        <q-btn color="theme-blue" class="q-mt-md" label="Aggiorna quantità" @click="showReasonInput = true" />
+        <q-btn
+          color="theme-blue"
+          outline
+          class="q-mt-md"
+          :label="$t('reset_quantity')"
+          @click="inventoryItemTempQuantity = cardItem.quantity"
+        />
+        <q-btn
+          color="theme-blue"
+          class="q-mt-md"
+          :label="$t('update_quantity')"
+          @click="showReasonInput = true"
+        />
 
       </SlideUpCard>
 
@@ -208,7 +219,7 @@ function confirmQuantity() {
     inventory.loadInventory({ product_key: selectedProduct.value._key });
     resetSelection();
     Notify.create({
-      message: 'Quantità aggiornata',
+      message: this.$t('quantity_updated'),
       color: 'theme-green',
       position: 'top',
     });
