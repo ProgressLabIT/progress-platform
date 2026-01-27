@@ -66,141 +66,19 @@
           icon-right="mdi-close-circle"
           @click="resetPositionNavigation"
         />
-
       </div>
 
-      <SearchOrScan
-        v-model="filter"
-        class="q-mb-sm"
+      <CountingContentsView
+        ref="contentsRef"
+        :session-data="sessionData"
+        :contents="positionContents"
+        :count-records="countRecords"
+        :position-status="positionStatus"
+        :position-key="countingStore.selectedPosition?._key"
+        :loading="loading"
+        @position-selected="selectPosition"
+        @refresh-position="refreshCurrentPosition"
       />
-
-
-
-      <!-- ================================ -->
-      <!-- ITEM LIST -->
-      <!-- ================================ -->
-      <div class="row items-center justify-between q-mb-sm">
-        <div class="text-h6">
-          {{ !loading && positionContents.length === 0 ? $t('no_contents') : $t('contents') }}
-        </div>
-        <q-checkbox
-          v-model="hideCountedFilter"
-          left-label
-          dense
-          :label="$t('hide_counted')"
-          :disable="loading"
-          class="text-body2"
-
-        />
-      </div>
-      <q-virtual-scroll
-        :items="filteredContents"
-        v-slot="{ item }"
-        class="col q-mb-md thin-scrollbar"
-      >
-        <q-item
-          :key="item._key"
-          clickable
-          class="content-card q-my-xs q-py-sm text-body1"
-          style="height: 75px; max-width: 95vw"
-          :style="{ 'border-color': getCountInfo(item).hasStarted ? 'var(--theme-blue)' : null }"
-          :class="[getColor(item), {'locked-item': getCountInfo(item).hasStarted && getCountInfo(item).startedBy === store.state.session.user._key}]"
-          @click="selectItem(item)"
-        >
-
-          <!-- ICON -->
-          <q-item-section side class="col-auto">
-            <q-icon :name="contentIcon[item.type]" />
-          </q-item-section>
-
-          <!-- CODE AND DESCRIPTION -->
-          <q-item-section>
-            <div class="row items-center highlight">
-              <div class="col-auto q-mr-sm">{{ item.code }}</div>
-              <!-- Added Icon -->
-              <div class="col-auto column items-center">
-              <q-icon
-                  v-if="item.isCountOnly"
-                  name="mdi-plus-circle"
-                  color="theme-orange"
-                  size="16px"
-              />
-              </div>
-              <!-- Resume/Active Icon -->
-              <div class="col-auto column items-center">
-                <q-icon
-                    v-if="getCountInfo(item).hasStarted"
-                    :name="getCountInfo(item).startedBy === store.state.session.user._key ? 'mdi-progress-pencil' : 'mdi-lock'"
-                    :color="getCountInfo(item).startedBy === store.state.session.user._key ? 'theme-blue' : 'theme-orange'"
-                    size="16px"
-                />
-              </div>
-              <!-- Completed Icon -->
-              <div class="col-auto column items-center">
-                <q-icon
-                    v-if="getCountInfo(item).completedCount > 0 && !(getCountInfo(item).hasStarted && getCountInfo(item).startedBy === store.state.session.user._key)"
-                    name="mdi-check-circle"
-                    color="theme-green"
-                    size="16px"
-                />
-              </div>
-            </div>
-            <q-item-label v-if="item.product_description" caption lines="2">
-              {{ item.product_description }}
-            </q-item-label>
-          </q-item-section>
-
-          <!-- QUANTITY -->
-          <q-item-section v-if="item.quantity && !blindQuantities" side class="col-auto">
-            <div class="text-body2">
-              {{ item.quantity }}
-              <span v-if="getCountedQuantity(item) !== null" class="text-low q-ml-xs">
-                / {{ getCountedQuantity(item) }}
-              </span>
-            </div>
-          </q-item-section>
-
-          <!-- COUNTED QUANTITY (blind mode) -->
-          <q-item-section v-if="blindQuantities && getCountedQuantity(item) !== null" side class="col-auto">
-            <div class="text-body2 text-low">
-              {{ getCountedQuantity(item) }}
-            </div>
-          </q-item-section>
-
-          <!-- POSITION FULLY CHECKED -->
-          <q-item-section
-            v-if="item?.type === 'position' && item?.position_key && item.position_key in positionStatus"
-            side
-            class="col-auto"
-          >
-            <div class="row items-baseline">
-              <q-icon name="mdi-check-circle" :size="positionStatus[item.position_key] === 'empty' ? '10px' : '25px'"/>
-              <q-icon v-if="positionStatus[item.position_key] === 'empty'" name="mdi-package-variant-remove" size="27px"/>
-            </div>
-          </q-item-section>
-
-          <!-- COUNT NUMBER & USER -->
-          <q-item-section
-            v-if="getCountInfo(item).hasRecords && (getCountInfo(item).startedBy || getCountInfo(item).completedBy.length > 0)"
-            side
-            class="col-auto"
-          >
-            <q-icon
-              v-if="getCountInfo(item).completedBy.length > 1"
-              name="mdi-account-group"
-              size="20px"
-              color="theme-grey"
-            />
-            <BaseUserAvatar
-              v-else
-              :user="usersByKeys[getCountInfo(item).startedBy || getCountInfo(item).completedBy[0]]"
-              :show_name="false"
-              size="20px"
-              dense
-            />
-          </q-item-section>
-        </q-item>
-      </q-virtual-scroll>
 
       <!-- ================================ -->
       <!-- ACTIONS -->
@@ -230,23 +108,6 @@
 
 
     <!-- ================================ -->
-    <!-- Counting Cards -->
-    <!-- ================================ -->
-    <CountingQuantityCard
-      v-if="selectedItem && selectedItem.serial_key === null"
-      :item="selectedItem"
-      @close="unselectItem()"
-    />
-
-    <CountingSerialsCard
-      v-if="selectedItem && selectedItem?.serial_key !== null"
-      :item="selectedItem"
-      :blind-mode="blindSerials"
-      @close="unselectItem()"
-    />
-
-
-    <!-- ================================ -->
     <!-- Product Search Card -->
     <!-- ================================ -->
     <CountingProductSearchCard
@@ -269,18 +130,16 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, nextTick } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Notify } from 'quasar';
 import { api } from '@/boot/axios';
 import { store } from '@/boot/store';
 import { useCountingStore } from '@/stores/counting';
 import SearchOrScan from '@/components/SearchOrScan.vue';
-import CountingQuantityCard from './CountingQuantityCard.vue';
-import CountingSerialsCard from './CountingSerialsCard.vue';
 import CountingProductSearchCard from './CountingProductSearchCard.vue';
 import CountingEmptyPositionCard from './CountingEmptyPositionCard.vue';
-import BaseUserAvatar from '@/components/BaseUserAvatar.vue';
+import CountingContentsView from './CountingContentsView.vue';
 import { Loading } from 'quasar';
 
 const props = defineProps({
@@ -300,44 +159,12 @@ const positionResults = ref([]);
 const positionResultsType = ref('RECENTI');
 const positionContents = ref([]);
 const positionStatus = ref({});
-const selectedItem = ref(null);
 const showProductSearch = ref(false);
-const usersByKeys = ref({});
 const countRecords = ref([]);
-const hideCountedFilter = ref(false);
 const showEmptyPositionConfirmation = ref(false);
-
-api.get('user').then((resp) => {
-  usersByKeys.value = resp.data.detail.reduce((acc, user) => {
-    acc[user._key] = user;
-    return acc;
-  }, {});
-});
-
-const blindQuantities = computed(() => props.sessionData.blind_quantities ?? true);
-const blindSerials = computed(() => props.sessionData.blind_serials ?? true);
+const contentsRef = ref(null);
 
 const positionPath = computed(() => countingStore.selectedPosition?.path || []);
-
-const contentIcon = {
-  product: 'mdi-apps',
-  serial: 'mdi-cube-scan',
-  position: 'mdi-package-variant-closed',
-};
-
-function getColor(item) {
-  if (item && item.isCountOnly) {
-    // Count-only items are rendered as outline-only, without background color
-    return `bg-grey-backdrop`;
-  }
-  const colorMap = {
-    product: 'blue',
-    serial: 'green',
-    position: 'red'
-  };
-  const color = colorMap[item.type];
-  return `bg-${color}-backdrop`;
-}
 
 function getPathString(position) {
   return position?.path?.map(p => p.position_code).join(' > ') || '';
@@ -573,8 +400,8 @@ async function loadCountRecords(positionKey) {
 async function selectPosition(positionKey) {
   Loading.show();
   try {
-  filter.value = '';
-  await loadPositionContents(positionKey);
+    filter.value = '';
+    await loadPositionContents(positionKey);
   } finally {
     Loading.hide();
   }
@@ -598,276 +425,19 @@ function resetPositionNavigation() {
   countingStore.selectedPosition = null;
   positionContents.value = [];
 }
-
-// Helper: Group count records by product_key + position_key
-function groupRecordsByProductAndPosition(records, positionKey) {
-  return records.reduce((acc, record) => {
-    const recordProductKey = record.product_key || (record._from ? record._from.split('/').pop() : null);
-    const recordPositionKey = record.position_key || (record._to ? record._to.split('/').pop() : null);
-
-    if (recordProductKey && recordPositionKey === positionKey) {
-      const key = `${recordProductKey}_${recordPositionKey}`;
-      if (!acc.has(key)) {
-        acc.set(key, []);
-      }
-      acc.get(key).push(record);
-    }
-    return acc;
-  }, new Map());
-}
-
-// Helper: Build count info for a single item
-function buildCountInfoForItem(item, records) {
-  const completedRecords = records.filter(r => r.status === 'completed' || r.status === 'submitted' || r.status === 'confirmed');
-  const startedRecords = records.filter(r => r.status === 'started');
-
-  return {
-    hasRecords: records.length > 0,
-    completedCount: completedRecords.length,
-    startedCount: startedRecords.length,
-    hasStarted: startedRecords.length > 0,
-    startedBy: startedRecords.length > 0 ? startedRecords[0].user_key : null,
-    completedBy: [...new Set(completedRecords.map(r => r.user_key).filter(Boolean))],
-    allRecords: records
-  };
-}
-
-// Helper: Build count info map from items and grouped records
-function buildCountInfoMap(items, recordsByKey, positionKey) {
-  return items.reduce((map, item) => {
-    if (!item.product_key) {
-      return map;
-    }
-
-    const key = `${item.product_key}_${positionKey}`;
-    const records = recordsByKey.get(key) || [];
-    map.set(item._key, buildCountInfoForItem(item, records));
-
-    return map;
-  }, new Map());
-}
-
-// Pre-compute count info map for all items to avoid repeated filtering
-const countInfoMap = computed(() => {
-  const positionKey = countingStore.selectedPosition?._key;
-
-  if (!positionKey || !countRecords.value.length) {
-    return new Map();
-  }
-
-  // Pre-process count records by product_key + position_key for faster lookup
-  const recordsByKey = groupRecordsByProductAndPosition(countRecords.value, positionKey);
-
-  // Get all items that could appear in filteredContents (before text filtering)
-  const processedInventory = aggregateInventoryItems(positionContents.value);
-  const countOnlyItems = buildCountOnlyItems();
-  const allItems = [
-    ...processedInventory.items,
-    ...Object.values(processedInventory.serialsByProduct),
-    ...countOnlyItems
-  ];
-
-  // Build count info for each item
-  return buildCountInfoMap(allItems, recordsByKey, positionKey);
-});
-
-const filteredContents = computed(() => {
-  const searchLower = (filter.value || '').toLowerCase();
-
-  // 1) Inventory-based items - aggregate serials by product
-  const processedInventory = aggregateInventoryItems(positionContents.value);
-
-  // 2) Count-only virtual items (counts without inventory)
-  const countOnlyItems = buildCountOnlyItems(''); // Pass empty string since we filter below
-
-  // 3) Combine everything
-  const allItems = [
-    ...processedInventory.items,
-    ...Object.values(processedInventory.serialsByProduct),
-    ...countOnlyItems
-  ];
-
-  // 4) Apply text filter to all items
-  const textFiltered = searchLower
-    ? allItems.filter(item => {
-        const code = (item.code || '').toLowerCase();
-        const description = (item.product_description || '').toLowerCase();
-        const searchContext = code + ' ' + description;
-        return searchContext.includes(searchLower);
-      })
-    : allItems;
-
-  // 5) Filter out completed counts if hideCountedFilter is active
-  const filteredItems = hideCountedFilter.value
-    ? textFiltered.filter(item => {
-        // Filter out items with completed counts
-        const countInfo = countInfoMap.value.get(item._key);
-        if (countInfo && countInfo.completedCount > 0) {
-          return false;
-        }
-        // Filter out positions that are counted or empty
-        if (item.type === 'position' && item.position_key && item.position_key in positionStatus.value) {
-          return false;
-        }
-        return true;
-      })
-    : textFiltered;
-
-  // 6) Sort by code attribute
-  return filteredItems.sort((a, b) => a.code.localeCompare(b.code));
-});
-
-
-// Auto-select item if exactly one matches the filter
-watch(filteredContents, async (filtered) => {
-  if (filter.value && filtered.length === 1) {
-    // Check if filter matches the item's code exactly (case-insensitive)
-    const itemCode = filtered[0].code?.toLowerCase() || '';
-    if (itemCode === filter.value.toLowerCase()) {
-      await nextTick();
-      selectItem(filtered[0]);
-      filter.value = '';
-    }
-  }
-});
-
 onMounted(() => {
   loadLatestUsedPositions();
 });
 
-function selectItem(item) {
-  // Check if item is locked by another user using count records
-  const countInfo = countInfoMap.value.get(item._key);
-  if (countInfo?.hasStarted && countInfo.startedBy) {
-    const currentUserKey = store.state.session.user._key;
-    if (countInfo.startedBy !== currentUserKey) {
-      // Item is locked by another user, block access
-      Notify.create({
-        message: $t('count_locked_by_other_user'),
-        color: 'theme-orange',
-        position: 'top',
-        timeout: 3000
-      });
-      return;
-    }
-    // Item is locked by current user, proceed normally
-  }
-
-  // Use countInfo to determine if count is active (more reliable than item.counting from API)
-  const isCounting = countInfo?.hasStarted || false;
-  const countBy = countInfo?.startedBy || item.count_by || null;
-
-  // Get the last count record for pre-filling
-  const lastCountRecord = getLastCountRecord(item);
-
-  if (item.type === 'position') {
-    selectPosition(item.position_key);
-  } else if (item.isAggregatedSerial) {
-    // For aggregated serials, pass the aggregated item with serials array
-    selectedItem.value = {
-      _key: item._key,
-      product_key: item.product_key,
-      product_code: item.product_code,
-      product_description: item.product_description,
-      position_key: countingStore.selectedPosition._key,
-      position_code: countingStore.selectedPosition.code,
-      serial_key: 'aggregated', // Mark as aggregated
-      serials: item.serials,     // Pass all serials for this product
-      quantity: item.quantity,
-      counting: isCounting,
-      count_by: countBy,
-      inventory_keys: item.inventory_keys || [],
-      path: [{ position_key: countingStore.selectedPosition._key, position_code: countingStore.selectedPosition.code }],
-      lastCountRecord,
-    };
-  } else {
-    // Convert position API response format to inventory format for counting cards
-    selectedItem.value = {
-      _key: item._key,
-      product_key: item.product_key,
-      product_code: item.code,
-      product_description: item.product_description,
-      position_key: countingStore.selectedPosition._key,
-      position_code: countingStore.selectedPosition.code,
-      serial_key: item.type === 'serial' ? item.serial_key : null,
-      serial_code: item.type === 'serial' ? item.code : null,
-      quantity: item.quantity || 0,
-      counting: isCounting,
-      count_by: countBy,
-      inventory_keys: item.inventory_keys || [item._key],
-      path: [{ position_key: countingStore.selectedPosition._key, position_code: countingStore.selectedPosition.code }],
-      lastCountRecord,
-    };
-  }
-}
-
-function unselectItem() {
-  selectedItem.value = null;
-  loadPositionContents(countingStore.selectedPosition._key);
-}
-
-// Helper function to get count info for display (uses pre-computed map)
-function getCountInfo(item) {
-  return countInfoMap.value.get(item._key) || {
-    hasRecords: false,
-    completedCount: 0,
-    startedCount: 0,
-    hasStarted: false,
-    startedBy: null,
-    completedBy: [],
-    allRecords: []
-  };
-}
-
-// Helper function to get counted quantity from count records
-function getCountedQuantity(item) {
-  const lastRecord = getLastCountRecord(item);
-  return lastRecord?.counted_qt ?? null;
-}
-
-// Helper function to get the last completed count record (from any user)
-function getLastCountRecord(item) {
-  const countInfo = getCountInfo(item);
-  if (!countInfo.hasRecords || countInfo.allRecords.length === 0) {
-    return null;
-  }
-
-  // Get completed/submitted/confirmed records from any user
-  const completedRecords = countInfo.allRecords.filter(
-    r => (r.status === 'completed' || r.status === 'submitted' || r.status === 'confirmed')
-  );
-
-  if (completedRecords.length === 0) {
-    return null;
-  }
-
-  // Sort by counted_at descending and return the most recent
-  return completedRecords.sort((a, b) => {
-    const dateA = a.counted_at ? new Date(a.counted_at) : new Date(0);
-    const dateB = b.counted_at ? new Date(b.counted_at) : new Date(0);
-    return dateB - dateA;
-  })[0];
-}
-
 function handleProductSelected(product) {
-  // Determine card type based on traceability_level
-  const isSerialProduct = !!product.traceability_level;
-
-  // Create item object for counting cards
-  selectedItem.value = {
-    _key: null, // No inventory key yet
-    product_key: product._key,
-    product_code: product.code,
-    product_description: product.description,
-    position_key: countingStore.selectedPosition._key,
-    position_code: countingStore.selectedPosition.code,
-    serial_key: isSerialProduct ? 'aggregated' : null,
-    quantity: 0,
-    counting: false,
-    count_by: null,
-    inventory_keys: [], // Empty - item doesn't exist in inventory yet
-    path: [{ position_key: countingStore.selectedPosition._key, position_code: countingStore.selectedPosition.code }]
-  };
+  if (!countingStore.selectedPosition?._key) {
+    return;
+  }
+  contentsRef.value?.openForProduct(
+    product,
+    countingStore.selectedPosition._key,
+    countingStore.selectedPosition.code
+  );
 }
 
 function handleEmptyPositionConfirmed() {
@@ -876,35 +446,16 @@ function handleEmptyPositionConfirmed() {
     loadPositionContents(countingStore.selectedPosition._key);
   }
 }
+
+function refreshCurrentPosition() {
+  if (countingStore.selectedPosition?._key) {
+    loadPositionContents(countingStore.selectedPosition._key);
+  }
+}
 </script>
 
 <style lang="sass" scoped>
-.content-card
-  border-radius: 5px
-
-.locked-item
-  border: 2px solid var(--theme-blue) !important
-
 .grid-style-transition
   transition: transform .28s, background-color .28s
 
-.thin-scrollbar
-  // Firefox
-  scrollbar-width: thin
-  scrollbar-color: rgba(255, 255, 255, 0.3) transparent
-
-  // WebKit browsers (Chrome, Safari, Edge)
-  &::-webkit-scrollbar
-    width: 6px
-
-  &::-webkit-scrollbar-track
-    background: transparent
-
-  &::-webkit-scrollbar-thumb
-    background: rgba(255, 255, 255, 0.3)
-    border-radius: 3px
-
-  &::-webkit-scrollbar-thumb:hover
-    background: rgba(255, 255, 255, 0.5)
 </style>
-
