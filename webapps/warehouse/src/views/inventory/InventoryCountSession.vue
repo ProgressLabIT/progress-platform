@@ -5,7 +5,7 @@
     <div class="text-body2 text-low">{{ countingStore.sessionData?.description }}</div>
 
     <!-- Product-based counting -->
-    <CountingInventoryNew
+    <CountingProductBrowser
       v-if="countingStore.sessionData?.type === 'product'"
       :session-data="countingStore.sessionData"
       class="col q-mt-md"
@@ -26,7 +26,7 @@ import { onBeforeRouteLeave } from 'vue-router';
 import { useNavStore } from 'src/stores/navigation';
 import { useCountingStore } from 'src/stores/counting';
 import { useI18n } from 'vue-i18n';
-import CountingInventoryNew from '@/components/counting/CountingInventoryNew.vue';
+import CountingProductBrowser from '@/components/counting/CountingProductBrowser.vue';
 import CountingPositionBrowser from '@/components/counting/CountingPositionBrowser.vue';
 
 const props = defineProps({

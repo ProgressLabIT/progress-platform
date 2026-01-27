@@ -1,19 +1,60 @@
-# Counting Position Browser - UI Logic Guide
+# Counting Browser - UI Logic Guide
 
-This document describes the user interface logic for the **CountingPositionBrowser** component, which is the main interface for inventory counting operations. It serves as a guide for understanding user flows and defining test cases.
+This document describes the user interface logic for the counting components in the warehouse app, which are the main interfaces for inventory counting operations. It serves as a guide for understanding user flows and defining test cases.
 
 ---
 
 ## Overview
 
-The counting browser operates in two main views (determined by Pinia store state):
+The warehouse app supports two types of counting sessions, each with its own primary component:
+
+1. **Position-based counting** (`CountingPositionBrowser.vue`) - User selects a warehouse position first, then counts items within it
+2. **Product-based counting** (`CountingProductBrowser.vue`) - User selects a product first, then counts that product's inventory across all positions
+
+Both components share common building blocks:
+
+- `CountingContentsView.vue` - Renders inventory items and handles counting operations
+- `CountingProductList.vue` - Displays product search results with traceability-aware styling
+- `CountingQuantityCard.vue` - Counting interface for non-serialized products
+- `CountingSerialsCard.vue` - Counting interface for serialized products
+
+### Shared Components
+
+**`CountingContentsView.vue`** is responsible for:
+- Rendering the inventory items list (products, serials, nested positions)
+- Computing and displaying count status (started, completed, locked)
+- Applying text and "hide counted" filters
+- Aggregating serials by product
+- Projecting **count-only** items (counts without inventory)
+- Opening counting cards (`CountingQuantityCard`, `CountingSerialsCard`) for the selected item
+
+**`CountingProductList.vue`** is responsible for:
+- Rendering product items with traceability-aware icons (serialized vs non-serialized)
+- Color-coded backgrounds (green for serialized, blue for non-serialized)
+- Used by both `CountingProductBrowser.vue` and `CountingProductSearchCard.vue`
+
+### State Management
+The components use **Pinia** (`useCountingStore`) for managing:
+- `sessionData` - The current counting session data
+- `selectedPosition` - Currently selected position (for position-based counting)
+- Navigation state across the counting workflow
+
+---
+
+# Part 1: Position-Based Counting
+
+## Overview
+
+`CountingPositionBrowser.vue` operates in two main views (determined by Pinia store state):
 1. **Position Selection** - User selects a warehouse position to count (`countingStore.selectedPosition === null`)
 2. **Contents View** - User views and counts items within the selected position (`countingStore.selectedPosition !== null`)
 
-### State Management
-The component uses **Pinia** (`useCountingStore`) for managing:
-- `selectedPosition` - Currently selected position (or null for position selection view)
-- Navigation state across the counting workflow
+`CountingPositionBrowser.vue` focuses on:
+- Position search and selection
+- Position path / breadcrumb display
+- Navigation (back / reset)
+- Loading position contents, count records and position completion status from the API
+- Delegating item interactions to `CountingContentsView.vue`
 
 ---
 
@@ -95,7 +136,7 @@ Multiple serial items of the same product are **aggregated** into a single row.
 - Filters are delegated to the backend via API call
 - Filter applies to contents when search input changes
 
-### Hide Counted Filter (NEW)
+### Hide Counted Filter
 | Checkbox State | Behavior |
 |----------------|----------|
 | Unchecked (default) | All items shown |
@@ -153,10 +194,10 @@ For aggregated serial items, locking is determined by checking all individual se
 
 ---
 
-## Navigation (NEW)
+## Navigation
 
 ### Hierarchical Position Navigation
-The component now tracks a **position path** for drill-down navigation through nested positions.
+The component tracks a **position path** for drill-down navigation through nested positions.
 
 ### Navigation Buttons
 
@@ -219,7 +260,7 @@ Position Selection
 
 ---
 
-## Product Search Card
+## Product Search Card (Position-Based)
 
 ### Initial State
 - Recent products displayed (last 10 used in movements)
@@ -273,7 +314,7 @@ Fallback: Old format returns array of contents directly.
 
 ---
 
-## Data Flow Summary
+## Data Flow Summary (Position-Based)
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -315,9 +356,133 @@ Fallback: Old format returns array of contents directly.
 
 ---
 
+# Part 2: Product-Based Counting
+
+## Overview
+
+`CountingProductBrowser.vue` operates in two main views (determined by local component state):
+1. **Product Selection** - User selects a product to count (`selectedProduct === null`)
+2. **Contents View** - User views and counts inventory for the selected product (`selectedProduct !== null`)
+
+Unlike position-based counting, product-based counting shows all inventory across all positions for a given product.
+
+---
+
+## Stage 1: Product Selection
+
+### Initial State
+- Search field is empty
+- **Recent products** are displayed (last 10 products used in movements)
+- Label shows "Recenti"
+
+### User Actions
+
+#### 1.1 Search for a Product
+| Action | Expected Behavior |
+|--------|-------------------|
+| User types in search field | System searches for products matching the input |
+| Search returns results | Display matching products, label changes to "Risultati" |
+| Search returns no results | Display empty list |
+| **Exact match found** (single result with code = search input) | **Auto-select** the product and proceed to Contents view |
+| User clears search field | Reload and display recent products |
+
+#### 1.2 Select a Product
+| Action | Expected Behavior |
+|--------|-------------------|
+| User clicks on a product card | Product is selected, inventory for that product is loaded |
+
+#### 1.3 Duplicate Search Prevention
+| Condition | Behavior |
+|-----------|----------|
+| Search value equals last search value | Search is skipped (no API call) |
+
+### Product Visual Indicators
+
+| Product Type | Icon | Background |
+|--------------|------|------------|
+| With traceability level (serial) | `mdi-cube-scan` | Green backdrop |
+| Without traceability (quantity) | `mdi-apps` | Blue backdrop |
+
+---
+
+## Stage 2: Contents View
+
+### Initial State
+- Selected product code is displayed in a chip with back button
+- Product inventory (across all positions) is loaded from API
+- Count records for this session and product are loaded
+- Contents view uses `CountingContentsView.vue` for display and counting
+
+### Content Types
+
+For product-based counting, items can be:
+
+| Type | Icon | Background Color | Description |
+|------|------|------------------|-------------|
+| **Product** | `mdi-apps` | Blue backdrop | Non-serialized inventory at a specific position |
+| **Serial** | `mdi-cube-scan` | Green backdrop | Individual serial at a specific position |
+
+Note: Position items are not shown in product-based counting (no drill-down navigation).
+
+### Navigation
+
+| Action | Expected Behavior |
+|--------|-------------------|
+| Click back arrow button | Return to product selection view |
+
+---
+
+## Data Flow Summary (Product-Based)
+
+```
+┌─────────────────────────────────────────────────────────┐
+│  Product Selection                                      │
+│  (selectedProduct === null)                             │
+│                                                         │
+│  ┌─────────────────────────────────────────────────┐   │
+│  │  Product Search (SearchOrScan)                   │   │
+│  └──────────────────┬──────────────────────────────┘   │
+│                     │                                   │
+│  ┌──────────────────▼──────────────────────────────┐   │
+│  │  CountingProductList                             │   │
+│  │  (displays products with traceability styling)   │   │
+│  └──────────────────┬──────────────────────────────┘   │
+└─────────────────────┼───────────────────────────────────┘
+                      │ selectProduct()
+                      ▼
+┌─────────────────────────────────────────────────────────┐
+│  Contents View                                          │
+│  (selectedProduct !== null)                             │
+│                                                         │
+│  ┌───────────────────────────────────────────┐         │
+│  │  [Back] [Product Code Chip]               │         │
+│  └───────────────────────────────────────────┘         │
+│                                                         │
+│  ┌─────────────────┐     ┌─────────────────┐           │
+│  │  Product        │────▶│  Count Records  │           │
+│  │  Inventory      │     │  Loaded         │           │
+│  └────────┬────────┘     └────────┬────────┘           │
+│           │                       │                     │
+│           └───────────┬───────────┘                     │
+│                       ▼                                 │
+│           ┌─────────────────────┐                       │
+│           │  CountingContentsView│                      │
+│           └─────────────────────┘                       │
+│                       │                                 │
+│                       ▼                                 │
+│               Counting Cards                            │
+└─────────────────────────────────────────────────────────┘
+         │
+         │ resetProductSelection()
+         ▼
+    Product Selection
+```
+
+---
+
 ## Test Case Checklist
 
-### Position Selection
+### Position Selection (Position-Based)
 - [ ] Recent positions load on mount
 - [ ] Search returns matching positions
 - [ ] Exact match auto-selects position
@@ -326,10 +491,18 @@ Fallback: Old format returns array of contents directly.
 - [ ] Root position "IN" can be selected
 - [ ] Position is set in Pinia store on selection
 
+### Product Selection (Product-Based)
+- [ ] Recent products load on mount
+- [ ] Search returns matching products
+- [ ] Exact match auto-selects product
+- [ ] Empty search restores recent products
+- [ ] Duplicate search is prevented
+- [ ] Product traceability icon displays correctly
+
 ### Contents View
-- [ ] Contents load for selected position
-- [ ] Position path is tracked from API response
-- [ ] Count records load for session and position
+- [ ] Contents load for selected position/product
+- [ ] Position path is tracked from API response (position-based only)
+- [ ] Count records load for session and position/product
 - [ ] Count info map is pre-computed correctly
 - [ ] Serial items are aggregated by product
 - [ ] Count-only items appear for products with counts but no inventory
@@ -354,7 +527,7 @@ Fallback: Old format returns array of contents directly.
 - [ ] Items locked by current user are accessible
 - [ ] Aggregated serial locking logic works correctly
 
-### Navigation
+### Navigation (Position-Based)
 - [ ] "Back" button only visible when positionPath.length > 1
 - [ ] "Back" navigates to parent position
 - [ ] "Reset" button always visible in contents view
@@ -362,10 +535,14 @@ Fallback: Old format returns array of contents directly.
 - [ ] Drilling into nested position updates path
 - [ ] Path correctly reflects hierarchy
 
+### Navigation (Product-Based)
+- [ ] Back button returns to product selection
+- [ ] Product chip displays selected product code
+
 ### Counting Cards
 - [ ] Product items open CountingQuantityCard
 - [ ] Serial items open CountingSerialsCard
-- [ ] Nested positions navigate to that position
+- [ ] Nested positions navigate to that position (position-based only)
 - [ ] Adding product for count opens correct card type
 
 ### Product Search
@@ -380,7 +557,8 @@ Fallback: Old format returns array of contents directly.
 - [ ] Other item information still visible
 
 ### State Management
-- [ ] Pinia store `selectedPosition` updates correctly
+- [ ] Pinia store `selectedPosition` updates correctly (position-based)
+- [ ] Local `selectedProduct` state updates correctly (product-based)
 - [ ] `resetPositionNavigation()` clears store and local state
 - [ ] Component reacts to store changes
 
@@ -391,7 +569,8 @@ Fallback: Old format returns array of contents directly.
 | Scenario | Expected Behavior |
 |----------|-------------------|
 | Position has no contents | "No contents" message displayed |
-| Position search returns empty | "No results" message displayed |
+| Product has no inventory | "No contents" message displayed |
+| Position/Product search returns empty | "No results" message displayed |
 | Count record for product not in inventory | Appears as count-only item |
 | Multiple count records for same product | Only one row shown (aggregated) |
 | Session user matches started record user | User can resume count |
