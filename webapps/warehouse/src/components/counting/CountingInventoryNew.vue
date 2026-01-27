@@ -1,68 +1,71 @@
 <template>
   <div class="col column q-gutter-y-md">
-    <!-- Search/Filter -->
-    <SearchOrScan v-model="productSearch" :label="$t('search_product')" class="q-mb-md" />
+    <!-- STATE 1: Product Selection -->
+    <template v-if="!selectedProduct">
+      <div class="col-auto q-mb-sm text-h3">
+        {{ $t('product') }}
+      </div>
 
-    <!-- Product List -->
-    <div v-if="inventory.contents.length === 0" class="text-h6">{{ $t('no_results') }}</div>
+      <!-- PRODUCT SEARCH -->
+      <SearchOrScan v-model="productFilter" @update:model-value="searchProducts" />
 
-    <q-scroll-area v-else class="col">
-      <q-list>
-        <q-item
-          v-for="item in filteredContents"
-          :key="item._key"
-          clickable
-          class="content-card q-my-sm q-pa-md text-body1"
-          :class="backgroundClass(item)"
-          @click="onItemClick(item)"
+      <!-- PRODUCT LIST -->
+      <div class="col-auto q-mt-md q-mb-sm text-h6">
+        {{ productListLabel }} ({{ productRows?.length || 0 }})
+      </div>
+
+      <CountingProductList
+        :products="productRows"
+        class="col"
+        @select="selectProduct"
+      />
+    </template>
+
+    <!-- STATE 2: Contents View for Selected Product -->
+    <template v-else>
+      <!-- Navigation Header -->
+      <div class="row items-center q-gutter-x-sm">
+        <q-btn
+          icon="mdi-arrow-left"
+          flat
+          round
+          dense
+          @click="resetProductSelection"
+        />
+        <q-chip
+          icon="mdi-apps"
+          color="theme-blue"
+          text-color="white"
+          class="text-body1"
         >
-          <q-item-section side>
-            <q-icon :name="item.serial_key ? 'mdi-cube-scan' : 'mdi-apps'" />
-          </q-item-section>
-          <q-item-section>
-            <q-item-label class="highlight">
-              {{ item.serial_code ? item.serial_code : item.product_code }}
-            </q-item-label>
-            <q-item-label caption>
-              {{ item.product_description }}
-            </q-item-label>
-            <q-item-label caption>
-              {{ item.path.map(p => p.position_code).join(' → ') || 'IN' }}
-            </q-item-label>
-          </q-item-section>
-          <q-item-section v-if="item.serial_key === null && !blindQuantities" side>
-            <div class="text-body2">
-              {{ item.quantity }}
-            </div>
-          </q-item-section>
-        </q-item>
-      </q-list>
-    </q-scroll-area>
+          {{ selectedProduct.code }}
+        </q-chip>
+      </div>
 
-    <!-- Counting Cards -->
-    <CountingQuantityCard
-      v-if="selectedItem && selectedItem.serial_key === null"
-      :item="selectedItem"
-      :blind-mode="blindQuantities"
-      @close="selectedItem = null"
-    />
-
-    <CountingSerialsCard
-      v-if="selectedItem && selectedItem.serial_key !== null"
-      :item="selectedItem"
-      :blind-mode="blindSerials"
-      @close="selectedItem = null"
-    />
+      <!-- Counting Contents -->
+      <CountingContentsView
+        ref="contentsViewRef"
+        :session-data="sessionData"
+        :contents="positionContents"
+        :count-records="countRecords"
+        :position-status="{}"
+        :position-key="null"
+        :loading="loading"
+        class="col"
+        @refresh-position="loadProductInventory"
+      />
+    </template>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useInventoryStore } from '@/stores/inventory';
+import { api } from '@/boot/axios';
+import { Loading } from 'quasar';
 import SearchOrScan from '@/components/SearchOrScan.vue';
-import CountingQuantityCard from './CountingQuantityCard.vue';
-import CountingSerialsCard from './CountingSerialsCard.vue';
+import CountingProductList from './CountingProductList.vue';
+import CountingContentsView from './CountingContentsView.vue';
 
 const props = defineProps({
   sessionData: {
@@ -72,45 +75,136 @@ const props = defineProps({
 });
 
 const { t: $t } = useI18n();
-const inventory = useInventoryStore();
-const productSearch = ref('');
-const selectedItem = ref(null);
 
-const blindQuantities = computed(() => props.sessionData.blind_quantities ?? true);
-const blindSerials = computed(() => props.sessionData.blind_serials ?? true);
+// Product selection state
+const selectedProduct = ref(null);
+const productFilter = ref('');
+const productListLabel = ref('Recenti');
+const productRows = ref([]);
+const productLastResearch = ref(undefined);
 
-const filteredContents = computed(() => {
-  if (!productSearch.value) {
-    return inventory.contents;
+// Contents view state
+const positionContents = ref([]);
+const countRecords = ref([]);
+const loading = ref(false);
+const contentsViewRef = ref(null);
+
+// Load recent products on mount
+loadRecentProducts();
+
+async function loadRecentProducts() {
+  Loading.show();
+  try {
+    const resp = await api.get('movement/latest-products', {
+      params: { limit: 10 }
+    });
+    productRows.value = resp.data;
+    productListLabel.value = $t('recent');
+  } catch (error) {
+    console.error('Error loading recent products:', error);
+    productRows.value = [];
+  } finally {
+    Loading.hide();
   }
-  const search = productSearch.value.toLowerCase();
-  return inventory.contents.filter(item => {
-    const productCode = item.product_code?.toLowerCase() || '';
-    const productDesc = item.product_description?.toLowerCase() || '';
-    const serialCode = item.serial_code?.toLowerCase() || '';
-    return productCode.includes(search) || productDesc.includes(search) || serialCode.includes(search);
-  });
-});
-
-function backgroundClass(item) {
-  const color = item.serial_key ? 'green' : 'blue';
-  return `bg-${color}-backdrop`;
 }
 
-function onItemClick(item) {
-  selectedItem.value = item;
+async function searchProducts() {
+  if (productFilter.value === productLastResearch.value) {
+    return;
+  }
+
+  if (!productFilter.value) {
+    await loadRecentProducts();
+    productLastResearch.value = '';
+    return;
+  }
+
+  Loading.show();
+  try {
+    const resp = await api.get('product', {
+      params: {
+        search_string: productFilter.value,
+        limit: 100
+      }
+    });
+    productRows.value = resp.data;
+    productListLabel.value = $t('results');
+    productLastResearch.value = productFilter.value;
+
+    // Auto-select if exact match
+    if (productRows.value.length === 1 && productRows.value[0].code === productFilter.value) {
+      selectProduct(productRows.value[0]);
+      productFilter.value = '';
+    }
+  } catch (error) {
+    console.error('Error searching products:', error);
+    productRows.value = [];
+  } finally {
+    Loading.hide();
+  }
 }
 
-onMounted(() => {
-  // Load all inventory for the counting session
-  // In a real implementation, this would be filtered by the session's assigned products
-  inventory.loadInventory({});
-});
+async function selectProduct(product) {
+  selectedProduct.value = product;
+  await loadProductInventory();
+}
+
+async function loadProductInventory() {
+  if (!selectedProduct.value) return;
+
+  loading.value = true;
+  Loading.show();
+
+  try {
+    // Load inventory for the selected product
+    const inventoryResp = await api.get('inventory', {
+      params: {
+        product_key: selectedProduct.value._key,
+        limit: 500
+      }
+    });
+
+    // Transform inventory items to contents format expected by CountingContentsView
+    positionContents.value = (inventoryResp.data || []).map(item => ({
+      _key: item._key,
+      type: item.serial_key ? 'serial' : 'product',
+      code: item.serial_key ? item.serial_code : item.product_code,
+      product_key: item.product_key,
+      product_code: item.product_code,
+      product_description: item.product_description,
+      position_key: item.position_key,
+      position_code: item.position_code,
+      serial_key: item.serial_key || null,
+      serial_code: item.serial_code || null,
+      quantity: item.quantity,
+      path: item.path || []
+    }));
+
+    // Load count records for this session and product
+    const countResp = await api.get(`inventory/count-session/${props.sessionData._key}/records`, {
+      params: {
+        product_key: selectedProduct.value._key
+      }
+    });
+    countRecords.value = countResp.data || [];
+
+  } catch (error) {
+    console.error('Error loading product inventory:', error);
+    positionContents.value = [];
+    countRecords.value = [];
+  } finally {
+    loading.value = false;
+    Loading.hide();
+  }
+}
+
+function resetProductSelection() {
+  selectedProduct.value = null;
+  positionContents.value = [];
+  countRecords.value = [];
+  productFilter.value = '';
+}
 </script>
 
 <style lang="scss" scoped>
-.content-card {
-  border-radius: 5px;
-}
 </style>
-

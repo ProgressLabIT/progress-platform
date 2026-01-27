@@ -15,41 +15,26 @@
 
       <!-- PRODUCT LIST -->
       <div class="col-auto q-mt-md q-mb-sm text-h6">
-        {{ productListLabel }} ({{ productRows?.length || 0 }})
+        {{ productListLabel }} ({{ filteredProducts?.length || 0 }})
       </div>
 
-      <q-scroll-area class="col">
-        <q-list>
-          <q-item
-            v-for="product in productRows"
-            :key="product._key"
-            clickable
-            dense
-            class="content-card q-my-xs q-py-sm"
-            :class="getProductColor(product)"
-            @click="selectProductForCount(product)"
-          >
-            <q-item-section side>
-              <q-icon :name="product.traceability_level ? 'mdi-cube-scan' : 'mdi-apps'" />
-            </q-item-section>
-            <q-item-section>
-              <q-item-label class="highlight">{{ product.code }}</q-item-label>
-              <q-item-label caption class="">{{ product.description }}</q-item-label>
-            </q-item-section>
-          </q-item>
-        </q-list>
-      </q-scroll-area>
+      <CountingProductList
+        :products="filteredProducts"
+        class="col"
+        @select="selectProductForCount"
+      />
     </div>
   </SlideUpCard>
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { api } from '@/boot/axios';
 import { Loading } from 'quasar';
 import SearchOrScan from '@/components/SearchOrScan.vue';
 import SlideUpCard from '@/components/SlideUpCard.vue';
+import CountingProductList from './CountingProductList.vue';
 
 const props = defineProps({
   modelValue: {
@@ -71,13 +56,15 @@ const emit = defineEmits(['update:modelValue', 'product-selected']);
 const { t: $t } = useI18n();
 
 const productFilter = ref('');
-const productListLabel = ref('Recenti');
+const productListLabel = ref($t('recent'));
 const productRows = ref([]);
 const productLastResearch = ref(undefined);
 
-function getProductColor(product) {
-  return product.traceability_level ? 'bg-green-backdrop' : 'bg-blue-backdrop';
-}
+// Filter out products that already have inventory in this position
+const filteredProducts = computed(() => {
+  const existingProducts = props.positionContents.map(p => p.product_key);
+  return productRows.value.filter(p => !existingProducts.includes(p._key));
+});
 
 async function searchProducts() {
   if (productFilter.value === productLastResearch.value) {
@@ -85,23 +72,28 @@ async function searchProducts() {
   }
 
   Loading.show();
-  const resp = await api.get('product', {
-    params: {
-      search_string: productFilter.value,
-      limit: 100
-    }
-  });
-  const existingProducts = props.positionContents.map(p => p.product_key);
-  const subset = resp.data.filter(p => !existingProducts.includes(p._key));
-  if (subset.length === 1 && subset[0].code === productFilter.value) {
-    selectProductForCount(subset[0]);
-    productFilter.value = '';
-  } else {
-    productRows.value = subset;
-    productListLabel.value = 'Risultati';
+  try {
+    const resp = await api.get('product', {
+      params: {
+        search_string: productFilter.value,
+        limit: 100
+      }
+    });
+    productRows.value = resp.data;
+    productListLabel.value = $t('results');
     productLastResearch.value = productFilter.value;
+
+    // Auto-select if exactly one product matches the search (after filtering)
+    if (filteredProducts.value.length === 1 && filteredProducts.value[0].code === productFilter.value) {
+      selectProductForCount(filteredProducts.value[0]);
+      productFilter.value = '';
+    }
+  } catch (error) {
+    console.error('Error searching products:', error);
+    productRows.value = [];
+  } finally {
+    Loading.hide();
   }
-  Loading.hide();
 }
 
 function selectProductForCount(product) {
@@ -112,15 +104,4 @@ function selectProductForCount(product) {
 </script>
 
 <style lang="sass" scoped>
-.content-card
-  border-radius: 5px
-  border: 1px solid transparent
 </style>
-
-
-
-
-
-
-
-

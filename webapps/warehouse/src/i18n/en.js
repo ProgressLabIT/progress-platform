@@ -98,6 +98,7 @@ export default {
   quantity_updated: 'Quantity updated',
   reset: 'Reset',
   reset_password: 'Reset password',
+  recent: 'Recent',
   results: 'Results',
   save: 'Save',
   scan_serial: 'Scan or search serials',
