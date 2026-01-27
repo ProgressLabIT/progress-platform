@@ -1256,7 +1256,7 @@ export default {
       canceled: 'Annullata',
       status: 'Stato',
       start_session: 'Avvia sessione',
-      new: 'Nuova Sessione di Conteggio',
+      new: 'Nuova',
       data: 'Dati Sessione',
       assignments: 'Assegnazioni',
       type: 'Tipo Sessione',

@@ -1235,6 +1235,7 @@ export default {
       started: 'Started',
       completed: 'Completed',
       applied: 'Applied',
+      new: 'New',
       canceled: 'Canceled',
       status: 'Status',
       start_session: 'Start session',

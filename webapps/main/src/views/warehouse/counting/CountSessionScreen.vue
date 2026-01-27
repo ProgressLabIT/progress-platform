@@ -14,6 +14,7 @@
               :color="statusColor"
               size="sm"
               text-color="white"
+              :outline="sessionStatus === 'new'"
               class="uppercase highlight"
             >
               {{ statusLabel }}
@@ -288,11 +289,15 @@ const showRecordsTab = computed(() => {
 const maxStep = computed(() => showRecordsTab.value ? 3 : 2);
 
 const sessionStatus = computed(() => {
-  return sessionData.value.status || 'planned';
+  return sessionData.value.status || 'new';
 });
 
 const statusColor = computed(() => {
   switch (sessionStatus.value) {
+    case 'planned':
+      return 'theme-grey';
+    case 'new':
+      return 'low';
     case 'started':
       return 'primary';
     case 'completed':
