@@ -293,6 +293,13 @@ export function useInventoryColumns() {
       label: t('warehouse.inventory.quantity').toUpperCase(),
       align: 'right',
       style: 'max-width: 10vw',
+      format: (val) => {
+        if (val === null || val === undefined) {
+          return '-';
+        }
+        // Round to 4 decimal places for visualization only
+        return Math.round(val * 10 ** 4) / 10 ** 4;
+      },
     },
     {
       name: 'serial',

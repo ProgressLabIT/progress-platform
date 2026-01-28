@@ -95,15 +95,18 @@
               />
             </div>
           </div>
-          <q-item-label v-if="item.product_description" caption lines="2">
+          <q-item-label v-if="item.product_description && sessionData.type === 'position'" caption lines="2">
             {{ item.product_description }}
+          </q-item-label>
+          <q-item-label v-if="sessionData.type === 'product'" caption lines="2">
+            {{ getPathString(item) }}
           </q-item-label>
         </q-item-section>
 
         <!-- QUANTITY -->
         <q-item-section v-if="item.quantity && !blindQuantities" side class="col-auto">
           <div class="text-body2">
-            {{ item.quantity }}
+            {{ Math.round(item.quantity * 10 ** 4) / 10 ** 4 }}
             <span v-if="getCountedQuantity(item) !== null" class="text-low q-ml-xs">
               / {{ getCountedQuantity(item) }}
             </span>
@@ -218,6 +221,11 @@ const props = defineProps({
     type: String,
     default: null
   },
+  // Optional product context (for product-based sessions)
+  productKey: {
+    type: String,
+    default: null
+  },
   loading: {
     type: Boolean,
     default: false
@@ -266,20 +274,28 @@ function getColor(item) {
 
 // --- Helpers for filtered contents ---
 
+function getPathString(item) {
+  return item.path?.map(p => p.position_code).join(' → ') || 'IN';
+}
+
 function aggregateInventoryItems(filteredItems) {
   // Process all inventory items in a single reduce, creating uniform data model
+  const aggregateKey = props.sessionData.type === 'product' ? 'position_key' : 'product_key';
   const processedItems = filteredItems.reduce(
     (acc, item) => {
       if (item.type === 'serial') {
         // Serial items: aggregate by product_key
-        const key = item.product_key;
+        const key = item[aggregateKey];
         if (!acc.serialsByProduct[key]) {
           acc.serialsByProduct[key] = {
-            _key: `aggregated_${item.product_key}`,
+            _key: `aggregated_${item[aggregateKey]}`,
             type: 'serial',
             code: item.product_code,
             product_description: item.product_description,
             product_key: item.product_key,
+            position_key: item.position_key,
+            position_code: item.position_code,
+            path: item.path,
             quantity: 0,
             serial_keys: [],
             inventory_keys: [],
@@ -336,12 +352,60 @@ function aggregateInventoryItems(filteredItems) {
 }
 
 function buildCountOnlyItems() {
-  if (!props.positionKey) {
-    // Count-only items are currently only supported for position-based sessions
+  const sessionType = props.sessionData.type;
+  const contextKey = sessionType === 'product' ? props.productKey : props.positionKey;
+
+  if (!contextKey) {
     return [];
   }
 
-  // Product keys that already have inventory in this position
+  // Product-based sessions: show positions where this product was counted but has no inventory
+  if (sessionType === 'product') {
+    const inventoryPositionKeys = new Set(
+      props.contents.map((item) => item.position_key).filter(Boolean)
+    );
+
+    const countOnlyMap = new Map();
+
+    props.countRecords.forEach((record) => {
+      const recordProductKey =
+        record.product_key || (record._from ? record._from.split('/').pop() : null);
+      if (recordProductKey !== contextKey) {
+        return;
+      }
+
+      const recordPositionKey =
+        record.position_key || (record._to ? record._to.split('/').pop() : null);
+      if (!recordPositionKey || inventoryPositionKeys.has(recordPositionKey)) {
+        return;
+      }
+
+      const aggregateKey = `${contextKey}_${recordPositionKey}`;
+      if (!countOnlyMap.has(aggregateKey)) {
+        countOnlyMap.set(aggregateKey, {
+          _key: `count_only_${aggregateKey}`,
+          type: 'product',
+          code: record.position_code || recordPositionKey,
+          product_key: contextKey,
+          position_key: recordPositionKey,
+          position_code: record.position_code || null,
+          path: record.position_path
+            ? record.position_path.map((code, index) => ({
+                position_code: code,
+                position_key: record.position_path_keys?.[index]
+              }))
+            : [],
+          quantity: null,
+          inventory_keys: [],
+          isCountOnly: true
+        });
+      }
+    });
+
+    return Array.from(countOnlyMap.values());
+  }
+
+  // Position-based sessions: keep existing logic (products counted without inventory in this position)
   const inventoryProductKeys = new Set(
     props.contents.map((item) => item.product_key).filter(Boolean)
   );
@@ -361,7 +425,7 @@ function buildCountOnlyItems() {
       ? recordPositionKeyRaw.split('/').pop()
       : recordPositionKeyRaw;
 
-    if (recordPositionKey && recordPositionKey !== props.positionKey) {
+    if (recordPositionKey && recordPositionKey !== contextKey) {
       return;
     }
 
@@ -379,7 +443,7 @@ function buildCountOnlyItems() {
         product_code: code,
         product_description: description,
         product_key: productKey,
-        position_key: recordPositionKey || props.positionKey,
+        position_key: recordPositionKey || contextKey,
         position_code: null,
         quantity: null, // No system quantity for virtual items
         inventory_keys: [], // No inventory backing
@@ -392,15 +456,20 @@ function buildCountOnlyItems() {
   return Array.from(countOnlyMap.values());
 }
 
-// Helper: Group count records by product_key + position_key
-function groupRecordsByProductAndPosition(records, positionKey) {
+// Helper: Group count records by product/position depending on session type
+function groupRecordsByContext(records, contextKey, sessionType) {
   return records.reduce((acc, record) => {
     const recordProductKey =
       record.product_key || (record._from ? record._from.split('/').pop() : null);
     const recordPositionKey =
       record.position_key || (record._to ? record._to.split('/').pop() : null);
 
-    if (recordProductKey && recordPositionKey === positionKey) {
+    // For position-based: filter by position, group by product
+    // For product-based: filter by product, group by position
+    const filterKey = sessionType === 'product' ? recordProductKey : recordPositionKey;
+    const groupKey = sessionType === 'product' ? recordPositionKey : recordProductKey;
+
+    if (groupKey && filterKey === contextKey) {
       const key = `${recordProductKey}_${recordPositionKey}`;
       if (!acc.has(key)) {
         acc.set(key, []);
@@ -430,13 +499,15 @@ function buildCountInfoForItem(item, records) {
 }
 
 // Helper: Build count info map from items and grouped records
-function buildCountInfoMap(items, recordsByKey, positionKey) {
+function buildCountInfoMap(items, recordsByKey, contextKey, sessionType) {
   return items.reduce((map, item) => {
     if (!item.product_key) {
       return map;
     }
 
-    const key = `${item.product_key}_${positionKey}`;
+    const positionKeyForItem =
+      sessionType === 'product' ? item.position_key : contextKey;
+    const key = `${item.product_key}_${positionKeyForItem}`;
     const records = recordsByKey.get(key) || [];
     map.set(item._key, buildCountInfoForItem(item, records));
 
@@ -446,14 +517,15 @@ function buildCountInfoMap(items, recordsByKey, positionKey) {
 
 // Pre-compute count info map for all items to avoid repeated filtering
 const countInfoMap = computed(() => {
-  const positionKey = props.positionKey;
+  const sessionType = props.sessionData.type;
+  const contextKey = sessionType === 'product' ? props.productKey : props.positionKey;
 
-  if (!positionKey || !props.countRecords.length) {
+  if (!contextKey || !props.countRecords.length) {
     return new Map();
   }
 
   // Pre-process count records by product_key + position_key for faster lookup
-  const recordsByKey = groupRecordsByProductAndPosition(props.countRecords, positionKey);
+  const recordsByKey = groupRecordsByContext(props.countRecords, contextKey, sessionType);
 
   // Get all items that could appear in filteredContents (before text filtering)
   const processedInventory = aggregateInventoryItems(props.contents);
@@ -465,7 +537,7 @@ const countInfoMap = computed(() => {
   ];
 
   // Build count info for each item
-  return buildCountInfoMap(allItems, recordsByKey, positionKey);
+  return buildCountInfoMap(allItems, recordsByKey, contextKey, sessionType);
 });
 
 const filteredContents = computed(() => {
@@ -620,7 +692,7 @@ function getCountInfo(item) {
 // Helper function to get counted quantity from count records
 function getCountedQuantity(item) {
   const lastRecord = getLastCountRecord(item);
-  return lastRecord?.counted_qt ?? null;
+  return Math.round((lastRecord?.counted_qt ?? 0) * 10 ** 4) / 10 ** 4;
 }
 
 // Helper function to get the last completed count record (from any user)

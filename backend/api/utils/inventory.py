@@ -175,6 +175,8 @@ class Queries:
         product_key: product._key,
         product_code: product.code,
         product_description: product.description,
+        position_key: NOT_NULL(LAST(shown_path).position_key, 'IN'),
+        position_code: NOT_NULL(LAST(shown_path).position_code, 'IN'),
         serial_code,
         value: inventory.value,
         _key: inventory._key

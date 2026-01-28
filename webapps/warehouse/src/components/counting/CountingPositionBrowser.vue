@@ -132,9 +132,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { Notify } from 'quasar';
 import { api } from '@/boot/axios';
-import { store } from '@/boot/store';
 import { useCountingStore } from '@/stores/counting';
 import SearchOrScan from '@/components/SearchOrScan.vue';
 import CountingProductSearchCard from './CountingProductSearchCard.vue';

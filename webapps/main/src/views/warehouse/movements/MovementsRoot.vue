@@ -113,7 +113,7 @@
               </template>
 
               <template v-else-if="column.name === 'quantity'">
-                {{ props.row.qt_confirmed }} / {{ props.row.qt_planned }}
+                {{ roundQuantity(props.row.qt_confirmed) }} / {{ roundQuantity(props.row.qt_planned) }}
               </template>
 
               <template v-else-if="column.name === 'user'">
@@ -453,6 +453,14 @@ export default {
             }, 1000),
           );
       }
+    },
+
+    roundQuantity(value) {
+      if (value === null || value === undefined) {
+        return '-';
+      }
+      // Round to 4 decimal places to keep visualization stable
+      return Math.round(value * 10 ** 4) / 10 ** 4;
     },
   },
 };

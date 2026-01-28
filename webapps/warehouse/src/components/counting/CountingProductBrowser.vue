@@ -25,21 +25,30 @@
     <template v-else>
       <!-- Navigation Header -->
       <div class="row items-center q-gutter-x-sm">
+        <div class="col-auto">
+        <div class="text-h5 text-uppercase text-low">
+          {{ $t('product') }}
+        </div>
+        <div class="text-h3 text-uppercase highlight">
+          {{ selectedProduct.code }}
+        </div>
+        <div class="text-body2">
+          {{ selectedProduct.description }}
+        </div>
+        </div>
+        <q-space />
+        <div class="col-auto items-bottom">
         <q-btn
-          icon="mdi-arrow-left"
-          flat
-          round
+          size="sm"
           dense
+          flat
+          color="theme-grey"
+          :label="$t('reset')"
+          label-left
+          icon-right="mdi-close-circle"
           @click="resetProductSelection"
         />
-        <q-chip
-          icon="mdi-apps"
-          color="theme-blue"
-          text-color="white"
-          class="text-body1"
-        >
-          {{ selectedProduct.code }}
-        </q-chip>
+        </div>
       </div>
 
       <!-- Counting Contents -->
@@ -50,6 +59,7 @@
         :count-records="countRecords"
         :position-status="{}"
         :position-key="null"
+        :product-key="selectedProduct?._key"
         :loading="loading"
         class="col"
         @refresh-position="loadProductInventory"
@@ -160,7 +170,7 @@ async function loadProductInventory() {
     const inventoryResp = await api.get('inventory', {
       params: {
         product_key: selectedProduct.value._key,
-        limit: 500
+        limit: 0
       }
     });
 
@@ -181,9 +191,11 @@ async function loadProductInventory() {
     }));
 
     // Load count records for this session and product
-    const countResp = await api.get(`inventory/count-session/${props.sessionData._key}/records`, {
+    const countResp = await api.get('/inventory/count-record', {
       params: {
-        product_key: selectedProduct.value._key
+        count_session_key: props.sessionData._key,
+        product_key: selectedProduct.value._key,
+        limit: 0
       }
     });
     countRecords.value = countResp.data || [];
