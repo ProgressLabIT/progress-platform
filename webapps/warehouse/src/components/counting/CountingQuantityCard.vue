@@ -83,14 +83,14 @@
             <div class="col">
               <div class="text-h3">{{ blindMode ? $t('counted_quantity') : $t('adjust_quantity') }}</div>
               <div v-if="!blindMode" class="text-body2 text-low q-mt-xs">
-                {{ $t('original_quantity') }}: {{ item.quantity }}
+                {{ $t('original_quantity') }}: {{ roundQuantity(item.quantity) }}
               </div>
             </div>
             <div v-if="!blindMode" class="col-auto highlight">
               <q-chip
                 size="md"
                 :color="adjustmentQuantity === 0 ? 'theme-grey' : (adjustmentQuantity > 0 ? 'theme-green' : 'theme-orange')"
-                :label="(adjustmentQuantity > 0 ? '+' : '') + adjustmentQuantity"
+                :label="(adjustmentQuantity > 0 ? '+' : '') + roundQuantity(adjustmentQuantity)"
                 class="full-width"
               />
             </div>
@@ -147,6 +147,7 @@ import SlideUpCard from '@/components/SlideUpCard.vue';
 import QuantitySelector from '@/components/QuantitySelector.vue';
 import { useInventoryMovements } from '@/composables/useInventoryMovements';
 import CountMovementsCallout from '@/components/counting/CountMovementsCallout.vue';
+import { roundQuantity } from '@/lib/rounding';
 
 const props = defineProps({
   item: {
@@ -335,7 +336,7 @@ async function cancelCount() {
 function saveCount() {
   const countData = {
     count_key: countRecordKey.value,
-    count_qt: countedQuantity.value,
+    count_qt: roundQuantity(countedQuantity.value),
     count_serial_keys: [],
     notes: notes.value || null,
   };

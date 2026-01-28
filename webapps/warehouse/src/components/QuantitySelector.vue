@@ -37,7 +37,7 @@
       />
       <div
         class="absolute-center text-center text-h1"
-      > {{ quantity }} </div>
+      > {{ roundQuantity(quantity) }} </div>
       <q-icon
         color="theme-blue"
         class="absolute-top-right"
@@ -54,41 +54,54 @@
           <q-btn
             color="low"
             outline
-            label="-100"
+            :label="useDecimals ? '-0.01' : '-100'"
             size="md"
             class="full-width"
-            v-touch-repeat:0:600:600:60.mouse="() => addQuantity(-100)"
+            v-touch-repeat:0:600:600:60.mouse="() => addQuantity(useDecimals ? -0.01 : -100)"
           />
         </div>
         <div class="col">
           <q-btn
             color="low"
             outline
-            label="-10"
+            :label="useDecimals ? '-0.001' : '-10'"
             size="md"
             class="full-width"
-            v-touch-repeat:0:600:600:60.mouse="() => addQuantity(-10)"
+            v-touch-repeat:0:600:600:60.mouse="() => addQuantity(useDecimals ? -0.001 : -10)"
           />
         </div>
         <div class="col">
           <q-btn
             color="theme-blue"
             outline
-            label="+10"
+            :label="useDecimals ? '+0.001' : '+10'"
             size="md"
             class="full-width"
-            v-touch-repeat:0:600:600:60.mouse="() => addQuantity(10)"
+            v-touch-repeat:0:600:600:60.mouse="() => addQuantity(useDecimals ? 0.001 : 10)"
           />
         </div>
         <div class="col">
           <q-btn
             color="theme-blue"
             outline
-            label="+100"
+            :label="useDecimals ? '+0.01' : '+100'"
             size="md"
             class="full-width"
-            v-touch-repeat:0:600:600:60.mouse="() => addQuantity(100)"
+            v-touch-repeat:0:600:600:60.mouse="() => addQuantity(useDecimals ? 0.01 : 100)"
           />
+        </div>
+        <div class="col-auto q-mr-sm q-mb-sm">
+          <q-btn
+            color="theme-blue"
+            round
+            :outline="!useDecimals"
+            size="md"
+            @click.stop="toggleDecimals()"
+          >
+            <span style="font-family: var(--text-font);">
+             0.1
+            </span>
+          </q-btn>
         </div>
       </div>
       <div class="full-width row q-mt-md" v-if="props.max">
@@ -113,7 +126,9 @@
 </template>
 
 <script setup>
+import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { roundQuantity } from '@/lib/rounding';
 
 const { t: $t} = useI18n();
 
@@ -146,8 +161,11 @@ const props = defineProps({
 })
 
 const quantity = defineModel({ type: Number })
+const useDecimals = ref(false);
 
-
+function toggleDecimals() {
+  useDecimals.value = !useDecimals.value;
+}
 
 function isTouchUpRight(touchPosition) {
   // Get the bounding rectangle of the quantity area
@@ -168,9 +186,9 @@ function isTouchUpRight(touchPosition) {
 
 function handleRepeat(info) {
   if (isTouchUpRight(info.position)) {
-    addQuantity(1);
+    addQuantity(useDecimals.value ? 0.1 : 1);
   } else if (quantity.value > 0) {
-    addQuantity(-1);
+    addQuantity(useDecimals.value ? -0.1 : -1);
   }
 }
 
@@ -180,9 +198,9 @@ function addQuantity(howMuch) {
 
 function setQuantity(value) {
   if (props.softMax) {
-    quantity.value = Math.max(props.min, value);
+    quantity.value = roundQuantity(Math.max(props.min, value));
   } else {
-    quantity.value = Math.max(props.min, Math.min(props.max ?? 999999999999, value));
+    quantity.value = roundQuantity(Math.max(props.min, Math.min(props.max ?? 999999999999, value)));
   }
 }
 
