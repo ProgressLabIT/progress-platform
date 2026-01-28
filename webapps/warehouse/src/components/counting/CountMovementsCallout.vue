@@ -1,7 +1,7 @@
 <template>
   <!-- MOVEMENTS CALLOUT -->
   <div
-    v-if="showMovementsCallout"
+    v-if="props.showMovementsCallout"
     class="col-auto row items-center q-my-sm movements-callout"
   >
     <div class="col text-body2">
@@ -27,13 +27,13 @@
       style="max-height: 200px;"
     >
       <div
-        v-if="loadingMovements"
+        v-if="props.loadingMovements"
         class="text-caption text-low q-pa-xs"
       >
         {{ $t('loading') }}
       </div>
       <div
-        v-else-if="!movements.length"
+        v-else-if="!props.movements.length"
         class="text-caption text-low q-pa-xs"
       >
         {{ $t('no_results') }}
@@ -45,7 +45,7 @@
         separator
       >
         <q-item
-          v-for="movement in movements"
+          v-for="movement in props.movements"
           :key="movement._key || movement.id"
           class="movements-row"
         >
@@ -53,7 +53,7 @@
             {{ formatMovementTimestamp(movement) }} → {{ movement.position_to_code }}
           </q-item-section>
           <q-item-section side class="text-caption text-low">
-            <template v-if="displayMode === 'serial'">
+            <template v-if="props.displayMode === 'serial'">
               {{ movement.serial_code }}
             </template>
             <template v-else>
@@ -69,6 +69,26 @@
 <script setup>
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+
+
+const props = defineProps({
+  displayMode: {
+    type: String,
+    default: 'quantity',
+  },
+  showMovementsCallout: {
+    type: Boolean,
+    default: false,
+  },
+  loadingMovements: {
+    type: Boolean,
+    default: false,
+  },
+  movements: {
+    type: Array,
+    default: () => [],
+  },
+});
 
 const { t: $t } = useI18n();
 const movementsExpanded = ref(false);
