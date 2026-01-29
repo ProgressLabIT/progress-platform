@@ -2,7 +2,7 @@
 from prefect import flow
 from prefect.schedules import Cron
 
-from common.utils import connect_to_progress_db
+from utils import connect_to_progress_db
 
 
 
