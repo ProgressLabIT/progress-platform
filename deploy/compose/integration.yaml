@@ -18,7 +18,7 @@ secrets:
 
 services:
   wf-integration-agent: # Client Workflow Agent
-    image: prefecthq/prefect:2-python3.11
+    image: prefecthq/prefect:3-latest
     entrypoint: >
       sh -c "chmod +x /flows/entrypoint.sh &&
              /usr/bin/tini -g -- /flows/entrypoint.sh"

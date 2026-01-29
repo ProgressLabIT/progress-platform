@@ -8,11 +8,12 @@ def connect_to_progress_db():
     with open('/run/secrets/progress_api_db_pwd') as secret:
       username = 'progress_api'
       progress_db_password = secret.read().rstrip('\n')
+      url = os.getenv('ARANGO_URL', 'http://db:8529')
   except FileNotFoundError:
     username = 'root'
     progress_db_password = ''
+    url = os.getenv('ARANGO_URL', 'http://localhost:8529')
 
-  url = os.getenv('ARANGO_URL', 'http://db:8529')
   client = ArangoClient(hosts=url)
   db = client.db('PROGRESS_PROD', username=username, password=progress_db_password)
 

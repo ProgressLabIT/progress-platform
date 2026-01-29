@@ -16,7 +16,7 @@ networks:
 
 services:
   wf-server: # Workflow Server
-    image: prefecthq/prefect:2-python3.11
+    image: prefecthq/prefect:3-latest
     restart: always
     depends_on:
       - workflow_db

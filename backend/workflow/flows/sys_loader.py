@@ -42,7 +42,7 @@ flow_list = [entry for entry in os.scandir('flowcode') if check_entry(entry)]
 
 """
 This script loads the flows contained in the each folder under the `flowcode` directory,
-deploying them to the Prefect server using the Prefect 2.x API.
+deploying them to the Prefect server using the Prefect 3.x API.
 """
 
 # Ensure the 'system' work pool exists before deploying
@@ -73,11 +73,11 @@ for entry in flow_list:
   if flow_module.main.__doc__:
     deploy_kwargs['description'] = flow_module.main.__doc__.strip()
 
-  # Add schedule if present
+  # Add schedule if present (Prefect 3.x uses 'schedules' as a list)
   try:
     schedule = flow_module.schedule
     if schedule:
-      deploy_kwargs['schedule'] = schedule
+      deploy_kwargs['schedules'] = [schedule]
   except AttributeError:
     # Do not add schedules if not present in the flow
     pass

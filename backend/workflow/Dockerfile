@@ -9,4 +9,6 @@ COPY flows /flows
 
 WORKDIR /flows
 
-CMD ["prefect", "agent", "start", "-q", "system"]
+RUN chmod +x /flows/entrypoint.sh
+
+CMD ["/flows/entrypoint.sh"]
