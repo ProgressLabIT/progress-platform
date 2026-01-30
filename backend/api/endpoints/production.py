@@ -247,7 +247,8 @@ async def update_work_order_quantities(
   # TODO: Ensure job_updates are coherent with the work order update
 
   try:
-    tx = db.begin_transaction(write=['WorkOrder', 'Job', 'Queue'])
+    # Include Event, Task, and event_source collections to ensure JobClosed events are stored correctly
+    tx = db.begin_transaction(write=['WorkOrder', 'Job', 'Queue', 'Event', 'Task', 'event_source'])
     wo_data = WorkOrderFull(**tx.collection('WorkOrder').get(wo_key))
 
     for update in job_updates:
@@ -746,7 +747,7 @@ async def update_jobs(job_updates:List[JobUpdate]):
   try:
     # Collect affected work orders to update them after job modifications
     affected_wo_keys = set()
-    
+
     for u in job_updates:
 
       if u.action == JobUpdateType.INSERT:
