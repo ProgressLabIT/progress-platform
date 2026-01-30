@@ -241,7 +241,7 @@ class CountSessionConfirmedEvent(BaseEvent):
     import httpx
     import os
 
-    prefect_url = os.getenv('PREFECT_API_URL', 'http://wf-server:4200/api')
+    prefect_url = os.getenv('PREFECT_API_URL', 'http://wf-server:4200/workflow/api')
 
     try:
       # 1. Find deployment by name

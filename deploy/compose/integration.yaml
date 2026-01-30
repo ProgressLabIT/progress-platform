@@ -32,6 +32,6 @@ services:
     secrets:
       - progress_api_db_pwd
     environment:
-      - PREFECT_API_URL=http://wf-server:4200/api
+      - PREFECT_API_URL=http://wf-server:4200/workflow/api
     deploy:
       replicas: 1
