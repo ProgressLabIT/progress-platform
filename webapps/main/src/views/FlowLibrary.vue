@@ -129,7 +129,7 @@ export default {
 
   computed: {
     base_url() {
-      return window.location.protocol + '//' + window.location.hostname + ':4200/api';
+      return window.location.origin + '/wf-api';
     },
 
     deployments_url() {

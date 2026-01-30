@@ -1,20 +1,19 @@
 /**
  * Composable for interacting with Prefect API to monitor workflows.
- * 
+ *
  * This composable provides functions to:
  * - Find Prefect deployments by name
  * - Get flow runs for a deployment
  * - Find flow runs by session parameter
  * - Trigger new flow runs
- * 
+ *
  * @module usePrefectAPI
  */
 
 import axios from 'axios'
 
 export function usePrefectAPI() {
-  const prefectBaseUrl = window.location.protocol + '//' + 
-    window.location.hostname + ':4200/api'
+  const prefectBaseUrl = window.location.origin + '/wf-api'
 
   /**
    * Find a deployment by name pattern
@@ -70,9 +69,9 @@ export function usePrefectAPI() {
 
       // Get recent flow runs for this deployment
       const flowRuns = await getFlowRunsByDeployment(deployment.id, 10)
-      
+
       // Find the flow run with matching session_key parameter
-      const matchingRun = flowRuns.find(run => 
+      const matchingRun = flowRuns.find(run =>
         run.parameters?.session_key === sessionKey
       )
 
