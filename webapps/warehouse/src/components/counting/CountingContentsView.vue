@@ -107,8 +107,8 @@
         <q-item-section v-if="item.quantity && !blindQuantities" side class="col-auto">
           <div class="text-body2">
             {{ Math.round(item.quantity * 10 ** 4) / 10 ** 4 }}
-            <span v-if="getCountedQuantity(item) !== null" class="text-low q-ml-xs">
-              / {{ getCountedQuantity(item) }}
+            <span v-if="getCountedQuantity(item) !== null" class="q-ml-xs">
+              → {{ getCountedQuantity(item) }}
             </span>
           </div>
         </q-item-section>
