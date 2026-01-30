@@ -17,4 +17,5 @@ exec streamlit run /app/main.py \
   --server.trust_xheaders=True \
   --server.enableCORS=False \
   --server.enableXsrfProtection=False \
-  --browser.serverAddress=reporting.$SUBDOMAIN.$DOMAIN
+  --server.baseUrlPath=/reports \
+  --browser.serverAddress=$SUBDOMAIN.$DOMAIN

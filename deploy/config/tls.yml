@@ -1,0 +1,7 @@
+# Traefik dynamic configuration for custom TLS certificates.
+# Copy this file to /opt/progress/letsencrypt/custom/tls.yml along with cert.pem and key.pem.
+# Traefik will load certificates from this directory automatically.
+tls:
+  certificates:
+    - certFile: /letsencrypt/custom/cert.pem
+      keyFile: /letsencrypt/custom/key.pem

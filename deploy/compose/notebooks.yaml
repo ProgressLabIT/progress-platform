@@ -29,6 +29,7 @@ services:
       start-notebook.py
       --ServerApp.ip='*'
       --ServerApp.port=8888
+      --ServerApp.base_url=/notebooks/
       --ServerApp.allow_root=True
       --ServerApp.open_browser=False
       --ServerApp.allow_remote_access=True
@@ -39,5 +40,6 @@ services:
         - "traefik.docker.network=progress"
         - "traefik.http.services.notebooks.loadbalancer.server.port=8888"
         - "traefik.http.routers.notebooks.entrypoints=websecure"
-        - "traefik.http.routers.notebooks.rule=Host(`notebooks.${SUBDOMAIN}.${DOMAIN}`)"
+        - "traefik.http.routers.notebooks.rule=Host(`${SUBDOMAIN}.${DOMAIN:-progresslab.it}`) && PathPrefix(`/notebooks`)"
+        - "traefik.http.routers.notebooks.priority=10"
         - "traefik.http.routers.notebooks.tls.certresolver=letsencrypt"

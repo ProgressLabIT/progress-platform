@@ -10,14 +10,8 @@
       - VERSION
       - DOMAIN
       - SUBDOMAIN
-      - DNS_PROVIDER
       - DNS_EMAIL
-      - DNS_DELAY
-      - DNS_API_KEY_VAR
-      - DNS_API_SECRET_VAR
-    private_env_vars:
-      - DNS_API_KEY
-      - DNS_API_SECRET
+    private_env_vars: []
     root_dir: /opt/progress
     venv_path: /opt/progress/.venv
     volumes:
@@ -43,9 +37,6 @@
       - { name: "progress_admin_pwd", length: 16 }
       - { name: "progress_jwt_secret", length: 32 }
       - { name: "progress_db_root_pwd", length: 16 }
-    dns_secrets:
-      - { name: "dns_api_key", value: "DNS_API_KEY" }
-      - { name: "dns_api_secret", value: "DNS_API_SECRET" }
 
   vars_files:
     - registry_creds
@@ -131,6 +122,12 @@
             state: directory
           loop: "{{ volumes + additional_folders }}"
 
+        - name: Create custom certificates directory
+          ansible.builtin.file:
+            path: "{{ root_dir }}/letsencrypt/custom"
+            state: directory
+            mode: '0700'
+
     - name: Setup infrastructure
       tags: docker
       vars:
@@ -169,13 +166,6 @@
           ansible.builtin.shell:
             cmd: "openssl rand -hex {{ item.length }} | docker secret create {{ item.name }} -"
           loop: "{{ secrets }}"
-
-        - name: Add DNS secrets
-          ansible.builtin.shell:
-            cmd: "echo '{{ progress_env_vars[item.value] }}' | docker secret create {{ item.name }} -"
-          loop: "{{ dns_secrets }}"
-
-
 
     - name: Deploy stack
       tags: deploy
@@ -221,7 +211,9 @@
                 --with-registry-auth \
                 -c base.yaml \
                 -c stack.yaml \
+                -c warehouse.yaml \
                 -c workflow.yaml \
+                -c integration.yaml \
                 -c reporting.yaml \
                 -c notebooks.yaml \
                 progress
