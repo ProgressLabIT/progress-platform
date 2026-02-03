@@ -18,7 +18,7 @@ class Position(ArangoDocument):
   code: str | None = None
   owned: bool | None = True
   available: bool | None = True
-  disposable: bool | None = False # gets deleted when emptied or shipped
+  disposable: bool | None = False # if True, gets deleted when emptied or shipped
   fixed: bool | None = True
   deleted: bool | None = False
   created: datetime | None = Field(default_factory=timestamp)
