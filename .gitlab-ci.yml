@@ -66,7 +66,7 @@ build:api:
 
 build:workflow:
   variables:
-    SERVICE: wf-sys-agent
+    SERVICE: wf-sys-worker
     BUILD_DIR: backend/workflow
     DOCKERFILE: Dockerfile
   <<: *service-template

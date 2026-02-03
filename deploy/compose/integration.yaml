@@ -17,7 +17,7 @@ secrets:
     external: true
 
 services:
-  wf-integration-agent: # Client Workflow Agent
+  wf-integration-worker: # Client Workflow Worker
     image: prefecthq/prefect:3-latest
     entrypoint: >
       sh -c "chmod +x /flows/entrypoint.sh &&
