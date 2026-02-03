@@ -44,21 +44,17 @@ services:
         # Route all /workflow/* requests to Prefect - no path manipulation needed
         - "traefik.http.routers.wf-server.rule=Host(`${SUBDOMAIN}.${DOMAIN:-progresslab.it}`) && PathPrefix(`/workflow`)"
         - "traefik.http.routers.wf-server.priority=10"
-        - "traefik.http.routers.wf-server.entrypoints=websecure"
-        - "traefik.http.routers.wf-server.tls.certresolver=letsencrypt"
         # Setting /wf-api route on main domain to bypass CORS for requests from main webapp
         - "traefik.http.routers.wf-api-from-app.priority=10"
-        - "traefik.http.routers.wf-api-from-app.entrypoints=websecure"
         - "traefik.http.routers.wf-api-from-app.rule=Host(`${SUBDOMAIN}.${DOMAIN:-progresslab.it}`) && PathPrefix(`/wf-api`)"
         - "traefik.http.routers.wf-api-from-app.service=wf-server"
-        - "traefik.http.routers.wf-api-from-app.tls.certresolver=letsencrypt"
         - "traefik.http.routers.wf-api-from-app.middlewares=wf-api-rewrite"
         - "traefik.http.middlewares.wf-api-rewrite.chain.middlewares=strip-wf-api,add-workflow-api"
         - "traefik.http.middlewares.strip-wf-api.stripprefix.prefixes=/wf-api"
         - "traefik.http.middlewares.add-workflow-api.addprefix.prefix=/workflow/api"
 
-  wf-system-agent: # System Workflow Agent
-    image: registry.gitlab.com/progresslab/progress-platform/wf-sys-agent:${VERSION}
+  wf-system-worker: # System Workflow Worker
+    image: registry.gitlab.com/progresslab/progress-platform/wf-sys-worker:${VERSION}
     restart: always
     depends_on:
       - wf-server

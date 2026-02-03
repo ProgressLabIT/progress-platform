@@ -10,8 +10,11 @@
       - VERSION
       - DOMAIN
       - SUBDOMAIN
-      - DNS_EMAIL
     private_env_vars: []
+    # Optional vars (not required, have defaults)
+    optional_env_vars:
+      - ENABLE_TLS
+      - TLS_EMAIL
     root_dir: /opt/progress
     venv_path: /opt/progress/.venv
     volumes:
@@ -198,9 +201,31 @@
             src: config/env_template.j2
             dest: "{{ root_dir }}/config/{{ progress_env_filename }}"
           vars:
+            # Combine required and optional vars for template
+            all_env_vars: "{{ public_env_vars + private_env_vars + optional_env_vars }}"
             progress_env_vars: "{{ progress_env_vars }}"
 
-        - name: Deploy to production
+        - name: Deploy to production with TLS
+          # Load environment variables from progress.env file before running docker stack deploy
+          ansible.builtin.shell:
+            executable: /bin/bash
+            cmd: |
+              cd {{ root_dir }}/config && \
+              export $(cat {{ progress_env_filename }} | xargs) && \
+              docker stack deploy \
+                --with-registry-auth \
+                -c base.yaml \
+                -c stack.yaml \
+                -c tls.yaml \
+                -c warehouse.yaml \
+                -c workflow.yaml \
+                -c integration.yaml \
+                -c reporting.yaml \
+                -c notebooks.yaml \
+                progress
+          when: progress_env_vars.ENABLE_TLS | default('true') | bool
+
+        - name: Deploy to production without TLS
           # Load environment variables from progress.env file before running docker stack deploy
           ansible.builtin.shell:
             executable: /bin/bash
@@ -217,6 +242,7 @@
                 -c reporting.yaml \
                 -c notebooks.yaml \
                 progress
+          when: not (progress_env_vars.ENABLE_TLS | default('true') | bool)
 
         - name: Copy init script to be run
           ansible.builtin.copy:

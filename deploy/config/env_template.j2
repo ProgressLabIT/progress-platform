@@ -1,3 +1,5 @@
-{% for var in public_env_vars %}
+{% for var in all_env_vars %}
+{% if var in progress_env_vars %}
 {{ var }}={{ progress_env_vars[var] }}
+{% endif %}
 {% endfor %}

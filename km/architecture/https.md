@@ -1,6 +1,11 @@
 ## Overview
 
-The Progress Platform uses **Traefik** as a reverse proxy for TLS termination. Two certificate strategies are supported:
+The Progress Platform uses **Traefik** as a reverse proxy and supports both HTTP and HTTPS deployments:
+
+- **HTTP (default)** — For private networks, development, or when TLS termination happens externally (VPN, reverse proxy)
+- **HTTPS with TLS** — For public-facing deployments, enabled by including the `tls.yaml` compose file
+
+When HTTPS is enabled, two certificate strategies are supported:
 
 1. **Let's Encrypt (HTTP challenge)** — Default for deployments with public internet access. No DNS or API credentials required.
 2. **Custom certificates** — For private networks or customers who provide their own certificates. Certificates are placed manually via SSH in a designated folder.
@@ -29,10 +34,76 @@ Custom certificates take precedence when present. This avoids requiring DNS cred
 
 ## Configuration Files
 
-- **`deploy/compose/stack.yaml`**: Traefik router command, volumes, service labels
-- **`deploy/config/progress.env.yaml`**: Domain and DNS_EMAIL (for Let's Encrypt)
+- **`deploy/compose/stack.yaml`**: Base production stack (HTTP-only by default)
+- **`deploy/compose/tls.yaml`**: TLS/HTTPS configuration (optional, include for HTTPS support)
+- **`deploy/compose/workflow.yaml`**: Prefect workflow server (optional)
+- **`deploy/compose/reporting.yaml`**: Streamlit reporting service (optional)
+- **`deploy/compose/warehouse.yaml`**: Warehouse mobile app (optional)
+- **`deploy/config/progress.env.yaml`**: Domain and TLS_EMAIL (for Let's Encrypt)
 - **`deploy/config/env_template.j2`**: Generates `progress.env`
-- **`deploy/config/tls.yml`**: Template for custom certificate dynamic config
+- **`deploy/config/tls.yml`**: Template for custom certificate dynamic config (Traefik file provider)
+
+## Deployment
+
+### Using Ansible (Recommended)
+
+The `single_node_setup.yaml` Ansible playbook automatically handles TLS configuration based on the `ENABLE_TLS` environment variable:
+
+```bash
+# Edit progress.env.yaml and set ENABLE_TLS: true or false
+ansible-playbook -i inventory.yml deploy/single_node_setup.yaml
+```
+
+The playbook will automatically include or exclude `tls.yaml` based on your configuration.
+
+### Manual Deployment
+
+#### Production with HTTPS (Public Internet)
+
+For deployments with public internet access, include `tls.yaml` to enable HTTPS with Let's Encrypt:
+
+```bash
+cd /opt/progress/config
+export $(cat progress.env | xargs)
+docker stack deploy \
+  -c ../deploy/compose/base.yaml \
+  -c ../deploy/compose/stack.yaml \
+  -c ../deploy/compose/tls.yaml \
+  --project-directory .. \
+  --project-name progress_prod
+```
+
+#### Production with HTTP (Private Network)
+
+For deployments on private networks without TLS, omit `tls.yaml`:
+
+```bash
+cd /opt/progress/config
+export $(cat progress.env | xargs)
+docker stack deploy \
+  -c ../deploy/compose/base.yaml \
+  -c ../deploy/compose/stack.yaml \
+  --project-directory .. \
+  --project-name progress_prod
+```
+
+All services will be accessible via HTTP on port 80.
+
+### Adding Optional Services
+
+Include additional compose files as needed:
+
+```bash
+docker stack deploy \
+  -c ../deploy/compose/base.yaml \
+  -c ../deploy/compose/stack.yaml \
+  -c ../deploy/compose/tls.yaml \
+  -c ../deploy/compose/workflow.yaml \
+  -c ../deploy/compose/reporting.yaml \
+  -c ../deploy/compose/warehouse.yaml \
+  --project-directory .. \
+  --project-name progress_prod
+```
 
 ## Environment Variables
 
@@ -44,8 +115,14 @@ File: `/opt/progress/config/progress.env` (generated from template)
 VERSION=0.10.1
 DOMAIN=domain.com
 SUBDOMAIN=mysub
-DNS_EMAIL=admin@domain.com   # Let's Encrypt account/notifications
+TLS_EMAIL=admin@domain.com   # Let's Encrypt account/notifications
+ENABLE_TLS=true              # Set to 'true' for HTTPS, 'false' for HTTP-only
 ```
+
+- **ENABLE_TLS** (optional): Controls whether HTTPS/TLS is enabled
+  - `true`: Ansible deployment includes `tls.yaml`, enables HTTPS with Let's Encrypt or custom certificates
+  - `false` or omitted: HTTP-only deployment on port 80 (suitable for private networks)
+  - Default: `false` if not specified in `progress.env.yaml`
 
 No DNS provider or API credentials are required for HTTP challenge.
 
@@ -119,7 +196,7 @@ Use container paths (`/letsencrypt/custom/...`), not host paths.
 
 2. **Let's Encrypt HTTP challenge**
    - Port 80 must be reachable from the internet for the domain.
-   - Ensure `DOMAIN`, `SUBDOMAIN`, and `DNS_EMAIL` are set in `progress.env` and exported before `docker stack deploy`.
+   - Ensure `DOMAIN`, `SUBDOMAIN`, and `TLS_EMAIL` are set in `progress.env` and exported before `docker stack deploy`.
    - Rate limits: use Let's Encrypt staging for testing if needed.
 
 3. **Custom certificates**
@@ -142,12 +219,20 @@ Use container paths (`/letsencrypt/custom/...`), not host paths.
 ## Updates and Maintenance
 
 1. **Change domain or email**
-   - Edit `/opt/progress/config/progress.env` (e.g. `DOMAIN`, `SUBDOMAIN`, `DNS_EMAIL`).
+   - Edit `/opt/progress/config/progress.env` (e.g. `DOMAIN`, `SUBDOMAIN`, `TLS_EMAIL`).
    - Export vars and redeploy: `cd /opt/progress/config && export $(cat progress.env | xargs) && docker stack deploy ...`
    - Optionally update only the router: `docker service update progress_router`.
 
-2. **Switch to custom certificates**
+2. **Enable HTTPS on existing HTTP deployment**
+   - Ensure the `letsencrypt` Docker volume exists: `docker volume create letsencrypt`
+   - Add `-c ../deploy/compose/tls.yaml` to your `docker stack deploy` command and redeploy
+
+3. **Disable HTTPS (switch to HTTP-only)**
+   - Remove `-c ../deploy/compose/tls.yaml` from your `docker stack deploy` command and redeploy
+   - Services will be accessible via HTTP on port 80
+
+4. **Switch to custom certificates**
    - Add `tls.yml`, `cert.pem`, and `key.pem` under `/opt/progress/letsencrypt/custom/` as above. Traefik will use them in addition to or instead of ACME-issued certs depending on configuration.
 
-3. **Switch back to Let's Encrypt only**
+5. **Switch back to Let's Encrypt only**
    - Remove or rename the dynamic config (e.g. `tls.yml`) and cert files from `custom/` so Traefik relies only on the Let's Encrypt resolver.

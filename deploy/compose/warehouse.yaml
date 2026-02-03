@@ -23,7 +23,5 @@ services:
         - "traefik.docker.network=progress"
         - "traefik.http.services.warehouse.loadbalancer.server.port=80"
         - "traefik.http.routers.warehouse.rule=Host(`${SUBDOMAIN}.${DOMAIN:-progresslab.it}`) && PathPrefix(`/wh`)"
-        - "traefik.http.routers.warehouse.entrypoints=websecure"
-        - "traefik.http.routers.warehouse.tls.certresolver=letsencrypt"
         - "traefik.http.routers.warehouse.middlewares=strip_warehouse_prefix"
         - "traefik.http.middlewares.strip_warehouse_prefix.stripprefix.prefixes=/wh"

@@ -40,9 +40,7 @@ services:
         - "traefik.docker.network=progress"
         - "traefik.http.services.reporting.loadbalancer.server.port=8501"
         - "traefik.http.routers.reporting.priority=10"
-        - "traefik.http.routers.reporting.entrypoints=websecure"
         - "traefik.http.routers.reporting.rule=Host(`${SUBDOMAIN}.${DOMAIN:-progresslab.it}`) && PathPrefix(`/reports`)"
-        - "traefik.http.routers.reporting.tls.certresolver=letsencrypt"
         # Ensure access is only via iframe from main sub.domain url
         - "traefik.http.routers.reporting.middlewares=reporting-embed"
         - "traefik.http.middlewares.reporting-embed.headers.framedeny=false"

@@ -12,11 +12,6 @@ secrets:
   progress_db_root_pwd:
     external: true
 
-volumes:
-  letsencrypt:
-    external: true
-
-
 services:
   router:
     command:
@@ -28,26 +23,11 @@ services:
       - --api.insecure
       - --log.level=INFO
       - --entrypoints.web.address=:80
-      - --entrypoints.websecure.address=:443
-      - --entrypoints.web.http.redirections.entrypoint.to=websecure
-      - --entrypoints.web.http.redirections.entrypoint.scheme=https
-      - --certificatesresolvers.letsencrypt.acme.httpchallenge=true
-      - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web
-      - --certificatesresolvers.letsencrypt.acme.email=${DNS_EMAIL:-admin@progresslab.it}
-      - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
-      - --providers.file.directory=/letsencrypt/custom
-      - --providers.file.watch=true
     ports:
       - target: 80
         published: 80
         protocol: tcp
         mode: host
-      - target: 443
-        published: 443
-        protocol: tcp
-        mode: host
-    volumes:
-      - letsencrypt:/letsencrypt
     networks:
       - progress
     deploy:
@@ -77,7 +57,6 @@ services:
         - "traefik.http.routers.db.middlewares=db_root"
         - "traefik.http.middlewares.db_root.replacepathregex.regex=^/_db/?$$"
         - "traefik.http.middlewares.db_root.replacepathregex.replacement=/"
-        - "traefik.http.routers.db.tls.certresolver=letsencrypt"
 
   broker:
     networks:
@@ -120,7 +99,6 @@ services:
         - "traefik.http.services.api.loadbalancer.server.port=8000"
         - "traefik.http.routers.api.rule=Host(`${SUBDOMAIN}.${DOMAIN:-progresslab.it}`) && PathPrefix(`/api`)"
         - "traefik.http.routers.api.priority=10"
-        - "traefik.http.routers.api.tls.certresolver=letsencrypt"
         - "traefik.http.routers.api.middlewares=strip_api_prefix"
         - "traefik.http.middlewares.strip_api_prefix.stripprefix.prefixes=/api"
         - "traefik.http.middlewares.strip_api_prefix.stripprefix.forceslash=false"
@@ -144,7 +122,6 @@ services:
         - "traefik.docker.network=progress"
         - "traefik.http.services.app.loadbalancer.server.port=80"
         - "traefik.http.routers.app.rule=Host(`${SUBDOMAIN}.${DOMAIN:-progresslab.it}`)"
-        - "traefik.http.routers.app.tls.certresolver=letsencrypt"
         # Lower priority so path-based routes (workflow, notebooks, reports) take precedence
         - "traefik.http.routers.app.priority=1"
 
