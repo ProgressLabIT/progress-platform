@@ -89,7 +89,7 @@
             :key="index"
           >
             <fieldset
-              v-if="Object.keys(pageSchema).length > 0"
+              v-if="normalizePageSchema(pageSchema).length > 0"
               class="q-pa-md q-my-md column"
               style="gap: 16px"
             >
@@ -98,14 +98,13 @@
               </legend>
 
               <template
-                v-for="(field, fieldName) in pageSchema"
-                :key="fieldName"
+                v-for="field in normalizePageSchema(pageSchema)"
+                :key="field.name"
               >
-                <!-- TODO: Handle field type 'image' -->
                 <template v-if="field.type === 'image'">
-                  <div>{{ fieldName }}</div>
+                  <div>{{ field.name }}</div>
                   <q-img
-                    :src="formModel[fieldName]"
+                    :src="formModel[field.name]"
                     fit="contain"
                     style="width: 300px"
                   >
@@ -113,8 +112,8 @@
                       <div class="bg-grey-2 text-grey-6" style="word-break: break-word;">
                         <div class="text-center">
                           <q-icon name="mdi-image-off-outline" size="md" />
-                          <div class="smaller q-mt-xs">{{  $t('image_not_available_at_path') }}</div>
-                          <div class="smaller q-mt-xs">{{ formModel[fieldName] }}</div>
+                          <div class="smaller q-mt-xs">{{ $t('image_not_available_at_path') }}</div>
+                          <div class="smaller q-mt-xs">{{ formModel[field.name] }}</div>
                         </div>
                       </div>
                     </template>
@@ -122,8 +121,8 @@
                 </template>
                 <q-input
                   v-else
-                  v-model="formModel[fieldName]"
-                  :label="fieldName"
+                  v-model="formModel[field.name]"
+                  :label="field.name"
                   filled
                 />
               </template>
@@ -200,10 +199,77 @@ import { useDialogPluginComponent } from 'quasar';
 import { nextTick, ref, reactive, toRaw } from 'vue';
 import VuePdfEmbed from 'vue-pdf-embed';
 import { api } from '@/boot/axios';
+import { linkedText, linkedImage, linkedBarcodes } from '@/plugins';
 import BaseDialog from '@/components/BaseDialog.vue';
 import LoadingSignal from '@/components/LoadingSignal.vue';
 import PrintTemplateCard from '@/components/PrintTemplateCard.vue';
 import BaseAutocompleteSerial from './BaseAutocompleteSerial.vue';
+
+const pdfmePlugins = {
+  text: linkedText,
+  image: linkedImage,
+  qrcode: linkedBarcodes.qrcode,
+  ean13: linkedBarcodes.ean13,
+  code39: linkedBarcodes.code39,
+  code128: linkedBarcodes.code128,
+  gs1datamatrix: linkedBarcodes.gs1datamatrix,
+  japanpost: linkedBarcodes.japanpost,
+  nw7: linkedBarcodes.nw7,
+  itf14: linkedBarcodes.itf14,
+  upca: linkedBarcodes.upca,
+  upce: linkedBarcodes.upce,
+};
+
+/** Normalize page schema to array of { name, type, ... } (v5 format). Supports v2/v4 (keyed object) and v5 (array). */
+function normalizePageSchema(pageSchema) {
+  if (!pageSchema) return [];
+  if (Array.isArray(pageSchema)) return pageSchema;
+  return Object.entries(pageSchema).map(([fieldName, fieldSpec]) => ({
+    ...fieldSpec,
+    name: fieldName,
+  }));
+}
+
+/** Get field names and link config from template + record. Supports v2/v4 (columns + links) and v5 (linkType/linkValue on schema). */
+function getFieldNamesAndLinks(data) {
+  const template = data.template || {};
+  const schemas = template.schemas || [];
+  const columns = template.columns;
+  const links = data.links || {};
+
+  if (columns && Array.isArray(columns) && columns.length > 0) {
+    return {
+      fieldNames: columns,
+      getLink: (fieldName) => links[fieldName] || null,
+    };
+  }
+
+  const fieldNames = [];
+  const linkByField = {};
+  for (const pageSchema of schemas) {
+    const fields = normalizePageSchema(pageSchema);
+    for (const field of fields) {
+      const name = field.name || field.key;
+      if (name) {
+        fieldNames.push(name);
+        if (field.linkType && field.linkType !== 'none') {
+          const value = field.linkType === 'preset' ? field.linkValue : field.customFieldKey;
+          linkByField[name] = { type: field.linkType, value: value || '' };
+        }
+      }
+    }
+  }
+  return {
+    fieldNames: [...new Set(fieldNames)],
+    getLink: (fieldName) => linkByField[fieldName] || null,
+  };
+}
+
+/** Normalize full schemas to v5 (array of arrays) for generate(). */
+function schemasToV5(schemas) {
+  if (!schemas || !Array.isArray(schemas)) return [];
+  return schemas.map(normalizePageSchema);
+}
 
 const props = defineProps({
   context: {
@@ -375,42 +441,32 @@ async function selectTemplate(template) {
     const { data } = await api.get(`print-template/${template._key}`);
     selectedTemplate.value = data;
 
-    // Validate template data structure
-    if (!data.template || !data.template.columns || !Array.isArray(data.template.columns)) {
-      throw new Error('Invalid template data: missing or invalid columns');
+    if (!data.template || !data.template.schemas) {
+      throw new Error('Invalid template data: missing template or schemas');
     }
+
+    const { fieldNames, getLink } = getFieldNamesAndLinks(data);
 
     formModel = reactive(
       Object.fromEntries(
-        data.template.columns.map((fieldName) => {
-          // Ensure fieldName is a string
+        fieldNames.map((fieldName) => {
           if (!fieldName || typeof fieldName !== 'string') {
             console.warn('Invalid field name found:', fieldName);
             return ['unknown_field', ''];
           }
-
-          const link = data.links && data.links[fieldName];
+          const link = getLink(fieldName);
           if (!link) {
             return [fieldName, ''];
           }
-
-          if (link?.value?.includes('serial')) {
+          if (link.value && String(link.value).includes('serial')) {
             hasSerialLink.value = true;
           }
-
-          if (link?.type === 'preset') {
+          if (link.type === 'preset') {
             const presetValue = props.context.getPresetValue(link.value);
-            return [
-              fieldName,
-              String(presetValue ?? ''),
-            ];
+            return [fieldName, String(presetValue ?? '')];
           }
-
           const customValue = props.context.getCustomFieldValue(link.value);
-          return [
-            fieldName,
-            String(customValue ?? ''),
-          ];
+          return [fieldName, String(customValue ?? '')];
         }),
       ),
     );
@@ -488,33 +544,24 @@ async function prepareInputs() {
     throw new Error('Template schemas are not available');
   }
 
-  for (const schema of selectedTemplate.value.template.schemas) {
-    let schemaFields = [];
+  for (const pageSchema of selectedTemplate.value.template.schemas) {
+    const fields = normalizePageSchema(pageSchema);
+    const schemaFields = [];
 
-    if (!schema || typeof schema !== 'object') {
-      console.warn('Invalid schema found, skipping:', schema);
-      continue;
-    }
+    for (const field of fields) {
+      const fieldName = field.name;
+      if (!fieldName) continue;
 
-    for (const [fieldName, fieldProps] of Object.entries(schema)) {
-      if (!fieldProps || typeof fieldProps !== 'object') {
-        console.warn(`Invalid field properties for ${fieldName}:`, fieldProps);
-        schemaFields.push([fieldName, '']);
-        continue;
-      }
-
-      if (fieldProps.type === 'image') {
+      if (field.type === 'image') {
         try {
           const imageUrl = formModel[fieldName];
-          const base64 = await loadImage(imageUrl); // If imageUrl is empty, empty string will not render any image. Background, if present, will be visible.
+          const base64 = await loadImage(imageUrl);
           schemaFields.push([fieldName, base64]);
         } catch (err) {
           console.error(`Error loading image for field ${fieldName}:`, err);
-          // Use empty string as fallback - error was already shown in the form UI
           schemaFields.push([fieldName, '']);
         }
       } else {
-        // Ensure we always have a string value, never null or undefined
         const fieldValue = formModel[fieldName];
         const safeValue = fieldValue != null ? String(fieldValue) : '';
         schemaFields.push([fieldName, safeValue]);
@@ -555,19 +602,15 @@ async function goToPreview() {
       throw new Error('Inputs are missing or invalid');
     }
 
-    // Log for debugging
-    console.log('Template:', template);
-    console.log('Inputs:', inputs);
-
     const cleanTemplate = {
       basePdf: template.basePdf,
-      schemas: toRaw(template.schemas || []),
-      columns: toRaw(template.columns ? [...template.columns] : []),
+      schemas: toRaw(schemasToV5(template.schemas)),
     };
 
     previewSrc.value = await generate({
       template: cleanTemplate,
       inputs,
+      plugins: pdfmePlugins,
     });
   } catch (error) {
     console.error('Error generating PDF preview:', error);

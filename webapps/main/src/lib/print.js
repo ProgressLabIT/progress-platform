@@ -2,8 +2,53 @@ import { Dialog, Notify, exportFile } from 'quasar';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useStore } from 'vuex';
+import { generate } from '@pdfme/generator';
 import PrintDialog from '@/components/PrintDialog.vue';
 import { usePrintTemplates } from '@/composables/print-template';
+import { linkedText, linkedImage, linkedBarcodes } from '@/plugins';
+
+const pdfmePlugins = {
+  text: linkedText,
+  image: linkedImage,
+  qrcode: linkedBarcodes.qrcode,
+  ean13: linkedBarcodes.ean13,
+  code39: linkedBarcodes.code39,
+  code128: linkedBarcodes.code128,
+  gs1datamatrix: linkedBarcodes.gs1datamatrix,
+  japanpost: linkedBarcodes.japanpost,
+  nw7: linkedBarcodes.nw7,
+  itf14: linkedBarcodes.itf14,
+  upca: linkedBarcodes.upca,
+  upce: linkedBarcodes.upce,
+};
+
+function normalizePageSchema(pageSchema) {
+  if (!pageSchema) return [];
+  if (Array.isArray(pageSchema)) return pageSchema;
+  return Object.entries(pageSchema).map(([fieldName, fieldSpec]) => ({ ...fieldSpec, name: fieldName }));
+}
+
+function schemasToV5(schemas) {
+  if (!schemas || !Array.isArray(schemas)) return [];
+  return schemas.map(normalizePageSchema);
+}
+
+/**
+ * Generate PDF from template and inputs (pdfme v5).
+ * @param {{ template: { basePdf: string, schemas: unknown[] }, inputs: object[] }} options
+ * @returns {Promise<Uint8Array>}
+ */
+export async function generatePdf({ template, inputs }) {
+  const cleanTemplate = {
+    basePdf: template.basePdf,
+    schemas: schemasToV5(template.schemas),
+  };
+  return generate({
+    template: cleanTemplate,
+    inputs: inputs || [],
+    plugins: pdfmePlugins,
+  });
+}
 
 export function usePrintDialog({ context: contextType, contextData }) {
   const { t } = useI18n();

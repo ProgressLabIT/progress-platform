@@ -147,10 +147,9 @@
 </template>
 
 <script>
-import { generate } from '@pdfme/generator';
 import MediaViewer from '@/components/MediaViewer.vue';
 import PrintTemplateDesigner from '@/components/PrintTemplateDesigner.vue';
-import { usePrintDialog } from '@/lib/print';
+import { usePrintDialog, generatePdf } from '@/lib/print';
 
 export default {
   name: 'PrintTemplateCard',
@@ -208,10 +207,10 @@ export default {
       const {
         data: { template },
       } = await this.$api.get(`print-template/${this.template._key}`);
-      const inputs = template.sampledata;
+      const inputs = template.sampledata || [];
       this.showPreview = {
         name: template.name,
-        pdf: await generate({ template, inputs }),
+        pdf: await generatePdf({ template, inputs }),
       };
     },
 
