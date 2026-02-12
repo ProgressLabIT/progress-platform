@@ -26,6 +26,15 @@ volumes:
 services:
   router:
     command:
+      # Base commands (must be repeated here as command: replaces, not merges)
+      - --providers.docker.swarmMode
+      - --providers.docker.exposedbydefault=false
+      - --accesslog
+      - --api.dashboard
+      - --api.debug
+      - --api.insecure
+      - --log.level=INFO
+      - --entrypoints.web.address=:80
       # HTTPS entrypoint
       - --entrypoints.websecure.address=:443
       # HTTP to HTTPS redirect
