@@ -336,6 +336,8 @@ async def get_wo_data(wo_key: str):
   try:
     wo_data = db.aql.execute(Queries.GET_WORK_ORDER_DATA, bind_vars=dict(wo_key=wo_key)).next()
     return APIResponse(detail=wo_data)
+  except StopIteration:
+    raise HTTPException(status_code=404, detail="Work order not found")
   except Exception as e:
     status_code=500
     response = dict(
