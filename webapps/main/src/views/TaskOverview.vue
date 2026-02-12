@@ -629,6 +629,8 @@ async function updateTasks() {
           chain = chain.then(() => sendEvent({ event_type: 'TASK_CANCELED', event_data: { task_key: taskKey } }));
         } else if (task_status.value === 'open') {
           chain = chain.then(() => sendEvent({ event_type: 'TASK_REOPENED', event_data: { task_key: taskKey } }));
+        } else if (task_status.value === 'pending') {
+          chain = chain.then(() => sendEvent({ event_type: 'TASK_SUSPENDED', event_data: { task_key: taskKey } }));
         }
       }
 

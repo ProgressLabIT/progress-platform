@@ -183,6 +183,7 @@ export default {
     // Eventi Compiti
     TASK_CREATED: 'Compito creato',
     TASK_UPDATED: 'Compito aggiornato',
+    TASK_SUSPENDED: 'Compito sospeso',
     TASK_COMPLETED: 'Compito completato',
     TASK_CANCELED: 'Compito annullato',
     TASK_REOPENED: 'Compito riaperto',
@@ -896,6 +897,7 @@ export default {
   task_complete_success: 'Compito completato con successo',
   task_complete_error: 'Errore nel completare il compito',
   task_must_be_open_to_edit: 'Il compito deve essere aperto per essere modificato',
+  tasks_updated_successfully: 'Compiti aggiornati con successo',
   activate_task_before_leaving: 'Attivare il Compito Prima di Uscire?',
   activate_task_prompt_message: 'Vuoi attivare questo compito prima di navigare verso l\'entità collegata? Questo aiuterà a mantenere il contesto del compito.',
   navigate_without_activating: 'No, naviga solamente',
