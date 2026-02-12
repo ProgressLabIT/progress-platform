@@ -225,7 +225,7 @@
     <!-- Bottom drawer for edit actions -->
     <div
       v-if="edit_mode"
-      class="full-width bg-blue-backdrop justify-between q-py-sm q-px-md items-center absolute-bottom edit-drawer"
+      class="full-width surface1 justify-between q-pb-md q-px-md items-center absolute-bottom edit-drawer"
       :class="{ 'drawer-visible': edit_mode }"
 
     >
@@ -306,7 +306,7 @@
           </div>
 
           <!-- ASSIGNEES -->
-          <div class="col-12 col-md-4">
+          <div class="col-12 col-sm-6 col-md-4">
             <q-select
               :model-value="task_assigned_to"
               :options="user_options"
@@ -363,7 +363,7 @@
           </div>
 
           <!-- STATUS -->
-          <div class="col-12 col-md-2">
+          <div class="col-12 col-sm-6 col-md-2">
             <q-select
               v-model="task_status"
               :options="Object.values(taskStatusOptions)"
@@ -640,7 +640,7 @@ async function updateTasks() {
     await Promise.all(updatePromises);
 
     $q.notify({
-      message: `${selected_tasks.value.size} ${t('task', selected_tasks.value.size)} updated successfully`,
+      message: t('tasks_updated_successfully'),
       color: 'theme-green',
       timeout: 2000,
       position: 'top',
