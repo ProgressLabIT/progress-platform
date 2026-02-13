@@ -132,6 +132,8 @@ def fetch_dhr_data(serial_key: str, include_step_data: bool = False) -> dict[str
       product_code: product ? product.code : null,
       product_description: product ? product.description : null,
       wo_phase_sequence: wo ? wo.phase_sequence : [],
+      wo_code: wo ? wo.wo_code : null,
+      project_code: wo ? wo.project_code : null,
       fields,
       step_data
     }
@@ -400,9 +402,9 @@ def generate_children_tables(serial_key: str) -> Tuple[str, str]:
         <table class="table">
           <thead>
             <tr>
-              <th>Product Code</th>
-              <th>Product Description</th>
-              <th>Serial Code</th>
+              <th>Code</th>
+              <th>Description</th>
+              <th>S/N</th>
             </tr>
           </thead>
           <tbody>'''
@@ -467,9 +469,11 @@ def generate_dhr_pdf(serial_key: str, include_step_data: bool = False) -> bytes:
 def generate_dhr_html(serial_key: str, data: Dict[str, Any]) -> str:
   """Generate HTML content optimized for WeasyPrint DHR generation"""
   serial_info = data.get('serial') or {}
-  serial_code = serial_info.get('code') or ''
-  product_code = data.get('product_code') or ''
-  product_description = data.get('product_description') or ''
+  serial_code = serial_info.get('code') or '-'
+  product_code = data.get('product_code') or '-'
+  product_description = data.get('product_description') or '-'
+  wo_code = data.get('wo_code') or '-'
+  project_code = data.get('project_code') or '-'
   created = format_date_readable(serial_info.get('created'))
   released = format_date_readable(serial_info.get('released'))
   fields = data.get('fields') or []
@@ -702,16 +706,22 @@ def generate_dhr_html(serial_key: str, data: Dict[str, Any]) -> str:
         <h1>Device History Record</h1>
         <table class="header-table">
           <tr>
-            <th>Product Code</th>
+            <th>Code</th>
             <td colspan="3">{product_code}</td>
           </tr>
           <tr>
-            <th>Product Description</th>
+            <th>Description</th>
             <td colspan="3">{product_description}</td>
           </tr>
           <tr>
-            <th>Serial Code</th>
+            <th>S/N</th>
             <td colspan="3">{serial_code}</td>
+          </tr>
+          <tr>
+            <th>Work Order</th>
+            <td>{wo_code}</td>
+            <th>Project</th>
+            <td>{project_code}</td>
           </tr>
           <tr>
             <th>Created</th>
