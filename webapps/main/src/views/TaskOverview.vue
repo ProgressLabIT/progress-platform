@@ -135,8 +135,8 @@
                     v-if="!isTaskActive(props.row._key)"
                     color="theme-green"
                     size="0.75rem"
-                    icon="mdi-pin"
-                    label="Activate Task"
+                    icon="mdi-play-circle-outline"
+                    :label="$t('task_activate')"
                     @click="activateTask(props.row._key)"
                   />
 
@@ -144,8 +144,8 @@
                     v-else
                     color="orange"
                     size="0.75rem"
-                    icon="mdi-pin-off"
-                    label="Deactivate"
+                    icon="mdi-stop-circle-outline"
+                    :label="$t('task_deactivate')"
                     @click="deactivateTask()"
                   />
                 </template>
@@ -160,7 +160,7 @@
           <template v-for="column in taskColumns" :key="column.name">
             <q-td
               class="ellipsis"
-              :style="props.row.status === 'completed' ? 'opacity: .7' : ''"
+              :style="['completed', 'canceled'].includes(props.row.status) ? 'opacity: .7' : ''"
               :props="props">
               <template v-if="column.name === 'type'">
                 <q-icon
@@ -175,7 +175,24 @@
                   size="16px"
                   :color="taskStatusOptions[props.row.status]?.color || 'theme-grey'"
                   :name="taskStatusOptions[props.row.status]?.icon || 'mdi-circle-outline'"
-                />
+                 />
+                 <q-popup-proxy context-menu auto-close>
+                    <q-list>
+                      <q-item
+                        v-for="status in Object.values(taskStatusOptions)"
+                        clickable
+                        :key="status.value"
+                        @click="updateTaskStatus(props.row._key, status.value)"
+                      >
+                        <q-item-section side>
+                          <q-icon :name="status.icon" :color="props.row.status === status.value ? status.color : 'theme-grey'" size="16px" />
+                        </q-item-section>
+                        <q-item-section>
+                          <q-item-label class="uppercase smaller" :class="{ 'highlight': props.row.status === status.value }">{{ status.label }}</q-item-label>
+                        </q-item-section>
+                      </q-item>
+                    </q-list>
+                  </q-popup-proxy>
               </template>
 
               <template v-else-if="['created', 'start_from', 'due_by', 'closed'].includes(column.name)">
@@ -660,6 +677,12 @@ async function updateTasks() {
   } finally {
     saving.value = false;
   }
+}
+
+function updateTaskStatus(taskKey, status) {
+  selected_tasks.value.add(taskKey);
+  task_status.value = status;
+  updateTasks();
 }
 
 // Date validation function
