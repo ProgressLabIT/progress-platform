@@ -25,7 +25,7 @@ echo "✅ Using tag: ${TAG}"
 REGISTRY="registry.gitlab.com/progresslab/progress-platform"
 
 # List your image names here (without the registry part)
-IMAGES=("api" "app" "wf-sys-worker")
+IMAGES=("api" "app" "warehouse" "wf-sys-worker")
 
 # List the corresponding service names here.
 STACK_NAME="progress"
