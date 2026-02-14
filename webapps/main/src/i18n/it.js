@@ -675,6 +675,7 @@ export default {
     },
 
     downloadWillBegin: 'Il download inizierà a breve!',
+    requiredFieldsEmpty: '{count} campo/i obbligatorio/i vuoto/i. Compilarli prima di continuare.',
   },
   print_template: 'Stampa | Stampe',
   print_template_confirm_delete_question:
@@ -692,6 +693,8 @@ export default {
   },
   print_template_preview: 'Anteprima',
   print_template_rename: 'Rinomina template',
+  print_template_fields: 'Campi',
+  print_template_barcodes: 'Codici a barre',
   procedure: 'procedura',
   process: 'processo',
   processing_cost: 'costo lavorazione',

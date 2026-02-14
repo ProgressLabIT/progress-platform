@@ -101,30 +101,37 @@
                 v-for="field in normalizePageSchema(pageSchema)"
                 :key="field.name"
               >
-                <template v-if="field.type === 'image'">
-                  <div>{{ field.name }}</div>
-                  <q-img
-                    :src="formModel[field.name]"
-                    fit="contain"
-                    style="width: 300px"
-                  >
-                    <template #error>
-                      <div class="bg-grey-2 text-grey-6" style="word-break: break-word;">
-                        <div class="text-center">
-                          <q-icon name="mdi-image-off-outline" size="md" />
-                          <div class="smaller q-mt-xs">{{ $t('image_not_available_at_path') }}</div>
-                          <div class="smaller q-mt-xs">{{ formModel[field.name] }}</div>
+                <!-- Skip read-only fields (auto-populated from link, not editable) -->
+                <template v-if="!field.readOnly">
+                  <template v-if="field.type === 'image'">
+                    <div>{{ field.name }}</div>
+                    <q-img
+                      :src="formModel[field.name]"
+                      fit="contain"
+                      style="width: 300px"
+                    >
+                      <template #error>
+                        <div class="bg-grey-2 text-grey-6" style="word-break: break-word;">
+                          <div class="text-center">
+                            <q-icon name="mdi-image-off-outline" size="md" />
+                            <div class="smaller q-mt-xs">{{ $t('image_not_available_at_path') }}</div>
+                            <div class="smaller q-mt-xs">{{ formModel[field.name] }}</div>
+                          </div>
                         </div>
-                      </div>
+                      </template>
+                    </q-img>
+                  </template>
+                  <q-input
+                    v-else
+                    v-model="formModel[field.name]"
+                    filled
+                  >
+                    <template #label>
+                      {{ field.name }}
+                      <span v-if="field.required" class="text-theme-red"> * </span>
                     </template>
-                  </q-img>
+                  </q-input>
                 </template>
-                <q-input
-                  v-else
-                  v-model="formModel[field.name]"
-                  :label="field.name"
-                  filled
-                />
               </template>
             </fieldset>
           </template>
@@ -197,6 +204,7 @@
 import { generate } from '@pdfme/generator';
 import { useDialogPluginComponent } from 'quasar';
 import { nextTick, ref, reactive, toRaw } from 'vue';
+import { useI18n } from 'vue-i18n';
 import VuePdfEmbed from 'vue-pdf-embed';
 import { api } from '@/boot/axios';
 import { buildPlugins } from '@/lib/print/plugins';
@@ -275,6 +283,7 @@ const props = defineProps({
 
 defineEmits(useDialogPluginComponent.emitsObject);
 
+const { t } = useI18n();
 const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } =
   useDialogPluginComponent();
 // This can't be inside the template due to unwrapping
@@ -565,11 +574,37 @@ async function prepareInputs() {
 }
 
 /**
+ * Collects all required field names from the template.
+ * @returns {string[]}
+ */
+function getRequiredFieldNames() {
+  const template = selectedTemplate.value?.template;
+  if (!template?.schemas || !Array.isArray(template.schemas)) return [];
+  const names = [];
+  for (const pageSchema of template.schemas) {
+    for (const field of normalizePageSchema(pageSchema)) {
+      if (field.name && field.required) names.push(field.name);
+    }
+  }
+  return names;
+}
+
+/**
  * Generates a PDF preview using the selected template and form data
  * Validates template structure, prepares inputs, and generates PDF using @pdfme/generator
  * Sets the preview source for display and advances to the preview step
  */
 async function goToPreview() {
+  const requiredNames = getRequiredFieldNames();
+  const requiredEmpty = requiredNames.filter((name) => {
+    const v = formModel[name];
+    return v === undefined || v === null || String(v).trim() === '';
+  });
+  if (requiredEmpty.length > 0) {
+    window.alert(t('printDialog.requiredFieldsEmpty', { count: requiredEmpty.length }));
+    return;
+  }
+
   previewSrc.value = undefined;
   activeStep.value = 2;
   await nextTick();
@@ -595,7 +630,7 @@ async function goToPreview() {
 
     const cleanTemplate = {
       basePdf: template.basePdf,
-      schemas: toRaw(schemasToV5(template.schemas)),
+      schemas: JSON.parse(JSON.stringify(schemasToV5(template.schemas))),
     };
 
     previewSrc.value = await generate({

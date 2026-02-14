@@ -14,7 +14,7 @@
 
     <template #content>
       <div class="column full-height" style="min-height: 0">
-      <!-- Toolbar: name, description, field buttons, actions (only when workingTemplate is set to avoid reading .name on undefined) -->
+      <!-- Toolbar: name, description, upload PDF, save -->
       <div
         v-if="workingTemplate"
         class="row q-pa-md q-col-gutter-md items-center surface1"
@@ -30,7 +30,7 @@
             class="shadow-3"
           />
         </div>
-        <div class="col-12 col-md-4">
+        <div class="col">
           <q-input
             v-model="workingTemplate.description"
             autogrow
@@ -41,63 +41,78 @@
             class="shadow-3"
           />
         </div>
-        <div class="col-12 col-md-4 row q-gutter-sm">
+        <div class="col-auto">
           <q-btn
             :label="$t('print_template_load_pdf')"
             color="primary"
             icon="mdi-upload"
-            dense
+            outline
+            padding="sm"
+            size="sm"
             @click="$refs.pdfFileInput.click()"
           />
+        </div>
+
+        <div class="col-auto">
           <q-btn
             :label="$t('save')"
             color="primary"
             icon="mdi-database-check"
-            dense
+            outline
+            size="sm"
+            padding="sm"
             @click="saveTemplate"
           />
         </div>
-
-        <div class="col-12">
-          <div class="row q-col-gutter-sm items-center">
-            <span class="text-caption text-low q-mr-sm">{{ $t('print_template_fields') }}:</span>
-            <q-btn
-              dense
-              size="sm"
-              outline
-              color="primary"
-              icon="mdi-format-text"
-              :label="$t('field_type_text')"
-              @click="addField('text')"
-            />
-            <q-btn
-              dense
-              size="sm"
-              outline
-              color="primary"
-              icon="mdi-image"
-              :label="$t('image')"
-              @click="addField('image')"
-            />
-            <q-separator vertical class="q-mx-sm" />
-            <span class="text-caption text-low q-mr-sm">{{ $t('print_template_barcodes') }}:</span>
-            <q-btn
-              v-for="bc in barcodeTypes"
-              :key="bc.type"
-              dense
-              size="sm"
-              flat
-              color="primary"
-              :icon="bc.icon"
-              @click="addField(bc.type)"
-            >
-              <q-tooltip>{{ bc.label }}</q-tooltip>
-            </q-btn>
-          </div>
-        </div>
       </div>
 
-      <div id="pdf-designer" class="pdf-designer-container" />
+      <!-- Designer container with custom left sidebar overlay -->
+      <div class="pdf-designer-wrapper">
+        <!-- Custom left sidebar for adding fields (absolutely positioned) -->
+        <div v-if="workingTemplate" class="custom-left-sidebar column surface1 q-px-md">
+          <q-btn
+            flat
+            dense
+            square
+            icon="mdi-format-text"
+            class="q-mb-xs"
+            @click="addField('text')"
+          >
+            <q-tooltip anchor="center right" self="center left" :offset="[10, 0]">
+              {{ $t('field_type_text') }}
+            </q-tooltip>
+          </q-btn>
+          <q-btn
+            flat
+            dense
+            square
+            icon="mdi-image"
+            class="q-mb-sm"
+            @click="addField('image')"
+          >
+            <q-tooltip anchor="center right" self="center left" :offset="[10, 0]">
+              {{ $t('image') }}
+            </q-tooltip>
+          </q-btn>
+
+          <q-btn
+            v-for="bc in barcodeTypes"
+            :key="bc.type"
+            flat
+            dense
+            square
+            :icon="bc.icon"
+            class="q-mb-xs"
+            @click="addField(bc.type)"
+          >
+            <q-tooltip anchor="center right" self="center left" :offset="[10, 0]">
+              {{ bc.label }}
+            </q-tooltip>
+          </q-btn>
+        </div>
+
+        <div id="pdf-designer" class="pdf-designer-container" />
+      </div>
       </div>
 
       <input
@@ -136,10 +151,10 @@ import BaseModalScreen from '@/components/BaseModalScreen.vue';
 
 const barcodeTypes = [
   { type: 'qrcode', label: 'QR Code', icon: 'mdi-qrcode' },
+  { type: 'gs1datamatrix', label: 'DataMatrix', icon: 'mdi-data-matrix' },
   { type: 'ean13', label: 'EAN-13', icon: 'mdi-barcode' },
   { type: 'code39', label: 'Code 39', icon: 'mdi-barcode' },
   { type: 'code128', label: 'Code 128', icon: 'mdi-barcode' },
-  { type: 'gs1datamatrix', label: 'DataMatrix', icon: 'mdi-barcode' },
   { type: 'japanpost', label: 'Japan Post', icon: 'mdi-barcode' },
   { type: 'nw7', label: 'NW-7', icon: 'mdi-barcode' },
   { type: 'itf14', label: 'ITF-14', icon: 'mdi-barcode' },
@@ -392,13 +407,28 @@ function cancelRename() {
 </script>
 
 <style scoped>
-.pdf-designer-container {
+.pdf-designer-wrapper {
   flex: 1;
   min-height: 0;
   position: relative;
 }
 
-/* Hide pdfme left sidebar (45px icon bar) so our toolbar is the only add-field UI */
+.custom-left-sidebar {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 100;
+  overflow-y: auto;
+}
+
+.pdf-designer-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+/* Hide pdfme left sidebar (45px icon bar) so our custom sidebar replaces it */
 .pdf-designer-container :deep([class*="LeftSidebar"]),
 .pdf-designer-container :deep([class*="left-sidebar"]),
 .pdf-designer-container :deep(> div > div:first-child[style*="width: 45px"]),

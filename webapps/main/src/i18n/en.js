@@ -664,6 +664,7 @@ export default {
     },
 
     downloadWillBegin: 'Your download will begin shortly!',
+    requiredFieldsEmpty: '{count} required field(s) are empty. Please fill them before continuing.',
   },
   print_template: 'Template | Templates',
   print_template_confirm_delete_question:
@@ -681,6 +682,8 @@ export default {
   },
   print_template_preview: 'Preview template',
   print_template_rename: 'Rename template',
+  print_template_fields: 'Fields',
+  print_template_barcodes: 'Barcodes',
   procedure: 'procedure',
   process: 'process',
   processing_cost: 'processing cost',

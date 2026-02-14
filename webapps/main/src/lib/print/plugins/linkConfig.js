@@ -65,7 +65,7 @@ export function createLinkSchema(customFields = [], activeSchema = {}) {
   const isPreset = activeSchema?.linkType === 'preset';
   const isCustomField = activeSchema?.linkType === 'custom_field';
   const isNone = !activeSchema?.linkType || activeSchema?.linkType === 'none';
-  
+
   // Determine options based on link type
   let linkValueOptions = [];
   let linkValueTitle = 'Link Value';
@@ -92,7 +92,7 @@ export function createLinkSchema(customFields = [], activeSchema = {}) {
   const currentValue = activeSchema?.linkValue || '';
   const isValueValid = linkValueOptions.some(opt => opt.value === currentValue);
   const effectiveValue = (isNone || !isValueValid) ? '' : currentValue;
-  
+
   // Also clear extraPath if linkValue is being cleared
   const needsExtraPath = isPreset && effectiveValue && effectiveValue.endsWith('.extra');
 
