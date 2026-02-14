@@ -34,6 +34,9 @@ Detailed documentation of the application's core capabilities, mapping to `backe
 #### Master Data (`/domains/master-data`)
 - Products, BOMs, and Process Definitions.
 
+#### Print
+- [Print Templates (pdfme v5)](print-templates.md) — Template designer, field linking (preset/custom/extra), and v5 field properties (`readOnly`, `required`, `extraPath`).
+
 ### 📘 Guides & Standards
 - [Development Setup](guides/setup-dev.md) - Getting started with Docker and local env.
 - [Testing Strategy](guides/testing-strategy.md) - How to write and run tests.
