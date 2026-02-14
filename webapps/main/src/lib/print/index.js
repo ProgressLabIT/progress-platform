@@ -5,22 +5,9 @@ import { useStore } from 'vuex';
 import { generate } from '@pdfme/generator';
 import PrintDialog from '@/components/PrintDialog.vue';
 import { usePrintTemplates } from '@/composables/print-template';
-import { linkedText, linkedImage, linkedBarcodes } from '@/plugins';
+import { buildPlugins } from '@/lib/print/plugins';
 
-const pdfmePlugins = {
-  text: linkedText,
-  image: linkedImage,
-  qrcode: linkedBarcodes.qrcode,
-  ean13: linkedBarcodes.ean13,
-  code39: linkedBarcodes.code39,
-  code128: linkedBarcodes.code128,
-  gs1datamatrix: linkedBarcodes.gs1datamatrix,
-  japanpost: linkedBarcodes.japanpost,
-  nw7: linkedBarcodes.nw7,
-  itf14: linkedBarcodes.itf14,
-  upca: linkedBarcodes.upca,
-  upce: linkedBarcodes.upce,
-};
+const pdfmePlugins = buildPlugins([]);
 
 function normalizePageSchema(pageSchema) {
   if (!pageSchema) return [];

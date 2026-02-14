@@ -97,7 +97,7 @@
 import { exportFile } from 'quasar';
 import { generate } from '@pdfme/generator';
 import BrowserPrint, { Printer } from 'browserprint-es';
-import { linkedText, linkedImage, linkedBarcodes } from '@/plugins';
+import { linkedText, linkedImage, linkedBarcodes } from '@/lib/print/plugins';
 import QuantitySelector from '@/components/QuantitySelector.vue';
 
 const pdfmePlugins = {

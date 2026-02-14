@@ -13,54 +13,98 @@
     </template>
 
     <template #content>
-      <div id="pdf-designer" class="absolute-full" />
-
+      <div class="column full-height" style="min-height: 0">
+      <!-- Toolbar: name, description, field buttons, actions (only when workingTemplate is set to avoid reading .name on undefined) -->
       <div
-        class="absolute-top-left full-height scroll q-pa-md"
-        style="min-width: 300px"
+        v-if="workingTemplate"
+        class="row q-pa-md q-col-gutter-md items-center surface1"
+        style="border-bottom: 1px solid rgba(0,0,0,0.12)"
       >
-        <div class="q-gutter-md">
+        <div class="col-12 col-md-4">
           <q-input
             v-model="workingTemplate.name"
             filled
+            dense
             :label="$t('name')"
             stack-label
             class="shadow-3"
-            input-class="transparent"
           />
-
+        </div>
+        <div class="col-12 col-md-4">
           <q-input
             v-model="workingTemplate.description"
             autogrow
             filled
+            dense
             :label="$t('description')"
             stack-label
             class="shadow-3"
           />
-
-          <q-space />
-
+        </div>
+        <div class="col-12 col-md-4 row q-gutter-sm">
           <q-btn
             :label="$t('print_template_load_pdf')"
             color="primary"
             icon="mdi-upload"
+            dense
             @click="$refs.pdfFileInput.click()"
           />
-
           <q-btn
             :label="$t('save')"
             color="primary"
             icon="mdi-database-check"
+            dense
             @click="saveTemplate"
           />
         </div>
+
+        <div class="col-12">
+          <div class="row q-col-gutter-sm items-center">
+            <span class="text-caption text-low q-mr-sm">{{ $t('print_template_fields') }}:</span>
+            <q-btn
+              dense
+              size="sm"
+              outline
+              color="primary"
+              icon="mdi-format-text"
+              :label="$t('field_type_text')"
+              @click="addField('text')"
+            />
+            <q-btn
+              dense
+              size="sm"
+              outline
+              color="primary"
+              icon="mdi-image"
+              :label="$t('image')"
+              @click="addField('image')"
+            />
+            <q-separator vertical class="q-mx-sm" />
+            <span class="text-caption text-low q-mr-sm">{{ $t('print_template_barcodes') }}:</span>
+            <q-btn
+              v-for="bc in barcodeTypes"
+              :key="bc.type"
+              dense
+              size="sm"
+              flat
+              color="primary"
+              :icon="bc.icon"
+              @click="addField(bc.type)"
+            >
+              <q-tooltip>{{ bc.label }}</q-tooltip>
+            </q-btn>
+          </div>
+        </div>
+      </div>
+
+      <div id="pdf-designer" class="pdf-designer-container" />
       </div>
 
       <input
         ref="pdfFileInput"
         type="file"
         accept="application/pdf"
-        style="opacity: 0"
+        style="opacity: 0; position: absolute; pointer-events: none"
         @change="uploadPdf($event.target.files[0])"
       />
 
@@ -80,14 +124,28 @@
 import { BLANK_PDF } from '@pdfme/common';
 import { Designer } from '@pdfme/ui';
 import { cloneDeep } from 'lodash';
-import { computed, ref, watch, toRaw } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useStore } from 'vuex';
+import { Dark } from 'quasar';
 import { api } from '@/boot/axios';
-import { linkedText, linkedImage, linkedBarcodes } from '@/plugins';
+import { buildPlugins } from '@/lib/print/plugins';
 import BaseActionCard from '@/components/BaseActionCard.vue';
 import BaseDialog from '@/components/BaseDialog.vue';
 import BaseModalScreen from '@/components/BaseModalScreen.vue';
+
+const barcodeTypes = [
+  { type: 'qrcode', label: 'QR Code', icon: 'mdi-qrcode' },
+  { type: 'ean13', label: 'EAN-13', icon: 'mdi-barcode' },
+  { type: 'code39', label: 'Code 39', icon: 'mdi-barcode' },
+  { type: 'code128', label: 'Code 128', icon: 'mdi-barcode' },
+  { type: 'gs1datamatrix', label: 'DataMatrix', icon: 'mdi-barcode' },
+  { type: 'japanpost', label: 'Japan Post', icon: 'mdi-barcode' },
+  { type: 'nw7', label: 'NW-7', icon: 'mdi-barcode' },
+  { type: 'itf14', label: 'ITF-14', icon: 'mdi-barcode' },
+  { type: 'upca', label: 'UPC-A', icon: 'mdi-barcode' },
+  { type: 'upce', label: 'UPC-E', icon: 'mdi-barcode' },
+];
 
 const props = defineProps({
   show: {
@@ -103,12 +161,13 @@ const props = defineProps({
 const emit = defineEmits(['close', 'saved']);
 
 const store = useStore();
+const customFields = computed(() => store.state.form?.customFields ?? []);
 
 watch(
   () => props.show,
-  (show) => {
+  async (show) => {
     if (show) {
-      store.dispatch('getCustomFields');
+      await store.dispatch('getCustomFields');
       initTemplate();
       setTimeout(initDesigner, 500);
     }
@@ -143,44 +202,121 @@ const emptyTemplate = computed(() => ({
 const mode = ref();
 const workingTemplate = ref();
 
-const pdfmePlugins = {
-  text: linkedText,
-  image: linkedImage,
-  qrcode: linkedBarcodes.qrcode,
-  ean13: linkedBarcodes.ean13,
-  code39: linkedBarcodes.code39,
-  code128: linkedBarcodes.code128,
-  gs1datamatrix: linkedBarcodes.gs1datamatrix,
-  japanpost: linkedBarcodes.japanpost,
-  nw7: linkedBarcodes.nw7,
-  itf14: linkedBarcodes.itf14,
-  upca: linkedBarcodes.upca,
-  upce: linkedBarcodes.upce,
-};
+/** Ant Design theme tokens mapped from app theme for pdfme Designer. */
+const pdfmeTheme = computed(() => {
+  const themeColors = store.getters.theme;
+  const isDark = Dark.isActive;
+  const textHigh = isDark ? 'rgba(255,255,255,0.87)' : 'rgba(30,52,58,1)';
+  const textSecondary = isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)';
+  const textTertiary = isDark ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.45)';
+  const textQuaternary = isDark ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.25)';
+  const inputBg = themeColors.surface2 || (isDark ? '#1F2A2D' : '#ffffff');
+  return {
+    token: {
+      colorPrimary: themeColors.blue || '#22AED1',
+      colorBgContainer: inputBg,
+      colorBgElevated: themeColors.surface2 || (isDark ? '#242E31' : '#ffffff'),
+      colorBgLayout: themeColors.surface1 || (isDark ? '#131E21' : '#eeeeee'),
+      colorText: textHigh,
+      colorTextSecondary: textSecondary,
+      colorTextTertiary: textTertiary,
+      colorTextQuaternary: textQuaternary,
+      colorBorder: themeColors.grey || '#707070',
+      colorSuccess: themeColors.green || '#0DAB76',
+      colorError: themeColors.red || '#E71D36',
+      colorWarning: themeColors.orange || '#FF9F1C',
+    },
+    components: {
+      Input: {
+        colorText: textHigh,
+        colorTextPlaceholder: textQuaternary,
+        colorBgContainer: inputBg,
+        colorBorder: themeColors.grey || '#707070',
+      },
+      Select: {
+        colorText: textHigh,
+        colorTextPlaceholder: textQuaternary,
+        colorBgContainer: inputBg,
+        colorBgElevated: themeColors.surface2 || (isDark ? '#242E31' : '#ffffff'),
+        colorBorder: themeColors.grey || '#707070',
+        optionSelectedBg: themeColors.blue || '#22AED1',
+      },
+      InputNumber: {
+        colorText: textHigh,
+        colorTextPlaceholder: textQuaternary,
+        colorBgContainer: inputBg,
+        colorBorder: themeColors.grey || '#707070',
+      },
+    },
+  };
+});
 
 /** @type {import('@pdfme/ui').Designer} */
 let designer;
+
+function getPlugins() {
+  return buildPlugins(customFields.value);
+}
+
 function initDesigner() {
   const container = document.getElementById('pdf-designer');
   if (!container) return;
 
   const rawTemplate = workingTemplate.value.template;
   const schemasV5 = schemasToV5(rawTemplate.schemas);
-  const cleanTemplate = {
+  const cleanTemplate = JSON.parse(JSON.stringify({
     basePdf: rawTemplate.basePdf,
-    schemas: toRaw(schemasV5),
-  };
+    schemas: schemasV5.length > 0 ? schemasV5 : [[]],
+  }));
+
+  const plugins = getPlugins();
 
   designer = new Designer({
     domContainer: container,
     template: cleanTemplate,
-    options: { lang: locale.value },
-    plugins: pdfmePlugins,
+    options: {
+      lang: locale.value,
+      theme: pdfmeTheme.value,
+    },
+    plugins,
   });
 
   designer.onChangeTemplate((template) => {
     workingTemplate.value.template = cloneDeep(template);
   });
+}
+
+watch(pdfmeTheme, (newTheme) => {
+  if (designer) {
+    designer.updateOptions({ theme: newTheme });
+  }
+});
+
+function addField(type) {
+  if (!designer) return;
+  const template = designer.getTemplate();
+  const schemas = template.schemas && template.schemas.length > 0 ? [...template.schemas] : [[]];
+  const pageIndex = 0;
+  const pageSchemas = Array.isArray(schemas[pageIndex]) ? [...schemas[pageIndex]] : [];
+  const plugins = getPlugins();
+  const plugin = plugins[type];
+  if (!plugin?.propPanel?.defaultSchema) return;
+
+  const defaultSchema = cloneDeep(plugin.propPanel.defaultSchema);
+  const baseName = type === 'text' ? 'text' : type === 'image' ? 'image' : type;
+  const uniqueName = `${baseName}_${Date.now()}`;
+  defaultSchema.name = uniqueName;
+  defaultSchema.position = defaultSchema.position || { x: 20, y: 20 };
+  defaultSchema.position = {
+    x: defaultSchema.position.x,
+    y: defaultSchema.position.y + pageSchemas.length * 12,
+  };
+  if (defaultSchema.width == null) defaultSchema.width = type === 'image' ? 60 : 80;
+  if (defaultSchema.height == null) defaultSchema.height = type === 'image' ? 40 : 10;
+
+  pageSchemas.push(defaultSchema);
+  schemas[pageIndex] = pageSchemas;
+  designer.updateTemplate({ ...template, schemas });
 }
 
 function closeDesigner() {
@@ -206,10 +342,29 @@ async function uploadPdf(file) {
   };
 }
 
+/** Migrate old customFieldKey to linkValue for backward compatibility */
+function migrateTemplateSchema(template) {
+  if (!template?.template?.schemas) return template;
+
+  const schemas = template.template.schemas;
+  schemas.forEach((pageSchema) => {
+    const fields = Array.isArray(pageSchema) ? pageSchema : Object.values(pageSchema);
+    fields.forEach((field) => {
+      // Migrate old customFieldKey to new unified linkValue field
+      if (field.customFieldKey && !field.linkValue) {
+        field.linkValue = field.customFieldKey;
+        delete field.customFieldKey;
+      }
+    });
+  });
+
+  return template;
+}
+
 function initTemplate() {
   if (props.editTemplate) {
     mode.value = 'edit';
-    workingTemplate.value = cloneDeep(props.editTemplate);
+    workingTemplate.value = migrateTemplateSchema(cloneDeep(props.editTemplate));
   } else {
     mode.value = 'new';
     workingTemplate.value = cloneDeep(emptyTemplate.value);
@@ -235,3 +390,28 @@ function cancelRename() {
   showRename.value = false;
 }
 </script>
+
+<style scoped>
+.pdf-designer-container {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+}
+
+/* Hide pdfme left sidebar (45px icon bar) so our toolbar is the only add-field UI */
+.pdf-designer-container :deep([class*="LeftSidebar"]),
+.pdf-designer-container :deep([class*="left-sidebar"]),
+.pdf-designer-container :deep(> div > div:first-child[style*="width: 45px"]),
+.pdf-designer-container :deep(> div > div:first-child[style*="width:45px"]) {
+  display: none !important;
+}
+</style>
+
+<style>
+/* Ant Design Select/Cascader dropdowns are portalled to document.body with z-index ~1050.
+   Quasar q-dialog uses z-index ~6000. Override so pdfme prop-panel dropdowns are visible. */
+.ant-select-dropdown,
+.ant-cascader-dropdown {
+  z-index: 9999 !important;
+}
+</style>

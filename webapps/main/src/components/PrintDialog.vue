@@ -199,26 +199,13 @@ import { useDialogPluginComponent } from 'quasar';
 import { nextTick, ref, reactive, toRaw } from 'vue';
 import VuePdfEmbed from 'vue-pdf-embed';
 import { api } from '@/boot/axios';
-import { linkedText, linkedImage, linkedBarcodes } from '@/plugins';
+import { buildPlugins } from '@/lib/print/plugins';
 import BaseDialog from '@/components/BaseDialog.vue';
 import LoadingSignal from '@/components/LoadingSignal.vue';
 import PrintTemplateCard from '@/components/PrintTemplateCard.vue';
 import BaseAutocompleteSerial from './BaseAutocompleteSerial.vue';
 
-const pdfmePlugins = {
-  text: linkedText,
-  image: linkedImage,
-  qrcode: linkedBarcodes.qrcode,
-  ean13: linkedBarcodes.ean13,
-  code39: linkedBarcodes.code39,
-  code128: linkedBarcodes.code128,
-  gs1datamatrix: linkedBarcodes.gs1datamatrix,
-  japanpost: linkedBarcodes.japanpost,
-  nw7: linkedBarcodes.nw7,
-  itf14: linkedBarcodes.itf14,
-  upca: linkedBarcodes.upca,
-  upce: linkedBarcodes.upce,
-};
+const pdfmePlugins = buildPlugins([]);
 
 /** Normalize page schema to array of { name, type, ... } (v5 format). Supports v2/v4 (keyed object) and v5 (array). */
 function normalizePageSchema(pageSchema) {
@@ -253,8 +240,12 @@ function getFieldNamesAndLinks(data) {
       if (name) {
         fieldNames.push(name);
         if (field.linkType && field.linkType !== 'none') {
-          const value = field.linkType === 'preset' ? field.linkValue : field.customFieldKey;
-          linkByField[name] = { type: field.linkType, value: value || '' };
+          // Support both new linkValue field and old customFieldKey for backward compatibility
+          let value = field.linkValue || field.customFieldKey || '';
+          if (field.linkType === 'preset' && field.extraPath) {
+            value = value ? `${value}.${field.extraPath}` : field.extraPath;
+          }
+          linkByField[name] = { type: field.linkType, value };
         }
       }
     }
