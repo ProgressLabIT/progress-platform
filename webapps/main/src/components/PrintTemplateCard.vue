@@ -22,6 +22,7 @@
         size="sm"
         flat
         round
+        color="high"
         icon="mdi-file-search-outline"
         @click="showTemplatePreview"
       >
@@ -33,6 +34,7 @@
         flat
         round
         icon="mdi-printer"
+        color="high"
         class="q-ml-sm"
         @click.stop="openPrintDialog"
       >
@@ -44,6 +46,7 @@
         flat
         round
         size="sm"
+        color="high"
         icon="mdi-pencil"
         @click="editTemplate"
       >
@@ -54,6 +57,7 @@
         flat
         round
         size="sm"
+        color="high"
         icon="mdi-delete"
         @click="showDelete = true"
       >
@@ -67,6 +71,7 @@
         flat
         round
         size="sm"
+        color="high"
         icon="mdi-close"
         @click="showUnlink = true"
       >
