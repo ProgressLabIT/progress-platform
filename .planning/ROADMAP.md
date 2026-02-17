@@ -23,7 +23,12 @@
   3. Existing database records are not modified by any migration or batch process
   4. Developers can import `float_equals`, `float_less_than`, `float_greater_than`, and `round_float` from a single utility module
   5. Module docstrings and code comments document the 6-decimal / 1e-6 epsilon standard
-**Plans**: TBD
+
+**Plans:** 2 plans in 1 wave
+
+Plans:
+- [ ] 01-01-PLAN.md — Float precision utilities (config + comparison functions)
+- [ ] 01-02-PLAN.md — Database serializer rounding (modify encoder with recursive rounding)
 
 ### Phase 2: Business Logic Migration
 **Goal**: Business logic comparisons use tolerance-based equality instead of raw float comparison
@@ -50,10 +55,10 @@
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Precision Foundation | 0/? | Not started | - |
+| 1. Precision Foundation | 0/2 | Planning complete | - |
 | 2. Business Logic Migration | 0/? | Not started | - |
 | 3. Frontend Display Cleanup | 0/? | Not started | - |
 
 ---
 *Roadmap created: 2026-02-17*
-*Last updated: 2026-02-17*
+*Last updated: 2026-02-17 (Phase 1 planning complete)*
