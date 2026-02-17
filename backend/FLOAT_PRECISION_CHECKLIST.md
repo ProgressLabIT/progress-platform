@@ -4,28 +4,25 @@ This document lists calculation sites where `round_float()` should be used to pr
 
 ## Critical Pattern: Division Operations
 
-### Progress Calculations
-These calculate job/batch progress percentages and must use `round_float()`:
+### Progress Calculations (Integer Results)
+These calculate job/batch progress percentages as integers - use `round()` directly:
 
-1. **backend/api/events/production/batch_completed.py:165**
+1. **backend/api/events/production/batch_completed.py:165** ✓
    ```python
    new_progress = round(100 * new_job_qt_completed / self.job.qt_planned)
-   # Should be:
-   new_progress = int(round_float(100 * new_job_qt_completed / self.job.qt_planned))
+   # Integer result - round() is sufficient
    ```
 
-2. **backend/api/events/admin/batch_canceled.py:95**
+2. **backend/api/events/admin/batch_canceled.py:95** ✓
    ```python
    progress = round(100 * self.job.qt_completed / self.job.qt_planned)
-   # Should be:
-   progress = int(round_float(100 * self.job.qt_completed / self.job.qt_planned))
+   # Integer result - round() is sufficient
    ```
 
-3. **backend/api/events/admin/progress_override_requested.py:296**
+3. **backend/api/events/admin/progress_override_requested.py:296** ✓
    ```python
    new_job_progress = round(100 * self.info.new_job_qt_completed / self.job.qt_planned)
-   # Should be:
-   new_job_progress = int(round_float(100 * self.info.new_job_qt_completed / self.job.qt_planned))
+   # Integer result - round() is sufficient
    ```
 
 ### Ratio/Percentage Calculations
@@ -117,9 +114,9 @@ These are database queries with division - harder to fix:
 
 ## Implementation Plan
 
-1. Add `from utils.float_precision import round_float` to each affected file
-2. Replace `round(... / ...)` with `int(round_float(... / ...))`  for integer fields
-3. Replace bare `... / ...` with `round_float(... / ...)` for float fields
+1. Add `from utils.float_precision import round_float` to affected files (for float results only)
+2. **For integer results**: Keep `round(... / ...)` - simpler and sufficient
+3. **For float results**: Use `round_float(... / ...)` - provides 6-decimal precision control
 4. Test each change to ensure behavior is preserved
 
 ## Files to Update

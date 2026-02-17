@@ -93,7 +93,7 @@ class BatchCanceledEvent(BaseAdmin):
       _key = self.job.key,
       active_batch_key = None,
       active_batch_qt = 0,
-      progress = int(round_float(100 * self.job.qt_completed / self.job.qt_planned))
+      progress = round(100 * self.job.qt_completed / self.job.qt_planned)
     )
 
     # Reset as created if batch is first

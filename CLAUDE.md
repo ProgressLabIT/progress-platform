@@ -106,13 +106,25 @@ Models with validators will round float values when data flows through Pydantic 
 
 #### 2. Manual Rounding at Calculation Sites (Required)
 **When to use `round_float()`**:
-- Any division operation: `progress = completed / total` → `progress = round_float(completed / total)`
-- Progress calculations: `100 * completed / planned` → `int(round_float(100 * completed / planned))`
-- Ratio/percentage calculations: `quantity / total_quantity`
-- Unit cost/value calculations: `total_cost / quantity`
+- Division operations that produce **float values**: `ratio = round_float(completed / total)`
+- Percentage/ratio calculations: `booking_pct = round_float(quantity / total_quantity)`
+- Unit cost/value calculations: `unit_cost = round_float(total_cost / quantity)`
 - **Especially** when the result will be stored in a raw dictionary for database update
 
+**When to use `round()` or `int()`**:
+- Division operations that produce **integer values**: `progress = round(100 * completed / total)`
+- Direct integer conversions where precision doesn't matter: `count = int(value)`
+
 **Import**: `from utils.float_precision import round_float`
+
+**Pattern**:
+```python
+# Float result - use round_float()
+ratio = round_float(quantity / total)
+
+# Integer result - use round()
+progress = round(100 * completed / planned)
+```
 
 **Why**: Many database writes use raw dictionaries (not Pydantic models), bypassing automatic validation. Manual rounding at calculation sites ensures these values are clean before entering the database.
 

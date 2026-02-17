@@ -57,7 +57,7 @@ class BaseJobEvent:
 
     job_update=dict(
       _key = self.job.key,
-      progress = int(round_float(total_progress * 100))
+      progress = round(total_progress * 100)
     )
 
     job = Job(**self.tx.collection('Job').update(job_update, return_new=True)['new'])

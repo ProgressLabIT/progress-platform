@@ -294,7 +294,7 @@ class ProgressOverrideRequestedEvent(BaseAdmin):
     - Adds back to queue if reopening
     """
 
-    new_job_progress = int(round_float(100 * self.info.new_job_qt_completed / self.job.qt_planned))
+    new_job_progress = round(100 * self.info.new_job_qt_completed / self.job.qt_planned)
 
     self.job_update = dict(
       _key=self.job.key,

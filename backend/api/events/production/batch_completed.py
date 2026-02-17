@@ -163,7 +163,7 @@ class BatchCompletedEvent(BaseProductionEvent):
     # JOB HAS REMAINING QUANTITY -> UPDATE JOB AND CREATE NEW BATCH IF NEEDED
     # ===================================================================
     else:
-      new_progress = int(round_float(100 * new_job_qt_completed / self.job.qt_planned))
+      new_progress = round(100 * new_job_qt_completed / self.job.qt_planned)
 
       job_update = dict(
         _key = self.info.job_key,
