@@ -7,8 +7,8 @@
 
 ## Phases
 
-- [ ] **Phase 1: Precision Foundation** - Serializer rounding, comparison utilities, and helper functions
-- [ ] **Phase 2: Business Logic Migration** - Migrate float comparisons in events and domain logic to tolerance utilities
+- [x] **Phase 1: Precision Foundation** - Serializer rounding, comparison utilities, and helper functions
+- [x] **Phase 2: Business Logic Migration** - Migrate float comparisons in events and domain logic to tolerance utilities
 - [ ] **Phase 3: Frontend Display Cleanup** - Clean numeric formatting across all Vue components
 
 ## Phase Details
@@ -42,9 +42,9 @@ Plans:
 **Plans:** 3 plans in 2 waves
 
 Plans:
-- [ ] 02-01-PLAN.md — Add convenience comparison functions (float_gte, float_lte)
-- [ ] 02-02-PLAN.md — Migrate WIP event comparisons (wip_booked, wip_unbooked, wip_removed)
-- [ ] 02-03-PLAN.md — Migrate production & inventory comparisons (endpoints, events)
+- [x] 02-01-PLAN.md — Add convenience comparison functions (float_gte, float_lte)
+- [x] 02-02-PLAN.md — Migrate WIP event comparisons (wip_booked, wip_unbooked, wip_removed)
+- [x] 02-03-PLAN.md — Migrate production & inventory comparisons (endpoints, events)
 
 ### Phase 3: Frontend Display Cleanup
 **Goal**: Users see clean, readable numbers everywhere in the UI
@@ -62,9 +62,9 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Precision Foundation | 2/2 | ✅ Complete | 2026-02-17 |
-| 2. Business Logic Migration | 0/3 | Planning complete | - |
+| 2. Business Logic Migration | 3/3 | ✅ Complete | 2026-02-17 |
 | 3. Frontend Display Cleanup | 0/? | Not started | - |
 
 ---
 *Roadmap created: 2026-02-17*
-*Last updated: 2026-02-17 (Phase 1 complete, Phase 2 planning complete)*
+*Last updated: 2026-02-17 (Phases 1-2 complete, Phase 3 not started)*
