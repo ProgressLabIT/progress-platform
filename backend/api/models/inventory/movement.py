@@ -4,12 +4,13 @@ from typing import Any
 from typing import Annotated
 
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator, StringConstraints, field_serializer
+from pydantic import BaseModel, ConfigDict, Field, model_validator, StringConstraints, field_serializer, field_validator
 
 from models.base_models import ArangoDocument, FlexModel
 #from utils.counter import _generate_counter
 from utils.dt import timestamp
 from utils.search import WildcardString
+from utils.float_precision import round_float
 
 
 
@@ -68,6 +69,14 @@ class InventoryMovementNew(FlexModel):
   reason: str | None = None
   user_key: str | None = None
   extra: Any = None
+
+  @field_validator('qt_planned', 'qt_confirmed', mode='before')
+  @classmethod
+  def round_float_fields(cls, v):
+    """Round float fields to prevent floating-point precision noise."""
+    if isinstance(v, float):
+      return round_float(v)
+    return v
 
   @model_validator(mode='before')
   def set_implicit_values(cls, values):
@@ -149,6 +158,14 @@ class InventoryMovement(ArangoDocument): # edge collection movement
 
   extra: Any = None
 
+  @field_validator('qt_planned', 'qt_confirmed', mode='before')
+  @classmethod
+  def round_float_fields(cls, v):
+    """Round float fields to prevent floating-point precision noise."""
+    if isinstance(v, float):
+      return round_float(v)
+    return v
+
   # Transfer routes must have at least two positions. Positions must be repeat.
   @model_validator(mode='after')
   def validate(self):
@@ -182,6 +199,14 @@ class MovementSplitData(BaseModel):
   serial_code: str | None = None
   qt_confirmed: float
   qt_planned: float | None = None
+
+  @field_validator('qt_confirmed', 'qt_planned', mode='before')
+  @classmethod
+  def round_float_fields(cls, v):
+    """Round float fields to prevent floating-point precision noise."""
+    if isinstance(v, float):
+      return round_float(v)
+    return v
 
   @model_validator(mode='after')
   def set_qt_planned(self):

@@ -1,8 +1,9 @@
 from datetime import datetime
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from utils.search import WildcardString
+from utils.float_precision import round_float
 
 
 # ========================================================
@@ -28,6 +29,14 @@ class Inventory(BaseModel): # edge is_in_position
 
   value: float | None = None
   extra: Any = None
+
+  @field_validator('quantity', 'value', mode='before')
+  @classmethod
+  def round_float_fields(cls, v):
+    """Round float fields to prevent floating-point precision noise."""
+    if isinstance(v, float):
+      return round_float(v)
+    return v
 
 class InventoryPathItem(BaseModel):
   position_key: str | None = None
