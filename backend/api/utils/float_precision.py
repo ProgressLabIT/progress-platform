@@ -13,13 +13,26 @@ comparison treats these as equal.
 
 **Standard epsilon:** 1e-6 (absolute tolerance, not relative)
 
+**Exports:**
+    - float_equals: Tolerance-based equality
+    - float_less_than: Tolerance-based less-than
+    - float_greater_than: Tolerance-based greater-than
+    - float_gte: Convenience for >= with tolerance
+    - float_lte: Convenience for <= with tolerance
+    - round_float: Config-driven rounding
+
 **Usage examples:**
 ```
-from utils.float_precision import float_equals, round_float
+from utils.float_precision import float_equals, float_gte, round_float
 
 # Comparison
 if float_equals(calculated_qty, expected_qty):
     # Quantities match within tolerance
+    pass
+
+# Convenience comparisons
+if float_gte(completed, planned):
+    # Job is complete
     pass
 
 # Rounding for display or storage
@@ -141,6 +154,62 @@ def float_greater_than(a: float, b: float, epsilon: float = 1e-6) -> bool:
             mark_complete()
     """
     return a > b and not float_equals(a, b, epsilon)
+
+
+def float_gte(a: float, b: float, epsilon: float = 1e-6) -> bool:
+    """
+    Check if a is greater than or equal to b with tolerance.
+
+    Convenience function equivalent to: float_greater_than(a, b) or float_equals(a, b)
+
+    Args:
+        a: First value
+        b: Second value
+        epsilon: Tolerance for comparison (default: 1e-6)
+
+    Returns:
+        True if a >= b within tolerance, False otherwise
+
+    Examples:
+        >>> float_gte(100.0, 99.999999)
+        True
+        >>> float_gte(99.5, 100.0)
+        False
+        >>> float_gte(100.0, 100.0)
+        True
+
+    Note: Use this for business logic like completion checks where
+    values like 99.999999 should be considered >= 100.0
+    """
+    return float_greater_than(a, b, epsilon) or float_equals(a, b, epsilon)
+
+
+def float_lte(a: float, b: float, epsilon: float = 1e-6) -> bool:
+    """
+    Check if a is less than or equal to b with tolerance.
+
+    Convenience function equivalent to: float_less_than(a, b) or float_equals(a, b)
+
+    Args:
+        a: First value
+        b: Second value
+        epsilon: Tolerance for comparison (default: 1e-6)
+
+    Returns:
+        True if a <= b within tolerance, False otherwise
+
+    Examples:
+        >>> float_lte(99.999999, 100.0)
+        True
+        >>> float_lte(100.5, 100.0)
+        False
+        >>> float_lte(100.0, 100.0)
+        True
+
+    Note: Use this for validation logic where values within epsilon
+    should be considered equal or less than the threshold.
+    """
+    return float_less_than(a, b, epsilon) or float_equals(a, b, epsilon)
 
 
 def round_float(value: float, decimals: int = None) -> float:
