@@ -1,4 +1,5 @@
 from models.production import Job
+from utils.float_precision import round_float
 
 # ===================================================================
 # Job
@@ -46,17 +47,17 @@ class BaseJobEvent:
   def update_job_step_progress(self):
     self._get_job_data()
 
-    current_batch_total_value = self.job.active_batch_qt / self.job.qt_planned
+    current_batch_total_value = round_float(self.job.active_batch_qt / self.job.qt_planned)
 
     steps_count = self.get_job_steps_count()
-    step_progress_value = current_batch_total_value / steps_count
+    step_progress_value = round_float(current_batch_total_value / steps_count)
     step_done_count = self.get_batch_step_done_count()
-    completed_qt_progress = self.job.qt_completed / self.job.qt_planned
+    completed_qt_progress = round_float(self.job.qt_completed / self.job.qt_planned)
     total_progress = completed_qt_progress + (step_progress_value * step_done_count)
 
     job_update=dict(
       _key = self.job.key,
-      progress = round(total_progress * 100)
+      progress = int(round_float(total_progress * 100))
     )
 
     job = Job(**self.tx.collection('Job').update(job_update, return_new=True)['new'])
