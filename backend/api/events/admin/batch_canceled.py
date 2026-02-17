@@ -5,6 +5,7 @@ from events.serial.serial_unlinked import SerialUnlinkedEvent
 from events.serial.serial_deleted import SerialDeletedEvent
 from models.event import EventInfoModel, EventType
 from utils.exceptions import JobIsActiveError, JobHasNoActiveBatchError
+from utils.float_precision import round_float
 from utils.serial import Queries as SerialQueries
 from utils.traceability import Queries as TraceabilityQueries
 
@@ -92,7 +93,7 @@ class BatchCanceledEvent(BaseAdmin):
       _key = self.job.key,
       active_batch_key = None,
       active_batch_qt = 0,
-      progress = round(100 * self.job.qt_completed / self.job.qt_planned)
+      progress = int(round_float(100 * self.job.qt_completed / self.job.qt_planned))
     )
 
     # Reset as created if batch is first

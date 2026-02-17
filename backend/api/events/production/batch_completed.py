@@ -20,6 +20,7 @@ from models.inventory import InventoryMovementReferences, InventoryMovementType
 from models.production import Job
 from models.traceability import *
 from utils.counter import _generate_counter
+from utils.float_precision import round_float
 from utils.production import Queries as ProductionQueries
 from utils.traceability import Queries as TraceabilityQueries
 from utils.serial import Queries as SerialQueries
@@ -162,7 +163,7 @@ class BatchCompletedEvent(BaseProductionEvent):
     # JOB HAS REMAINING QUANTITY -> UPDATE JOB AND CREATE NEW BATCH IF NEEDED
     # ===================================================================
     else:
-      new_progress = round(100 * new_job_qt_completed / self.job.qt_planned)
+      new_progress = int(round_float(100 * new_job_qt_completed / self.job.qt_planned))
 
       job_update = dict(
         _key = self.info.job_key,

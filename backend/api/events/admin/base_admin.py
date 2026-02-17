@@ -5,6 +5,7 @@ from events.production.base_production import BaseProductionEvent
 from models.production import WorkOrderFull, WorkStatus
 from models.event import EventInfoModel
 from pydantic import model_validator
+from utils.float_precision import round_float
 from utils.production import Queries as ProductionQueries
 from utils.traceability import Queries as TraceabilityQueries
 
@@ -53,7 +54,7 @@ class BaseAdmin(BaseProductionEvent):
         remaining_wip_to_remove -= current_wip['quantity']
       else:
         leftover_wip = current_wip['quantity'] - remaining_wip_to_remove
-        new_value = round(current_wip.get('value', 0) * leftover_wip / current_wip['quantity'], 4)
+        new_value = round_float(current_wip.get('value', 0) * leftover_wip / current_wip['quantity'])
         wip_update = dict(_key=current_wip['_key'], quantity=leftover_wip, value=new_value)
         self.tx.collection('wip').update(wip_update)
         remaining_wip_to_remove = 0

@@ -2,6 +2,7 @@ from events.production.base_production import BaseProductionEvent
 from models.event import EventInfoModel, EventType
 from models.traceability import WIP
 from utils.exceptions import WipNotAvailableError
+from utils.float_precision import round_float
 from utils.serial import Queries as SerialQueries
 from utils.traceability import Queries as TraceabilityQueries
 
@@ -56,7 +57,7 @@ class WIPBookedEvent(BaseProductionEvent):
 
         else:
           # Partially book batch for job
-          booking_percentage = self.info.quantity / wip.quantity
+          booking_percentage = round_float(self.info.quantity / wip.quantity)
           self.tx.collection('wip').update(dict(
             _key=wip.key,
             quantity=wip.quantity - self.info.quantity,

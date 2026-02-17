@@ -15,6 +15,7 @@ from utils.exceptions import (
 )
 from collections import deque
 
+from utils.float_precision import round_float
 from utils.production import Queries as ProductionQueries
 from utils.traceability import Queries as TraceabilityQueries
 
@@ -293,7 +294,7 @@ class ProgressOverrideRequestedEvent(BaseAdmin):
     - Adds back to queue if reopening
     """
 
-    new_job_progress = round(100 * self.info.new_job_qt_completed / self.job.qt_planned)
+    new_job_progress = int(round_float(100 * self.info.new_job_qt_completed / self.job.qt_planned))
 
     self.job_update = dict(
       _key=self.job.key,
@@ -545,7 +546,7 @@ class ProgressOverrideRequestedEvent(BaseAdmin):
       bind_vars=dict(job_key=self.job.key)
     ).next()
 
-    return avg_unit_processing_time
+    return round_float(avg_unit_processing_time) if avg_unit_processing_time else None
 
 
   # =================================================================================================
@@ -653,13 +654,13 @@ class ProgressOverrideRequestedEvent(BaseAdmin):
         # )
 
     # Calculate average hourly cost for the canceled work sessions
-    average_hourly_cost = 0 if not canceled_work_sessions else sum(ws.hourly_cost or 0 for ws in canceled_work_sessions) / len(canceled_work_sessions)
+    average_hourly_cost = 0 if not canceled_work_sessions else round_float(sum(ws.hourly_cost or 0 for ws in canceled_work_sessions) / len(canceled_work_sessions))
 
     # Create new work sessions with durations and hourly cost based on quantity ratios
     new_work_sessions = []
     total_handled_quantity = 0
     for batch in active_batches:
-        quantity_ratio = batch.qt_pass / self.info.new_job_qt_completed
+        quantity_ratio = round_float(batch.qt_pass / self.info.new_job_qt_completed)
         total_handled_quantity += batch.qt_pass
         work_session = WorkSession(
             batch_key=batch.key,

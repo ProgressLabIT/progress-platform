@@ -1,6 +1,7 @@
 from events.admin.base_admin import BaseAdmin, Queries
 from utils.dt import timestamp
 from utils.exceptions import JobIsActiveError, JobIsNotStartedError
+from utils.float_precision import round_float
 from models.production import Job, WorkStatus
 from models.event import EventType, EventInfoModel
 from models.traceability import Batch, WorkSession
@@ -58,7 +59,7 @@ class TimeOverrideRequested(BaseAdmin):
     for b in job_batches:
       try:
         # Consider also the active batch
-        batch_quota = b.qt_total / (self.job.qt_completed + self.job.active_batch_qt)
+        batch_quota = round_float(b.qt_total / (self.job.qt_completed + self.job.active_batch_qt))
       # Handle cases where there's active quantity but no completed quantity
       except ZeroDivisionError:
         batch_quota = 1
