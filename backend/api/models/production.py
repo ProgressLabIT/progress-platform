@@ -11,6 +11,7 @@ from models.product import TraceabilityLevel
 from models.form import SerialFormFieldValue
 from models.base_models import FlexModel, ArangoDocument
 from utils.dt import timestamp
+from utils.float_precision import round_float
 
 
 class TimeDeltaInfo(FlexModel):
@@ -85,6 +86,14 @@ class WorkOrderFull(ArangoDocument, WorkOrderNew):
 
   phase_sequence: list[str] = []
   wo_docs: list[ProductDoc] = []
+
+  @field_validator('qt_planned', 'qt_completed', 'material_cost', mode='before')
+  @classmethod
+  def round_float_fields(cls, v):
+    """Round float fields to prevent floating-point precision noise."""
+    if isinstance(v, float):
+      return round_float(v)
+    return v
 
 
 class RequiredAvailableQt(FlexModel):
@@ -168,12 +177,21 @@ class Job(FlexModel):
   #     raise ValueError("Progress must be between 0 and 100%")
   #   return v
 
+  @field_validator('qt_planned', 'qt_completed', 'active_batch_qt', mode='before')
+  @classmethod
+  def round_float_fields(cls, v):
+    """Round float fields to prevent floating-point precision noise."""
+    if isinstance(v, float):
+      return round_float(v)
+    return v
+
   @field_validator('qt_released')
   @classmethod
   def released_less_than_completed(cls, qt_released: float, info: ValidationInfo):
     if qt_released > info.data['qt_completed']:
       raise ValueError("Released quantity cannot exceed completed quantity")
-    return qt_released
+    # Round the validated value
+    return round_float(qt_released) if isinstance(qt_released, float) else qt_released
 
   # @validator('jobs_downstream', 'jobs_upstream', each_item=True)
   # def check_job_id_root(cls, job_id):

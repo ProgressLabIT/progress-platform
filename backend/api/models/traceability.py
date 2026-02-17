@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from models.form import FormFieldValue
 from models.base_models import FlexModel, ArangoEdge, ArangoDocument
+from utils.float_precision import round_float
 
 
 class StepStatus(str, Enum):
@@ -64,6 +65,14 @@ class Batch(FlexModel):
   canceled: str | None = None # Event id
   forced: str | None = None # Event id
 
+  @field_validator('qt_pass', 'qt_scrap', 'qt_total', 'unit_material_cost', 'value', mode='before')
+  @classmethod
+  def round_float_fields(cls, v):
+    """Round float fields to prevent floating-point precision noise."""
+    if isinstance(v, float):
+      return round_float(v)
+    return v
+
 
 class WorkSession(FlexModel):
   key: str | None = Field(None, alias="_key")
@@ -85,6 +94,14 @@ class WorkSession(FlexModel):
   canceled: str | None = None
   forced: str | None = None
 
+  @field_validator('hourly_cost', mode='before')
+  @classmethod
+  def round_float_fields(cls, v):
+    """Round float fields to prevent floating-point precision noise."""
+    if isinstance(v, float):
+      return round_float(v)
+    return v
+
   @field_validator('duration', mode="before")
   @classmethod
   def truncate_duration(cls, v) -> int:
@@ -98,4 +115,12 @@ class WIP(ArangoEdge):
   value: float = 0
   quantity: float = 0
   active: bool = False # indicates if it's being worked on or just sitting around
+
+  @field_validator('value', 'quantity', mode='before')
+  @classmethod
+  def round_float_fields(cls, v):
+    """Round float fields to prevent floating-point precision noise."""
+    if isinstance(v, float):
+      return round_float(v)
+    return v
 
