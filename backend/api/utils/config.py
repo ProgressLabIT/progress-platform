@@ -17,6 +17,7 @@ class Settings(BaseSettings):
   kafka_client_id_consumer: str = "backend-service-consumer"
   kafka_client_id_producer: str = "backend-service-producer"
   kafka_session_to_ms: int = 10000
+  float_precision_decimals: int = 6  # Decimal precision for float values in database serialization
 
   model_config = SettingsConfigDict(
     env_prefix = "progress_",
