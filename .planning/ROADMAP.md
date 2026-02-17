@@ -55,7 +55,13 @@ Plans:
   2. Inventory available_quantity and progress percentages display without trailing noise digits
   3. Work session durations and batch completion quantities display cleanly
   4. A reusable Vue composable or filter is available for consistent float formatting across components
-**Plans**: TBD
+
+**Plans:** 3 plans in 2 waves
+
+Plans:
+- [ ] 03-01-PLAN.md — Create global float formatting utility ($formatFloat)
+- [ ] 03-02-PLAN.md — Migrate production component displays (JobCard, ProgressBtn, etc.)
+- [ ] 03-03-PLAN.md — Migrate warehouse component displays (movements, inventory)
 
 ## Progress
 
@@ -63,8 +69,8 @@ Plans:
 |-------|----------------|--------|-----------|
 | 1. Precision Foundation | 2/2 | ✅ Complete | 2026-02-17 |
 | 2. Business Logic Migration | 3/3 | ✅ Complete | 2026-02-17 |
-| 3. Frontend Display Cleanup | 0/? | Not started | - |
+| 3. Frontend Display Cleanup | 0/3 | Planning complete | - |
 
 ---
 *Roadmap created: 2026-02-17*
-*Last updated: 2026-02-17 (Phases 1-2 complete, Phase 3 not started)*
+*Last updated: 2026-02-17 (Phases 1-2 complete, Phase 3 planning complete)*
