@@ -15,7 +15,7 @@ from utils.exceptions import (
 )
 from collections import deque
 
-from utils.float_precision import round_float
+from utils.float_precision import float_greater_than, round_float
 from utils.production import Queries as ProductionQueries
 from utils.traceability import Queries as TraceabilityQueries
 
@@ -171,7 +171,8 @@ class ProgressOverrideRequestedEvent(BaseAdmin):
     if self.info.quantity_change > self.free_wip_qt_upstream and not self.job.first_phase:
         raise WipNotAvailableError("The previous phase has not made enough progress to make this change")
 
-    if self.info.quantity_change < 0 and abs(self.info.quantity_change) > self.free_wip_qt_downstream and not self.job.last_phase:
+    # Use tolerance comparison for WIP quantity validation
+    if self.info.quantity_change < 0 and float_greater_than(abs(self.info.quantity_change), self.free_wip_qt_downstream) and not self.job.last_phase:
         raise WipNotAvailableError("You can't reduce the released quantity of this phase below that already completed/started/booked from the following phase")
 
 

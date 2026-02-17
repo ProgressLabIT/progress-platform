@@ -6,6 +6,7 @@ from events.inventory.base_inventory import BaseInventoryEvent, BaseInventoryMod
 from events.inventory.movement_completed import MovementCompletedEvent
 from models.event import EventType, EventInfoModel
 from models.inventory import *
+from utils.float_precision import float_gte
 from utils.inventory import Queries
 from utils.exceptions import InventoryMovementException
 
@@ -43,7 +44,8 @@ class MovementUpdatedEvent(BaseInventoryEvent):
       # TODO: consider using multiple events to confirm the initial movement
       # and automatically generate transfers for the splits
       if len(self.info.split_into) > 0:
-        if self.info.qt_confirmed >= self.info.qt_planned:
+        # Use tolerance comparison for movement completion check
+        if float_gte(self.info.qt_confirmed, self.info.qt_planned):
           # If the split is for the whole movement, delete the original movement
           self.tx.collection('movement').delete(self.info.movement_key)
         else:
@@ -72,7 +74,8 @@ class MovementUpdatedEvent(BaseInventoryEvent):
           ))
 
       # No split, only update the original movement
-      elif self.info.qt_confirmed >= self.info.qt_planned:
+      # Use tolerance comparison for movement completion check
+      elif float_gte(self.info.qt_confirmed, self.info.qt_planned):
         MovementCompletedEvent.create_as_child(self, dict(
           movement_key=self.info.movement_key,
           movement_type=original_movement['type'],

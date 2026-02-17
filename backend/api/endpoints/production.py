@@ -12,6 +12,7 @@ from utils.api import APIResponse
 from utils.counter import _generate_counter
 from utils.db import db
 from utils.exceptions import HTTPError
+from utils.float_precision import float_gte
 from utils.production import (
   Queries,
   create_job_record,
@@ -274,7 +275,8 @@ async def update_work_order_quantities(
 
         _update_job_progress(db=tx, job_key=job.key)
 
-        if job.qt_completed >= job.qt_planned:
+        # Use tolerance comparison for job completion check
+        if float_gte(job.qt_completed, job.qt_planned):
           close_job_and_update_queues(tx, Job(**result['old']))
 
       elif update.action == JobUpdateType.CLOSE:
@@ -779,7 +781,8 @@ async def update_jobs(job_updates:List[JobUpdate]):
         if 'qt_planned' in u.data:
           _update_job_progress(db=tx, job_key=new_job_data.key)
 
-          if new_job_data.qt_completed >= new_job_data.qt_planned:
+          # Use tolerance comparison for job completion check
+          if float_gte(new_job_data.qt_completed, new_job_data.qt_planned):
             new_job_data = close_job_and_update_queues(tx, old_job_data)
 
         if 'assigned_to' in u.data:

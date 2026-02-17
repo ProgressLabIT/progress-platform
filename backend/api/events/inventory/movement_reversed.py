@@ -4,6 +4,7 @@ from events.inventory.movement_planned import MovementPlannedEvent
 from models.event import EventType, EventInfoModel
 from models.inventory import InventoryMovement, InventoryMovementReferences, InventoryMovementNew, InventoryMovementType, MovementStatus
 from utils.exceptions import InventoryMovementException
+from utils.float_precision import float_greater_than
 
 class MovementReversedEvent(BaseInventoryEvent):
   """
@@ -183,7 +184,8 @@ class MovementReversedEvent(BaseInventoryEvent):
     if movement_to_revert.qt_confirmed == 0:
       raise ValueError(f'Movement {self.info.original_movement_key} has no confirmed quantity to revert')
 
-    if self.info.quantity_to_revert and self.info.quantity_to_revert > movement_to_revert.qt_confirmed:
+    # Use tolerance comparison for reversal validation
+    if self.info.quantity_to_revert and float_greater_than(self.info.quantity_to_revert, movement_to_revert.qt_confirmed):
       raise ValueError(f"Can't revert partial quantity {self.info.quantity_to_revert} for movement {self.info.original_movement_key}, it's greater than the movement quantity {movement_to_revert.qt_confirmed}")
 
   # =====================================================================
