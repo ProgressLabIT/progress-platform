@@ -38,7 +38,13 @@ Plans:
   1. Event validation logic that compares float values (progress thresholds, quantity checks) uses tolerance utilities instead of == or < operators on floats
   2. Inventory operations (movements, counting reconciliation) use tolerance comparisons so that quantities like 99.999999 and 100.0 are treated as equal
   3. Production logic (progress completion checks, consumption quantity validation) uses tolerance comparisons so off-by-epsilon values do not block operations
-**Plans**: TBD
+
+**Plans:** 3 plans in 2 waves
+
+Plans:
+- [ ] 02-01-PLAN.md — Add convenience comparison functions (float_gte, float_lte)
+- [ ] 02-02-PLAN.md — Migrate WIP event comparisons (wip_booked, wip_unbooked, wip_removed)
+- [ ] 02-03-PLAN.md — Migrate production & inventory comparisons (endpoints, events)
 
 ### Phase 3: Frontend Display Cleanup
 **Goal**: Users see clean, readable numbers everywhere in the UI
@@ -55,10 +61,10 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Precision Foundation | 0/2 | Planning complete | - |
-| 2. Business Logic Migration | 0/? | Not started | - |
+| 1. Precision Foundation | 2/2 | ✅ Complete | 2026-02-17 |
+| 2. Business Logic Migration | 0/3 | Planning complete | - |
 | 3. Frontend Display Cleanup | 0/? | Not started | - |
 
 ---
 *Roadmap created: 2026-02-17*
-*Last updated: 2026-02-17 (Phase 1 planning complete)*
+*Last updated: 2026-02-17 (Phase 1 complete, Phase 2 planning complete)*
