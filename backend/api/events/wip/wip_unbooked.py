@@ -2,7 +2,7 @@ from events.production.base_production import BaseProductionEvent
 from models.event import EventInfoModel, EventType
 from models.traceability import WIP
 from utils.exceptions import WipNotAvailableError
-from utils.float_precision import round_float
+from utils.float_precision import float_gte, round_float
 
 
 class WIPUnbookedEvent(BaseProductionEvent):
@@ -28,7 +28,8 @@ class WIPUnbookedEvent(BaseProductionEvent):
     booked_wips = sorted([WIP(**wip) for wip in booked_wips_cursor], key=lambda wip: wip.quantity)
 
     for wip in booked_wips:
-      if self.info.quantity >= wip.quantity:
+      # Use tolerance comparison to handle epsilon precision noise
+      if float_gte(self.info.quantity, wip.quantity):
         # Unbook entire batch for job
         self.tx.collection('wip').update(dict(
           _key = wip.key,

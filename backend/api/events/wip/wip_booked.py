@@ -2,7 +2,7 @@ from events.production.base_production import BaseProductionEvent
 from models.event import EventInfoModel, EventType
 from models.traceability import WIP
 from utils.exceptions import WipNotAvailableError
-from utils.float_precision import round_float
+from utils.float_precision import float_gte, round_float
 from utils.serial import Queries as SerialQueries
 from utils.traceability import Queries as TraceabilityQueries
 
@@ -44,7 +44,8 @@ class WIPBookedEvent(BaseProductionEvent):
 
       # TODO: change using while loop like in events/admin.py@override_progress
       for wip in free_wips:
-        if self.info.quantity >= wip.quantity:
+        # Use tolerance comparison to handle epsilon precision noise
+        if float_gte(self.info.quantity, wip.quantity):
           # Book entire batch for job
           self.tx.collection('wip').update(dict(
             _key = wip.key,
