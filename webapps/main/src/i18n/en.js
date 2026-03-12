@@ -272,6 +272,7 @@ export default {
   field_type_date: 'Date',
   field_type_number: 'Number',
   field_type_separator: 'Separator',
+  field_type_template_string: 'Template String',
   field_type_text: 'Text',
   field_type_ternary: 'True/False/NA',
   field_type_time: 'Time',

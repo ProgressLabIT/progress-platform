@@ -277,6 +277,7 @@ export default {
   field_type_date: 'Data',
   field_type_number: 'Numero',
   field_type_separator: 'Separatore',
+  field_type_template_string: 'Stringa Template',
   field_type_text: 'Testo',
   field_type_ternary: 'Vero/Falso/NA',
   field_type_time: 'Ora',

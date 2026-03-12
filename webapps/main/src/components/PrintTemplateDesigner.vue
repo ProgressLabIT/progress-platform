@@ -87,11 +87,23 @@
             dense
             square
             icon="mdi-image"
-            class="q-mb-sm"
+            class="q-mb-xs"
             @click="addField('image')"
           >
             <q-tooltip anchor="center right" self="center left" :offset="[10, 0]">
               {{ $t('image') }}
+            </q-tooltip>
+          </q-btn>
+          <q-btn
+            flat
+            dense
+            square
+            icon="mdi-text-box-outline"
+            class="q-mb-sm"
+            @click="addField('template_string')"
+          >
+            <q-tooltip anchor="center right" self="center left" :offset="[10, 0]">
+              {{ $t('field_type_template_string') }}
             </q-tooltip>
           </q-btn>
 
