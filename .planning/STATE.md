@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 01-03-PLAN.md — linkedTemplateString plugin GREEN, all 3 tests pass
-last_updated: "2026-03-12T15:46:21.425Z"
+stopped_at: "Checkpoint: Task 3 human-verify — toolbar button and encode/decode round-trip awaiting user verification"
+last_updated: "2026-03-12T15:50:23.062Z"
 last_activity: 2026-03-12 — Completed 01-01 test scaffold
 progress:
   total_phases: 4
   completed_phases: 0
   total_plans: 5
-  completed_plans: 3
+  completed_plans: 4
   percent: 20
 ---
 
@@ -52,6 +52,7 @@ Progress: [██░░░░░░░░] 20%
 *Updated after each plan completion*
 | Phase 01-template-string-plugin P02 | 3 | 1 tasks | 1 files |
 | Phase 01-template-string-plugin P03 | 1 | 1 tasks | 2 files |
+| Phase 01-template-string-plugin P04 | 2 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -67,6 +68,8 @@ Decisions logged in PROJECT.md Key Decisions table.
 - [Phase 01-template-string-plugin]: vitest.config.js uses node environment with src/**/*.test.js glob pattern
 - [Phase 01-template-string-plugin]: presetOptions import skipped — non-cf:: tokens route to getPresetValue() without static allowlist, keeping templateResolver.js decoupled
 - [Phase 01-template-string-plugin]: Omitted createLinkSchema() from templateExpression propPanel — linkType is fixed to template_expression, no link selector UI needed
+- [Phase 01-template-string-plugin]: encodeTemplateExpressions() receives flat pdfme Template (designer.getTemplate() output) — operates on .schemas not .template.schemas
+- [Phase 01-template-string-plugin]: Used mdi-text-box-outline icon for template_string toolbar button (distinct from mdi-format-text for plain text)
 
 ### Pending Todos
 
@@ -78,6 +81,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-12T15:46:21.423Z
-Stopped at: Completed 01-03-PLAN.md — linkedTemplateString plugin GREEN, all 3 tests pass
+Last session: 2026-03-12T15:50:23.059Z
+Stopped at: Checkpoint: Task 3 human-verify — toolbar button and encode/decode round-trip awaiting user verification
 Resume file: None
