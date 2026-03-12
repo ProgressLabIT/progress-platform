@@ -377,8 +377,8 @@ function migrateTemplateSchema(template) {
 }
 
 /**
- * Decode all template_expression fields in-place so the canvas shows the human-readable form.
- * Sets field.content = decodeExpression(field.templateExpression, customFields)
+ * Decode all template_expression fields in-place so the canvas and Expression input show the human-readable form.
+ * Updates both field.templateExpression (slug form for editing) and field.content (canvas preview).
  */
 function decodeTemplateExpressions(template, fields) {
   if (!template?.template?.schemas) return;
@@ -386,7 +386,9 @@ function decodeTemplateExpressions(template, fields) {
     const schemaFields = Array.isArray(pageSchema) ? pageSchema : Object.values(pageSchema);
     schemaFields.forEach((field) => {
       if (field.linkType === 'template_expression') {
-        field.content = decodeExpression(field.templateExpression, fields);
+        const decoded = decodeExpression(field.templateExpression, fields);
+        field.templateExpression = decoded;
+        field.content = decoded;
       }
     });
   });
