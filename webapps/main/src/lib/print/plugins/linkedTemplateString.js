@@ -36,6 +36,7 @@ export function createLinkedTemplateString(customFields = []) {
       widgets: text.propPanel.widgets || {},
       defaultSchema: {
         ...text.propPanel.defaultSchema,
+        type: 'template_string',
         linkType: 'template_expression',
         linkValue: '',
         extraPath: '',
