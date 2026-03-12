@@ -145,6 +145,7 @@ import { useStore } from 'vuex';
 import { Dark } from 'quasar';
 import { api } from '@/boot/axios';
 import { buildPlugins } from '@/lib/print/plugins';
+import { encodeExpression, decodeExpression } from '@/lib/print/templateResolver.js';
 import BaseActionCard from '@/components/BaseActionCard.vue';
 import BaseDialog from '@/components/BaseDialog.vue';
 import BaseModalScreen from '@/components/BaseModalScreen.vue';
@@ -376,10 +377,46 @@ function migrateTemplateSchema(template) {
   return template;
 }
 
+/**
+ * Decode all template_expression fields in-place so the canvas shows the human-readable form.
+ * Sets field.content = decodeExpression(field.templateExpression, customFields)
+ */
+function decodeTemplateExpressions(template, fields) {
+  if (!template?.template?.schemas) return;
+  template.template.schemas.forEach((pageSchema) => {
+    const schemaFields = Array.isArray(pageSchema) ? pageSchema : Object.values(pageSchema);
+    schemaFields.forEach((field) => {
+      if (field.linkType === 'template_expression') {
+        field.content = decodeExpression(field.templateExpression, fields);
+      }
+    });
+  });
+}
+
+/**
+ * Encode all template_expression fields in a deep-cloned template for storage.
+ * Never mutates the original — returns the encoded copy.
+ */
+function encodeTemplateExpressions(template, fields) {
+  const cloned = cloneDeep(template);
+  if (!cloned?.schemas) return cloned;
+  cloned.schemas.forEach((pageSchema) => {
+    const schemaFields = Array.isArray(pageSchema) ? pageSchema : Object.values(pageSchema);
+    schemaFields.forEach((field) => {
+      if (field.linkType === 'template_expression') {
+        field.templateExpression = encodeExpression(field.templateExpression, fields);
+      }
+    });
+  });
+  return cloned;
+}
+
 function initTemplate() {
   if (props.editTemplate) {
     mode.value = 'edit';
-    workingTemplate.value = migrateTemplateSchema(cloneDeep(props.editTemplate));
+    const cloned = migrateTemplateSchema(cloneDeep(props.editTemplate));
+    decodeTemplateExpressions(cloned, customFields.value);
+    workingTemplate.value = cloned;
   } else {
     mode.value = 'new';
     workingTemplate.value = cloneDeep(emptyTemplate.value);
@@ -388,12 +425,13 @@ function initTemplate() {
 
 async function saveTemplate() {
   const templateFromDesigner = designer.getTemplate();
+  const encodedTemplate = encodeTemplateExpressions(cloneDeep(templateFromDesigner), customFields.value);
   await api.request({
     method: mode.value === 'new' ? 'POST' : 'PUT',
     url: 'print-template',
     data: {
       ...workingTemplate.value,
-      template: templateFromDesigner,
+      template: encodedTemplate,
     },
   });
   emit('saved');
