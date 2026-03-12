@@ -11,7 +11,7 @@
 - [x] **TMPL-02**: `templateResolver.js` provides `decodeExpression` (keys → labels for Designer display), `encodeExpression` (labels → keys for save), and `resolveExpression` (replaces `{{...}}` with live values)
 - [x] **TMPL-03**: `linkedTemplateString.js` pdfme plugin wraps base `text` schema and exposes `templateExpression` textarea + variable reference in the property panel
 - [x] **TMPL-04**: PrintTemplateDesigner decodes expressions on load and encodes on save; toolbar has a button to add a template string field
-- [ ] **TMPL-05**: PrintDialog resolves `template_expression` link type via `resolveExpression` during field linking
+- [x] **TMPL-05**: PrintDialog resolves `template_expression` link type via `resolveExpression` during field linking
 
 ### ZPL Generator
 
@@ -71,7 +71,7 @@
 | TMPL-02 | Phase 1 | Complete |
 | TMPL-03 | Phase 1 | Complete |
 | TMPL-04 | Phase 1 | Complete |
-| TMPL-05 | Phase 1 | Pending |
+| TMPL-05 | Phase 1 | Complete |
 | ZPL-01 | Phase 2 | Pending |
 | ZPL-02 | Phase 2 | Pending |
 | ZPL-03 | Phase 2 | Pending |

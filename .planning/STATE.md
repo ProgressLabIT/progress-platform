@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: "Checkpoint: Task 3 human-verify — toolbar button and encode/decode round-trip awaiting user verification"
-last_updated: "2026-03-12T15:50:23.062Z"
+stopped_at: "Checkpoint: Task 3 human-verify — PrintDialog live resolution and backend slug uniqueness awaiting user verification"
+last_updated: "2026-03-12T15:54:14.235Z"
 last_activity: 2026-03-12 — Completed 01-01 test scaffold
 progress:
   total_phases: 4
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 5
-  completed_plans: 4
+  completed_plans: 5
   percent: 20
 ---
 
@@ -53,6 +53,7 @@ Progress: [██░░░░░░░░] 20%
 | Phase 01-template-string-plugin P02 | 3 | 1 tasks | 1 files |
 | Phase 01-template-string-plugin P03 | 1 | 1 tasks | 2 files |
 | Phase 01-template-string-plugin P04 | 2 | 2 tasks | 3 files |
+| Phase 01-template-string-plugin P05 | 2 | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -70,6 +71,8 @@ Decisions logged in PROJECT.md Key Decisions table.
 - [Phase 01-template-string-plugin]: Omitted createLinkSchema() from templateExpression propPanel — linkType is fixed to template_expression, no link selector UI needed
 - [Phase 01-template-string-plugin]: encodeTemplateExpressions() receives flat pdfme Template (designer.getTemplate() output) — operates on .schemas not .template.schemas
 - [Phase 01-template-string-plugin]: Used mdi-text-box-outline icon for template_string toolbar button (distinct from mdi-format-text for plain text)
+- [Phase 01-template-string-plugin]: Python-side slug comparison in form.py avoids AQL REGEX_REPLACE dependency
+- [Phase 01-template-string-plugin]: getFieldNamesAndLinks() forwards templateExpression onto link object for use in selectTemplate()
 
 ### Pending Todos
 
@@ -81,6 +84,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-12T15:50:23.059Z
-Stopped at: Checkpoint: Task 3 human-verify — toolbar button and encode/decode round-trip awaiting user verification
+Last session: 2026-03-12T15:54:14.233Z
+Stopped at: Checkpoint: Task 3 human-verify — PrintDialog live resolution and backend slug uniqueness awaiting user verification
 Resume file: None

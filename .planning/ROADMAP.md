@@ -12,7 +12,7 @@ Four independently shippable phases complete the printing subsystem. Phase 1 bui
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Template String Plugin** - pdfme plugin + designer + dialog support for `{{variable}}` composite text fields
+- [x] **Phase 1: Template String Plugin** - pdfme plugin + designer + dialog support for `{{variable}}` composite text fields (completed 2026-03-12)
 - [ ] **Phase 2: ZPL Generator** - Pure-JS transpiler converting pdfme template schemas + resolved inputs into valid ZPL strings
 - [ ] **Phase 3: Print Service** - Stateless FastAPI TCP relay microservice + Docker Compose deployment
 - [ ] **Phase 4: Full Integration** - Print dialog "Send to Printer" action, printer type field, warehouse app migration, and documentation
@@ -78,7 +78,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Template String Plugin | 4/5 | In Progress|  |
+| 1. Template String Plugin | 5/5 | Complete   | 2026-03-12 |
 | 2. ZPL Generator | 0/TBD | Not started | - |
 | 3. Print Service | 0/TBD | Not started | - |
 | 4. Full Integration | 0/TBD | Not started | - |
