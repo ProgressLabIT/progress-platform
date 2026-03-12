@@ -255,6 +255,7 @@ export default {
   field: 'field | fields',
   field_add: 'Add field',
   separator_add: 'Add separator',
+  field_slug_conflict: 'A field with the same name already exists. Choose a different name.',
   field_delete: 'Delete field',
   field_delete_success: 'Field deleted',
   field_delete_text:

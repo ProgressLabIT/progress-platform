@@ -260,6 +260,7 @@ export default {
   field: 'campo | campi',
   field_add: 'Aggiungi campo',
   separator_add: 'Aggiungi separatore',
+  field_slug_conflict: 'Esiste già un campo con lo stesso nome. Scegli un nome diverso.',
   field_delete: 'Elimina campo',
   field_delete_success: 'Campo eliminato',
   field_delete_text:

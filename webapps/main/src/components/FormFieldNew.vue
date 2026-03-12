@@ -87,11 +87,22 @@ export default {
         default_label: this.new_field.label,
         default_hint: this.new_field.hint,
       };
-      this.$api.post('field', data).then(() => {
-        this.$store.dispatch('getCustomFields');
-        this.$emit('created');
-        this.$emit('close');
-      });
+      this.$api.post('field', data)
+        .then(() => {
+          this.$store.dispatch('getCustomFields');
+          this.$emit('created');
+          this.$emit('close');
+        })
+        .catch((err) => {
+          if (err?.response?.status === 409) {
+            this.$q.notify({
+              message: this.$t('field_slug_conflict'),
+              color: 'negative',
+              position: 'top',
+              timeout: 4000,
+            });
+          }
+        });
     },
   },
 };
