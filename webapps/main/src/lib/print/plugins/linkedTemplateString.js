@@ -24,10 +24,8 @@ export function createLinkedTemplateString(customFields = []) {
         templateExpression: {
           title: 'Expression',
           type: 'string',
-          widget: 'textarea',
           span: 24,
           props: {
-            rows: 4,
             placeholder: 'e.g. Product: {{product.code}} - Qty: {{serial.qt}} pcs',
           },
         },
