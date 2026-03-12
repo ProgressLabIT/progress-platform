@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: planning
-stopped_at: Phase 1 context gathered
-last_updated: "2026-03-12T14:42:02.158Z"
+status: in-progress
+stopped_at: Completed 01-01-PLAN.md — test scaffold in RED state
+last_updated: "2026-03-12T15:40:19.412Z"
 last_activity: 2026-03-12 — Roadmap created
 progress:
   total_phases: 4
   completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
+  total_plans: 5
+  completed_plans: 1
   percent: 0
 ---
 
@@ -26,28 +26,28 @@ See: .planning/PROJECT.md (updated 2026-03-12)
 ## Current Position
 
 Phase: 1 of 4 (Template String Plugin)
-Plan: 0 of TBD in current phase
-Status: Ready to plan
-Last activity: 2026-03-12 — Roadmap created
+Plan: 1 of 5 in current phase
+Status: In Progress
+Last activity: 2026-03-12 — Completed 01-01 test scaffold
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [██░░░░░░░░] 20%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 0
-- Average duration: -
-- Total execution time: 0 hours
+- Total plans completed: 1
+- Average duration: 14 min
+- Total execution time: 0.23 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| - | - | - | - |
+| 01-template-string-plugin | 1/5 | 14 min | 14 min |
 
 **Recent Trend:**
-- Last 5 plans: -
-- Trend: -
+- Last 5 plans: 14 min
+- Trend: baseline
 
 *Updated after each plan completion*
 
@@ -61,6 +61,8 @@ Decisions logged in PROJECT.md Key Decisions table.
 - Initial: Print service is stateless TCP relay (~100 lines) — no DB, no auth, easy on-prem deploy
 - Initial: Browser calls print service directly on LAN IP; `traefik.enable=false`
 - Initial: ZPL image fields (`^GFA`) deferred to v3
+- [Phase 01-template-string-plugin]: Used yarn instead of npm for vitest install — project has yarn.lock, npm fails on rolldown peer dependency
+- [Phase 01-template-string-plugin]: vitest.config.js uses node environment with src/**/*.test.js glob pattern
 
 ### Pending Todos
 
@@ -72,6 +74,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-12T14:42:02.149Z
-Stopped at: Phase 1 context gathered
-Resume file: .planning/phases/01-template-string-plugin/01-CONTEXT.md
+Last session: 2026-03-12T15:40:19.410Z
+Stopped at: Completed 01-01-PLAN.md — test scaffold in RED state
+Resume file: None
