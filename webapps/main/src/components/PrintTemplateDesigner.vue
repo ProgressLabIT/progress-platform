@@ -95,19 +95,6 @@
             </q-tooltip>
           </q-btn>
           <q-btn
-            flat
-            dense
-            square
-            icon="mdi-text-box-outline"
-            class="q-mb-sm"
-            @click="addField('template_string')"
-          >
-            <q-tooltip anchor="center right" self="center left" :offset="[10, 0]">
-              {{ $t('field_type_template_string') }}
-            </q-tooltip>
-          </q-btn>
-
-          <q-btn
             v-for="bc in barcodeTypes"
             :key="bc.type"
             flat

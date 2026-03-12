@@ -71,34 +71,9 @@ class TextFieldSpec(BaseModel):
   linkValue: str | None = None
   customFieldKey: str | None = None
   extraPath: str | None = None
+  templateExpression: str | None = None
 
   # pdfme v5 form behavior
-  readOnly: bool | None = None
-  required: bool | None = None
-
-class TemplateStringFieldSpec(BaseModel):
-  """Template expression field — evaluates {{token}} expressions at print time"""
-  name: str
-  type: Literal['template_string'] = 'template_string'
-  position: Position
-  height: float
-  width: float
-
-  alignment: Alignment | None = None
-  backgroundColor: str | None = None
-  characterSpacing: float | None = None
-  dynamicFontSize: DynamicFontSize | None = None
-  fontColor: str | None = None
-  fontName: str | None = None
-  fontSize: float | None = None
-  lineHeight: float | None = None
-  rotate: float | None = None
-  verticalAlignment: VerticalAlignment | None = None
-
-  linkType: Literal['template_expression'] = 'template_expression'
-  templateExpression: str | None = None
-  content: str | None = None
-
   readOnly: bool | None = None
   required: bool | None = None
 
@@ -116,12 +91,13 @@ class VisualFieldSpec(BaseModel):
   linkValue: str | None = None
   customFieldKey: str | None = None
   extraPath: str | None = None
+  templateExpression: str | None = None
 
   # pdfme v5 form behavior
   readOnly: bool | None = None
   required: bool | None = None
 
-FieldSpec = TextFieldSpec | TemplateStringFieldSpec | VisualFieldSpec
+FieldSpec = TextFieldSpec | VisualFieldSpec
 PageSchema = list[FieldSpec] # v5: array of field specs, each with a name property
 
 class PrintTemplate(BaseModel):

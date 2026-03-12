@@ -6,12 +6,10 @@ export { presetOptions, createLinkSchema, linkDefaults } from './linkConfig.js';
 export { createLinkedText } from './linkedText.js';
 export { createLinkedImage } from './linkedImage.js';
 export { createLinkedBarcodes } from './linkedBarcodes.js';
-export { createLinkedTemplateString } from './linkedTemplateString.js';
 
 import { createLinkedText } from './linkedText.js';
 import { createLinkedImage } from './linkedImage.js';
 import { createLinkedBarcodes } from './linkedBarcodes.js';
-import { createLinkedTemplateString } from './linkedTemplateString.js';
 
 /**
  * Build plugin map for Designer or Generator. Pass customFields from store when used in Designer.
@@ -33,6 +31,5 @@ export function buildPlugins(customFields = []) {
     itf14: barcodes.itf14,
     upca: barcodes.upca,
     upce: barcodes.upce,
-    template_string: createLinkedTemplateString(customFields),
   };
 }

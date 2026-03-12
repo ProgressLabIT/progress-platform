@@ -96,6 +96,8 @@ export function createLinkSchema(customFields = [], activeSchema = {}) {
   // Also clear extraPath if linkValue is being cleared
   const needsExtraPath = isPreset && effectiveValue && effectiveValue.endsWith('.extra');
 
+  const isTemplateExpression = activeSchema?.linkType === 'template_expression';
+
   return {
     linkType: {
       title: 'Link Type',
@@ -106,7 +108,17 @@ export function createLinkSchema(customFields = [], activeSchema = {}) {
           { label: 'None', value: 'none' },
           { label: 'Preset', value: 'preset' },
           { label: 'Custom Field', value: 'custom_field' },
+          { label: 'Template Expression', value: 'template_expression' },
         ],
+      },
+    },
+    templateExpression: {
+      title: 'Expression',
+      type: 'string',
+      span: 24,
+      hidden: !isTemplateExpression,
+      props: {
+        placeholder: 'e.g. {{product.code}}-{{serial.qt}}',
       },
     },
     linkValue: {
@@ -114,6 +126,7 @@ export function createLinkSchema(customFields = [], activeSchema = {}) {
       type: 'string',
       widget: 'select',
       disabled: isNone,
+      hidden: isTemplateExpression,
       default: effectiveValue,
       props: {
         options: linkValueOptions,
@@ -134,4 +147,5 @@ export const linkDefaults = {
   linkType: 'none',
   linkValue: '',
   extraPath: '',
+  templateExpression: '',
 };
