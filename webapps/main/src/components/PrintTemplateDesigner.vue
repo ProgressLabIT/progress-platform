@@ -388,7 +388,11 @@ function decodeTemplateExpressions(template, fields) {
       if (field.linkType === 'template_expression') {
         const decoded = decodeExpression(field.templateExpression, fields);
         field.templateExpression = decoded;
-        field.content = decoded;
+        // Only update canvas content for text fields — barcode/image fields require
+        // valid data (e.g. GS1 structure) so leave their default sample content intact.
+        if (field.type === 'text') {
+          field.content = decoded;
+        }
       }
     });
   });
