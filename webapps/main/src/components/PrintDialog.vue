@@ -205,9 +205,11 @@ import { generate } from '@pdfme/generator';
 import { useDialogPluginComponent } from 'quasar';
 import { nextTick, ref, reactive, toRaw } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useStore } from 'vuex';
 import VuePdfEmbed from 'vue-pdf-embed';
 import { api } from '@/boot/axios';
 import { buildPlugins } from '@/lib/print/plugins';
+import { resolveExpression } from '@/lib/print/templateResolver.js';
 import BaseDialog from '@/components/BaseDialog.vue';
 import LoadingSignal from '@/components/LoadingSignal.vue';
 import PrintTemplateCard from '@/components/PrintTemplateCard.vue';
@@ -253,7 +255,12 @@ function getFieldNamesAndLinks(data) {
           if (field.linkType === 'preset' && field.extraPath) {
             value = value ? `${value}.${field.extraPath}` : field.extraPath;
           }
-          linkByField[name] = { type: field.linkType, value };
+          linkByField[name] = {
+            type: field.linkType,
+            value,
+            // For template_expression fields, the expression lives on the schema field itself
+            templateExpression: field.templateExpression || '',
+          };
         }
       }
     }
@@ -284,6 +291,7 @@ const props = defineProps({
 defineEmits(useDialogPluginComponent.emitsObject);
 
 const { t } = useI18n();
+const store = useStore();
 const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } =
   useDialogPluginComponent();
 // This can't be inside the template due to unwrapping
@@ -447,6 +455,10 @@ async function selectTemplate(template) {
 
     const { fieldNames, getLink } = getFieldNamesAndLinks(data);
 
+    // Ensure custom fields are loaded — idempotent, safe to call every time
+    await store.dispatch('getCustomFields');
+    const allCustomFields = store.state.form.customFields;
+
     formModel = reactive(
       Object.fromEntries(
         fieldNames.map((fieldName) => {
@@ -460,6 +472,12 @@ async function selectTemplate(template) {
           }
           if (link.value && String(link.value).includes('serial')) {
             hasSerialLink.value = true;
+          }
+          if (link.type === 'template_expression') {
+            // field.templateExpression holds the encoded expression ({{cf::_key}} form from DB)
+            // resolveExpression handles both preset tokens and cf:: tokens
+            const resolved = resolveExpression(link.templateExpression, props.context, allCustomFields);
+            return [fieldName, String(resolved ?? '')];
           }
           if (link.type === 'preset') {
             const presetValue = props.context.getPresetValue(link.value);
