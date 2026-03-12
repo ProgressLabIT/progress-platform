@@ -7,7 +7,7 @@
 
 ### Template String Plugin
 
-- [ ] **TMPL-01**: Designer can add a "template string" field that supports `{{variable}}` syntax for composite text (e.g. `Product: {{product.code}} - Qty: {{serial.qt}} pcs`)
+- [x] **TMPL-01**: Designer can add a "template string" field that supports `{{variable}}` syntax for composite text (e.g. `Product: {{product.code}} - Qty: {{serial.qt}} pcs`)
 - [x] **TMPL-02**: `templateResolver.js` provides `decodeExpression` (keys → labels for Designer display), `encodeExpression` (labels → keys for save), and `resolveExpression` (replaces `{{...}}` with live values)
 - [x] **TMPL-03**: `linkedTemplateString.js` pdfme plugin wraps base `text` schema and exposes `templateExpression` textarea + variable reference in the property panel
 - [ ] **TMPL-04**: PrintTemplateDesigner decodes expressions on load and encodes on save; toolbar has a button to add a template string field
@@ -67,7 +67,7 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| TMPL-01 | Phase 1 | Pending |
+| TMPL-01 | Phase 1 | Complete |
 | TMPL-02 | Phase 1 | Complete |
 | TMPL-03 | Phase 1 | Complete |
 | TMPL-04 | Phase 1 | Pending |
