@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import Literal, Union
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from models.base_models import ArangoDocument, ArangoEdge
 
@@ -49,6 +49,8 @@ class Position(BaseModel):
 # pdfme v5: each field carries its own name and optional link configuration
 
 class TextFieldSpec(BaseModel):
+  model_config = ConfigDict(extra='allow')
+
   name: str
   type: Literal['text'] = 'text'
   position: Position
@@ -79,6 +81,8 @@ class TextFieldSpec(BaseModel):
 
 class VisualFieldSpec(BaseModel):
   """Image or linear/2D codes"""
+  model_config = ConfigDict(extra='allow')
+
   name: str
   type: VisualFieldType
   position: Position
