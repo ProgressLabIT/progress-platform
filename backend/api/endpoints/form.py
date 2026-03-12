@@ -1,3 +1,4 @@
+import re
 import traceback
 
 from fastapi import APIRouter, HTTPException, Query, Depends
@@ -10,9 +11,29 @@ from utils.db import db, model_to_db_dict
 router = APIRouter()
 
 
+def slugify(name: str) -> str:
+    """Convert a human label to a stable snake_case identifier (mirrors JS slugify in templateResolver.js)."""
+    s = name.lower()
+    s = re.sub(r'\([^)]*\)', '', s)   # remove parenthesised content
+    s = re.sub(r'[^a-z0-9]+', '_', s)  # non-alphanumeric runs → '_'
+    s = re.sub(r'_+', '_', s)          # collapse consecutive underscores
+    return s.strip('_')
+
+
 @router.post('/field',
     dependencies=[Depends(auth.verify_token)])
 def create_field(field_data: CustomField):
+  slug = slugify(field_data.name)
+  try:
+    existing = list(db.aql.execute(
+      'FOR f IN CustomField RETURN { _key: f._key, name: f.name }'
+    ))
+    if any(slugify(f['name']) == slug for f in existing):
+      raise HTTPException(status_code=409, detail=f"A custom field with slug '{slug}' already exists")
+  except HTTPException:
+    raise
+  except Exception:
+    raise HTTPException(status_code=500, detail=traceback.format_exc())
   try:
     field_key = db.collection('CustomField').insert(field_data)['_key']
     return APIResponse(
@@ -42,6 +63,17 @@ def fetch_field(name: str | None = None, key: str | None = None):
     dependencies=[Depends(auth.verify_token)])
 def replace_field_metadata(field_key: str, field_data: CustomField):
   """Field data must contain _key"""
+  slug = slugify(field_data.name)
+  try:
+    existing = list(db.aql.execute(
+      'FOR f IN CustomField RETURN { _key: f._key, name: f.name }'
+    ))
+    if any(slugify(f['name']) == slug and f['_key'] != field_key for f in existing):
+      raise HTTPException(status_code=409, detail=f"A custom field with slug '{slug}' already exists")
+  except HTTPException:
+    raise
+  except Exception:
+    raise HTTPException(status_code=500, detail=traceback.format_exc())
   try:
     db.collection('CustomField').update(field_data.dict(by_alias=True), check_rev=False)
     return APIResponse(message = "Field updated successfully")
