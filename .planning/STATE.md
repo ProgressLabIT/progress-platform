@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: "Checkpoint: Task 3 human-verify — PrintDialog live resolution and backend slug uniqueness awaiting user verification"
-last_updated: "2026-03-12T15:54:14.235Z"
+stopped_at: Completed 01-04-PLAN.md (post-verification SUMMARY update)
+last_updated: "2026-03-13T14:15:14.065Z"
 last_activity: 2026-03-12 — Completed 01-01 test scaffold
 progress:
   total_phases: 4
@@ -54,6 +54,7 @@ Progress: [██░░░░░░░░] 20%
 | Phase 01-template-string-plugin P03 | 1 | 1 tasks | 2 files |
 | Phase 01-template-string-plugin P04 | 2 | 2 tasks | 3 files |
 | Phase 01-template-string-plugin P05 | 2 | 2 tasks | 2 files |
+| Phase 01-template-string-plugin P04 | 45 | 3 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -73,6 +74,9 @@ Decisions logged in PROJECT.md Key Decisions table.
 - [Phase 01-template-string-plugin]: Used mdi-text-box-outline icon for template_string toolbar button (distinct from mdi-format-text for plain text)
 - [Phase 01-template-string-plugin]: Python-side slug comparison in form.py avoids AQL REGEX_REPLACE dependency
 - [Phase 01-template-string-plugin]: getFieldNamesAndLinks() forwards templateExpression onto link object for use in selectTemplate()
+- [Phase 01-template-string-plugin]: template_expression implemented as a linkType option on all existing plugins via linkConfig.js — not a separate pdfme plugin. Avoids unregistered widget errors.
+- [Phase 01-template-string-plugin]: Plain string widget used for templateExpression input — textarea widget is not registered in pdfme v5
+- [Phase 01-template-string-plugin]: field.content only updated for text-type fields during decode — barcode fields preserve sample content so canvas renders correctly
 
 ### Pending Todos
 
@@ -84,6 +88,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-12T15:54:14.233Z
-Stopped at: Checkpoint: Task 3 human-verify — PrintDialog live resolution and backend slug uniqueness awaiting user verification
+Last session: 2026-03-13T14:15:14.063Z
+Stopped at: Completed 01-04-PLAN.md (post-verification SUMMARY update)
 Resume file: None
