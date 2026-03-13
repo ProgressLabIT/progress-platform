@@ -11,6 +11,7 @@ from starlette import status
 
 from models.auth import *
 from models.org import User
+from utils.config import get_config
 from utils.db import db
 from utils.exceptions import *
 
@@ -34,7 +35,6 @@ scopes_description = {
   "operator": "User can access the operator panel and make production declarations"
 }
 
-TOKEN_SECRET = "0ac33c11e3f6c4903f6f30c03edfda07e513288884a8d573690eb6d916fca034"
 ALGORITHM = "HS256"
 
 bearer_token = OAuth2PasswordBearer(tokenUrl="/api/auth", scopes=scopes_description)
@@ -245,7 +245,7 @@ def verify_token(token_str: str = Depends(bearer_token)):
 
   try:
     try:
-      token_json = jwt.decode(token_str, TOKEN_SECRET, algorithms=[ALGORITHM])
+      token_json = jwt.decode(token_str, get_config().jwt_secret, algorithms=[ALGORITHM])
 
     except jwt.ExpiredSignatureError:
       print('Token expired')
@@ -320,7 +320,7 @@ def issue_token(
 
   access_token = jwt.encode(
     access_token_data.dict(by_alias=True, exclude_none=True),
-    TOKEN_SECRET,
+    get_config().jwt_secret,
     algorithm=ALGORITHM
   )
 

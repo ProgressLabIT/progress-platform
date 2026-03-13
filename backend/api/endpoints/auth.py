@@ -18,6 +18,7 @@ from models.auth import *
 from models.org import User
 from utils.api import APIResponse, AuthAPIResponse
 from utils import auth
+from utils.config import get_config
 from utils.db import db
 from utils.exceptions import *
 
@@ -259,7 +260,7 @@ async def close_user_session(
   token_str: str = Depends(auth.bearer_token)
 ):
 
-  token_json = jwt.decode(token_str, auth.TOKEN_SECRET, algorithms=[auth.ALGORITHM], verify_expiration=False)
+  token_json = jwt.decode(token_str, get_config().jwt_secret, algorithms=[auth.ALGORITHM], verify_expiration=False)
   token = TokenData(**token_json)
 
   is_entitled = False

@@ -11,6 +11,7 @@ class Settings(BaseSettings):
   webapp_url: str = "http://localhost:9000"
   api_db_username: str = "root" # use default when running standalone containers
   api_db_pwd: str = ""
+  jwt_secret: str = ""
   cors_allowed_origins: list[str] = ["*"]
   kafka_bootstrap_server: str = "broker:19092"
   kafka_group_id: str = "backend"

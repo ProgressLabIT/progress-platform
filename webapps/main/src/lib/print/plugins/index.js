@@ -10,6 +10,7 @@ export { createLinkedBarcodes } from './linkedBarcodes.js';
 import { createLinkedText } from './linkedText.js';
 import { createLinkedImage } from './linkedImage.js';
 import { createLinkedBarcodes } from './linkedBarcodes.js';
+import { createDataMatrixPlugin } from './customDataMatrix.js';
 
 /**
  * Build plugin map for Designer or Generator. Pass customFields from store when used in Designer.
@@ -25,6 +26,7 @@ export function buildPlugins(customFields = []) {
     ean13: barcodes.ean13,
     code39: barcodes.code39,
     code128: barcodes.code128,
+    datamatrix: createDataMatrixPlugin(customFields),
     gs1datamatrix: barcodes.gs1datamatrix,
     japanpost: barcodes.japanpost,
     nw7: barcodes.nw7,

@@ -95,6 +95,18 @@
             </q-tooltip>
           </q-btn>
           <q-btn
+            flat
+            dense
+            square
+            icon="mdi-text-box-outline"
+            class="q-mb-sm"
+            @click="addTemplateExpressionField()"
+          >
+            <q-tooltip anchor="center right" self="center left" :offset="[10, 0]">
+              {{ $t('field_type_template_string') }}
+            </q-tooltip>
+          </q-btn>
+          <q-btn
             v-for="bc in barcodeTypes"
             :key="bc.type"
             flat
@@ -151,7 +163,8 @@ import BaseModalScreen from '@/components/BaseModalScreen.vue';
 
 const barcodeTypes = [
   { type: 'qrcode', label: 'QR Code', icon: 'mdi-qrcode' },
-  { type: 'gs1datamatrix', label: 'DataMatrix', icon: 'mdi-data-matrix' },
+  { type: 'datamatrix', label: 'DataMatrix', icon: 'mdi-data-matrix' },
+  { type: 'gs1datamatrix', label: 'GS1 DataMatrix', icon: 'mdi-data-matrix' },
   { type: 'ean13', label: 'EAN-13', icon: 'mdi-barcode' },
   { type: 'code39', label: 'Code 39', icon: 'mdi-barcode' },
   { type: 'code128', label: 'Code 128', icon: 'mdi-barcode' },
@@ -307,7 +320,7 @@ watch(pdfmeTheme, (newTheme) => {
   }
 });
 
-function addField(type) {
+function addField(type, overrides = {}) {
   if (!designer) return;
   const template = designer.getTemplate();
   const schemas = template.schemas && template.schemas.length > 0 ? [...template.schemas] : [[]];
@@ -329,9 +342,15 @@ function addField(type) {
   if (defaultSchema.width == null) defaultSchema.width = type === 'image' ? 60 : 80;
   if (defaultSchema.height == null) defaultSchema.height = type === 'image' ? 40 : 10;
 
+  Object.assign(defaultSchema, overrides);
+
   pageSchemas.push(defaultSchema);
   schemas[pageIndex] = pageSchemas;
   designer.updateTemplate({ ...template, schemas });
+}
+
+function addTemplateExpressionField() {
+  addField('text', { linkType: 'template_expression', templateExpression: '' });
 }
 
 function closeDesigner() {
@@ -378,20 +397,23 @@ function migrateTemplateSchema(template) {
 
 /**
  * Decode all template_expression fields in-place so the canvas and Expression input show the human-readable form.
- * Updates both field.templateExpression (slug form for editing) and field.content (canvas preview).
+ * - Text fields: content = decoded expression (readable canvas preview)
+ * - Barcode/other fields: content = plugin defaultSchema.content (valid sample so designer renders correctly)
  */
 function decodeTemplateExpressions(template, fields) {
   if (!template?.template?.schemas) return;
+  const plugins = getPlugins();
   template.template.schemas.forEach((pageSchema) => {
     const schemaFields = Array.isArray(pageSchema) ? pageSchema : Object.values(pageSchema);
     schemaFields.forEach((field) => {
       if (field.linkType === 'template_expression') {
-        const decoded = decodeExpression(field.templateExpression, fields);
-        field.templateExpression = decoded;
-        // Only update canvas content for text fields — barcode/image fields require
-        // valid data (e.g. GS1 structure) so leave their default sample content intact.
+        field.templateExpression = decodeExpression(field.templateExpression, fields);
         if (field.type === 'text') {
-          field.content = decoded;
+          field.content = field.templateExpression;
+        } else {
+          // Restore default sample content so the barcode renders in the designer
+          const defaultContent = plugins[field.type]?.propPanel?.defaultSchema?.content;
+          if (defaultContent) field.content = defaultContent;
         }
       }
     });

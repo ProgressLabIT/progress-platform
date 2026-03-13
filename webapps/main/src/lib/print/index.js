@@ -26,10 +26,21 @@ function schemasToV5(schemas) {
  * @returns {Promise<Uint8Array>}
  */
 export async function generatePdf({ template, inputs }) {
-  const cleanTemplate = {
-    basePdf: template.basePdf,
-    schemas: schemasToV5(template.schemas),
-  };
+  const cleanSchemas = schemasToV5(template.schemas);
+
+  // Migrate gs1datamatrix → datamatrix when runtime value is not valid GS1 AI format
+  const gs1Re = /\((01)\)(\d*)(\(|$)/;
+  for (const page of cleanSchemas) {
+    for (const field of page) {
+      if (field.type !== 'gs1datamatrix') continue;
+      const val = (inputs && inputs[0])?.[field.name] ?? '';
+      const m = val.match(gs1Re);
+      const ok = m && val.length <= 52 && m[1] === '01' && [8,12,13,14].includes(m[2].length);
+      if (!ok) field.type = 'datamatrix';
+    }
+  }
+
+  const cleanTemplate = { basePdf: template.basePdf, schemas: cleanSchemas };
   return generate({
     template: cleanTemplate,
     inputs: inputs || [],

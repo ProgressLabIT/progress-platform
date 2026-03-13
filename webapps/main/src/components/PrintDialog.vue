@@ -646,10 +646,25 @@ async function goToPreview() {
       throw new Error('Inputs are missing or invalid');
     }
 
-    const cleanTemplate = {
-      basePdf: template.basePdf,
-      schemas: JSON.parse(JSON.stringify(schemasToV5(template.schemas))),
-    };
+    const cleanSchemas = JSON.parse(JSON.stringify(schemasToV5(template.schemas)));
+
+    // Migrate gs1datamatrix → datamatrix when the runtime value is not valid GS1 AI format.
+    // This lets existing templates that used gs1datamatrix for free-form data render correctly.
+    const gs1Regex = /\((01)\)(\d*)(\(|$)/;
+    for (const page of cleanSchemas) {
+      for (const field of page) {
+        if (field.type !== 'gs1datamatrix') continue;
+        const val = inputs[0]?.[field.name] ?? '';
+        const m = val.match(gs1Regex);
+        const isValidGs1 = m && val.length <= 52 && m[1] === '01' &&
+          [8, 12, 13, 14].includes(m[2].length);
+        if (!isValidGs1) {
+          field.type = 'datamatrix';
+        }
+      }
+    }
+
+    const cleanTemplate = { basePdf: template.basePdf, schemas: cleanSchemas };
 
     previewSrc.value = await generate({
       template: cleanTemplate,
