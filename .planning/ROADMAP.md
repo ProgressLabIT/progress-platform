@@ -14,7 +14,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Template String Plugin** - pdfme plugin + designer + dialog support for `{{variable}}` composite text fields (completed 2026-03-12)
 - [x] **Phase 2: ZPL Generator** - Pure-JS transpiler converting pdfme template schemas + resolved inputs into valid ZPL strings (completed 2026-03-18)
-- [ ] **Phase 3: Print Service** - Stateless FastAPI TCP relay microservice + Docker Compose deployment
+- [ ] **Phase 3: Print Service** - SSE-subscriber print service + main API print endpoints + Docker Compose deployment
 - [ ] **Phase 4: Full Integration** - Print dialog "Send to Printer" action, printer type field, warehouse app migration, and documentation
 
 ## Phase Details
@@ -52,15 +52,19 @@ Plans:
 - [x] 02-01-PLAN.md — TDD: Export prereqs, implement generateZpl with all field types (text, barcodes, image skip, envelope)
 
 ### Phase 3: Print Service
-**Goal**: A deployable on-prem service accepts ZPL or PDF data from the browser and forwards it as raw bytes over TCP to any LAN printer
+**Goal**: Browser submits print jobs to the main API, which relays them via SSE to an on-prem print service that forwards raw bytes over TCP to LAN printers and reports results back
 **Depends on**: Phase 2
 **Requirements**: SVC-01, SVC-02, SVC-03, SVC-04, SVC-05
 **Success Criteria** (what must be TRUE):
-  1. `GET /health` returns 200 and `POST /print` with valid payload successfully forwards data to a printer host:port over raw TCP
-  2. CORS origins are configurable via `PRINT_SERVICE_CORS_ORIGINS` so browser calls from the main app are accepted
-  3. The service runs in Docker via `deploy/compose/print.yaml` with `traefik.enable=false`, following existing compose patterns
-  4. Both ZPL (text) and PDF (base64) formats are accepted; `copies` parameter controls `^PQ` / PDF copy count
-**Plans**: TBD
+  1. `POST /api/print-job` accepts a valid payload, stores a PrintJob DB record, and enqueues an SSE event; `GET /api/print-jobs/stream` delivers jobs to the print service subscriber
+  2. The print service subscribes to the SSE stream, sends data over TCP to `printer_host:printer_port`, and POSTs the result back to `/api/print-jobs/{id}/result`
+  3. The service runs in Docker via `deploy/compose/print.yaml` with `traefik.enable=false` and no inbound port requirements
+  4. Both ZPL (ASCII-encoded) and PDF (base64-decoded) formats are accepted; TCP errors are classified as `connection_refused`, `timeout`, or `send_error`
+**Plans**: 2 plans
+
+Plans:
+- [ ] 03-01-PLAN.md — Add PrintJob models and print job endpoints (POST /print-job, SSE stream, result callback) to main API
+- [ ] 03-02-PLAN.md — Create standalone print service (SSE subscriber + TCP sender), Dockerfile, and Docker Compose deployment
 
 ### Phase 4: Full Integration
 **Goal**: Factory operators can print labels directly to any configured printer from the main app print dialog and the warehouse app, replacing all hardcoded ZPL and `/pstprint` dependencies
@@ -83,5 +87,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 |-------|----------------|--------|-----------|
 | 1. Template String Plugin | 5/5 | Complete   | 2026-03-13 |
 | 2. ZPL Generator | 1/1 | Complete   | 2026-03-18 |
-| 3. Print Service | 0/TBD | Not started | - |
+| 3. Print Service | 0/2 | Not started | - |
 | 4. Full Integration | 0/TBD | Not started | - |
