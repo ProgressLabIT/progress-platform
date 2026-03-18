@@ -49,7 +49,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 02-01-PLAN.md — TDD: Export prereqs, implement generateZpl with all field types (text, barcodes, image skip, envelope)
+- [x] 02-01-PLAN.md — TDD: Export prereqs, implement generateZpl with all field types (text, barcodes, image skip, envelope)
 
 ### Phase 3: Print Service
 **Goal**: A deployable on-prem service accepts ZPL or PDF data from the browser and forwards it as raw bytes over TCP to any LAN printer
