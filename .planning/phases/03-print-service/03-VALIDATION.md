@@ -2,7 +2,7 @@
 phase: 3
 slug: print-service
 status: draft
-nyquist_compliant: false
+nyquist_compliant: true
 wave_0_complete: false
 created: 2026-03-18
 ---
@@ -17,18 +17,18 @@ created: 2026-03-18
 
 | Property | Value |
 |----------|-------|
-| **Framework** | pytest 7.x |
-| **Config file** | `print-service/tests/conftest.py` |
-| **Quick run command** | `cd print-service && python -m pytest tests/ -x -q` |
-| **Full suite command** | `cd print-service && python -m pytest tests/ -v` |
+| **Framework** | pytest 8.x + pytest-asyncio |
+| **Config file** | `backend/print-service/test_tcp_sender.py` (flat file, no tests/ package) |
+| **Quick run command** | `cd backend/print-service && python -m pytest test_tcp_sender.py -x -q` |
+| **Full suite command** | `cd backend/print-service && python -m pytest test_tcp_sender.py -v` |
 | **Estimated runtime** | ~10 seconds |
 
 ---
 
 ## Sampling Rate
 
-- **After every task commit:** Run `cd print-service && python -m pytest tests/ -x -q`
-- **After every plan wave:** Run `cd print-service && python -m pytest tests/ -v`
+- **After every task commit:** Run `cd backend/print-service && python -m pytest test_tcp_sender.py -x -q`
+- **After every plan wave:** Run `cd backend/print-service && python -m pytest test_tcp_sender.py -v`
 - **Before `/gsd:verify-work`:** Full suite must be green
 - **Max feedback latency:** 10 seconds
 
@@ -38,24 +38,22 @@ created: 2026-03-18
 
 | Task ID | Plan | Wave | Requirement | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|-----------|-------------------|-------------|--------|
-| 3-01-01 | 01 | 0 | SVC-01 | unit | `cd print-service && python -m pytest tests/test_main.py -x -q` | ❌ W0 | ⬜ pending |
-| 3-01-02 | 01 | 1 | SVC-01 | unit | `cd print-service && python -m pytest tests/test_main.py::test_health -x -q` | ❌ W0 | ⬜ pending |
-| 3-01-03 | 01 | 1 | SVC-02 | unit | `cd print-service && python -m pytest tests/test_main.py::test_sse_subscribe -x -q` | ❌ W0 | ⬜ pending |
-| 3-01-04 | 01 | 1 | SVC-03 | unit | `cd print-service && python -m pytest tests/test_main.py::test_tcp_forward -x -q` | ❌ W0 | ⬜ pending |
-| 3-02-01 | 02 | 1 | SVC-04 | unit | `cd print-service && python -m pytest tests/test_main.py::test_zpl_format -x -q` | ❌ W0 | ⬜ pending |
-| 3-02-02 | 02 | 1 | SVC-05 | integration | `cd print-service && python -m pytest tests/test_main.py::test_copies -x -q` | ❌ W0 | ⬜ pending |
+| 3-01-01 | 01 | 1 | SVC-01, SVC-02 | import | `cd backend/api && PYTHONPATH=. python -c "from models.print_job import PrintJobRequest, PrintJobResult, PrintJobRecord; print('OK')"` | n/a (models) | pending |
+| 3-01-02 | 01 | 1 | SVC-01, SVC-02 | grep | `grep -c "def create_print_job\|def print_job_stream\|def print_job_result" backend/api/endpoints/print.py` | n/a (endpoints) | pending |
+| 3-02-01 | 02 | 2 | SVC-01, SVC-02 | unit | `cd backend/print-service && python -m pytest test_tcp_sender.py -x -q` | Wave 0 | pending |
+| 3-02-02 | 02 | 2 | SVC-04, SVC-05 | syntax | `python -c "import ast; ast.parse(open('backend/print-service/main.py').read())" && docker compose -f deploy/compose/print.yaml config --quiet` | n/a | pending |
 
-*Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
+*Status: pending / green / red / flaky*
 
 ---
 
 ## Wave 0 Requirements
 
-- [ ] `print-service/tests/__init__.py` — test package init
-- [ ] `print-service/tests/conftest.py` — shared fixtures (mock SSE server, mock TCP socket)
-- [ ] `print-service/tests/test_main.py` — stubs for SVC-01 through SVC-05
+- [ ] `backend/print-service/test_tcp_sender.py` — unit tests for encode_zpl, decode_pdf, send_tcp (created by Plan 02 Task 1 as part of TDD)
+- [ ] `backend/print-service/requirements.txt` — pytest and pytest-asyncio listed as dependencies
 
-*Existing infrastructure covers main API side requirements.*
+*Plan 01 (main API endpoints) uses import/grep verification — no separate test file needed.*
+*Plan 02 Task 1 is type="tdd" and creates test_tcp_sender.py as part of its RED phase.*
 
 ---
 
@@ -63,19 +61,18 @@ created: 2026-03-18
 
 | Behavior | Requirement | Why Manual | Test Instructions |
 |----------|-------------|------------|-------------------|
-| Real LAN printer receives raw bytes | SVC-01 | Requires physical printer hardware | Connect to LAN printer, `POST /print` with ZPL payload, confirm print output |
-| CORS headers accepted by browser | SVC-02 | Requires browser-originated request | Open app in browser, trigger print, confirm no CORS errors in console |
+| Real LAN printer receives raw bytes | SVC-01 | Requires physical printer hardware | Connect to LAN printer, POST /api/print-job with ZPL payload, confirm print output |
 | Docker compose service starts | SVC-04 | Requires Docker environment | `docker compose -f deploy/compose/print.yaml up`, confirm container healthy |
 
 ---
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or Wave 0 dependencies
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references
-- [ ] No watch-mode flags
-- [ ] Feedback latency < 10s
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All tasks have `<automated>` verify or Wave 0 dependencies
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify
+- [x] Wave 0 covers all MISSING references
+- [x] No watch-mode flags
+- [x] Feedback latency < 10s
+- [x] `nyquist_compliant: true` set in frontmatter
 
 **Approval:** pending
