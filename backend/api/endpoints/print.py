@@ -1,9 +1,15 @@
+import json
 import traceback
+from datetime import datetime, timezone
 
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Request
+from sse_starlette.sse import EventSourceResponse
 from utils import auth
 
+from managers.server_event_manager import ServerEventManager
+from managers.notification_manager import NotificationManager
 from models.print import PrintTemplateRecord, TemplateAssignmentUpdate, TemplateAssignmentUpdateType, TemplateAssignmentContext
+from models.print_job import PrintJobRequest, PrintJobResult, PrintJobRecord
 from utils.api import APIResponse
 from utils.db import db
 from utils.print import preprocess_template, build_template_assignment_record
@@ -189,5 +195,54 @@ async def update_template_assignments(updates: list[TemplateAssignmentUpdate]):
       tx.abort_transaction()
 
 
+# Print Job Endpoints
+
+@router.post('/print-job', dependencies=[Depends(auth.verify_token)])
+async def create_print_job(job: PrintJobRequest):
+    record = {
+        "status": "pending",
+        "printer_host": job.printer_host,
+        "printer_port": job.printer_port,
+        "format": job.format.value,
+        "copies": job.copies,
+        "timeout_seconds": job.timeout_seconds,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "completed_at": None,
+        "error": None,
+        "error_detail": None,
+    }
+    result = db.collection("PrintJob").insert(record)
+    job_key = result["_key"]
+
+    sse_payload = job.model_dump()
+    sse_payload["format"] = job.format.value
+    sse_payload["job_id"] = job_key
+    sse_payload["subtopic"] = "print-jobs"
+    ServerEventManager.getInstance().enqueue(json.dumps(sse_payload))
+
+    return {"job_id": job_key}
 
 
+@router.get('/print-jobs/stream', dependencies=[Depends(auth.verify_token)])
+async def print_job_stream(request: Request):
+    return EventSourceResponse(
+        ServerEventManager.getInstance().push_events(request, "print-jobs")
+    )
+
+
+@router.post('/print-jobs/{job_id}/result', dependencies=[Depends(auth.verify_token)])
+async def print_job_result(job_id: str, result: PrintJobResult):
+    now = datetime.now(timezone.utc).isoformat()
+    update = {
+        "_key": job_id,
+        "status": "sent" if result.ok else "failed",
+        "completed_at": now,
+    }
+    if not result.ok:
+        update["error"] = result.error
+        update["error_detail"] = result.detail
+    db.collection("PrintJob").update(update)
+
+    NotificationManager.getInstance().notifyGlobalRefresh()
+
+    return {"ok": True}
