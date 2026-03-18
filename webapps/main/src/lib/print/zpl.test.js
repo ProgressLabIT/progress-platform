@@ -117,7 +117,7 @@ describe('Coordinate conversion', () => {
 
 describe('Text field', () => {
   it('produces correct ^FO^A0N^FB^FD^FS for given position/fontSize/width/alignment', () => {
-    // x=10 → round(10*203/25.4)=80, y=20 → 160, fontH=round(12*203/72)=34, fieldW=round(50*203/25.4)=398
+    // x=10 → round(10*203/25.4)=80, y=20 → 160, fontH=round(12*203/72)=34, fieldW=round(50*203/25.4)=400
     const template = makeTemplate([makeField({
       position: { x: 10, y: 20 },
       fontSize: 12,
@@ -125,7 +125,7 @@ describe('Text field', () => {
       alignment: 'center',
     })]);
     const result = generateZpl(template, [{ field1: 'Hello' }], { dpi: 203 });
-    expect(result).toContain('^FO80,160^A0N,34,34^FB398,1,0,C,0^FDHello^FS');
+    expect(result).toContain('^FO80,160^A0N,34,34^FB400,1,0,C,0^FDHello^FS');
   });
 
   it('alignment left uses L in ^FB', () => {
