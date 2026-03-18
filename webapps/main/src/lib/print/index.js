@@ -9,13 +9,13 @@ import { buildPlugins } from '@/lib/print/plugins';
 
 const pdfmePlugins = buildPlugins([]);
 
-function normalizePageSchema(pageSchema) {
+export function normalizePageSchema(pageSchema) {
   if (!pageSchema) return [];
   if (Array.isArray(pageSchema)) return pageSchema;
   return Object.entries(pageSchema).map(([fieldName, fieldSpec]) => ({ ...fieldSpec, name: fieldName }));
 }
 
-function schemasToV5(schemas) {
+export function schemasToV5(schemas) {
   if (!schemas || !Array.isArray(schemas)) return [];
   return schemas.map(normalizePageSchema);
 }
