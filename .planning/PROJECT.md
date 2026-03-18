@@ -19,8 +19,8 @@ Factory operators can print labels directly to any ZPL printer by pressing one b
 
 ### Active
 
-- [ ] Template string (`{{variable}}`) field type in pdfme designer for composite text labels
-- [ ] ZPL transpiler that converts pdfme template schemas + resolved inputs into valid ZPL strings (text, barcodes, QR — images deferred)
+- [x] Template string (`{{variable}}`) field type in pdfme designer for composite text labels — Validated in Phase 1: Template String Plugin
+- [x] ZPL transpiler that converts pdfme template schemas + resolved inputs into valid ZPL strings (text, barcodes, QR — images deferred) — Validated in Phase 2: ZPL Generator
 - [ ] On-prem print service: stateless FastAPI TCP relay (~100 lines) that forwards ZPL or PDF bytes to a printer on the LAN
 - [ ] Print dialog step 3 extended: "Download PDF" (existing) + "Send to Printer" with printer selector and quantity input
 - [ ] Printer model gets a `type` field (`zpl` | `pdf`) in the settings UI
@@ -76,4 +76,4 @@ Factory operators can print labels directly to any ZPL printer by pressing one b
 | Warehouse app template config in main app (not warehouse app) | Admins configure templates, not operators; main app is the admin surface | — Pending |
 
 ---
-*Last updated: 2026-03-12 after initialization*
+*Last updated: 2026-03-18 — Phase 2 complete*
