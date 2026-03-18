@@ -15,11 +15,11 @@
 
 ### ZPL Generator
 
-- [ ] **ZPL-01**: `generateZpl(template, inputs, { dpi, quantity })` transpiles a pdfme template + resolved inputs into a valid ZPL string
-- [ ] **ZPL-02**: Coordinate mapping: pdfme mm → ZPL dots at configurable DPI (default 203)
-- [ ] **ZPL-03**: Supported field types: `text` (`^FO^A0N^FB^FD^FS`), `qrcode` (`^BQN`), `code128` (`^BCN`), `code39` (`^B3N`), `ean13` (`^BEN`), `gs1datamatrix` (`^BXN`)
-- [ ] **ZPL-04**: Image fields log a console warning and are skipped (deferred to v3)
-- [ ] **ZPL-05**: Output wraps fields with `^XA ... ^PQ{quantity} ^XZ`
+- [x] **ZPL-01**: `generateZpl(template, inputs, { dpi, quantity })` transpiles a pdfme template + resolved inputs into a valid ZPL string
+- [x] **ZPL-02**: Coordinate mapping: pdfme mm → ZPL dots at configurable DPI (default 203)
+- [x] **ZPL-03**: Supported field types: `text` (`^FO^A0N^FB^FD^FS`), `qrcode` (`^BQN`), `code128` (`^BCN`), `code39` (`^B3N`), `ean13` (`^BEN`), `gs1datamatrix` (`^BXN`)
+- [x] **ZPL-04**: Image fields log a console warning and are skipped (deferred to v3)
+- [x] **ZPL-05**: Output wraps fields with `^XA ... ^PQ{quantity} ^XZ`
 
 ### Print Service
 
@@ -72,11 +72,11 @@
 | TMPL-03 | Phase 1 | Complete |
 | TMPL-04 | Phase 1 | Complete |
 | TMPL-05 | Phase 1 | Complete |
-| ZPL-01 | Phase 2 | Pending |
-| ZPL-02 | Phase 2 | Pending |
-| ZPL-03 | Phase 2 | Pending |
-| ZPL-04 | Phase 2 | Pending |
-| ZPL-05 | Phase 2 | Pending |
+| ZPL-01 | Phase 2 | Complete |
+| ZPL-02 | Phase 2 | Complete |
+| ZPL-03 | Phase 2 | Complete |
+| ZPL-04 | Phase 2 | Complete |
+| ZPL-05 | Phase 2 | Complete |
 | SVC-01 | Phase 3 | Pending |
 | SVC-02 | Phase 3 | Pending |
 | SVC-03 | Phase 3 | Pending |
