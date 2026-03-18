@@ -21,12 +21,12 @@ Factory operators can print labels directly to any ZPL printer by pressing one b
 
 - [x] Template string (`{{variable}}`) field type in pdfme designer for composite text labels — Validated in Phase 1: Template String Plugin
 - [x] ZPL transpiler that converts pdfme template schemas + resolved inputs into valid ZPL strings (text, barcodes, QR — images deferred) — Validated in Phase 2: ZPL Generator
-- [ ] On-prem print service: stateless FastAPI TCP relay (~100 lines) that forwards ZPL or PDF bytes to a printer on the LAN
+- [x] On-prem print service: SSE-subscriber Python process that forwards ZPL or PDF bytes to a printer on the LAN — Validated in Phase 3: Print Service
 - [ ] Print dialog step 3 extended: "Download PDF" (existing) + "Send to Printer" with printer selector and quantity input
 - [ ] Printer model gets a `type` field (`zpl` | `pdf`) in the settings UI
 - [ ] Main app settings: configure which pdfme template is used per label type (product label, position label) for the warehouse app
 - [ ] Warehouse app print flow uses the new print service + configured templates instead of hardcoded ZPL + `/pstprint`
-- [ ] Docker Compose service definition for the print service (`deploy/compose/print.yaml`)
+- [x] Docker Compose service definition for the print service (`deploy/compose/print.yaml`) — Validated in Phase 3: Print Service
 - [ ] `printServerURL` option in `appConfig.js` (optional; enables direct printing when set)
 
 ### Out of Scope
@@ -76,4 +76,4 @@ Factory operators can print labels directly to any ZPL printer by pressing one b
 | Warehouse app template config in main app (not warehouse app) | Admins configure templates, not operators; main app is the admin surface | — Pending |
 
 ---
-*Last updated: 2026-03-18 — Phase 2 complete*
+*Last updated: 2026-03-18 — Phase 3 complete*
