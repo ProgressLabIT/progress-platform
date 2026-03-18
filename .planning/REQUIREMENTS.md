@@ -26,8 +26,8 @@
 - [x] **SVC-01**: `backend/print-service/main.py` FastAPI app with `GET /health` and `POST /print` endpoints
 - [x] **SVC-02**: `POST /print` accepts `printer_host`, `printer_port` (default 9100), `format` (`zpl`|`pdf`), `data` (ZPL text or base64 PDF), `copies`; opens raw TCP socket, sends data, closes
 - [x] **SVC-03**: CORS origins configurable via `PRINT_SERVICE_CORS_ORIGINS` env var
-- [ ] **SVC-04**: Dockerfile (`python:3.11-slim`, port 8200, uvicorn)
-- [ ] **SVC-05**: `deploy/compose/print.yaml` following existing compose patterns; `traefik.enable=false` (browser calls LAN IP directly)
+- [x] **SVC-04**: Dockerfile (`python:3.11-slim`, port 8200, uvicorn)
+- [x] **SVC-05**: `deploy/compose/print.yaml` following existing compose patterns; `traefik.enable=false` (browser calls LAN IP directly)
 
 ### Print Dialog Integration
 
@@ -80,8 +80,8 @@
 | SVC-01 | Phase 3 | Complete |
 | SVC-02 | Phase 3 | Complete |
 | SVC-03 | Phase 3 | Complete |
-| SVC-04 | Phase 3 | Pending |
-| SVC-05 | Phase 3 | Pending |
+| SVC-04 | Phase 3 | Complete |
+| SVC-05 | Phase 3 | Complete |
 | DIAL-01 | Phase 4 | Pending |
 | DIAL-02 | Phase 4 | Pending |
 | DIAL-03 | Phase 4 | Pending |

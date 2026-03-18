@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Completed 03-01-PLAN.md
-last_updated: "2026-03-18T21:44:38.414Z"
+stopped_at: Completed 03-02-PLAN.md
+last_updated: "2026-03-18T21:49:12.218Z"
 progress:
   total_phases: 4
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 8
-  completed_plans: 7
+  completed_plans: 8
 ---
 
 # Project State
@@ -54,6 +54,7 @@ Plan: 1 of 2
 | Phase 01-template-string-plugin P05 | 45 | 3 tasks | 3 files |
 | Phase 02-zpl-generator P01 | 4 | 2 tasks | 3 files |
 | Phase 03-print-service P01 | 5 | 2 tasks | 2 files |
+| Phase 03-print-service P02 | 5 | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -81,6 +82,8 @@ Decisions logged in PROJECT.md Key Decisions table.
 - [Phase 02-zpl-generator]: Inlined schemasToV5/normalizePageSchema into zpl.js — index.js Vue/Quasar deps unresolvable in Vitest node environment
 - [Phase 03-print-service]: data field excluded from PrintJobRecord DB storage (large base64 PDF payloads); passes through SSE only
 - [Phase 03-print-service]: SVC-03 CORS requirement claimed for traceability only — SSE-subscriber pattern means browser never calls print service
+- [Phase 03-print-service]: Health endpoint implemented as raw asyncio TCP server on :8200 — no FastAPI/uvicorn needed for client process
+- [Phase 03-print-service]: compose file for on-prem optional service: no networks, no volumes, traefik.enable=false, reaches main API via public PRINT_SERVICE_API_URL
 
 ### Pending Todos
 
@@ -92,6 +95,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-18T21:44:38.411Z
-Stopped at: Completed 03-01-PLAN.md
+Last session: 2026-03-18T21:49:12.215Z
+Stopped at: Completed 03-02-PLAN.md
 Resume file: None
