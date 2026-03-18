@@ -31,11 +31,11 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 5 plans
 
 Plans:
-- [ ] 01-01-PLAN.md — Install vitest and create failing test scaffold (RED state)
-- [ ] 01-02-PLAN.md — Implement templateResolver.js (slugify, encode, decode, resolve) via TDD
-- [ ] 01-03-PLAN.md — Implement linkedTemplateString.js plugin and register in buildPlugins()
-- [ ] 01-04-PLAN.md — Wire plugin into PrintTemplateDesigner: toolbar button + decode-on-load + encode-on-save
-- [ ] 01-05-PLAN.md — Wire resolveExpression into PrintDialog + backend slug uniqueness validation
+- [x] 01-01-PLAN.md — Install vitest and create failing test scaffold (RED state)
+- [x] 01-02-PLAN.md — Implement templateResolver.js (slugify, encode, decode, resolve) via TDD
+- [x] 01-03-PLAN.md — Implement linkedTemplateString.js plugin and register in buildPlugins()
+- [x] 01-04-PLAN.md — Wire plugin into PrintTemplateDesigner: toolbar button + decode-on-load + encode-on-save
+- [x] 01-05-PLAN.md — Wire resolveExpression into PrintDialog + backend slug uniqueness validation
 
 ### Phase 2: ZPL Generator
 **Goal**: A `generateZpl()` function converts any pdfme template and resolved inputs into a valid, printer-ready ZPL string supporting text, barcodes, and QR codes
@@ -46,7 +46,10 @@ Plans:
   2. Text fields, QR codes, code128, code39, EAN-13, and GS1 DataMatrix fields all produce correct ZPL commands at the right coordinates
   3. pdfme mm coordinates map accurately to ZPL dots at configurable DPI (default 203)
   4. Image fields are silently skipped with a console warning and do not break generation
-**Plans**: TBD
+**Plans**: 1 plan
+
+Plans:
+- [ ] 02-01-PLAN.md — TDD: Export prereqs, implement generateZpl with all field types (text, barcodes, image skip, envelope)
 
 ### Phase 3: Print Service
 **Goal**: A deployable on-prem service accepts ZPL or PDF data from the browser and forwards it as raw bytes over TCP to any LAN printer
@@ -79,6 +82,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Template String Plugin | 5/5 | Complete   | 2026-03-13 |
-| 2. ZPL Generator | 0/TBD | Not started | - |
+| 2. ZPL Generator | 0/1 | Planned | - |
 | 3. Print Service | 0/TBD | Not started | - |
 | 4. Full Integration | 0/TBD | Not started | - |
