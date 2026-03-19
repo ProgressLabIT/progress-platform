@@ -56,8 +56,8 @@ Plans:
 **Depends on**: Phase 2
 **Requirements**: SVC-01, SVC-02, SVC-03, SVC-04, SVC-05
 **Success Criteria** (what must be TRUE):
-  1. `POST /api/print-job` accepts a valid payload, stores a PrintJob DB record, and enqueues an SSE event; `GET /api/print-jobs/stream` delivers jobs to the print service subscriber
-  2. The print service subscribes to the SSE stream, sends data over TCP to `printer_host:printer_port`, and POSTs the result back to `/api/print-jobs/{id}/result`
+  1. `POST /api/print-job` accepts a valid payload, generates a uuid4 job_id in memory (no DB collection), and enqueues an SSE event on the "print-jobs" subtopic; `GET /api/print-jobs/stream` delivers jobs to the print service subscriber
+  2. The print service subscribes to the SSE stream, sends data over TCP to `printer_host:printer_port`, and POSTs the result back to `/api/print-jobs/{id}/result` which enqueues a "print-result" SSE event
   3. The service runs in Docker via `deploy/compose/print.yaml` with `traefik.enable=false` and no inbound port requirements
   4. Both ZPL (ASCII-encoded) and PDF (base64-decoded) formats are accepted; TCP errors are classified as `connection_refused`, `timeout`, or `send_error`
 **Plans**: 2 plans
@@ -67,15 +67,18 @@ Plans:
 - [ ] 03-02-PLAN.md — Create standalone print service (SSE subscriber + TCP sender), Dockerfile, and Docker Compose deployment
 
 ### Phase 4: Full Integration
-**Goal**: Factory operators can print labels directly to any configured printer from the main app print dialog and the warehouse app, replacing all hardcoded ZPL and `/pstprint` dependencies
+**Goal**: Factory operators can print labels directly to any configured printer from the main app print dialog and the warehouse app, with real-time success/error feedback via SSE, replacing all hardcoded ZPL and `/pstprint` dependencies
 **Depends on**: Phase 3
-**Requirements**: DIAL-01, DIAL-02, DIAL-03, DIAL-04, DIAL-05, DIAL-06, WH-01, WH-02, WH-03, DOC-01
+**Requirements**: DIAL-01, DIAL-02, DIAL-03, DIAL-04, DIAL-05, DIAL-06, SSE-01, SSE-02, WH-01, WH-02, WH-03, DOC-01
+  - `SSE-01`: Frontend subscribes to `/notification/print-result` SSE stream after submitting a print job
+  - `SSE-02`: Frontend filters "print-result" events by `job_id` to display success or error feedback for the originating request
 **Success Criteria** (what must be TRUE):
   1. When `printServerURL` is set in `appConfig.js`, the print dialog step 3 shows a "Send to Printer" action with printer selector and quantity input alongside the existing "Download PDF" button
   2. Selecting a ZPL printer triggers `generateZpl()` → send ZPL; selecting a PDF printer triggers `generate()` → base64 → send PDF
-  3. Admins can configure which pdfme template is used per warehouse label type (product label, position label) in main app settings
-  4. Warehouse app operators click print and labels come out — workflow is identical to before, but no longer depends on Zebra-specific `/pstprint` or hardcoded ZPL
-  5. `km/print-templates.md` covers all new capabilities: template string syntax, ZPL transpiler, print service deployment, printer type field, and `printServerURL` config
+  3. After submitting a print job, the frontend subscribes to the `/notification/print-result` SSE stream, filters events by the returned `job_id`, and displays a success toast or error message to the user
+  4. Admins can configure which pdfme template is used per warehouse label type (product label, position label) in main app settings
+  5. Warehouse app operators click print and labels come out — workflow is identical to before, but no longer depends on Zebra-specific `/pstprint` or hardcoded ZPL
+  6. `km/print-templates.md` covers all new capabilities: template string syntax, ZPL transpiler, print service deployment, printer type field, and `printServerURL` config
 **Plans**: TBD
 
 ## Progress

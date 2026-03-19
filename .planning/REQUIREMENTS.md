@@ -37,6 +37,8 @@
 - [ ] **DIAL-04**: "Download PDF" button (existing behavior) preserved alongside the new action
 - [ ] **DIAL-05**: `sendToPrintService({ data, printer, format, copies })` implemented in `lib/print/index.js`
 - [ ] **DIAL-06**: PrintDialog OK handler: `type === 'zpl'` → `generateZpl()` → send ZPL; `type === 'pdf'` → `generate()` → base64 → send PDF
+- [ ] **SSE-01**: Frontend subscribes to `/notification/print-result` SSE stream after submitting a print job, receiving real-time success/error feedback
+- [ ] **SSE-02**: Frontend filters "print-result" events by `job_id` to match each SSE event to the originating print request and display the correct success toast or error message
 
 ### Warehouse App Integration
 
@@ -88,14 +90,16 @@
 | DIAL-04 | Phase 4 | Pending |
 | DIAL-05 | Phase 4 | Pending |
 | DIAL-06 | Phase 4 | Pending |
+| SSE-01 | Phase 4 | Pending |
+| SSE-02 | Phase 4 | Pending |
 | WH-01 | Phase 4 | Pending |
 | WH-02 | Phase 4 | Pending |
 | WH-03 | Phase 4 | Pending |
 | DOC-01 | Phase 4 | Pending |
 
 **Coverage:**
-- v1 requirements: 25 total
-- Mapped to phases: 25
+- v1 requirements: 27 total
+- Mapped to phases: 27
 - Unmapped: 0 ✓
 
 ---
