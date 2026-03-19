@@ -58,7 +58,9 @@ All sizes use **Red Hat Text**. Orbitron is reserved for `.display` brand elemen
 | Body | 16px (1rem) | 400 (regular) | 1.2 | Form field values, table cell content, toast message body |
 | Label | 14px (0.875rem) | 500 (medium) | 1.2 | Form field labels (`q-input` label prop), table column headers, q-tab labels |
 | Heading | ~18.7px (1.17rem) | 500 (medium) | 1.2 | Dialog section headers using `.text-h3` |
-| Overline | ~10.7px (0.67rem) | 700 (bold), uppercase | 1.2 | Column category labels using `.overline` class |
+| Overline | ~10.7px (0.67rem) | 500 (medium), uppercase | 1.2 | Column category labels using `.overline` class |
+
+Weights: exactly 2 — 400 (regular) for body; 500 (medium) for label, heading, and overline. Overline is visually differentiated from labels by its smaller size (~10.7px) and `text-transform: uppercase` — no additional bold weight is needed.
 
 Source: `typography.scss` — `.text-h3 { font-size: 1.17rem; font-weight: 500 }`, `.q-tab { font-size: 0.875rem; font-weight: 500 }`, `body { line-height: 1.2 }`.
 
@@ -99,6 +101,8 @@ Source: `quasar.variables.scss`, `theme.scss`, existing `PrintDialog.vue` button
 New and modified components for this phase. Implementors must match these patterns exactly.
 
 ### PrintDialog.vue — Step 3 additions
+
+**Focal point:** `Send to [name]` button — the only `color="primary"` element in step 3 stepper navigation. All other buttons use `color="theme-grey"`. This asymmetry directs operator attention to the primary print action.
 
 **States:**
 
