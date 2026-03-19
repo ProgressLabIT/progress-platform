@@ -1,0 +1,42 @@
+{
+  "version": "1.0",
+  "timestamp": "2026-03-19T11:00:22.529Z",
+  "phase": "03",
+  "phase_name": "print-service",
+  "phase_dir": ".planning/phases/03-print-service",
+  "plan": null,
+  "task": "mid-UAT",
+  "status": "paused",
+  "completed_tasks": [
+    {"id": 1, "name": "UAT file created (03-UAT.md)", "status": "done"},
+    {"id": 2, "name": "CI: add build:print-service job", "status": "done"},
+    {"id": 3, "name": "Compose: progress network + default API URL", "status": "done"},
+    {"id": 4, "name": "Auth: verify_print_service_token scoping", "status": "done"},
+    {"id": 5, "name": "db_init: PrintJob collection + token generation", "status": "done"},
+    {"id": 6, "name": "Ansible: print service setup block", "status": "done"}
+  ],
+  "remaining_tasks": [
+    {"id": 7, "name": "Commit all modified files", "status": "not_started"},
+    {"id": 8, "name": "Resume and complete UAT (6 tests pending, starting at test 1)", "status": "not_started"}
+  ],
+  "blockers": [],
+  "human_actions_pending": [],
+  "decisions": [
+    {"decision": "Docker secret via bind-mounted file (not swarm secret)", "rationale": "Keeps print service as standalone Compose, no need to join print server to swarm", "phase": "03"},
+    {"decision": "context=api + consumer_type=3psw for print service token", "rationale": "verify_token rejects api-context tokens; verify_print_service_token requires both, so the token is strictly scoped", "phase": "03"},
+    {"decision": "Fixed _key=print-service with overwrite=True in Token collection", "rationale": "Idempotent re-runs of db_init don't create duplicate tokens", "phase": "03"},
+    {"decision": "Token only in PROGRESS_PROD", "rationale": "Production service credential, not needed in DEV/TEST", "phase": "03"}
+  ],
+  "uncommitted_files": [
+    ".gitlab-ci.yml",
+    "backend/api/endpoints/print.py",
+    "backend/api/utils/auth.py",
+    "backend/print-service/config.py",
+    "deploy/compose/print.yaml",
+    "deploy/scripts/db_init.py",
+    "deploy/single_node_setup.yaml",
+    ".planning/phases/03-print-service/03-UAT.md"
+  ],
+  "next_action": "Commit the 7 modified files + 03-UAT.md, then resume UAT with /gsd:verify-work 3",
+  "context_notes": "UAT was interrupted at test 1 (Cold Start Smoke Test) to fix infrastructure gaps discovered during testing. All fixes are done and uncommitted. The auth refactor strictly scopes the print service token."
+}
