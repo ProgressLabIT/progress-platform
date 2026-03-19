@@ -1,42 +1,45 @@
 {
   "version": "1.0",
-  "timestamp": "2026-03-19T11:00:22.529Z",
+  "timestamp": "2026-03-19T11:45:55.148Z",
   "phase": "03",
   "phase_name": "print-service",
   "phase_dir": ".planning/phases/03-print-service",
-  "plan": null,
-  "task": "mid-UAT",
+  "plan": 2,
+  "task": "post-plan credential refactor",
+  "total_tasks": 6,
   "status": "paused",
   "completed_tasks": [
-    {"id": 1, "name": "UAT file created (03-UAT.md)", "status": "done"},
-    {"id": 2, "name": "CI: add build:print-service job", "status": "done"},
-    {"id": 3, "name": "Compose: progress network + default API URL", "status": "done"},
-    {"id": 4, "name": "Auth: verify_print_service_token scoping", "status": "done"},
-    {"id": 5, "name": "db_init: PrintJob collection + token generation", "status": "done"},
-    {"id": 6, "name": "Ansible: print service setup block", "status": "done"}
+    {"id": 1, "name": "Phase 03 plans executed (01 + 02)", "status": "done", "commit": "9bf7d414"},
+    {"id": 2, "name": "UAT infra fixes (CI, network, PrintJob collection, ansible setup)", "status": "done", "commit": "uncommitted"},
+    {"id": 3, "name": "Credential management refactor — print_service user + login-based auth", "status": "done", "commit": "uncommitted"}
   ],
   "remaining_tasks": [
-    {"id": 7, "name": "Commit all modified files", "status": "not_started"},
-    {"id": 8, "name": "Resume and complete UAT (6 tests pending, starting at test 1)", "status": "not_started"}
+    {"id": 4, "name": "Commit all modified files", "status": "not_started"},
+    {"id": 5, "name": "Resume UAT — all 6 tests still pending", "status": "not_started"},
+    {"id": 6, "name": "Update handoff after UAT", "status": "not_started"}
   ],
   "blockers": [],
-  "human_actions_pending": [],
+  "human_actions_pending": [
+    {"action": "Run UAT tests 1-6 manually", "context": "Tests require a live environment with print service running", "blocking": true}
+  ],
   "decisions": [
-    {"decision": "Docker secret via bind-mounted file (not swarm secret)", "rationale": "Keeps print service as standalone Compose, no need to join print server to swarm", "phase": "03"},
-    {"decision": "context=api + consumer_type=3psw for print service token", "rationale": "verify_token rejects api-context tokens; verify_print_service_token requires both, so the token is strictly scoped", "phase": "03"},
-    {"decision": "Fixed _key=print-service with overwrite=True in Token collection", "rationale": "Idempotent re-runs of db_init don't create duplicate tokens", "phase": "03"},
-    {"decision": "Token only in PROGRESS_PROD", "rationale": "Production service credential, not needed in DEV/TEST", "phase": "03"}
+    {"decision": "Print service authenticates via /api/auth instead of static JWT", "rationale": "Eliminates duplicated token-generation logic in db_init; print_service user created same way as cadmin; token refresh handled automatically on reconnect", "phase": "03"},
+    {"decision": "Added scope field to TokenData model", "rationale": "scope was silently dropped from JWT payload; now included so verify_print_service_token can check print_service scope without a DB lookup", "phase": "03"},
+    {"decision": "verify_print_service_token checks context=USER_SESSION + scope contains print_service", "rationale": "Replaces context=api+consumer_type=3psw check; semantically cleaner — print service is a regular user with restricted scope", "phase": "03"},
+    {"decision": "print_service_pwd generated separately from main secrets loop", "rationale": "Main secrets loop pipes directly to Docker without saving the value; print service needs it written to a file for compose AND as swarm secret for init-db", "phase": "03"}
   ],
   "uncommitted_files": [
     ".gitlab-ci.yml",
     "backend/api/endpoints/print.py",
+    "backend/api/models/auth.py",
     "backend/api/utils/auth.py",
     "backend/print-service/config.py",
+    "backend/print-service/main.py",
     "deploy/compose/print.yaml",
     "deploy/scripts/db_init.py",
     "deploy/single_node_setup.yaml",
     ".planning/phases/03-print-service/03-UAT.md"
   ],
-  "next_action": "Commit the 7 modified files + 03-UAT.md, then resume UAT with /gsd:verify-work 3",
-  "context_notes": "UAT was interrupted at test 1 (Cold Start Smoke Test) to fix infrastructure gaps discovered during testing. All fixes are done and uncommitted. The auth refactor strictly scopes the print service token."
+  "next_action": "Commit all modified files, then resume UAT with /gsd:verify-work 3 — test 1 (Cold Start Smoke Test) is first",
+  "context_notes": "Two rounds of infra changes: (1) original UAT pre-flight fixes (CI, network, PrintJob collection, ansible setup block), (2) credential management refactor replacing static JWT with print_service user + login-based auth. Both sets are complete and uncommitted. The auth refactor touches 7 files but is minimal — no new endpoints, just a user record, scope field in TokenData model, and authenticate() call on startup in main.py."
 }
