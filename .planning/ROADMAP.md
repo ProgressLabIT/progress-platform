@@ -63,8 +63,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 03-01-PLAN.md — Add PrintJob models and print job endpoints (POST /print-job, SSE stream, result callback) to main API
-- [ ] 03-02-PLAN.md — Create standalone print service (SSE subscriber + TCP sender), Dockerfile, and Docker Compose deployment
+- [x] 03-01-PLAN.md — Add PrintJob models and print job endpoints (POST /print-job, SSE stream, result callback) to main API
+- [x] 03-02-PLAN.md — Create standalone print service (SSE subscriber + TCP sender), Dockerfile, and Docker Compose deployment
 
 ### Phase 4: Full Integration
 **Goal**: Factory operators can print labels directly to any configured printer from the main app print dialog and the warehouse app, with real-time success/error feedback via SSE, replacing all hardcoded ZPL and `/pstprint` dependencies
@@ -73,13 +73,19 @@ Plans:
   - `SSE-01`: Frontend subscribes to `/notification/print-result` SSE stream after submitting a print job
   - `SSE-02`: Frontend filters "print-result" events by `job_id` to display success or error feedback for the originating request
 **Success Criteria** (what must be TRUE):
-  1. When `printServerURL` is set in `appConfig.js`, the print dialog step 3 shows a "Send to Printer" action with printer selector and quantity input alongside the existing "Download PDF" button
+  1. When user has a printer configured in preferences, the print dialog step 3 shows a "Send to [printer name]" action alongside the existing "Download PDF" button
   2. Selecting a ZPL printer triggers `generateZpl()` → send ZPL; selecting a PDF printer triggers `generate()` → base64 → send PDF
   3. After submitting a print job, the frontend subscribes to the `/notification/print-result` SSE stream, filters events by the returned `job_id`, and displays a success toast or error message to the user
   4. Admins can configure which pdfme template is used per warehouse label type (product label, position label) in main app settings
   5. Warehouse app operators click print and labels come out — workflow is identical to before, but no longer depends on Zebra-specific `/pstprint` or hardcoded ZPL
-  6. `km/print-templates.md` covers all new capabilities: template string syntax, ZPL transpiler, print service deployment, printer type field, and `printServerURL` config
-**Plans**: TBD
+  6. `km/print-templates.md` covers all new capabilities: template string syntax, ZPL transpiler, print service deployment, printer type field, and warehouse template assignment
+**Plans**: 4 plans
+
+Plans:
+- [ ] 04-01-PLAN.md — Printer type/timeout fields + sendToPrintService/waitForPrintResult lib functions
+- [ ] 04-02-PLAN.md — PrintDialog "Send to Printer" button with ZPL/PDF routing and SSE feedback
+- [ ] 04-03-PLAN.md — Warehouse settings template selectors + warehouse print function replacement
+- [ ] 04-04-PLAN.md — Documentation: km/print-templates.md update
 
 ## Progress
 
@@ -91,4 +97,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | 1. Template String Plugin | 5/5 | Complete   | 2026-03-13 |
 | 2. ZPL Generator | 1/1 | Complete   | 2026-03-18 |
 | 3. Print Service | 2/2 | Complete   | 2026-03-18 |
-| 4. Full Integration | 0/TBD | Not started | - |
+| 4. Full Integration | 0/4 | Planning complete | - |
