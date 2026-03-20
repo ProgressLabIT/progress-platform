@@ -1,9 +1,9 @@
 ---
-status: complete
+status: resolved
 phase: 04-full-integration
 source: [04-01-SUMMARY.md, 04-02-SUMMARY.md, 04-03-SUMMARY.md, 04-04-SUMMARY.md]
 started: 2026-03-20T10:15:00Z
-updated: 2026-03-20T10:35:00Z
+updated: 2026-03-20T12:00:00Z
 ---
 
 ## Current Test
@@ -65,21 +65,38 @@ skipped: 1
 ## Gaps
 
 - truth: "Clicking Send to Printer submits a print job via API and shows spinner until result arrives"
-  status: failed
+  status: resolved
   reason: "User reported: after clicking the send to printer button the buttons disappear, the spinner appears, but only for a very short time, then an error notification appears saying 'Maximum call stack exceeded'. No api calls are shown in the inspector."
   severity: blocker
   test: 5
-  root_cause: ""
-  artifacts: []
-  missing: []
-  debug_session: ""
+  root_cause: "PrintDialog.vue line 742 uses btoa(String.fromCharCode(...new Uint8Array(pdfBytes))) — spread operator expands the full PDF byte array (50–500KB) as individual function arguments, exceeding V8's max argument count (~65k). Crash is synchronous before sendToPrintService() fires. Fix: replace with chunked btoa conversion (loop over 8192-byte slices)."
+  artifacts:
+    - path: "webapps/main/src/components/PrintDialog.vue"
+      issue: "line 742: btoa(String.fromCharCode(...new Uint8Array(pdfBytes))) causes RangeError on any real PDF"
+    - path: "webapps/main/src/lib/print/index.js"
+      issue: "generatePdf() helper at lines 29–50 exists and returns raw bytes correctly but is not imported/used by PrintDialog.vue"
+  missing:
+    - "Replace spread-based btoa with chunked conversion (8192 bytes per slice)"
+    - "Optionally import generatePdf() from lib/print/index.js to deduplicate generate() call"
+  debug_session: ".planning/debug/print-dialog-stack-overflow.md"
 
 - truth: "Warehouse print notifications reflect actual print outcome (error shown on failure); notifications use theme colors (theme-green/theme-orange/theme-red)"
-  status: failed
+  status: resolved
   reason: "User reported: The print-service correctly handles the thing, receiving the event and sending it to the configured printer, which then fails, but in the UI there's no hint at the failure, instead only a success notification is shown. Also, the notification is not set with the theme color. Success should use theme-green, warning theme-orange, error theme-red."
   severity: major
   test: 9
-  root_cause: ""
-  artifacts: []
-  missing: []
-  debug_session: ""
+  root_cause: "Two separate bugs. (1) printProductLabel/printPositionLabel fire success toast immediately after POST /print-job returns job_id (enqueue confirmation), never calling waitForPrintResult() to get the actual printer outcome from the SSE stream. (2) All 8 Notify.create calls use Quasar built-in type:'positive'/'negative' instead of the app pattern color:'theme-green'/'theme-red'/'theme-orange'."
+  artifacts:
+    - path: "webapps/warehouse/src/lib/print/index.js"
+      issue: "lines 134–135 and 172–174: submitPrintJob result discarded, positive toast fired unconditionally with no SSE result check"
+    - path: "webapps/warehouse/src/lib/print/index.js"
+      issue: "all 8 Notify.create calls use type:'positive'/'negative' instead of color:'theme-*'"
+    - path: "webapps/main/src/lib/print/index.js"
+      issue: "reference: waitForPrintResult() at lines 78–104 is what warehouse lib is missing"
+    - path: "webapps/main/src/components/PrintDialog.vue"
+      issue: "reference: lines 746–757 show correct branching on result.ok / result.error === 'timeout'"
+  missing:
+    - "Call waitForPrintResult(job_id, timeoutMs) after submitPrintJob in printProductLabel and printPositionLabel"
+    - "Branch on result.ok (success), result.error === 'timeout' (warning), other errors (failure)"
+    - "Replace all type:'positive' with color:'theme-green' and type:'negative' with color:'theme-red'; use color:'theme-orange' for timeout"
+  debug_session: ".planning/debug/warehouse-print-success-on-failure.md"
