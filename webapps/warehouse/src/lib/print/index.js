@@ -101,6 +101,32 @@ async function submitPrintJob(zplData, printer) {
 }
 
 /**
+ * Wait for the SSE print-result event for a given job_id.
+ * Resolves with { ok, error, detail } when the result arrives or on timeout.
+ */
+function waitForPrintResult(jobId, timeoutMs) {
+  return new Promise((resolve) => {
+    const url = api.defaults.baseURL + '/notification/print-result';
+    const source = new EventSource(url, { withCredentials: false });
+    const timer = setTimeout(() => {
+      source.close();
+      resolve({ ok: false, error: 'timeout', detail: null });
+    }, timeoutMs);
+    source.addEventListener('print-result', (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.job_id === jobId) {
+          clearTimeout(timer);
+          source.close();
+          resolve({ ok: data.ok, error: data.error ?? null, detail: data.detail ?? null });
+        }
+      } catch (e) { /* ignore */ }
+    });
+    source.onerror = () => {};
+  });
+}
+
+/**
  * Print a product label using the configured product label template.
  * Preserves the same function signature as the original for backward compatibility.
  * @param {string} productCode
@@ -111,19 +137,19 @@ export async function printProductLabel(productCode, productDescription) {
     const { config } = useConfigStore();
     const templateKey = config.productLabelTemplate;
     if (!templateKey) {
-      Notify.create({ type: 'negative', message: $t('alerts.no_template_configured') || 'No product label template configured' });
+      Notify.create({ color: 'theme-red', message: $t('alerts.no_template_configured') || 'No product label template configured' });
       return;
     }
 
     const printer = getUserPrinter();
     if (!printer) {
-      Notify.create({ type: 'negative', message: $t('alerts.no_printer_found') });
+      Notify.create({ color: 'theme-red', message: $t('alerts.no_printer_found') });
       return;
     }
 
     const templateData = await fetchTemplate(templateKey);
     if (!templateData) {
-      Notify.create({ type: 'negative', message: 'Failed to load print template' });
+      Notify.create({ color: 'theme-red', message: 'Failed to load print template' });
       return;
     }
 
@@ -131,11 +157,19 @@ export async function printProductLabel(productCode, productDescription) {
     const inputs = resolveTemplateInputs(templateData, context);
     const zpl = generateZpl(templateData.template, inputs, { dpi: 203, quantity: 1 });
 
-    await submitPrintJob(zpl, printer);
-    Notify.create({ type: 'positive', message: $t('alerts.print_job_sent') || 'Label sent to printer' });
+    const { data: responseData } = await submitPrintJob(zpl, printer);
+    const timeoutMs = ((printer.timeout_seconds ?? 5) + 5) * 1000;
+    const result = await waitForPrintResult(responseData.job_id, timeoutMs);
+    if (result.ok) {
+      Notify.create({ color: 'theme-green', message: $t('alerts.print_job_sent') || 'Label sent to printer' });
+    } else if (result.error === 'timeout') {
+      Notify.create({ color: 'theme-orange', message: $t('alerts.print_timeout') || 'Printer did not respond in time' });
+    } else {
+      Notify.create({ color: 'theme-red', message: result.detail || $t('alerts.print_failed') || 'Print failed' });
+    }
   } catch (error) {
     console.error('printProductLabel error:', error);
-    Notify.create({ type: 'negative', message: error.message || 'Print failed' });
+    Notify.create({ color: 'theme-red', message: error.message || 'Print failed' });
   }
 }
 
@@ -149,19 +183,19 @@ export async function printPositionLabel(position) {
     const { config } = useConfigStore();
     const templateKey = config.positionLabelTemplate;
     if (!templateKey) {
-      Notify.create({ type: 'negative', message: $t('alerts.no_template_configured') || 'No position label template configured' });
+      Notify.create({ color: 'theme-red', message: $t('alerts.no_template_configured') || 'No position label template configured' });
       return;
     }
 
     const printer = getUserPrinter();
     if (!printer) {
-      Notify.create({ type: 'negative', message: $t('alerts.no_printer_found') });
+      Notify.create({ color: 'theme-red', message: $t('alerts.no_printer_found') });
       return;
     }
 
     const templateData = await fetchTemplate(templateKey);
     if (!templateData) {
-      Notify.create({ type: 'negative', message: 'Failed to load print template' });
+      Notify.create({ color: 'theme-red', message: 'Failed to load print template' });
       return;
     }
 
@@ -170,10 +204,18 @@ export async function printPositionLabel(position) {
     const inputs = resolveTemplateInputs(templateData, context);
     const zpl = generateZpl(templateData.template, inputs, { dpi: 203, quantity: 1 });
 
-    await submitPrintJob(zpl, printer);
-    Notify.create({ type: 'positive', message: $t('alerts.print_job_sent') || 'Label sent to printer' });
+    const { data: responseData } = await submitPrintJob(zpl, printer);
+    const timeoutMs = ((printer.timeout_seconds ?? 5) + 5) * 1000;
+    const result = await waitForPrintResult(responseData.job_id, timeoutMs);
+    if (result.ok) {
+      Notify.create({ color: 'theme-green', message: $t('alerts.print_job_sent') || 'Label sent to printer' });
+    } else if (result.error === 'timeout') {
+      Notify.create({ color: 'theme-orange', message: $t('alerts.print_timeout') || 'Printer did not respond in time' });
+    } else {
+      Notify.create({ color: 'theme-red', message: result.detail || $t('alerts.print_failed') || 'Print failed' });
+    }
   } catch (error) {
     console.error('printPositionLabel error:', error);
-    Notify.create({ type: 'negative', message: error.message || 'Print failed' });
+    Notify.create({ color: 'theme-red', message: error.message || 'Print failed' });
   }
 }
