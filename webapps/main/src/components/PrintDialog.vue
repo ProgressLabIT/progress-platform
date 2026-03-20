@@ -739,7 +739,13 @@ async function sendToPrinter() {
       }
       const cleanTemplate = { basePdf: template.basePdf, schemas: cleanSchemas };
       const pdfBytes = await generate({ template: cleanTemplate, inputs, plugins: pdfmePlugins });
-      data = btoa(String.fromCharCode(...new Uint8Array(pdfBytes)));
+      const bytes = new Uint8Array(pdfBytes);
+      let binary = '';
+      const chunkSize = 8192;
+      for (let i = 0; i < bytes.length; i += chunkSize) {
+        binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize));
+      }
+      data = btoa(binary);
       format = 'pdf';
     }
 
