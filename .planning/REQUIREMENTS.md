@@ -48,7 +48,7 @@
 
 ### Documentation
 
-- [ ] **DOC-01**: `km/print-templates.md` updated: template string field (syntax, storage format, resolution), ZPL transpiler (field mapping, coordinate conversion, supported types, image deferral), print service (deployment, endpoint contract, CORS), printer `type` field, `printServerURL` config
+- [x] **DOC-01**: `km/print-templates.md` updated: template string field (syntax, storage format, resolution), ZPL transpiler (field mapping, coordinate conversion, supported types, image deferral), print service (deployment, endpoint contract, CORS), printer `type` field, `printServerURL` config
 
 ## v2 Requirements
 
@@ -95,7 +95,7 @@
 | WH-01 | Phase 4 | Complete |
 | WH-02 | Phase 4 | Complete |
 | WH-03 | Phase 4 | Complete |
-| DOC-01 | Phase 4 | Pending |
+| DOC-01 | Phase 4 | Complete |
 
 **Coverage:**
 - v1 requirements: 27 total
