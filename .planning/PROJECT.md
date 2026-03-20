@@ -79,4 +79,4 @@ Factory operators can print labels directly to any ZPL printer by pressing one b
 ---
 **Current state:** All 4 phases complete. Printing v2 fully operational — template string fields, ZPL transpiler, print service deployed, full-stack integration wired. Milestone v1.0 complete.
 
-*Last updated: 2026-03-20 — Phase 4 complete — Milestone v1.0 complete*
+*Last updated: 2026-03-20 — Phase 4 gap closure complete — all UAT blockers resolved — Milestone v1.0 complete*
