@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Completed 04-05-PLAN.md
-last_updated: "2026-03-20T13:05:34.828Z"
+stopped_at: Completed 04-06-PLAN.md
+last_updated: "2026-03-20T13:06:04.062Z"
 progress:
   total_phases: 4
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 14
-  completed_plans: 13
+  completed_plans: 14
 ---
 
 # Project State
@@ -60,6 +60,7 @@ Plan: 1 of 6
 | Phase 04-full-integration P03 | 8 | 2 tasks | 4 files |
 | Phase 04-full-integration P04 | 2 | 1 tasks | 1 files |
 | Phase 04-full-integration P05 | 1 | 1 tasks | 1 files |
+| Phase 04-full-integration P06 | 1 | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -96,6 +97,8 @@ Decisions logged in PROJECT.md Key Decisions table.
 - [Phase 04-full-integration]: BrowserPrint removed from lib/print/ only; PrintLabelForm.vue BrowserPrint usage is out of scope for this plan
 - [Phase 04-full-integration]: PRINT_SERVICE_API_PASSWORD documented (secret-mounted) rather than PRINT_SERVICE_API_TOKEN - matches actual config.py field name (api_password via secret)
 - [Phase 04-full-integration]: chunkSize=8192 chosen for btoa loop in PrintDialog — safely under V8 ~65000 arg limit, eliminates stack overflow for any PDF size
+- [Phase 04-full-integration]: timeout derived from printer.timeout_seconds + 5s buffer matches main app PrintDialog pattern
+- [Phase 04-full-integration]: waitForPrintResult added as module-private function — callers don't need direct SSE access
 
 ### Pending Todos
 
@@ -113,6 +116,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-20T13:05:34.824Z
-Stopped at: Completed 04-05-PLAN.md
+Last session: 2026-03-20T13:06:04.059Z
+Stopped at: Completed 04-06-PLAN.md
 Resume file: None
