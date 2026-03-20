@@ -79,13 +79,15 @@ Plans:
   4. Admins can configure which pdfme template is used per warehouse label type (product label, position label) in main app settings
   5. Warehouse app operators click print and labels come out — workflow is identical to before, but no longer depends on Zebra-specific `/pstprint` or hardcoded ZPL
   6. `km/print-templates.md` covers all new capabilities: template string syntax, ZPL transpiler, print service deployment, printer type field, and warehouse template assignment
-**Plans**: 4 plans
+**Plans**: 6 plans
 
 Plans:
-- [ ] 04-01-PLAN.md — Printer type/timeout fields + sendToPrintService/waitForPrintResult lib functions
-- [ ] 04-02-PLAN.md — PrintDialog "Send to Printer" button with ZPL/PDF routing and SSE feedback
-- [ ] 04-03-PLAN.md — Warehouse settings template selectors + warehouse print function replacement
-- [ ] 04-04-PLAN.md — Documentation: km/print-templates.md update
+- [x] 04-01-PLAN.md — Printer type/timeout fields + sendToPrintService/waitForPrintResult lib functions
+- [x] 04-02-PLAN.md — PrintDialog "Send to Printer" button with ZPL/PDF routing and SSE feedback
+- [x] 04-03-PLAN.md — Warehouse settings template selectors + warehouse print function replacement
+- [x] 04-04-PLAN.md — Documentation: km/print-templates.md update
+- [ ] 04-05-PLAN.md — Fix PrintDialog PDF btoa stack overflow (gap closure)
+- [ ] 04-06-PLAN.md — Fix warehouse print SSE feedback + theme colors (gap closure)
 
 ## Progress
 
@@ -97,4 +99,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | 1. Template String Plugin | 5/5 | Complete   | 2026-03-13 |
 | 2. ZPL Generator | 1/1 | Complete   | 2026-03-18 |
 | 3. Print Service | 2/2 | Complete   | 2026-03-18 |
-| 4. Full Integration | 4/4 | Complete   | 2026-03-20 |
+| 4. Full Integration | 4/6 | UAT Fixes | - |
