@@ -22,12 +22,12 @@ Factory operators can print labels directly to any ZPL printer by pressing one b
 - [x] Template string (`{{variable}}`) field type in pdfme designer for composite text labels — Validated in Phase 1: Template String Plugin
 - [x] ZPL transpiler that converts pdfme template schemas + resolved inputs into valid ZPL strings (text, barcodes, QR — images deferred) — Validated in Phase 2: ZPL Generator
 - [x] On-prem print service: SSE-subscriber Python process that forwards ZPL or PDF bytes to a printer on the LAN — Validated in Phase 3: Print Service
-- [ ] Print dialog step 3 extended: "Download PDF" (existing) + "Send to Printer" with printer selector and quantity input
-- [ ] Printer model gets a `type` field (`zpl` | `pdf`) in the settings UI
-- [ ] Main app settings: configure which pdfme template is used per label type (product label, position label) for the warehouse app
-- [ ] Warehouse app print flow uses the new print service + configured templates instead of hardcoded ZPL + `/pstprint`
+- [x] Print dialog step 3: "Download PDF" (existing) + "Send to [printer name]" button — visible when user has printer preference set — Validated in Phase 4: Full Integration
+- [x] Printer model gets `type` (zpl/pdf) and `timeout_seconds` fields in settings UI — Validated in Phase 4: Full Integration
+- [x] Main app settings: configure product label template and position label template for the warehouse app — Validated in Phase 4: Full Integration
+- [x] Warehouse app print flow uses the new print service + configured templates instead of hardcoded ZPL + `/pstprint` — Validated in Phase 4: Full Integration
 - [x] Docker Compose service definition for the print service (`deploy/compose/print.yaml`) — Validated in Phase 3: Print Service
-- [ ] `printServerURL` option in `appConfig.js` (optional; enables direct printing when set)
+- [x] `printServerURL` approach superseded — button visibility driven by user printer preference; no appConfig.js change needed — Validated in Phase 4: Full Integration
 
 ### Out of Scope
 
@@ -63,17 +63,20 @@ Factory operators can print labels directly to any ZPL printer by pressing one b
 - **Portability**: Print service must work with any ZPL-compatible printer (not just Zebra), so no vendor-specific protocols
 - **No backend model changes**: pdfme template schema is the single source of truth for both PDF and ZPL — no new DB collections needed for this milestone
 - **Warehouse UX unchanged**: Operators' click-to-print workflow must not change — only the implementation behind it changes
-- **LAN-only relay**: Print service is direct-from-browser to LAN printer; not proxied through the main API
+- **LAN-only relay**: Print service is a server-side SSE subscriber — browser never calls it directly; all traffic goes through the main API
 
 ## Key Decisions
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| One pdfme template → two output paths (PDF + ZPL) | Avoids maintaining a separate ZPL editor or template type | — Pending |
-| Stateless TCP relay (not a driver/spooler) | Keeps service ~100 lines, no DB, no auth, easy to deploy on-prem | — Pending |
-| `traefik.enable=false` for print service | Browser calls it directly on LAN IP; no reverse proxy needed | — Pending |
-| ZPL images deferred | `^GFA` bitmap conversion is complex; text + barcodes cover 90% of label use cases | — Pending |
-| Warehouse app template config in main app (not warehouse app) | Admins configure templates, not operators; main app is the admin surface | — Pending |
+| One pdfme template → two output paths (PDF + ZPL) | Avoids maintaining a separate ZPL editor or template type | Validated |
+| Stateless TCP relay (SSE subscriber, not a spooler) | Keeps service ~100 lines, no DB, no auth, easy to deploy on-prem | Validated |
+| `traefik.enable=false` for print service | Print service is an outbound SSE client; no inbound ports needed | Validated |
+| ZPL images deferred | `^GFA` bitmap conversion is complex; text + barcodes cover 90% of label use cases | Validated |
+| Warehouse app template config in main app (not warehouse app) | Admins configure templates, not operators; main app is the admin surface | Validated |
+| "Send to Printer" uses user preference (no dialog dropdown) | Simpler UX — one button per user's configured printer; printer changed in settings, not per-print | Validated |
 
 ---
-*Last updated: 2026-03-18 — Phase 3 complete*
+**Current state:** All 4 phases complete. Printing v2 fully operational — template string fields, ZPL transpiler, print service deployed, full-stack integration wired. Milestone v1.0 complete.
+
+*Last updated: 2026-03-20 — Phase 4 complete — Milestone v1.0 complete*
