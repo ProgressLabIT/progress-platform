@@ -113,6 +113,7 @@ None yet.
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
 | 260319-ios | Update ROADMAP Phase 3+4 for stateless print arch + SSE print-result subscription | 2026-03-19 | fda25f62 | [260319-ios-update-roadmap-phase-4-print-result-sse-](./quick/260319-ios-update-roadmap-phase-4-print-result-sse-/) |
+| 260320-w3j | add position.code to the preset fields | 2026-03-20 | 308173ba | [260320-w3j-add-position-code-to-the-preset-fields](./quick/260320-w3j-add-position-code-to-the-preset-fields/) |
 | 260320-w3j | Add position.code to the preset fields (designer dropdown + TemplateContext runtime) | 2026-03-20 | b756a12f | [260320-w3j-add-position-code-to-the-preset-fields](./quick/260320-w3j-add-position-code-to-the-preset-fields/) |
 
 ## Session Continuity
