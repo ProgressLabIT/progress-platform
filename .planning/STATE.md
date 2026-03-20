@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Completed 04-02-PLAN.md
-last_updated: "2026-03-20T09:58:44.460Z"
+stopped_at: Completed 04-03-PLAN.md
+last_updated: "2026-03-20T10:02:04.739Z"
 progress:
   total_phases: 4
   completed_phases: 3
   total_plans: 12
-  completed_plans: 10
+  completed_plans: 11
 ---
 
 # Project State
@@ -57,6 +57,7 @@ Plan: 2 of 4
 | Phase 03-print-service P02 | 5 | 2 tasks | 7 files |
 | Phase 04-full-integration P01 | 3 | 2 tasks | 4 files |
 | Phase 04-full-integration P02 | 2 | 2 tasks | 1 files |
+| Phase 04-full-integration P03 | 8 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -89,6 +90,8 @@ Decisions logged in PROJECT.md Key Decisions table.
 - [Phase 04-full-integration]: api import added to lib/print/index.js from @/boot/axios (was absent from file)
 - [Phase 04-full-integration]: sendToPrinter uses onDialogHide() not onDialogOK() — keeps download and print paths independent with no code changes to usePrintDialog
 - [Phase 04-full-integration]: No printServerURL or appConfig.js changes (DIAL-01 superseded) — button visibility driven by selectedPrinter computed
+- [Phase 04-full-integration]: Used existing settings.productLabelTemplate and settings.positionLabelTemplate i18n keys (not warehouse-namespaced path) — keys already existed at top-level settings path
+- [Phase 04-full-integration]: BrowserPrint removed from lib/print/ only; PrintLabelForm.vue BrowserPrint usage is out of scope for this plan
 
 ### Pending Todos
 
@@ -106,6 +109,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-20T09:58:44.457Z
-Stopped at: Completed 04-02-PLAN.md
+Last session: 2026-03-20T10:02:04.736Z
+Stopped at: Completed 04-03-PLAN.md
 Resume file: None

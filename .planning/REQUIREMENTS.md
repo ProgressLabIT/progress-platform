@@ -42,9 +42,9 @@
 
 ### Warehouse App Integration
 
-- [ ] **WH-01**: Main app settings section to configure which pdfme template is used per warehouse label type (product label, position label)
-- [ ] **WH-02**: Warehouse app product/position label printing uses the configured pdfme templates + new print service instead of hardcoded ZPL + `/pstprint`
-- [ ] **WH-03**: Warehouse app operator UX is unchanged — click-to-print behavior identical to current
+- [x] **WH-01**: Main app settings section to configure which pdfme template is used per warehouse label type (product label, position label)
+- [x] **WH-02**: Warehouse app product/position label printing uses the configured pdfme templates + new print service instead of hardcoded ZPL + `/pstprint`
+- [x] **WH-03**: Warehouse app operator UX is unchanged — click-to-print behavior identical to current
 
 ### Documentation
 
@@ -92,9 +92,9 @@
 | DIAL-06 | Phase 4 | Complete |
 | SSE-01 | Phase 4 | Complete |
 | SSE-02 | Phase 4 | Complete |
-| WH-01 | Phase 4 | Pending |
-| WH-02 | Phase 4 | Pending |
-| WH-03 | Phase 4 | Pending |
+| WH-01 | Phase 4 | Complete |
+| WH-02 | Phase 4 | Complete |
+| WH-03 | Phase 4 | Complete |
 | DOC-01 | Phase 4 | Pending |
 
 **Coverage:**
