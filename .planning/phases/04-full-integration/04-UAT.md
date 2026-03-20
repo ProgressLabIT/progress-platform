@@ -1,13 +1,15 @@
 ---
-status: testing
+status: complete
 phase: 04-full-integration
 source: [04-05-SUMMARY.md, 04-06-SUMMARY.md]
 started: 2026-03-20T12:30:00Z
-updated: 2026-03-20T12:30:00Z
+updated: 2026-03-20T17:00:00Z
 ---
 
 ## Current Test
 <!-- OVERWRITE each test - shows where we are -->
+
+## Current Test
 
 [testing complete]
 
@@ -33,10 +35,17 @@ skipped: 0
 
 ## Gaps
 
-- truth: "Warehouse print notifications reflect actual print outcome; red on failure, green on success, orange on timeout"
-  status: failed
-  reason: "User reported: First call correctly showed red notification. Subsequent calls showed green success despite printer being unreachable (127.0.0.1:9100, no listener). Print service logs show jobs routed to 192.168.1.57:9100 and returning OK. Also: SSE EventSource connections are not closed after receiving a result — multiple connections accumulate per print session."
+- truth: "SSE EventSource connections are closed after receiving a print result"
+  status: resolved
+  reason: "User reported: the client opens multiple SSE connections every time a job is sent, and they don't get closed."
   severity: major
   test: 2
-  artifacts: []
-  missing: []
+  root_cause: "server_event_manager.py push_events used blocking await queue.get() with no timeout — after source.close() was called client-side, the server generator was stuck waiting for the next event and never reached the is_disconnected() check. Also undergisterQueue had two bugs: inverted None check and dict.remove() (dicts have no .remove()). Fix: asyncio.wait_for with 1s timeout + finally block for undergisterQueue + use dict.pop()."
+  artifacts:
+    - path: "backend/api/managers/server_event_manager.py"
+      issue: "push_events blocked on queue.get() with no timeout; undergisterQueue used dict.remove() and inverted condition"
+  missing:
+    - "asyncio.wait_for(queue.get(), timeout=1.0) with TimeoutError continue"
+    - "Move undergisterQueue to finally block"
+    - "Fix undergisterQueue to use self.queue[topic].pop(requestID, None)"
+  note: "The subsequent 'false success' calls were not a code bug — print service logs show jobs going to 192.168.1.57:9100 (not 127.0.0.1), which is a real printer that recovered after the first send_error. User's preference was pointing to 192.168.1.57, not the 127.0.0.1 test printer."
