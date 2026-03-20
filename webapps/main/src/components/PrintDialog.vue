@@ -173,27 +173,42 @@
         </div>
 
         <q-stepper-navigation class="flex q-gutter-sm">
-          <q-btn
-            :label="$t('cancel')"
-            color="theme-grey"
-            @click="onDialogCancel"
-          />
+          <template v-if="!isPrinting">
+            <q-btn
+              :label="$t('cancel')"
+              color="theme-grey"
+              @click="onDialogCancel"
+            />
 
-          <q-space />
+            <q-space />
 
-          <q-btn :label="$t('back')" color="theme-grey" @click="activeStep--" />
-          <q-btn
-            :label="$t('save')"
-            color="primary"
-            :disable="isLoadingTemplate"
-            @click="
-              onDialogOK({
-                src: previewSrc,
-                printTemplate: selectedTemplate,
-                data: formModel,
-              })
-            "
-          />
+            <q-btn :label="$t('back')" color="theme-grey" @click="activeStep--" />
+            <q-btn
+              :label="$t('save')"
+              color="primary"
+              :disable="isLoadingTemplate"
+              @click="
+                onDialogOK({
+                  src: previewSrc,
+                  printTemplate: selectedTemplate,
+                  data: formModel,
+                })
+              "
+            />
+            <q-btn
+              v-if="selectedPrinter"
+              :label="$t('printDialog.sendToPrinter.label', { name: selectedPrinter.name })"
+              color="primary"
+              icon="mdi-printer"
+              :disable="isLoadingTemplate"
+              @click="sendToPrinter"
+            />
+          </template>
+          <template v-else>
+            <q-space />
+            <q-spinner color="primary" size="2em" />
+            <q-space />
+          </template>
         </q-stepper-navigation>
       </q-step>
     </q-stepper>
@@ -202,14 +217,17 @@
 
 <script setup>
 import { generate } from '@pdfme/generator';
-import { useDialogPluginComponent } from 'quasar';
-import { nextTick, ref, reactive, toRaw } from 'vue';
+import { useDialogPluginComponent, Notify } from 'quasar';
+import { nextTick, ref, reactive, toRaw, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useStore } from 'vuex';
 import VuePdfEmbed from 'vue-pdf-embed';
 import { api } from '@/boot/axios';
 import { buildPlugins } from '@/lib/print/plugins';
 import { resolveExpression } from '@/lib/print/templateResolver.js';
+import { useConfigStore } from '@/stores/config';
+import { generateZpl } from '@/lib/print/zpl.js';
+import { sendToPrintService, waitForPrintResult } from '@/lib/print/index.js';
 import BaseDialog from '@/components/BaseDialog.vue';
 import LoadingSignal from '@/components/LoadingSignal.vue';
 import PrintTemplateCard from '@/components/PrintTemplateCard.vue';
@@ -297,6 +315,15 @@ const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } =
 // This can't be inside the template due to unwrapping
 // See: https://github.com/vuejs/composition-api/issues/317#issuecomment-1069145915
 const getDialogRef = () => dialogRef;
+
+const { config } = useConfigStore();
+const isPrinting = ref(false);
+
+const selectedPrinter = computed(() => {
+  const prefValue = store.state.session.user?.preferences?.printer;
+  if (!prefValue) return null;
+  return config.printers.find(p => `${p.host}:${p.port}` === prefValue) ?? null;
+});
 
 const activeStep = ref(0);
 const allowSelectTemplate = ref(true);
@@ -677,6 +704,64 @@ async function goToPreview() {
     // Go back to the previous step
     activeStep.value = 1;
   }
+}
+
+async function sendToPrinter() {
+  if (!selectedPrinter.value) return;
+  isPrinting.value = true;
+
+  try {
+    const printer = selectedPrinter.value;
+    let data;
+    let format;
+
+    if (printer.type === 'zpl') {
+      // ZPL path: generateZpl → send ZPL string
+      const inputs = await prepareInputs();
+      const zplString = generateZpl(selectedTemplate.value.template, inputs, { dpi: 203, quantity: 1 });
+      data = zplString;
+      format = 'zpl';
+    } else {
+      // PDF path: generate → base64
+      const { template } = selectedTemplate.value;
+      const cleanSchemas = JSON.parse(JSON.stringify(schemasToV5(template.schemas)));
+      // gs1datamatrix migration (same as goToPreview)
+      const inputs = await prepareInputs();
+      const gs1Regex = /\((01)\)(\d*)(\(|$)/;
+      for (const page of cleanSchemas) {
+        for (const field of page) {
+          if (field.type !== 'gs1datamatrix') continue;
+          const val = inputs[0]?.[field.name] ?? '';
+          const m = val.match(gs1Regex);
+          const isValidGs1 = m && val.length <= 52 && m[1] === '01' && [8, 12, 13, 14].includes(m[2].length);
+          if (!isValidGs1) field.type = 'datamatrix';
+        }
+      }
+      const cleanTemplate = { basePdf: template.basePdf, schemas: cleanSchemas };
+      const pdfBytes = await generate({ template: cleanTemplate, inputs, plugins: pdfmePlugins });
+      data = btoa(String.fromCharCode(...new Uint8Array(pdfBytes)));
+      format = 'pdf';
+    }
+
+    const { job_id } = await sendToPrintService({ data, printer, format, copies: 1 });
+    const timeoutMs = ((printer.timeout_seconds ?? 5) + 5) * 1000;
+    const result = await waitForPrintResult(job_id, timeoutMs);
+
+    onDialogHide();
+    if (result.ok) {
+      Notify.create({ type: 'positive', message: t('printDialog.sendToPrinter.success') });
+    } else if (result.error === 'timeout') {
+      Notify.create({ type: 'negative', message: t('printDialog.sendToPrinter.timeout') });
+    } else {
+      Notify.create({ type: 'negative', message: result.detail || t('printDialog.sendToPrinter.error') });
+    }
+  } catch (err) {
+    // POST failed or other error — stay open so user can retry
+    isPrinting.value = false;
+    Notify.create({ type: 'negative', message: err.message || t('printDialog.sendToPrinter.error') });
+    return;
+  }
+  isPrinting.value = false;
 }
 
 const dialogWidth = 615;
