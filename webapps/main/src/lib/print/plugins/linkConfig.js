@@ -36,6 +36,8 @@ export const presetOptions = [
   'product.code',
   'product.description',
 
+  'position.code',
+
   'issue.id',
   'issue.open_date',
   'issue.open_time',

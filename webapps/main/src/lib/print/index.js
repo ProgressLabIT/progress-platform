@@ -200,6 +200,7 @@ export class TemplateContext {
   serial = null;
   product = null;
   workOrder = null;
+  position = null;
 
   /** @protected */
   _store;
@@ -213,6 +214,7 @@ export class TemplateContext {
     this.product = null;
     this.workOrder = null;
     this.issue = null;
+    this.position = null;
   }
 
   getTemplateContextKey() {
@@ -332,6 +334,10 @@ export class TemplateContext {
         case 'product.description':
           return this.product?.description;
 
+        // Position presets
+        case 'position.code':
+          return this.position?.code;
+
         // Job presets
         case 'job.key':
           return this.job?._key;
@@ -419,7 +425,8 @@ export class TemplateContext {
       job: this.job,
       work_order: this.workOrder,
       product: this.product,
-      issue: this.issue
+      issue: this.issue,
+      position: this.position,
     };
 
     if (baseObjectMap[base]) {
@@ -495,6 +502,10 @@ export class TemplateContext {
 
   setSelectedIssue(issue) {
     this.issue = issue;
+  }
+
+  setSelectedPosition(position) {
+    this.position = position;
   }
 }
 
