@@ -311,6 +311,13 @@ export default {
   printers: 'Printers',
   add_printer: 'add printer',
   remove_printer: 'remove printer',
+  printer: {
+    type: 'Type',
+    type_zpl: 'ZPL',
+    type_pdf: 'PDF',
+    timeout_seconds: 'Timeout (seconds)',
+    timeout: 'Timeout',
+  },
   issue: 'issue',
   issue_button_close: 'Close issue',
   issue_button_reopen: 'Reopen issue',

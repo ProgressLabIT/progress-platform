@@ -11,11 +11,17 @@
         <div class="col-3">
           {{ $t('name') }}
         </div>
-        <div class="col-3">
+        <div class="col-2">
           {{ $t('host') }}
         </div>
-        <div class="col">
+        <div class="col-1">
           {{ $t('port') }}
+        </div>
+        <div class="col-2">
+          {{ $t('printer.type') }}
+        </div>
+        <div class="col-2">
+          {{ $t('printer.timeout') }}
         </div>
       </div>
 
@@ -39,11 +45,17 @@
           <div class="col-3">
             {{ $capitalize(printer.name) }}
           </div>
-          <div class="col-3">
+          <div class="col-2">
             {{ $capitalize(printer.host) }}
           </div>
-          <div class="col">
+          <div class="col-1">
             {{ $capitalize(printer.port) }}
+          </div>
+          <div class="col-2">
+            {{ (printer.type || '').toUpperCase() }}
+          </div>
+          <div class="col-2">
+            {{ printer.timeout_seconds ? printer.timeout_seconds + 's' : '' }}
           </div>
         </div>
       </div>
