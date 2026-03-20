@@ -32,13 +32,13 @@
 ### Print Dialog Integration
 
 - [ ] **DIAL-01**: `printServerURL` option added to `deploy/config/appConfig.js` (optional; enables direct printing when set)
-- [ ] **DIAL-02**: Printer model has a `type` field (`zpl`|`pdf`); PrinterNew.vue and PrintersTable.vue updated accordingly
+- [x] **DIAL-02**: Printer model has a `type` field (`zpl`|`pdf`); PrinterNew.vue and PrintersTable.vue updated accordingly
 - [ ] **DIAL-03**: Print dialog step 3 adds "Send to Printer" action (only visible when `printServerURL` is configured): printer selector dropdown, quantity input, confirm button
 - [ ] **DIAL-04**: "Download PDF" button (existing behavior) preserved alongside the new action
-- [ ] **DIAL-05**: `sendToPrintService({ data, printer, format, copies })` implemented in `lib/print/index.js`
+- [x] **DIAL-05**: `sendToPrintService({ data, printer, format, copies })` implemented in `lib/print/index.js`
 - [ ] **DIAL-06**: PrintDialog OK handler: `type === 'zpl'` → `generateZpl()` → send ZPL; `type === 'pdf'` → `generate()` → base64 → send PDF
-- [ ] **SSE-01**: Frontend subscribes to `/notification/print-result` SSE stream after submitting a print job, receiving real-time success/error feedback
-- [ ] **SSE-02**: Frontend filters "print-result" events by `job_id` to match each SSE event to the originating print request and display the correct success toast or error message
+- [x] **SSE-01**: Frontend subscribes to `/notification/print-result` SSE stream after submitting a print job, receiving real-time success/error feedback
+- [x] **SSE-02**: Frontend filters "print-result" events by `job_id` to match each SSE event to the originating print request and display the correct success toast or error message
 
 ### Warehouse App Integration
 
@@ -85,13 +85,13 @@
 | SVC-04 | Phase 3 | Complete |
 | SVC-05 | Phase 3 | Complete |
 | DIAL-01 | Phase 4 | Pending |
-| DIAL-02 | Phase 4 | Pending |
+| DIAL-02 | Phase 4 | Complete |
 | DIAL-03 | Phase 4 | Pending |
 | DIAL-04 | Phase 4 | Pending |
-| DIAL-05 | Phase 4 | Pending |
+| DIAL-05 | Phase 4 | Complete |
 | DIAL-06 | Phase 4 | Pending |
-| SSE-01 | Phase 4 | Pending |
-| SSE-02 | Phase 4 | Pending |
+| SSE-01 | Phase 4 | Complete |
+| SSE-02 | Phase 4 | Complete |
 | WH-01 | Phase 4 | Pending |
 | WH-02 | Phase 4 | Pending |
 | WH-03 | Phase 4 | Pending |
