@@ -34,7 +34,6 @@
         @select="(position) => (configModel.defaultConsumptionPosition = position)"
       />
 
-
       <div class="text-body1 q-mt-xl">
         {{ $t('settings.mandatoryReasonForMovementTypes') }}
       </div>
@@ -51,27 +50,27 @@
           />
         </div>
       </div>
-      <!-- Product label template -->
-      <!-- <BaseAutocompleteTemplate
-        :label="$t('settings.productLabelTemplate')"
-        :value="configModel.productLabelTemplate"
-        key-onlyx
-        clearable
-        :disable="!editMode"
-        :dense="false"
-        @select="(template) => (configModel.productLabelTemplate = template)"
-      /> -->
-      <!-- Position label template -->
-      <!-- <BaseAutocompleteTemplate
-        :label="$t('settings.positionLabelTemplate')"
-        :value="configModel.positionLabelTemplate"
-        clearable
-        key-only
-        :dense="false"
-        :disable="!editMode"
-          @select="(template) => (configModel.positionLabelTemplate = template)"
-        /> -->
-      </template>
+    </template>
+
+    <!-- Label template assignment (independent of inventory management toggle) -->
+    <BaseAutocompleteTemplate
+      :label="$t('settings.productLabelTemplate')"
+      :value="configModel.productLabelTemplate"
+      key-only
+      clearable
+      :disable="!editMode"
+      :dense="false"
+      @select="(template) => (configModel.productLabelTemplate = template)"
+    />
+    <BaseAutocompleteTemplate
+      :label="$t('settings.positionLabelTemplate')"
+      :value="configModel.positionLabelTemplate"
+      key-only
+      clearable
+      :disable="!editMode"
+      :dense="false"
+      @select="(template) => (configModel.positionLabelTemplate = template)"
+    />
     </div>
   </SettingsSection>
 </template>
@@ -80,6 +79,7 @@
 import { cloneDeep } from 'lodash';
 import { ref } from 'vue';
 import BaseAutocompletePosition from '@/components/BaseAutocompletePosition.vue';
+import BaseAutocompleteTemplate from '@/components/BaseAutocompleteTemplate.vue';
 import LoadingSignal from '@/components/LoadingSignal.vue';
 import SettingsSection from '@/components/SettingsSection.vue';
 import { useConfigStore } from '@/stores/config';
