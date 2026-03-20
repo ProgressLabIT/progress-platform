@@ -1,4 +1,5 @@
 import { Dialog, Notify, exportFile } from 'quasar';
+import { api } from '@/boot/axios';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useStore } from 'vuex';
@@ -45,6 +46,60 @@ export async function generatePdf({ template, inputs }) {
     template: cleanTemplate,
     inputs: inputs || [],
     plugins: pdfmePlugins,
+  });
+}
+
+/**
+ * Submit a print job to the main API.
+ * @param {{ data: string, printer: { host: string, port: number, timeout_seconds?: number }, format: 'zpl'|'pdf', copies?: number }} params
+ * @returns {Promise<{ job_id: string }>}
+ */
+export async function sendToPrintService({ data, printer, format, copies = 1 }) {
+  const payload = {
+    printer_host: printer.host,
+    printer_port: printer.port,
+    format,
+    data,
+    copies,
+    timeout_seconds: printer.timeout_seconds ?? 5,
+  };
+  const response = await api.post('print-job', payload);
+  return response.data;  // { job_id: "uuid" }
+}
+
+/**
+ * Subscribe to SSE print-result events and wait for the one matching jobId.
+ * Resolves with { ok, error, detail } on match or { ok: false, error: 'timeout' } on timeout.
+ * Always closes the EventSource before resolving.
+ * @param {string} jobId
+ * @param {number} timeoutMs
+ * @returns {Promise<{ ok: boolean, error: string|null, detail: string|null }>}
+ */
+export function waitForPrintResult(jobId, timeoutMs) {
+  return new Promise((resolve) => {
+    const url = api.defaults.baseURL + '/notification/print-result';
+    const source = new EventSource(url, { withCredentials: false });
+    const timer = setTimeout(() => {
+      source.close();
+      resolve({ ok: false, error: 'timeout', detail: null });
+    }, timeoutMs);
+
+    source.addEventListener('print-result', (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.job_id === jobId) {
+          clearTimeout(timer);
+          source.close();
+          resolve({ ok: data.ok, error: data.error ?? null, detail: data.detail ?? null });
+        }
+      } catch (e) {
+        // Ignore unparseable SSE events
+      }
+    });
+
+    source.onerror = () => {
+      // EventSource will auto-reconnect on errors; if closed by timer, this is a no-op
+    };
   });
 }
 

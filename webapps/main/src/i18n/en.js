@@ -674,6 +674,12 @@ export default {
 
     downloadWillBegin: 'Your download will begin shortly!',
     requiredFieldsEmpty: '{count} required field(s) are empty. Please fill them before continuing.',
+    sendToPrinter: {
+      label: 'Send to {name}',
+      success: 'Label sent to printer',
+      error: 'Print failed. Check the printer and try again.',
+      timeout: 'No response from printer. Check the connection and try again.',
+    },
   },
   print_template: 'Template | Templates',
   print_template_confirm_delete_question:
