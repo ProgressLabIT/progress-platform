@@ -102,7 +102,9 @@ Decisions logged in PROJECT.md Key Decisions table.
 
 ### Pending Todos
 
-None yet.
+- [ui] Resolve orphaned linkedTemplateString plugin — register in buildPlugins() or delete
+- [api] Investigate verify_print_service_token USER_SESSION auth context
+- [ui] Fix warehouse config store missing template fields in updateAppConfig
 
 ### Blockers/Concerns
 
