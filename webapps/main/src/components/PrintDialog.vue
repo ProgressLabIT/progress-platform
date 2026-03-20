@@ -749,12 +749,16 @@ async function sendToPrinter() {
       format = 'pdf';
     }
 
-    const { job_id } = await sendToPrintService({ data, printer, format, copies: 1 });
     const timeoutMs = ((printer.timeout_seconds ?? 5) + 5) * 1000;
-    const result = await waitForPrintResult(job_id, timeoutMs);
+    // Subscribe before submitting: avoids the race where fast results arrive before the SSE
+    // connection is registered. waitForPrintResult buffers events until the job_id resolves.
+    const result = await waitForPrintResult(
+      sendToPrintService({ data, printer, format, copies: 1 }).then((r) => r.job_id),
+      timeoutMs,
+    );
 
-    onDialogHide();
     if (result.ok) {
+      onDialogHide();
       Notify.create({ type: 'positive', message: t('printDialog.sendToPrinter.success') });
     } else if (result.error === 'timeout') {
       Notify.create({ type: 'negative', message: t('printDialog.sendToPrinter.timeout') });

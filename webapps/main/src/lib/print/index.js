@@ -75,31 +75,53 @@ export async function sendToPrintService({ data, printer, format, copies = 1 }) 
  * @param {number} timeoutMs
  * @returns {Promise<{ ok: boolean, error: string|null, detail: string|null }>}
  */
-export function waitForPrintResult(jobId, timeoutMs) {
-  return new Promise((resolve) => {
+export function waitForPrintResult(jobIdOrPromise, timeoutMs) {
+  return new Promise((resolve, reject) => {
     const url = api.defaults.baseURL + '/notification/print-result';
     const source = new EventSource(url, { withCredentials: false });
-    const timer = setTimeout(() => {
+    let jobId = null;
+    const buffer = [];
+
+    const finish = (result) => {
+      clearTimeout(timer);
       source.close();
-      resolve({ ok: false, error: 'timeout', detail: null });
+      resolve(result);
+    };
+
+    const timer = setTimeout(() => {
+      finish({ ok: false, error: 'timeout', detail: null });
     }, timeoutMs);
 
     source.addEventListener('print-result', (event) => {
       try {
         const data = JSON.parse(event.data);
-        if (data.job_id === jobId) {
-          clearTimeout(timer);
-          source.close();
-          resolve({ ok: data.ok, error: data.error ?? null, detail: data.detail ?? null });
+        if (jobId !== null) {
+          if (data.job_id === jobId) finish({ ok: data.ok, error: data.error ?? null, detail: data.detail ?? null });
+        } else {
+          buffer.push(data);
         }
       } catch (e) {
         // Ignore unparseable SSE events
       }
     });
 
-    source.onerror = () => {
-      // EventSource will auto-reconnect on errors; if closed by timer, this is a no-op
-    };
+    // jobIdOrPromise may be a string (legacy) or a Promise<string> (subscribe-before-submit).
+    // Opening the EventSource before the job is submitted eliminates the race condition where
+    // fast results (e.g. connection-refused) arrive before the subscription is registered.
+    Promise.resolve(jobIdOrPromise).then(
+      (id) => {
+        jobId = id;
+        const hit = buffer.find((d) => d.job_id === jobId);
+        if (hit) finish({ ok: hit.ok, error: hit.error ?? null, detail: hit.detail ?? null });
+      },
+      (err) => {
+        clearTimeout(timer);
+        source.close();
+        reject(err);
+      },
+    );
+
+    source.onerror = () => {};
   });
 }
 

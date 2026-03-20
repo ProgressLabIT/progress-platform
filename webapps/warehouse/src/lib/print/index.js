@@ -104,24 +104,49 @@ async function submitPrintJob(zplData, printer) {
  * Wait for the SSE print-result event for a given job_id.
  * Resolves with { ok, error, detail } when the result arrives or on timeout.
  */
-function waitForPrintResult(jobId, timeoutMs) {
-  return new Promise((resolve) => {
+function waitForPrintResult(jobIdOrPromise, timeoutMs) {
+  return new Promise((resolve, reject) => {
     const url = api.defaults.baseURL + '/notification/print-result';
     const source = new EventSource(url, { withCredentials: false });
-    const timer = setTimeout(() => {
+    let jobId = null;
+    const buffer = [];
+
+    const finish = (result) => {
+      clearTimeout(timer);
       source.close();
-      resolve({ ok: false, error: 'timeout', detail: null });
+      resolve(result);
+    };
+
+    const timer = setTimeout(() => {
+      finish({ ok: false, error: 'timeout', detail: null });
     }, timeoutMs);
+
     source.addEventListener('print-result', (event) => {
       try {
         const data = JSON.parse(event.data);
-        if (data.job_id === jobId) {
-          clearTimeout(timer);
-          source.close();
-          resolve({ ok: data.ok, error: data.error ?? null, detail: data.detail ?? null });
+        if (jobId !== null) {
+          if (data.job_id === jobId) finish({ ok: data.ok, error: data.error ?? null, detail: data.detail ?? null });
+        } else {
+          buffer.push(data);
         }
       } catch (e) { /* ignore */ }
     });
+
+    // Accept a Promise<string> so callers can open the subscription before submitting,
+    // eliminating the race where fast results arrive before the SSE connection registers.
+    Promise.resolve(jobIdOrPromise).then(
+      (id) => {
+        jobId = id;
+        const hit = buffer.find((d) => d.job_id === jobId);
+        if (hit) finish({ ok: hit.ok, error: hit.error ?? null, detail: hit.detail ?? null });
+      },
+      (err) => {
+        clearTimeout(timer);
+        source.close();
+        reject(err);
+      },
+    );
+
     source.onerror = () => {};
   });
 }
@@ -157,9 +182,11 @@ export async function printProductLabel(productCode, productDescription) {
     const inputs = resolveTemplateInputs(templateData, context);
     const zpl = generateZpl(templateData.template, inputs, { dpi: 203, quantity: 1 });
 
-    const { data: responseData } = await submitPrintJob(zpl, printer);
     const timeoutMs = ((printer.timeout_seconds ?? 5) + 5) * 1000;
-    const result = await waitForPrintResult(responseData.job_id, timeoutMs);
+    const result = await waitForPrintResult(
+      submitPrintJob(zpl, printer).then((r) => r.data.job_id),
+      timeoutMs,
+    );
     if (result.ok) {
       Notify.create({ color: 'theme-green', message: $t('alerts.print_job_sent') || 'Label sent to printer' });
     } else if (result.error === 'timeout') {
@@ -204,9 +231,11 @@ export async function printPositionLabel(position) {
     const inputs = resolveTemplateInputs(templateData, context);
     const zpl = generateZpl(templateData.template, inputs, { dpi: 203, quantity: 1 });
 
-    const { data: responseData } = await submitPrintJob(zpl, printer);
     const timeoutMs = ((printer.timeout_seconds ?? 5) + 5) * 1000;
-    const result = await waitForPrintResult(responseData.job_id, timeoutMs);
+    const result = await waitForPrintResult(
+      submitPrintJob(zpl, printer).then((r) => r.data.job_id),
+      timeoutMs,
+    );
     if (result.ok) {
       Notify.create({ color: 'theme-green', message: $t('alerts.print_job_sent') || 'Label sent to printer' });
     } else if (result.error === 'timeout') {
