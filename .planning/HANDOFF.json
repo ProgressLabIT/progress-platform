@@ -1,45 +1,55 @@
 {
   "version": "1.0",
-  "timestamp": "2026-03-19T11:45:55.148Z",
-  "phase": "03",
-  "phase_name": "print-service",
-  "phase_dir": ".planning/phases/03-print-service",
-  "plan": 2,
-  "task": "post-plan credential refactor",
-  "total_tasks": 6,
+  "timestamp": "2026-03-20T17:31:15.112Z",
+  "phase": "04",
+  "phase_name": "full-integration",
+  "phase_dir": ".planning/phases/04-full-integration",
+  "plan": "post-gap-closure",
+  "task": "sse-connection-validation",
   "status": "paused",
   "completed_tasks": [
-    {"id": 1, "name": "Phase 03 plans executed (01 + 02)", "status": "done", "commit": "9bf7d414"},
-    {"id": 2, "name": "UAT infra fixes (CI, network, PrintJob collection, ansible setup)", "status": "done", "commit": "uncommitted"},
-    {"id": 3, "name": "Credential management refactor — print_service user + login-based auth", "status": "done", "commit": "uncommitted"}
+    {"id": 1, "name": "Execute gap closure 04-05 (btoa stack overflow)", "status": "done", "commit": "3eefbd8c"},
+    {"id": 2, "name": "Execute gap closure 04-06 (warehouse SSE notifications)", "status": "done", "commit": "91fea17d"},
+    {"id": 3, "name": "Verify phase 04 (6/6 passed)", "status": "done", "commit": "e41ac2bc"},
+    {"id": 4, "name": "UAT restart: test 1 PDF print spinner", "status": "done", "result": "pass"},
+    {"id": 5, "name": "Fix server_event_manager.py SSE connection leak", "status": "done", "commit": "81d5add2"},
+    {"id": 6, "name": "Fix waitForPrintResult race condition (subscribe-before-submit)", "status": "done", "commit": "afcfeef9"}
   ],
   "remaining_tasks": [
-    {"id": 4, "name": "Commit all modified files", "status": "not_started"},
-    {"id": 5, "name": "Resume UAT — all 6 tests still pending", "status": "not_started"},
-    {"id": 6, "name": "Update handoff after UAT", "status": "not_started"}
+    {"id": 7, "name": "Validate EventSource closes promptly after rebuild + retest", "status": "not_started"},
+    {"id": 8, "name": "Commit keep-alive change in server_event_manager.py (user added yield comment)", "status": "not_started"},
+    {"id": 9, "name": "Mark UAT test 2 as passed and update UAT file to resolved", "status": "not_started"}
   ],
   "blockers": [],
   "human_actions_pending": [
-    {"action": "Run UAT tests 1-6 manually", "context": "Tests require a live environment with print service running", "blocking": true}
+    {
+      "action": "Rebuild frontend and retest warehouse print — check if EventSource connection closes after receiving event",
+      "context": "Race condition fix (commit afcfeef9) changes JS requiring rebuild. If still open: check r.job_id vs r.data.job_id in browser console.",
+      "blocking": true
+    }
   ],
   "decisions": [
-    {"decision": "Print service authenticates via /api/auth instead of static JWT", "rationale": "Eliminates duplicated token-generation logic in db_init; print_service user created same way as cadmin; token refresh handled automatically on reconnect", "phase": "03"},
-    {"decision": "Added scope field to TokenData model", "rationale": "scope was silently dropped from JWT payload; now included so verify_print_service_token can check print_service scope without a DB lookup", "phase": "03"},
-    {"decision": "verify_print_service_token checks context=USER_SESSION + scope contains print_service", "rationale": "Replaces context=api+consumer_type=3psw check; semantically cleaner — print service is a regular user with restricted scope", "phase": "03"},
-    {"decision": "print_service_pwd generated separately from main secrets loop", "rationale": "Main secrets loop pipes directly to Docker without saving the value; print service needs it written to a file for compose AND as swarm secret for init-db", "phase": "03"}
+    {"decision": "waitForPrintResult accepts Promise<string>|string for jobId", "rationale": "EventSource opens before submit, eliminating race where fast results arrive before subscription registers", "phase": "04"},
+    {"decision": "asyncio.wait_for timeout=1.0s in server_event_manager", "rationale": "Balances disconnect detection vs CPU overhead", "phase": "04"},
+    {"decision": "Subsequent false-success calls are not a code bug", "rationale": "Print service log showed 192.168.1.57 (real printer). First failure was transient send_error.", "phase": "04"}
   ],
   "uncommitted_files": [
-    ".gitlab-ci.yml",
-    "backend/api/endpoints/print.py",
-    "backend/api/models/auth.py",
-    "backend/api/utils/auth.py",
-    "backend/print-service/config.py",
-    "backend/print-service/main.py",
-    "deploy/compose/print.yaml",
-    "deploy/scripts/db_init.py",
-    "deploy/single_node_setup.yaml",
-    ".planning/phases/03-print-service/03-UAT.md"
+    "backend/api/managers/server_event_manager.py — user added keep-alive: yield {comment:''} on TimeoutError",
+    "backend/api/endpoints/print.py — milestone branch work (pre-existing)",
+    "backend/api/models/auth.py — milestone branch work",
+    "backend/api/models/print_job.py — milestone branch work",
+    "backend/api/utils/auth.py — milestone branch work",
+    "backend/print-service/config.py — milestone branch work",
+    "backend/print-service/main.py — milestone branch work",
+    "deploy/compose/print.yaml — milestone branch work",
+    "deploy/scripts/db_init.py — milestone branch work",
+    "deploy/single_node_setup.yaml — milestone branch work",
+    "km/domains/printing/print-templates.md — milestone branch work",
+    "webapps/main/src/i18n/en.js — milestone branch work",
+    "webapps/main/src/i18n/it.js — milestone branch work",
+    "webapps/main/src/views/settings/warehouse/WarehouseSettings.vue — milestone branch work",
+    "webapps/warehouse/src/lib/print/index.js — linter formatting (logically committed)"
   ],
-  "next_action": "Commit all modified files, then resume UAT with /gsd:verify-work 3 — test 1 (Cold Start Smoke Test) is first",
-  "context_notes": "Two rounds of infra changes: (1) original UAT pre-flight fixes (CI, network, PrintJob collection, ansible setup block), (2) credential management refactor replacing static JWT with print_service user + login-based auth. Both sets are complete and uncommitted. The auth refactor touches 7 files but is minimal — no new endpoints, just a user record, scope field in TokenData model, and authenticate() call on startup in main.py."
+  "next_action": "Ask user: did rebuild confirm connections close after event? If yes: commit keep-alive + update UAT. If no: check submit promise chain returns r.job_id correctly.",
+  "context_notes": "Branch 536/pdfme5-upgrade. server_event_manager.py has user-added keep-alive keep-alive comment event — should be committed. The other 14 uncommitted files are pre-existing branch work from before this session, not changed in session."
 }
