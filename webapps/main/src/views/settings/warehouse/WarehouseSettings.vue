@@ -53,6 +53,9 @@
     </template>
 
     <!-- Label template assignment (independent of inventory management toggle) -->
+    <div class="text-body1 q-mt-xl">
+      {{ $t('settings.productPositionLabelSettings')}}
+    </div>
     <BaseAutocompleteTemplate
       :label="$t('settings.productLabelTemplate')"
       :value="configModel.productLabelTemplate"
@@ -101,7 +104,6 @@ async function save() {
     positionLabelTemplate: configModel.value.positionLabelTemplate,
     mandatoryReasonForMovementTypes: configModel.value.mandatoryReasonForMovementTypes,
   }
-  console.log(update);
   await updateAppConfig(update);
 }
 
@@ -114,6 +116,5 @@ function updateMandatoryReasonForMovementTypes(movement) {
   } else {
     configModel.value.mandatoryReasonForMovementTypes.push(movement);
   }
-  console.log(configModel.value.mandatoryReasonForMovementTypes);
 }
 </script>

@@ -841,6 +841,7 @@ export default {
     productLabelTemplate: 'Etichetta prodotto',
     positionLabelTemplate: 'Etichetta posizione',
     mandatoryReasonForMovementTypes: 'Rendi motivo obbligatorio per i seguenti movimenti manuali',
+    productPositionLabelSettings: 'Seleziona i template per le etichette di prodotto/posizione',
   },
   session: {
     alerts: {

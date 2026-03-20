@@ -241,8 +241,8 @@ def verify_password(plain_password, hashed_password):
 
 # ----------------------------------------------------------------------
 
-def verify_token(token_str: str = Depends(bearer_token)):
-
+def _verify_token_base(token_str: str) -> TokenData:
+  """Verify JWT signature, DB record, and revocation. Raises credentials_exception on any failure."""
   try:
     try:
       token_json = jwt.decode(token_str, get_config().jwt_secret, algorithms=[ALGORITHM])
@@ -282,6 +282,22 @@ def verify_token(token_str: str = Depends(bearer_token)):
     traceback.print_exc()
     raise credentials_exception
 
+  return token_data
+
+
+def verify_token(token_str: str = Depends(bearer_token)):
+  token_data = _verify_token_base(token_str)
+  if token_data.context == TokenContext.API:
+    raise credentials_exception  # Service tokens cannot use user endpoints
+  return token_data
+
+
+def verify_print_service_token(token_str: str = Depends(bearer_token)):
+  token_data = _verify_token_base(token_str)
+  if token_data.context != TokenContext.USER_SESSION:
+    raise credentials_exception
+  if "print_service" not in (token_data.scope or "").split():
+    raise credentials_exception
   return token_data
 
 # ----------------------------------------------------------------------

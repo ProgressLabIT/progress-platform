@@ -178,6 +178,7 @@ The print service is a lightweight Python process that subscribes to the main AP
 
 ```
 Browser
+  ├─► EventSource GET /api/print-result/stream  (opened first, one-shot)
   └─► POST /api/print-job  ──►  Main API
                                   │
                                   ├─► SSE stream (GET /api/print-jobs/stream)
@@ -187,11 +188,13 @@ Browser
                                   │         └─► TCP ──► Printer
                                   │                        │
                                   │    POST /api/print-jobs/{id}/result ◄─┘
-                                  │
-                                  └─► SSE notification ──► Browser toast
+                                  │         │
+                                  │         └─► enqueue → print-result SSE ──► Browser toast
 ```
 
-**Key constraint:** The browser never calls the print service directly. The print service only makes outbound connections — to the main API and to printers. No inbound ports are needed.
+**Key constraints:**
+- The browser never calls the print service directly. The print service only makes outbound connections — to the main API and to printers. No inbound ports are needed.
+- Print jobs are fire-and-forget — there is no `PrintJob` database collection. The result callback (`POST /print-jobs/{id}/result`) enqueues an SSE event for the browser and returns immediately.
 
 ### Deployment
 
@@ -280,13 +283,13 @@ Error codes: `connection_refused`, `timeout`, `send_error`.
 
 **SSE notification (main API → browser):**
 
-After the result callback is received, the main API publishes an SSE event to the browser:
+After the result callback is received, the main API enqueues an SSE event on the `print-result` topic via `ServerEventManager.enqueue()`:
 
-- Topic: `/notification/print-result`
-- Subtopic: `print-result`
+- Endpoint: `GET /api/print-result/stream` (dedicated one-shot SSE stream; the generator uses `max_events=1` and self-terminates after delivering one event)
+- Event type: `print-result`
 - Payload: `{ "job_id": "abc123", "ok": true, "error": null, "detail": null }`
 
-The browser filters by `job_id` to match the event to the originating print request.
+The browser opens an `EventSource` to this endpoint before submitting the print job, then filters by `job_id` to match the event to the originating request. The server-side generator exits after one event; the HTTP connection closes within a few seconds via `sse_starlette` cleanup.
 
 ### Health check
 
@@ -338,18 +341,18 @@ The button shows the name of the configured printer: `"Send to [printer name]"`.
 1. User clicks "Send to [printer name]"
 2. Both buttons are hidden; a centered spinner appears (printing in progress)
 3. `sendToPrintService()` POSTs to `POST /api/print-job`
-4. `waitForPrintResult()` subscribes to `/notification/print-result` SSE, filtered by `job_id`
-5. On result or timeout: dialog closes, spinner clears
-6. Toast notification appears
+4. `waitForPrintResult()` opens an SSE stream to `GET /print-result/stream` (dedicated one-shot endpoint, closes after one event), filtered by `job_id`
+5. On result or timeout: spinner clears; toast appears. The dialog **closes only on success** so the user can fix data or retry after printer errors or timeouts.
+6. Toast notification appears (see table below)
 
 ### Toast outcomes
 
 | Outcome | Toast type | Message |
 |---|---|---|
-| Success | Positive (green) | "Label sent to printer" |
-| Error | Negative (red) | Error detail from print service |
-| Timeout | Negative (red) | "No response from printer" |
-| POST failure | — | Dialog stays open, `isPrinting` reset; user can retry |
+| Success | Positive (green) | "Label sent to printer"; dialog closes |
+| Error | Negative (red) | Error detail from print service; dialog stays open |
+| Timeout | Negative (red) | "No response from printer"; dialog stays open |
+| POST failure | Negative (red) | Dialog stays open, `isPrinting` reset; user can retry |
 
 ### Download PDF
 
@@ -391,6 +394,7 @@ Warehouse templates use the standard template link system. Two preset contexts a
 
 Templates can also use `template_expression` fields to compose values from these presets.
 
+
 ### Print flow (warehouse app)
 
 The warehouse app's `printProductLabel()` and `printPositionLabel()` functions in `webapps/warehouse/src/lib/print/index.js` implement the new pipeline:
@@ -401,7 +405,7 @@ The warehouse app's `printProductLabel()` and `printPositionLabel()` functions i
 4. Call `generateZpl(template, resolvedInputs, { dpi, quantity })` to produce ZPL
 5. POST to `POST /api/print-job` with the ZPL string
 
-The function signatures are identical to the previous implementation — all callers (`IncomingQuantitySelectionPage.vue`, `CreateContainerForm.vue`, etc.) are unchanged.
+The function signatures are identical to the previous implementation -- all callers (`IncomingQuantitySelectionPage.vue`, `CreateContainerForm.vue`, etc.) are unchanged.
 
 ### BrowserPrint removal
 

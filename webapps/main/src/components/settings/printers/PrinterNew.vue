@@ -60,7 +60,7 @@ import BaseActionFormCard from '@/components/BaseActionFormCard.vue';
 
 const name = ref('');
 const host = ref('');
-const port = ref(80);
+const port = ref(9100);
 const type = ref('');
 const timeout_seconds = ref(5);
 

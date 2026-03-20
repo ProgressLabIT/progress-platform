@@ -70,3 +70,10 @@ build:workflow:
     BUILD_DIR: backend/workflow
     DOCKERFILE: Dockerfile
   <<: *service-template
+
+build:print-service:
+  variables:
+    SERVICE: print-service
+    BUILD_DIR: backend/print-service
+    DOCKERFILE: Dockerfile
+  <<: *service-template

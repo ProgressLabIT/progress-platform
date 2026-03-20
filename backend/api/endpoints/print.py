@@ -1,15 +1,15 @@
 import json
 import traceback
-from datetime import datetime, timezone
-
+import uuid
+from collections.abc import AsyncIterable
 from fastapi import APIRouter, HTTPException, Depends, Request
-from sse_starlette.sse import EventSourceResponse
+from fastapi.sse import EventSourceResponse, ServerSentEvent
 from utils import auth
 
-from managers.server_event_manager import ServerEventManager
 from managers.notification_manager import NotificationManager
+from managers.server_event_manager import ServerEventManager
 from models.print import PrintTemplateRecord, TemplateAssignmentUpdate, TemplateAssignmentUpdateType, TemplateAssignmentContext
-from models.print_job import PrintJobRequest, PrintJobResult, PrintJobRecord
+from models.print_job import PrintJobRequest, PrintJobResult
 from utils.api import APIResponse
 from utils.db import db
 from utils.print import preprocess_template, build_template_assignment_record
@@ -199,20 +199,7 @@ async def update_template_assignments(updates: list[TemplateAssignmentUpdate]):
 
 @router.post('/print-job', dependencies=[Depends(auth.verify_token)])
 async def create_print_job(job: PrintJobRequest):
-    record = {
-        "status": "pending",
-        "printer_host": job.printer_host,
-        "printer_port": job.printer_port,
-        "format": job.format.value,
-        "copies": job.copies,
-        "timeout_seconds": job.timeout_seconds,
-        "created_at": datetime.now(timezone.utc).isoformat(),
-        "completed_at": None,
-        "error": None,
-        "error_detail": None,
-    }
-    result = db.collection("PrintJob").insert(record)
-    job_key = result["_key"]
+    job_key = str(uuid.uuid4())
 
     sse_payload = job.model_dump()
     sse_payload["format"] = job.format.value
@@ -223,26 +210,25 @@ async def create_print_job(job: PrintJobRequest):
     return {"job_id": job_key}
 
 
-@router.get('/print-jobs/stream', dependencies=[Depends(auth.verify_token)])
-async def print_job_stream(request: Request):
-    return EventSourceResponse(
-        ServerEventManager.getInstance().push_events(request, "print-jobs")
-    )
+@router.get('/print-jobs/stream',
+  dependencies=[Depends(auth.verify_print_service_token)],
+  response_class=EventSourceResponse
+)
+async def print_job_stream(request: Request) -> AsyncIterable[ServerSentEvent]:
+    async for event in ServerEventManager.getInstance().push_events(request, "print-jobs"):
+        yield event
 
 
-@router.post('/print-jobs/{job_id}/result', dependencies=[Depends(auth.verify_token)])
+@router.post('/print-jobs/{job_id}/result', dependencies=[Depends(auth.verify_print_service_token)])
 async def print_job_result(job_id: str, result: PrintJobResult):
-    now = datetime.now(timezone.utc).isoformat()
-    update = {
-        "_key": job_id,
-        "status": "sent" if result.ok else "failed",
-        "completed_at": now,
+    sse_result = {
+        "subtopic": "print-result",
+        "job_id": job_id,
+        "ok": result.ok,
+        "error": result.error if not result.ok else None,
+        "detail": result.detail if not result.ok else None,
     }
-    if not result.ok:
-        update["error"] = result.error
-        update["error_detail"] = result.detail
-    db.collection("PrintJob").update(update)
-
+    ServerEventManager.getInstance().enqueue(json.dumps(sse_result))
     NotificationManager.getInstance().notifyGlobalRefresh()
 
     return {"ok": True}

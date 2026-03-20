@@ -842,6 +842,7 @@ export default {
     productLabelTemplate: 'Product label template',
     positionLabelTemplate: 'Position label template',
     mandatoryReasonForMovementTypes: 'Make reason mandatory for the following manual movements',
+    productPositionLabelSettings: 'Select product and position print templates',
   },
   session: {
     alerts: {

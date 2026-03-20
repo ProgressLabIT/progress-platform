@@ -1,5 +1,6 @@
 import asyncio
 from fastapi import Request
+from fastapi.sse import ServerSentEvent
 import json
 from utils.delayedqueue.conflated_delayedqueue import ConflatedDelayedQueue
 from utils.delayedqueue.delayed_queue_item import DelayedQueueItem
@@ -52,12 +53,10 @@ class ServerEventManager:
                         timeout=1.0
                     )
                 except asyncio.TimeoutError:
+                    yield ServerSentEvent(comment="")
                     continue
 
                 if event:
-                    yield {
-                        "event": topic,
-                        "data": event
-                    }
+                    yield ServerSentEvent(raw_data=event, event=topic)
         finally:
             ServerEventManager.getInstance().undergisterQueue(topic, request)

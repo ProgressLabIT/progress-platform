@@ -1,7 +1,6 @@
 import asyncio
 import json
 import logging
-from contextlib import asynccontextmanager
 
 import httpx
 from httpx_sse import aconnect_sse
@@ -19,7 +18,18 @@ logger = logging.getLogger("print-service")
 _sse_connected = False
 
 
-async def handle_job(client: httpx.AsyncClient, config, job: dict) -> None:
+async def authenticate(client: httpx.AsyncClient, config) -> str:
+    resp = await client.post(
+        f"{config.api_url}/auth",
+        data={"username": config.username, "password": config.api_password},
+    )
+    resp.raise_for_status()
+    token = resp.json()["access_token"]
+    logger.info("Authenticated with API")
+    return token
+
+
+async def handle_job(client: httpx.AsyncClient, config, job: dict, token: str) -> None:
     job_id = job["job_id"]
     printer_host = job["printer_host"]
     printer_port = job.get("printer_port", 9100)
@@ -38,11 +48,11 @@ async def handle_job(client: httpx.AsyncClient, config, job: dict) -> None:
             data_bytes = decode_pdf(data_str)
         else:
             result = {"ok": False, "error": "send_error", "detail": f"Unknown format: {fmt}"}
-            await report_result(client, config, job_id, result)
+            await report_result(client, config, job_id, result, token)
             return
     except ValueError as e:
         result = {"ok": False, "error": "send_error", "detail": str(e)}
-        await report_result(client, config, job_id, result)
+        await report_result(client, config, job_id, result, token)
         return
 
     # Send to printer — repeat for copies (ZPL ^PQ is handled by generateZpl,
@@ -55,14 +65,14 @@ async def handle_job(client: httpx.AsyncClient, config, job: dict) -> None:
     else:
         result = await send_tcp(printer_host, printer_port, data_bytes, timeout)
 
-    await report_result(client, config, job_id, result)
+    await report_result(client, config, job_id, result, token)
 
 
 async def report_result(
-    client: httpx.AsyncClient, config, job_id: str, result: dict
+    client: httpx.AsyncClient, config, job_id: str, result: dict, token: str
 ) -> None:
     url = f"{config.api_url}/print-jobs/{job_id}/result"
-    headers = {"Authorization": f"Bearer {config.api_token}"}
+    headers = {"Authorization": f"Bearer {token}"}
     try:
         resp = await client.post(url, json=result, headers=headers)
         if resp.status_code != 200:
@@ -77,7 +87,6 @@ async def report_result(
 async def subscribe_loop() -> None:
     global _sse_connected
     config = get_config()
-    headers = {"Authorization": f"Bearer {config.api_token}"}
     stream_url = f"{config.api_url}/print-jobs/stream"
 
     logger.info(f"Print service starting — API: {config.api_url}")
@@ -85,6 +94,8 @@ async def subscribe_loop() -> None:
     while True:
         try:
             async with httpx.AsyncClient(timeout=None) as client:
+                token = await authenticate(client, config)
+                headers = {"Authorization": f"Bearer {token}"}
                 logger.info(f"Connecting to SSE stream: {stream_url}")
                 async with aconnect_sse(
                     client, "GET", stream_url, headers=headers
@@ -94,7 +105,7 @@ async def subscribe_loop() -> None:
                     async for sse in event_source.aiter_sse():
                         try:
                             job = json.loads(sse.data)
-                            await handle_job(client, config, job)
+                            await handle_job(client, config, job, token)
                         except json.JSONDecodeError as e:
                             logger.error(f"Invalid SSE data: {e}")
                         except Exception as e:
