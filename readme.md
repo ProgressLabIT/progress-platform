@@ -1,6 +1,6 @@
 # Progress Platform
 
-A full-stack **Manufacturing Operations Management** system (MOM) built to manage product data, production planning and execution, inventory, traceability, and quality for discrete manufacturing environments. Designed and developed as a multi-tenant, event-sourced platform deployed on-premise via Docker.
+A full-stack **Manufacturing Operations Management** system (MOM) built to manage product data, production planning and execution, inventory, traceability, and quality for discrete manufacturing environments. Designed and developed as a single-tenant, event-sourced platform deployed on-premise via Docker.
 
 > **Note:** This is a production system actively used by manufacturing companies in high compliance sectors such as electronics, medical devices, defence and aerospace. Some configuration files and credentials have been excluded from this repository.
 
@@ -99,12 +99,12 @@ A full-stack **Manufacturing Operations Management** system (MOM) built to manag
 │   └── reports/         # Reporting service
 ├── webapps/
 │   ├── main/            # Primary SPA (Vue 3 + Quasar + Vite)
-│   └── warehouse/       # Mobile-first warehouse app (Capacitor)
+│   └── warehouse/       # Mobile-first warehouse app (Vue 3 + Quasar + Vite)
 ├── deploy/
-│   ├── compose/         # Docker Compose files (dev, prod, swarm, TLS)
+│   ├── compose/         # Service configuration / Docker Compose files (dev, prod, TLS config, etc.)
 │   └── config/          # Environment configs, Traefik, Prometheus
 ├── db/                  # Migrations, queries, backup scripts
-├── testing/             # Cypress, Mocha, Robot Framework suites
+├── testing/             # Robot Framework suites
 ├── km/                  # Living documentation (architecture, domain logic)
 └── cli/                 # CLI tools (data generation, utilities)
 ```
