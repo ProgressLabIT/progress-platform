@@ -294,6 +294,10 @@ def verify_token(token_str: str = Depends(bearer_token)):
 
 def verify_print_service_token(token_str: str = Depends(bearer_token)):
   token_data = _verify_token_base(token_str)
+  # The print service authenticates via POST /api/auth (OAuth2 password grant),
+  # which always issues USER_SESSION context tokens — there is no separate service
+  # account token context. The scope check below is the primary guard; the context
+  # check here ensures API-context tokens (future service tokens) are rejected.
   if token_data.context != TokenContext.USER_SESSION:
     raise credentials_exception
   if "print_service" not in (token_data.scope or "").split():

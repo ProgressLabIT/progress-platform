@@ -111,6 +111,8 @@ export const useConfigStore = defineStore('config', () => {
       allow_independent_reordering_of_job_queues:
         configToUpdate.allowIndependentReorderingOfJobQueues,
       allow_serial_delete: configToUpdate.allowSerialDelete,
+      product_label_template: configToUpdate.productLabelTemplate,
+      position_label_template: configToUpdate.positionLabelTemplate,
     });
 
     Object.assign(config, configToUpdate);
