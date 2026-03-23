@@ -1,16 +1,17 @@
 from functools import lru_cache
+from typing import Literal
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    api_url: str = "http://localhost:8000/api"
-    username: str = "print_service"
-    api_password: str = "1234"
-    non_ascii: str = "replace"  # "replace" | "error"
-    reconnect_delay: float = 5.0
+    api_url: str | None = "http://localhost:8000/api"
+    username: str | None = "print_service"
+    api_password: str | None = "1234"
+    non_ascii: Literal["replace", "error"] | None = "replace"
+    reconnect_delay: float | None = 5.0
 
     model_config = SettingsConfigDict(
-        env_prefix="PRINT_SERVICE_",
+        env_prefix="PROGRESS_PRINT_SERVICE_",
         env_file=".env",
         secrets_dir="/run/secrets",
     )
