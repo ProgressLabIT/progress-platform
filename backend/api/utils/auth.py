@@ -11,6 +11,7 @@ from starlette import status
 
 from models.auth import *
 from models.org import User
+from utils.config import get_config
 from utils.db import db
 from utils.exceptions import *
 
@@ -34,7 +35,6 @@ scopes_description = {
   "operator": "User can access the operator panel and make production declarations"
 }
 
-TOKEN_SECRET = "0ac33c11e3f6c4903f6f30c03edfda07e513288884a8d573690eb6d916fca034"
 ALGORITHM = "HS256"
 
 bearer_token = OAuth2PasswordBearer(tokenUrl="/api/auth", scopes=scopes_description)
@@ -241,11 +241,11 @@ def verify_password(plain_password, hashed_password):
 
 # ----------------------------------------------------------------------
 
-def verify_token(token_str: str = Depends(bearer_token)):
-
+def _verify_token_base(token_str: str) -> TokenData:
+  """Verify JWT signature, DB record, and revocation. Raises credentials_exception on any failure."""
   try:
     try:
-      token_json = jwt.decode(token_str, TOKEN_SECRET, algorithms=[ALGORITHM])
+      token_json = jwt.decode(token_str, get_config().jwt_secret, algorithms=[ALGORITHM])
 
     except jwt.ExpiredSignatureError:
       print('Token expired')
@@ -284,6 +284,26 @@ def verify_token(token_str: str = Depends(bearer_token)):
 
   return token_data
 
+
+def verify_token(token_str: str = Depends(bearer_token)):
+  token_data = _verify_token_base(token_str)
+  if token_data.context == TokenContext.API:
+    raise credentials_exception  # Service tokens cannot use user endpoints
+  return token_data
+
+
+def verify_print_service_token(token_str: str = Depends(bearer_token)):
+  token_data = _verify_token_base(token_str)
+  # The print service authenticates via POST /api/auth (OAuth2 password grant),
+  # which always issues USER_SESSION context tokens — there is no separate service
+  # account token context. The scope check below is the primary guard; the context
+  # check here ensures API-context tokens (future service tokens) are rejected.
+  if token_data.context != TokenContext.USER_SESSION:
+    raise credentials_exception
+  if "print_service" not in (token_data.scope or "").split():
+    raise credentials_exception
+  return token_data
+
 # ----------------------------------------------------------------------
 
 def revoke_token(token_key, db=db):
@@ -320,7 +340,7 @@ def issue_token(
 
   access_token = jwt.encode(
     access_token_data.dict(by_alias=True, exclude_none=True),
-    TOKEN_SECRET,
+    get_config().jwt_secret,
     algorithm=ALGORITHM
   )
 

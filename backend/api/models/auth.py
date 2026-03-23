@@ -49,6 +49,7 @@ class TokenData(FlexModel):
   issued_at: datetime = Field(..., alias="iat")
   expires_at: datetime | None = Field(..., alias="exp")
   context: TokenContext = Field(..., alias="ctx")
+  scope: str | None = None
   # audience: str | None = Field(None, alias="aud") # identify third party apps
   # issuer: str | None = Field(None, alias="iss") # url of server
 

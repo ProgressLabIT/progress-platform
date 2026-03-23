@@ -67,9 +67,23 @@
 <script>
 import { generate } from '@pdfme/generator';
 import { mapState /*, mapActions */ } from 'vuex';
+import { buildPlugins } from '@/lib/print/plugins';
 import BaseAutocompleteTemplate from '@/components/BaseAutocompleteTemplate.vue';
 import MediaViewer from '@/components/MediaViewer.vue';
 import SettingsSection from '@/components/SettingsSection.vue';
+
+const pdfmePlugins = buildPlugins([]);
+
+function normalizePageSchema(pageSchema) {
+  if (!pageSchema) return [];
+  if (Array.isArray(pageSchema)) return pageSchema;
+  return Object.entries(pageSchema).map(([fieldName, fieldSpec]) => ({ ...fieldSpec, name: fieldName }));
+}
+
+function schemasToV5(schemas) {
+  if (!schemas || !Array.isArray(schemas)) return [];
+  return schemas.map(normalizePageSchema);
+}
 
 export default {
   name: 'LabelPrintTemplates',
@@ -106,10 +120,18 @@ export default {
       const {
         data: { template },
       } = await this.$api.get(`print-template/${t._key}`);
-      const inputs = template.sampledata;
+      const inputs = template.sampledata || [];
+      const cleanTemplate = {
+        basePdf: template.basePdf,
+        schemas: schemasToV5(template.schemas),
+      };
       this.show_template = {
         name: t.name,
-        pdf: await generate({ template, inputs }),
+        pdf: await generate({
+          template: cleanTemplate,
+          inputs,
+          plugins: pdfmePlugins,
+        }),
       };
     },
 

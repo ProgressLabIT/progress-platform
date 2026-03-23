@@ -97,7 +97,34 @@
 import { exportFile } from 'quasar';
 import { generate } from '@pdfme/generator';
 import BrowserPrint, { Printer } from 'browserprint-es';
+import { linkedText, linkedImage, linkedBarcodes } from '@/lib/print/plugins';
 import QuantitySelector from '@/components/QuantitySelector.vue';
+
+const pdfmePlugins = {
+  text: linkedText,
+  image: linkedImage,
+  qrcode: linkedBarcodes.qrcode,
+  ean13: linkedBarcodes.ean13,
+  code39: linkedBarcodes.code39,
+  code128: linkedBarcodes.code128,
+  gs1datamatrix: linkedBarcodes.gs1datamatrix,
+  japanpost: linkedBarcodes.japanpost,
+  nw7: linkedBarcodes.nw7,
+  itf14: linkedBarcodes.itf14,
+  upca: linkedBarcodes.upca,
+  upce: linkedBarcodes.upce,
+};
+
+function normalizePageSchema(pageSchema) {
+  if (!pageSchema) return [];
+  if (Array.isArray(pageSchema)) return pageSchema;
+  return Object.entries(pageSchema).map(([fieldName, fieldSpec]) => ({ ...fieldSpec, name: fieldName }));
+}
+
+function schemasToV5(schemas) {
+  if (!schemas || !Array.isArray(schemas)) return [];
+  return schemas.map(normalizePageSchema);
+}
 
 export default {
   name: 'PrintLabelForm',
@@ -191,27 +218,10 @@ export default {
     },
 
     prepareInputs() {
-      // Needed to parse input type to load images as base64
       const inputs = [];
-      for (const schema of this.selected_template.template.schemas) {
-        let schemaFields = [];
-        for (const [fieldName /*, fieldProps*/] of Object.entries(schema)) {
-          //if (fieldProps.type === 'image') {
-          //  try {
-          //    const base64 = formModel[fieldName] // Image URL
-          //      ? await loadImage(formModel[fieldName])
-          //      : ''; // empty string will not render any image. Background, if present, will be visibile.
-          //    schemaFields.push([fieldName, base64]);
-          //  } catch (err) {
-          //    window.alert(
-          //      'Error while generating the image. Please contact the system administrator.'
-          //    );
-          //    console.log(err);
-          //  }
-          //} else {
-          schemaFields.push([fieldName, /*formModel[fieldName]*/ '']);
-          //}
-        }
+      for (const pageSchema of this.selected_template.template.schemas) {
+        const fields = normalizePageSchema(pageSchema);
+        const schemaFields = fields.map((field) => [field.name, '']);
         inputs.push(Object.fromEntries(schemaFields));
       }
       return inputs;
@@ -220,9 +230,17 @@ export default {
     selectPrinter(printer) {
       this.selected_printers = printer;
       this.loading_label = 'printing';
-      let template = this.selected_template.template;
+      const template = this.selected_template.template;
+      const cleanTemplate = {
+        basePdf: template.basePdf,
+        schemas: schemasToV5(template.schemas),
+      };
 
-      generate({ template, inputs: this.prepareInputs() }).then(
+      generate({
+        template: cleanTemplate,
+        inputs: this.prepareInputs(),
+        plugins: pdfmePlugins,
+      }).then(
         (data) => {
           exportFile('test-no-mime.pdf', new Blob([data], { type: 'application/pdf' }))
           //() => {

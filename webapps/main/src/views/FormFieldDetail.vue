@@ -402,14 +402,27 @@ export default {
         calls.push(this.$api.delete(`list/${this.field._key}`, { params }));
       }
 
-      Promise.all(calls).then(() => {
-        this.$emit('reload');
-        this.saving = false;
-        this.editMode = false;
-        if (this.is_choice) {
-          this.loadListValues();
-        }
-      });
+      Promise.all(calls)
+        .then(() => {
+          this.$emit('reload');
+          this.editMode = false;
+          if (this.is_choice) {
+            this.loadListValues();
+          }
+        })
+        .catch((err) => {
+          if (err?.response?.status === 409) {
+            this.$q.notify({
+              message: this.$t('field_slug_conflict'),
+              color: 'negative',
+              position: 'top',
+              timeout: 4000,
+            });
+          }
+        })
+        .finally(() => {
+          this.saving = false;
+        });
     },
 
     cancel() {

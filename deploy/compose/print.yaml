@@ -1,0 +1,24 @@
+networks:
+  progress:
+    external: true
+
+secrets:
+  print_service_pwd:
+    file: /opt/progress/print-service/pwd
+
+services:
+  print-service:
+    image: registry.gitlab.com/progresslab/progress-platform/print-service:${VERSION}
+    restart: unless-stopped
+    networks:
+      - progress
+    environment:
+      PRINT_SERVICE_API_URL: ${PRINT_SERVICE_API_URL:-http://api:8000}
+      PRINT_SERVICE_NON_ASCII: ${PRINT_SERVICE_NON_ASCII:-replace}
+    secrets:
+      - source: print_service_pwd
+        target: api_password
+    deploy:
+      replicas: 1
+      labels:
+        - "traefik.enable=false"

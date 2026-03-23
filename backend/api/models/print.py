@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import Literal, Union
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from models.base_models import ArangoDocument, ArangoEdge
 
@@ -28,6 +28,12 @@ class VisualFieldType(str, Enum):
   UPCA = 'upca'
   UPCE = 'upce'
 
+class LinkType(str, Enum):
+  NONE = 'none'
+  PRESET = 'preset'
+  CUSTOM_FIELD = 'custom_field'
+  TEMPLATE_EXPRESSION = 'template_expression'
+
 
 class DynamicFontSize(BaseModel):
   fit: str | None = None
@@ -40,8 +46,12 @@ class Position(BaseModel):
 
 
 # Due to javascript library specs, properties must be specified in camelCase
+# pdfme v5: each field carries its own name and optional link configuration
 
 class TextFieldSpec(BaseModel):
+  model_config = ConfigDict(extra='allow')
+
+  name: str
   type: Literal['text'] = 'text'
   position: Position
   height: float
@@ -58,35 +68,51 @@ class TextFieldSpec(BaseModel):
   rotate: float | None = None
   verticalAlignment: VerticalAlignment | None = None
 
+  # Link configuration
+  linkType: LinkType | None = None
+  linkValue: str | None = None
+  customFieldKey: str | None = None
+  extraPath: str | None = None
+  templateExpression: str | None = None
+
+  # pdfme v5 form behavior
+  readOnly: bool | None = None
+  required: bool | None = None
+
 class VisualFieldSpec(BaseModel):
   """Image or linear/2D codes"""
+  model_config = ConfigDict(extra='allow')
+
+  name: str
   type: VisualFieldType
   position: Position
   height: float
-  rotate: float | None = None
   width: float
+  rotate: float | None = None
+
+  # Link configuration
+  linkType: LinkType | None = None
+  linkValue: str | None = None
+  customFieldKey: str | None = None
+  extraPath: str | None = None
+  templateExpression: str | None = None
+
+  # pdfme v5 form behavior
+  readOnly: bool | None = None
+  required: bool | None = None
 
 FieldSpec = TextFieldSpec | VisualFieldSpec
-PageSchema = dict[str, FieldSpec] # field name -> field details
+PageSchema = list[FieldSpec] # v5: array of field specs, each with a name property
 
 class PrintTemplate(BaseModel):
   basePdf: str | None = None
-  columns: list[str] = []
   sampledata: list[dict[str, str]] = []
   schemas: list[PageSchema]
-
-class PrintTemplateLinkType(str, Enum):
-  PRESET = 'preset'
-  CUSTOM_FIELD = 'custom_field'
-
-class PrintTemplateLink(BaseModel):
-  type: PrintTemplateLinkType
-  value: str | None = None
+  pdfmeVersion: str | None = None
 
 class PrintTemplateRecord(ArangoDocument):
   name: str
   description: str | None = None
-  links: dict[str, PrintTemplateLink] = dict()
   template: PrintTemplate | None = None
   entities: int | None = 0
 

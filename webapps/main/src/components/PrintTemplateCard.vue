@@ -22,6 +22,7 @@
         size="sm"
         flat
         round
+        color="high"
         icon="mdi-file-search-outline"
         @click="showTemplatePreview"
       >
@@ -33,6 +34,7 @@
         flat
         round
         icon="mdi-printer"
+        color="high"
         class="q-ml-sm"
         @click.stop="openPrintDialog"
       >
@@ -44,6 +46,7 @@
         flat
         round
         size="sm"
+        color="high"
         icon="mdi-pencil"
         @click="editTemplate"
       >
@@ -54,6 +57,7 @@
         flat
         round
         size="sm"
+        color="high"
         icon="mdi-delete"
         @click="showDelete = true"
       >
@@ -67,6 +71,7 @@
         flat
         round
         size="sm"
+        color="high"
         icon="mdi-close"
         @click="showUnlink = true"
       >
@@ -147,10 +152,9 @@
 </template>
 
 <script>
-import { generate } from '@pdfme/generator';
 import MediaViewer from '@/components/MediaViewer.vue';
 import PrintTemplateDesigner from '@/components/PrintTemplateDesigner.vue';
-import { usePrintDialog } from '@/lib/print';
+import { usePrintDialog, generatePdf } from '@/lib/print';
 
 export default {
   name: 'PrintTemplateCard',
@@ -208,10 +212,10 @@ export default {
       const {
         data: { template },
       } = await this.$api.get(`print-template/${this.template._key}`);
-      const inputs = template.sampledata;
+      const inputs = template.sampledata || [];
       this.showPreview = {
         name: template.name,
-        pdf: await generate({ template, inputs }),
+        pdf: await generatePdf({ template, inputs }),
       };
     },
 

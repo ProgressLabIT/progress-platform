@@ -1,9 +1,129 @@
 import { Dialog, Notify, exportFile } from 'quasar';
+import { api } from '@/boot/axios';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useStore } from 'vuex';
+import { generate } from '@pdfme/generator';
 import PrintDialog from '@/components/PrintDialog.vue';
 import { usePrintTemplates } from '@/composables/print-template';
+import { buildPlugins } from '@/lib/print/plugins';
+
+const pdfmePlugins = buildPlugins([]);
+
+export function normalizePageSchema(pageSchema) {
+  if (!pageSchema) return [];
+  if (Array.isArray(pageSchema)) return pageSchema;
+  return Object.entries(pageSchema).map(([fieldName, fieldSpec]) => ({ ...fieldSpec, name: fieldName }));
+}
+
+export function schemasToV5(schemas) {
+  if (!schemas || !Array.isArray(schemas)) return [];
+  return schemas.map(normalizePageSchema);
+}
+
+/**
+ * Generate PDF from template and inputs (pdfme v5).
+ * @param {{ template: { basePdf: string, schemas: unknown[] }, inputs: object[] }} options
+ * @returns {Promise<Uint8Array>}
+ */
+export async function generatePdf({ template, inputs }) {
+  const cleanSchemas = schemasToV5(template.schemas);
+
+  // Migrate gs1datamatrix → datamatrix when runtime value is not valid GS1 AI format
+  const gs1Re = /\((01)\)(\d*)(\(|$)/;
+  for (const page of cleanSchemas) {
+    for (const field of page) {
+      if (field.type !== 'gs1datamatrix') continue;
+      const val = (inputs && inputs[0])?.[field.name] ?? '';
+      const m = val.match(gs1Re);
+      const ok = m && val.length <= 52 && m[1] === '01' && [8,12,13,14].includes(m[2].length);
+      if (!ok) field.type = 'datamatrix';
+    }
+  }
+
+  const cleanTemplate = { basePdf: template.basePdf, schemas: cleanSchemas };
+  return generate({
+    template: cleanTemplate,
+    inputs: inputs || [],
+    plugins: pdfmePlugins,
+  });
+}
+
+/**
+ * Submit a print job to the main API.
+ * @param {{ data: string, printer: { host: string, port: number, timeout_seconds?: number }, format: 'zpl'|'pdf', copies?: number }} params
+ * @returns {Promise<{ job_id: string }>}
+ */
+export async function sendToPrintService({ data, printer, format, copies = 1 }) {
+  const payload = {
+    printer_host: printer.host,
+    printer_port: printer.port,
+    format,
+    data,
+    copies,
+    timeout_seconds: printer.timeout_seconds ?? 5,
+  };
+  const response = await api.post('print-job', payload);
+  return response.data;  // { job_id: "uuid" }
+}
+
+/**
+ * Subscribe to SSE print-result events and wait for the one matching jobId.
+ * Resolves with { ok, error, detail } on match or { ok: false, error: 'timeout' } on timeout.
+ * Always closes the EventSource before resolving.
+ * @param {string} jobId
+ * @param {number} timeoutMs
+ * @returns {Promise<{ ok: boolean, error: string|null, detail: string|null }>}
+ */
+export function waitForPrintResult(jobIdOrPromise, timeoutMs) {
+  return new Promise((resolve, reject) => {
+    const url = api.defaults.baseURL + '/notification/print-result';
+    const source = new EventSource(url, { withCredentials: false });
+    let jobId = null;
+    const buffer = [];
+
+    const finish = (result) => {
+      clearTimeout(timer);
+      source.close();
+      resolve(result);
+    };
+
+    const timer = setTimeout(() => {
+      finish({ ok: false, error: 'timeout', detail: null });
+    }, timeoutMs);
+
+    source.addEventListener('print-result', (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (jobId !== null) {
+          if (data.job_id === jobId) finish({ ok: data.ok, error: data.error ?? null, detail: data.detail ?? null });
+        } else {
+          buffer.push(data);
+        }
+      } catch (e) {
+        // Ignore unparseable SSE events
+      }
+    });
+
+    // jobIdOrPromise may be a string (legacy) or a Promise<string> (subscribe-before-submit).
+    // Opening the EventSource before the job is submitted eliminates the race condition where
+    // fast results (e.g. connection-refused) arrive before the subscription is registered.
+    Promise.resolve(jobIdOrPromise).then(
+      (id) => {
+        jobId = id;
+        const hit = buffer.find((d) => d.job_id === jobId);
+        if (hit) finish({ ok: hit.ok, error: hit.error ?? null, detail: hit.detail ?? null });
+      },
+      (err) => {
+        clearTimeout(timer);
+        source.close();
+        reject(err);
+      },
+    );
+
+    source.onerror = () => {};
+  });
+}
 
 export function usePrintDialog({ context: contextType, contextData }) {
   const { t } = useI18n();
@@ -80,6 +200,7 @@ export class TemplateContext {
   serial = null;
   product = null;
   workOrder = null;
+  position = null;
 
   /** @protected */
   _store;
@@ -93,6 +214,7 @@ export class TemplateContext {
     this.product = null;
     this.workOrder = null;
     this.issue = null;
+    this.position = null;
   }
 
   getTemplateContextKey() {
@@ -212,6 +334,10 @@ export class TemplateContext {
         case 'product.description':
           return this.product?.description;
 
+        // Position presets
+        case 'position.code':
+          return this.position?.code;
+
         // Job presets
         case 'job.key':
           return this.job?._key;
@@ -299,7 +425,8 @@ export class TemplateContext {
       job: this.job,
       work_order: this.workOrder,
       product: this.product,
-      issue: this.issue
+      issue: this.issue,
+      position: this.position,
     };
 
     if (baseObjectMap[base]) {
@@ -375,6 +502,10 @@ export class TemplateContext {
 
   setSelectedIssue(issue) {
     this.issue = issue;
+  }
+
+  setSelectedPosition(position) {
+    this.position = position;
   }
 }
 

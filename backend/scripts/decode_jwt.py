@@ -2,7 +2,7 @@ import timeit
 
 import jwt
 
-TOKEN_SECRET = "0ac33c11e3f6c4903f6f30c03edfda07e513288884a8d573690eb6d916fca034"
+TOKEN_SECRET = "change-me-use-env-var-PROGRESS_JWT_SECRET"
 ALGORITHM = "HS256"
 
 

@@ -1,6 +1,6 @@
 import logging
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from arango import ArangoClient
 from arango.exceptions import ServerStatusError
@@ -106,6 +106,8 @@ with sys_db_connection.begin_batch_execution() as sys_db:
     'progress_api': get_secret('progress_api_db_pwd'),
     'customer':'customer'
   }
+
+  print_service_pwd = get_secret('print_service_pwd')
 
   # TODO: Check if users are present
   for u, pwd in db_users.items():
@@ -357,6 +359,16 @@ collections = [
       scope = 'admin production library operator quality warehouse task traceability reporting',
       site_key = '0',
       reset_password = True
+    ),
+    dict(
+      username = 'print_service',
+      name = 'Print',
+      surname = 'Service',
+      active = True,
+      psw_hash = pwd_context.hash(print_service_pwd),
+      scope = 'print_service',
+      site_key = '0',
+      reset_password = False
     )
   ]),
   Collection(name='UserSession'),
@@ -403,5 +415,3 @@ for db in db_handles:
   logger.info(f'Created collections and data in db {db.db_name}')
 
 logger.info('Database initialization completed successfully!')
-
-

@@ -89,7 +89,7 @@
             :key="index"
           >
             <fieldset
-              v-if="Object.keys(pageSchema).length > 0"
+              v-if="normalizePageSchema(pageSchema).length > 0"
               class="q-pa-md q-my-md column"
               style="gap: 16px"
             >
@@ -98,34 +98,40 @@
               </legend>
 
               <template
-                v-for="(field, fieldName) in pageSchema"
-                :key="fieldName"
+                v-for="field in normalizePageSchema(pageSchema)"
+                :key="field.name"
               >
-                <!-- TODO: Handle field type 'image' -->
-                <template v-if="field.type === 'image'">
-                  <div>{{ fieldName }}</div>
-                  <q-img
-                    :src="formModel[fieldName]"
-                    fit="contain"
-                    style="width: 300px"
-                  >
-                    <template #error>
-                      <div class="bg-grey-2 text-grey-6" style="word-break: break-word;">
-                        <div class="text-center">
-                          <q-icon name="mdi-image-off-outline" size="md" />
-                          <div class="smaller q-mt-xs">{{  $t('image_not_available_at_path') }}</div>
-                          <div class="smaller q-mt-xs">{{ formModel[fieldName] }}</div>
+                <!-- Skip read-only fields (auto-populated from link, not editable) -->
+                <template v-if="!field.readOnly">
+                  <template v-if="field.type === 'image'">
+                    <div>{{ field.name }}</div>
+                    <q-img
+                      :src="formModel[field.name]"
+                      fit="contain"
+                      style="width: 300px"
+                    >
+                      <template #error>
+                        <div class="bg-grey-2 text-grey-6" style="word-break: break-word;">
+                          <div class="text-center">
+                            <q-icon name="mdi-image-off-outline" size="md" />
+                            <div class="smaller q-mt-xs">{{ $t('image_not_available_at_path') }}</div>
+                            <div class="smaller q-mt-xs">{{ formModel[field.name] }}</div>
+                          </div>
                         </div>
-                      </div>
+                      </template>
+                    </q-img>
+                  </template>
+                  <q-input
+                    v-else
+                    v-model="formModel[field.name]"
+                    filled
+                  >
+                    <template #label>
+                      {{ field.name }}
+                      <span v-if="field.required" class="text-theme-red"> * </span>
                     </template>
-                  </q-img>
+                  </q-input>
                 </template>
-                <q-input
-                  v-else
-                  v-model="formModel[fieldName]"
-                  :label="fieldName"
-                  filled
-                />
               </template>
             </fieldset>
           </template>
@@ -167,27 +173,42 @@
         </div>
 
         <q-stepper-navigation class="flex q-gutter-sm">
-          <q-btn
-            :label="$t('cancel')"
-            color="theme-grey"
-            @click="onDialogCancel"
-          />
+          <template v-if="!isPrinting">
+            <q-btn
+              :label="$t('cancel')"
+              color="theme-grey"
+              @click="onDialogCancel"
+            />
 
-          <q-space />
+            <q-space />
 
-          <q-btn :label="$t('back')" color="theme-grey" @click="activeStep--" />
-          <q-btn
-            :label="$t('save')"
-            color="primary"
-            :disable="isLoadingTemplate"
-            @click="
-              onDialogOK({
-                src: previewSrc,
-                printTemplate: selectedTemplate,
-                data: formModel,
-              })
-            "
-          />
+            <q-btn :label="$t('back')" color="theme-grey" @click="activeStep--" />
+            <q-btn
+              :label="$t('save')"
+              color="primary"
+              :disable="isLoadingTemplate"
+              @click="
+                onDialogOK({
+                  src: previewSrc,
+                  printTemplate: selectedTemplate,
+                  data: formModel,
+                })
+              "
+            />
+            <q-btn
+              v-if="selectedPrinter"
+              :label="$t('printDialog.sendToPrinter.label', { name: selectedPrinter.name })"
+              color="primary"
+              icon="mdi-printer"
+              :disable="isLoadingTemplate"
+              @click="sendToPrinter"
+            />
+          </template>
+          <template v-else>
+            <q-space />
+            <q-spinner color="primary" size="2em" />
+            <q-space />
+          </template>
         </q-stepper-navigation>
       </q-step>
     </q-stepper>
@@ -196,14 +217,83 @@
 
 <script setup>
 import { generate } from '@pdfme/generator';
-import { useDialogPluginComponent } from 'quasar';
-import { nextTick, ref, reactive, toRaw } from 'vue';
+import { useDialogPluginComponent, Notify } from 'quasar';
+import { nextTick, ref, reactive, toRaw, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { useStore } from 'vuex';
 import VuePdfEmbed from 'vue-pdf-embed';
 import { api } from '@/boot/axios';
+import { buildPlugins } from '@/lib/print/plugins';
+import { resolveExpression } from '@/lib/print/templateResolver.js';
+import { useConfigStore } from '@/stores/config';
+import { generateZpl } from '@/lib/print/zpl.js';
+import { sendToPrintService, waitForPrintResult } from '@/lib/print/index.js';
 import BaseDialog from '@/components/BaseDialog.vue';
 import LoadingSignal from '@/components/LoadingSignal.vue';
 import PrintTemplateCard from '@/components/PrintTemplateCard.vue';
 import BaseAutocompleteSerial from './BaseAutocompleteSerial.vue';
+
+const pdfmePlugins = buildPlugins([]);
+
+/** Normalize page schema to array of { name, type, ... } (v5 format). Supports v2/v4 (keyed object) and v5 (array). */
+function normalizePageSchema(pageSchema) {
+  if (!pageSchema) return [];
+  if (Array.isArray(pageSchema)) return pageSchema;
+  return Object.entries(pageSchema).map(([fieldName, fieldSpec]) => ({
+    ...fieldSpec,
+    name: fieldName,
+  }));
+}
+
+/** Get field names and link config from template + record. Supports v2/v4 (columns + links) and v5 (linkType/linkValue on schema). */
+function getFieldNamesAndLinks(data) {
+  const template = data.template || {};
+  const schemas = template.schemas || [];
+  const columns = template.columns;
+  const links = data.links || {};
+
+  if (columns && Array.isArray(columns) && columns.length > 0) {
+    return {
+      fieldNames: columns,
+      getLink: (fieldName) => links[fieldName] || null,
+    };
+  }
+
+  const fieldNames = [];
+  const linkByField = {};
+  for (const pageSchema of schemas) {
+    const fields = normalizePageSchema(pageSchema);
+    for (const field of fields) {
+      const name = field.name || field.key;
+      if (name) {
+        fieldNames.push(name);
+        if (field.linkType && field.linkType !== 'none') {
+          // Support both new linkValue field and old customFieldKey for backward compatibility
+          let value = field.linkValue || field.customFieldKey || '';
+          if (field.linkType === 'preset' && field.extraPath) {
+            value = value ? `${value}.${field.extraPath}` : field.extraPath;
+          }
+          linkByField[name] = {
+            type: field.linkType,
+            value,
+            // For template_expression fields, the expression lives on the schema field itself
+            templateExpression: field.templateExpression || '',
+          };
+        }
+      }
+    }
+  }
+  return {
+    fieldNames: [...new Set(fieldNames)],
+    getLink: (fieldName) => linkByField[fieldName] || null,
+  };
+}
+
+/** Normalize full schemas to v5 (array of arrays) for generate(). */
+function schemasToV5(schemas) {
+  if (!schemas || !Array.isArray(schemas)) return [];
+  return schemas.map(normalizePageSchema);
+}
 
 const props = defineProps({
   context: {
@@ -218,11 +308,22 @@ const props = defineProps({
 
 defineEmits(useDialogPluginComponent.emitsObject);
 
+const { t } = useI18n();
+const store = useStore();
 const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } =
   useDialogPluginComponent();
 // This can't be inside the template due to unwrapping
 // See: https://github.com/vuejs/composition-api/issues/317#issuecomment-1069145915
 const getDialogRef = () => dialogRef;
+
+const { config } = useConfigStore();
+const isPrinting = ref(false);
+
+const selectedPrinter = computed(() => {
+  const prefValue = store.state.session.user?.preferences?.printer;
+  if (!prefValue) return null;
+  return config.printers.find(p => `${p.host}:${p.port}` === prefValue) ?? null;
+});
 
 const activeStep = ref(0);
 const allowSelectTemplate = ref(true);
@@ -375,42 +476,42 @@ async function selectTemplate(template) {
     const { data } = await api.get(`print-template/${template._key}`);
     selectedTemplate.value = data;
 
-    // Validate template data structure
-    if (!data.template || !data.template.columns || !Array.isArray(data.template.columns)) {
-      throw new Error('Invalid template data: missing or invalid columns');
+    if (!data.template || !data.template.schemas) {
+      throw new Error('Invalid template data: missing template or schemas');
     }
+
+    const { fieldNames, getLink } = getFieldNamesAndLinks(data);
+
+    // Ensure custom fields are loaded — idempotent, safe to call every time
+    await store.dispatch('getCustomFields');
+    const allCustomFields = store.state.form.customFields;
 
     formModel = reactive(
       Object.fromEntries(
-        data.template.columns.map((fieldName) => {
-          // Ensure fieldName is a string
+        fieldNames.map((fieldName) => {
           if (!fieldName || typeof fieldName !== 'string') {
             console.warn('Invalid field name found:', fieldName);
             return ['unknown_field', ''];
           }
-
-          const link = data.links && data.links[fieldName];
+          const link = getLink(fieldName);
           if (!link) {
             return [fieldName, ''];
           }
-
-          if (link?.value?.includes('serial')) {
+          if (link.value && String(link.value).includes('serial')) {
             hasSerialLink.value = true;
           }
-
-          if (link?.type === 'preset') {
-            const presetValue = props.context.getPresetValue(link.value);
-            return [
-              fieldName,
-              String(presetValue ?? ''),
-            ];
+          if (link.type === 'template_expression') {
+            // field.templateExpression holds the encoded expression ({{cf::_key}} form from DB)
+            // resolveExpression handles both preset tokens and cf:: tokens
+            const resolved = resolveExpression(link.templateExpression, props.context, allCustomFields);
+            return [fieldName, String(resolved ?? '')];
           }
-
+          if (link.type === 'preset') {
+            const presetValue = props.context.getPresetValue(link.value);
+            return [fieldName, String(presetValue ?? '')];
+          }
           const customValue = props.context.getCustomFieldValue(link.value);
-          return [
-            fieldName,
-            String(customValue ?? ''),
-          ];
+          return [fieldName, String(customValue ?? '')];
         }),
       ),
     );
@@ -488,33 +589,24 @@ async function prepareInputs() {
     throw new Error('Template schemas are not available');
   }
 
-  for (const schema of selectedTemplate.value.template.schemas) {
-    let schemaFields = [];
+  for (const pageSchema of selectedTemplate.value.template.schemas) {
+    const fields = normalizePageSchema(pageSchema);
+    const schemaFields = [];
 
-    if (!schema || typeof schema !== 'object') {
-      console.warn('Invalid schema found, skipping:', schema);
-      continue;
-    }
+    for (const field of fields) {
+      const fieldName = field.name;
+      if (!fieldName) continue;
 
-    for (const [fieldName, fieldProps] of Object.entries(schema)) {
-      if (!fieldProps || typeof fieldProps !== 'object') {
-        console.warn(`Invalid field properties for ${fieldName}:`, fieldProps);
-        schemaFields.push([fieldName, '']);
-        continue;
-      }
-
-      if (fieldProps.type === 'image') {
+      if (field.type === 'image') {
         try {
           const imageUrl = formModel[fieldName];
-          const base64 = await loadImage(imageUrl); // If imageUrl is empty, empty string will not render any image. Background, if present, will be visible.
+          const base64 = await loadImage(imageUrl);
           schemaFields.push([fieldName, base64]);
         } catch (err) {
           console.error(`Error loading image for field ${fieldName}:`, err);
-          // Use empty string as fallback - error was already shown in the form UI
           schemaFields.push([fieldName, '']);
         }
       } else {
-        // Ensure we always have a string value, never null or undefined
         const fieldValue = formModel[fieldName];
         const safeValue = fieldValue != null ? String(fieldValue) : '';
         schemaFields.push([fieldName, safeValue]);
@@ -527,11 +619,37 @@ async function prepareInputs() {
 }
 
 /**
+ * Collects all required field names from the template.
+ * @returns {string[]}
+ */
+function getRequiredFieldNames() {
+  const template = selectedTemplate.value?.template;
+  if (!template?.schemas || !Array.isArray(template.schemas)) return [];
+  const names = [];
+  for (const pageSchema of template.schemas) {
+    for (const field of normalizePageSchema(pageSchema)) {
+      if (field.name && field.required) names.push(field.name);
+    }
+  }
+  return names;
+}
+
+/**
  * Generates a PDF preview using the selected template and form data
  * Validates template structure, prepares inputs, and generates PDF using @pdfme/generator
  * Sets the preview source for display and advances to the preview step
  */
 async function goToPreview() {
+  const requiredNames = getRequiredFieldNames();
+  const requiredEmpty = requiredNames.filter((name) => {
+    const v = formModel[name];
+    return v === undefined || v === null || String(v).trim() === '';
+  });
+  if (requiredEmpty.length > 0) {
+    window.alert(t('printDialog.requiredFieldsEmpty', { count: requiredEmpty.length }));
+    return;
+  }
+
   previewSrc.value = undefined;
   activeStep.value = 2;
   await nextTick();
@@ -555,19 +673,30 @@ async function goToPreview() {
       throw new Error('Inputs are missing or invalid');
     }
 
-    // Log for debugging
-    console.log('Template:', template);
-    console.log('Inputs:', inputs);
+    const cleanSchemas = JSON.parse(JSON.stringify(schemasToV5(template.schemas)));
 
-    const cleanTemplate = {
-      basePdf: template.basePdf,
-      schemas: toRaw(template.schemas || []),
-      columns: toRaw(template.columns ? [...template.columns] : []),
-    };
+    // Migrate gs1datamatrix → datamatrix when the runtime value is not valid GS1 AI format.
+    // This lets existing templates that used gs1datamatrix for free-form data render correctly.
+    const gs1Regex = /\((01)\)(\d*)(\(|$)/;
+    for (const page of cleanSchemas) {
+      for (const field of page) {
+        if (field.type !== 'gs1datamatrix') continue;
+        const val = inputs[0]?.[field.name] ?? '';
+        const m = val.match(gs1Regex);
+        const isValidGs1 = m && val.length <= 52 && m[1] === '01' &&
+          [8, 12, 13, 14].includes(m[2].length);
+        if (!isValidGs1) {
+          field.type = 'datamatrix';
+        }
+      }
+    }
+
+    const cleanTemplate = { basePdf: template.basePdf, schemas: cleanSchemas };
 
     previewSrc.value = await generate({
       template: cleanTemplate,
       inputs,
+      plugins: pdfmePlugins,
     });
   } catch (error) {
     console.error('Error generating PDF preview:', error);
@@ -575,6 +704,74 @@ async function goToPreview() {
     // Go back to the previous step
     activeStep.value = 1;
   }
+}
+
+async function sendToPrinter() {
+  if (!selectedPrinter.value) return;
+  isPrinting.value = true;
+
+  try {
+    const printer = selectedPrinter.value;
+    let data;
+    let format;
+
+    if (printer.type === 'zpl') {
+      // ZPL path: generateZpl → send ZPL string
+      const inputs = await prepareInputs();
+      const zplString = generateZpl(selectedTemplate.value.template, inputs, { dpi: 203, quantity: 1 });
+      data = zplString;
+      format = 'zpl';
+    } else {
+      // PDF path: generate → base64
+      const { template } = selectedTemplate.value;
+      const cleanSchemas = JSON.parse(JSON.stringify(schemasToV5(template.schemas)));
+      // gs1datamatrix migration (same as goToPreview)
+      const inputs = await prepareInputs();
+      const gs1Regex = /\((01)\)(\d*)(\(|$)/;
+      for (const page of cleanSchemas) {
+        for (const field of page) {
+          if (field.type !== 'gs1datamatrix') continue;
+          const val = inputs[0]?.[field.name] ?? '';
+          const m = val.match(gs1Regex);
+          const isValidGs1 = m && val.length <= 52 && m[1] === '01' && [8, 12, 13, 14].includes(m[2].length);
+          if (!isValidGs1) field.type = 'datamatrix';
+        }
+      }
+      const cleanTemplate = { basePdf: template.basePdf, schemas: cleanSchemas };
+      const pdfBytes = await generate({ template: cleanTemplate, inputs, plugins: pdfmePlugins });
+      const bytes = new Uint8Array(pdfBytes);
+      let binary = '';
+      const chunkSize = 8192;
+      for (let i = 0; i < bytes.length; i += chunkSize) {
+        binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize));
+      }
+      data = btoa(binary);
+      format = 'pdf';
+    }
+
+    const timeoutMs = ((printer.timeout_seconds ?? 5) + 5) * 1000;
+    // Subscribe before submitting: avoids the race where fast results arrive before the SSE
+    // connection is registered. waitForPrintResult buffers events until the job_id resolves.
+    const result = await waitForPrintResult(
+      sendToPrintService({ data, printer, format, copies: 1 }).then((r) => r.job_id),
+      timeoutMs,
+    );
+
+    if (result.ok) {
+      onDialogHide();
+      Notify.create({ type: 'positive', message: t('printDialog.sendToPrinter.success') });
+    } else if (result.error === 'timeout') {
+      Notify.create({ type: 'negative', message: t('printDialog.sendToPrinter.timeout') });
+    } else {
+      Notify.create({ type: 'negative', message: result.detail || t('printDialog.sendToPrinter.error') });
+    }
+  } catch (err) {
+    // POST failed or other error — stay open so user can retry
+    isPrinting.value = false;
+    Notify.create({ type: 'negative', message: err.message || t('printDialog.sendToPrinter.error') });
+    return;
+  }
+  isPrinting.value = false;
 }
 
 const dialogWidth = 615;

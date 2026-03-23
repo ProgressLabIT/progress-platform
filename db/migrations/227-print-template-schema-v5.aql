@@ -1,0 +1,163 @@
+// ============================================================================
+// PrintTemplate Migration: v2/v4 to v5 Schema Format
+// ============================================================================
+//
+// This migration:
+// 1. Converts schemas from keyed objects to arrays with 'name' property (v5 format)
+// 2. Embeds link data (linkType, linkValue) directly into schema fields
+// 3. Ensures backgroundColor is present in text fields (defaults to empty string)
+// 4. Adds pdfmeVersion marker
+//
+// IMPORTANT: Run a DRY RUN first to preview changes before applying!
+// ============================================================================
+
+// ------------------------------------------------------------------------
+// ------------------------------ DRY RUN ---------------------------------
+// ------------------------------------------------------------------------
+// Preview what the migration will do (does NOT modify data)
+
+FOR doc IN PrintTemplate
+  FILTER doc.template != null AND doc.template.schemas != null
+
+  // Check if already migrated (v5 schemas are arrays of arrays)
+  FILTER !IS_ARRAY(doc.template.schemas[0]) OR LENGTH(doc.template.schemas) == 0
+
+  LET links = doc.links || {}
+
+  LET migratedSchemas = (
+    FOR pageSchema IN doc.template.schemas
+      // Each pageSchema is currently { fieldName: { type, position, ... }, ... }
+      LET migratedFields = (
+        FOR fieldName IN ATTRIBUTES(pageSchema)
+          LET fieldSpec = pageSchema[fieldName]
+          LET fieldLink = links[fieldName] || {}
+
+          // Build the new field with 'name' property and embedded link data
+          LET baseField = MERGE(
+            fieldSpec,
+            {
+              name: fieldName,
+              linkType: fieldLink.type || 'none',
+              linkValue: fieldLink.value || ''
+            }
+          )
+
+          // For text fields, ensure backgroundColor exists
+          LET finalField = fieldSpec.type == 'text'
+            ? MERGE(baseField, {
+                backgroundColor: fieldSpec.backgroundColor || ''
+              })
+            : baseField
+
+          RETURN finalField
+      )
+      RETURN migratedFields
+  )
+
+  RETURN {
+    _key: doc._key,
+    name: doc.name,
+    originalSchemaFormat: doc.template.schemas,
+    migratedSchemaFormat: migratedSchemas,
+    linksToEmbed: links
+  }
+
+// ------------------------------------------------------------------------
+// ------------------------------ APPLY MIGRATION -------------------------
+// ------------------------------------------------------------------------
+// Uncomment and run this section AFTER reviewing the dry run results
+
+/*
+FOR doc IN PrintTemplate
+  FILTER doc.template != null AND doc.template.schemas != null
+
+  // Check if already migrated (v5 schemas are arrays of arrays)
+  // Skip if first schema page is already an array (v5 format)
+  LET isAlreadyMigrated = LENGTH(doc.template.schemas) > 0
+    AND IS_ARRAY(doc.template.schemas[0])
+
+  FILTER !isAlreadyMigrated
+
+  LET links = doc.links || {}
+
+  LET migratedSchemas = (
+    FOR pageSchema IN doc.template.schemas
+      LET migratedFields = (
+        FOR fieldName IN ATTRIBUTES(pageSchema)
+          LET fieldSpec = pageSchema[fieldName]
+          LET fieldLink = links[fieldName] || {}
+
+          LET baseField = MERGE(
+            fieldSpec,
+            {
+              name: fieldName,
+              linkType: fieldLink.type || 'none',
+              linkValue: fieldLink.value || ''
+            }
+          )
+
+          LET finalField = fieldSpec.type == 'text'
+            ? MERGE(baseField, {
+                backgroundColor: fieldSpec.backgroundColor || ''
+              })
+            : baseField
+
+          RETURN finalField
+      )
+      RETURN migratedFields
+  )
+
+  LET updatedTemplate = MERGE(
+    doc.template,
+    {
+      schemas: migratedSchemas,
+      pdfmeVersion: '5.0.0'
+    }
+  )
+
+  // Keep the original links for backward compatibility (can be removed later)
+  // Remove 'columns' as it's no longer needed in v5 (names are in schemas)
+  UPDATE doc WITH {
+    template: UNSET(updatedTemplate, 'columns'),
+    _migrated_at: DATE_ISO8601(DATE_NOW()),
+    _migrated_from_version: '2.x'
+  } IN PrintTemplate
+
+  RETURN {
+    _key: doc._key,
+    name: doc.name,
+    status: 'migrated'
+  }
+*/
+
+// ------------------------------------------------------------------------
+// ------------------------------ VERIFICATION ----------------------------
+// ------------------------------------------------------------------------
+// Run after migration to verify all templates are in v5 format
+
+/*
+FOR doc IN PrintTemplate
+  FILTER doc.template != null AND doc.template.schemas != null
+
+  LET isV5Format = LENGTH(doc.template.schemas) > 0
+    AND IS_ARRAY(doc.template.schemas[0])
+    AND LENGTH(doc.template.schemas[0]) > 0
+    AND HAS(doc.template.schemas[0][0], 'name')
+
+  LET hasAllBackgroundColors = (
+    FOR pageSchema IN doc.template.schemas
+      FOR field IN pageSchema
+        FILTER field.type == 'text'
+        RETURN HAS(field, 'backgroundColor')
+  )
+
+  RETURN {
+    _key: doc._key,
+    name: doc.name,
+    isV5Format: isV5Format,
+    pdfmeVersion: doc.template.pdfmeVersion,
+    textFieldsWithBgColor: LENGTH(hasAllBackgroundColors) == 0
+      OR MIN(hasAllBackgroundColors) == true,
+    migratedAt: doc._migrated_at
+  }
+*/

@@ -581,8 +581,8 @@
 </template>
 
 <script>
-import { generate } from '@pdfme/generator';
 import { Dialog, Notify } from 'quasar';
+import { generatePdf } from '@/lib/print';
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 import { useStore, mapState /*, mapActions */ } from 'vuex';
@@ -923,10 +923,10 @@ export default {
       const {
         data: { template },
       } = await this.$api.get(`print-template/${t._key}`);
-      const inputs = template.sampledata;
+      const inputs = template.sampledata || [];
       this.show_template = {
         name: t.name,
-        pdf: await generate({ template, inputs }),
+        pdf: await generatePdf({ template, inputs }),
       };
     },
 

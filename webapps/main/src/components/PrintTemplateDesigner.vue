@@ -13,101 +13,127 @@
     </template>
 
     <template #content>
-      <div id="pdf-designer" class="absolute-full" />
-
+      <div class="column full-height" style="min-height: 0">
+      <!-- Toolbar: name, description, upload PDF, save -->
       <div
-        class="absolute-top-left full-height scroll q-pa-md"
-        style="min-width: 300px"
+        v-if="workingTemplate"
+        class="row q-pa-md q-col-gutter-md items-center surface1"
+        style="border-bottom: 1px solid rgba(0,0,0,0.12)"
       >
-        <div class="q-gutter-md">
+        <div class="col-12 col-md-4">
           <q-input
             v-model="workingTemplate.name"
             filled
+            dense
             :label="$t('name')"
             stack-label
             class="shadow-3"
-            input-class="transparent"
           />
-
+        </div>
+        <div class="col">
           <q-input
             v-model="workingTemplate.description"
             autogrow
             filled
+            dense
             :label="$t('description')"
             stack-label
             class="shadow-3"
           />
-
-          <div class="text-h5 q-mt-lg">{{ $capitalize($t('link', 2)) }}</div>
-          <fieldset
-            v-for="column in workingTemplate.template.columns"
-            :key="column"
-          >
-            <legend class="text-h5 q-px-sm">{{ column }}</legend>
-
-            <div class="row items-center q-mb-sm">
-              <span class="q-mr-sm">{{ $t('type') }}:</span>
-
-              <q-btn-toggle
-                v-model="workingTemplate.links[column].type"
-                :options="linkTypeOptions"
-                size="sm"
-                no-caps
-                @update:model-value="workingTemplate.links[column].value = null"
-              />
-            </div>
-
-            <q-select
-              v-if="workingTemplate.links[column].type === 'preset'"
-              v-model="workingTemplate.links[column].value"
-              :options="templateDataOptions.sort()"
-              filled
-              class="shadow-3"
-            />
-            <BaseAutocompleteCustomField
-              v-else
-              v-model="workingTemplate.links[column].value"
-              key-only
-              class="shadow-3"
-            />
-            <q-input
-              v-if="workingTemplate.links[column].value?.includes('.extra')"
-              :label="$t('extra_attribute')"
-              :model-value="workingTemplate.links[column].value.split('.').slice(2).join('.')"
-              filled
-              class="shadow-3 q-mt-sm"
-              @update:model-value="(attributeName) => updateExtraAttribute(column, attributeName)"
-            />
-          </fieldset>
-
-          <q-space />
-
-          <!-- ACTION MENU -->
+        </div>
+        <div class="col-auto">
           <q-btn
             :label="$t('print_template_load_pdf')"
             color="primary"
             icon="mdi-upload"
+            outline
+            padding="sm"
+            size="sm"
             @click="$refs.pdfFileInput.click()"
           />
+        </div>
 
+        <div class="col-auto">
           <q-btn
             :label="$t('save')"
             color="primary"
             icon="mdi-database-check"
+            outline
+            size="sm"
+            padding="sm"
             @click="saveTemplate"
           />
         </div>
+      </div>
+
+      <!-- Designer container with custom left sidebar overlay -->
+      <div class="pdf-designer-wrapper">
+        <!-- Custom left sidebar for adding fields (absolutely positioned) -->
+        <div v-if="workingTemplate" class="custom-left-sidebar column surface1 q-px-md">
+          <q-btn
+            flat
+            dense
+            square
+            icon="mdi-format-text"
+            class="q-mb-xs"
+            @click="addField('text')"
+          >
+            <q-tooltip anchor="center right" self="center left" :offset="[10, 0]">
+              {{ $t('field_type_text') }}
+            </q-tooltip>
+          </q-btn>
+          <q-btn
+            flat
+            dense
+            square
+            icon="mdi-image"
+            class="q-mb-xs"
+            @click="addField('image')"
+          >
+            <q-tooltip anchor="center right" self="center left" :offset="[10, 0]">
+              {{ $t('image') }}
+            </q-tooltip>
+          </q-btn>
+          <q-btn
+            flat
+            dense
+            square
+            icon="mdi-text-box-outline"
+            class="q-mb-sm"
+            @click="addTemplateExpressionField()"
+          >
+            <q-tooltip anchor="center right" self="center left" :offset="[10, 0]">
+              {{ $t('field_type_template_string') }}
+            </q-tooltip>
+          </q-btn>
+          <q-btn
+            v-for="bc in barcodeTypes"
+            :key="bc.type"
+            flat
+            dense
+            square
+            :icon="bc.icon"
+            class="q-mb-xs"
+            @click="addField(bc.type)"
+          >
+            <q-tooltip anchor="center right" self="center left" :offset="[10, 0]">
+              {{ bc.label }}
+            </q-tooltip>
+          </q-btn>
+        </div>
+
+        <div id="pdf-designer" class="pdf-designer-container" />
+      </div>
       </div>
 
       <input
         ref="pdfFileInput"
         type="file"
         accept="application/pdf"
-        style="opacity: 0"
+        style="opacity: 0; position: absolute; pointer-events: none"
         @change="uploadPdf($event.target.files[0])"
       />
 
-      <!-- TODO: Implement -->
       <BaseDialog :show="showRename">
         <BaseActionCard
           :title="$capitalize($t('print_template_rename'))"
@@ -124,15 +150,30 @@
 import { BLANK_PDF } from '@pdfme/common';
 import { Designer } from '@pdfme/ui';
 import { cloneDeep } from 'lodash';
-import { computed, ref, watch, toRaw } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useStore } from 'vuex';
+import { Dark } from 'quasar';
 import { api } from '@/boot/axios';
+import { buildPlugins } from '@/lib/print/plugins';
+import { encodeExpression, decodeExpression } from '@/lib/print/templateResolver.js';
 import BaseActionCard from '@/components/BaseActionCard.vue';
-import BaseAutocompleteCustomField from '@/components/BaseAutocompleteCustomField.vue';
 import BaseDialog from '@/components/BaseDialog.vue';
 import BaseModalScreen from '@/components/BaseModalScreen.vue';
 
+const barcodeTypes = [
+  { type: 'qrcode', label: 'QR Code', icon: 'mdi-qrcode' },
+  { type: 'datamatrix', label: 'DataMatrix', icon: 'mdi-data-matrix' },
+  { type: 'gs1datamatrix', label: 'GS1 DataMatrix', icon: 'mdi-data-matrix' },
+  { type: 'ean13', label: 'EAN-13', icon: 'mdi-barcode' },
+  { type: 'code39', label: 'Code 39', icon: 'mdi-barcode' },
+  { type: 'code128', label: 'Code 128', icon: 'mdi-barcode' },
+  { type: 'japanpost', label: 'Japan Post', icon: 'mdi-barcode' },
+  { type: 'nw7', label: 'NW-7', icon: 'mdi-barcode' },
+  { type: 'itf14', label: 'ITF-14', icon: 'mdi-barcode' },
+  { type: 'upca', label: 'UPC-A', icon: 'mdi-barcode' },
+  { type: 'upce', label: 'UPC-E', icon: 'mdi-barcode' },
+];
 
 const props = defineProps({
   show: {
@@ -147,68 +188,33 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'saved']);
 
-// Load custom fields on mount
 const store = useStore();
+const customFields = computed(() => store.state.form?.customFields ?? []);
 
 watch(
   () => props.show,
-  (show) => {
+  async (show) => {
     if (show) {
-      store.dispatch('getCustomFields');
+      await store.dispatch('getCustomFields');
       initTemplate();
       setTimeout(initDesigner, 500);
     }
   },
 );
 
-const templateDataOptions = [
-  'current_date',
-  'current_time',
-  'current_user',
-
-  'job.key',
-  'job.qt_planned',
-  'job.qt_completed',
-  'job.phase_alias',
-  'job.start_date',
-  'job.start_time',
-  'job.end_date',
-  'job.end_time',
-  'job.notes',
-  'job.extra',
-
-  'project.code',
-
-  'work_order.code',
-  'work_order.qt_planned',
-  'work_order.qt_completed',
-  'work_order.start_date',
-  'work_order.start_time',
-  'work_order.end_date',
-  'work_order.end_time',
-  'work_order.notes',
-  'work_order.extra',
-
-  'product.code',
-  'product.description',
-
-  'issue.id',
-  'issue.open_date',
-  'issue.open_time',
-  'issue.open_user',
-  'issue.close_date',
-  'issue.close_time',
-  'issue.close_user',
-  'issue.status',
-
-  'serial.code',
-  'serial.qt',
-  'serial.create_date',
-  'serial.create_time',
-  'serial.release_date',
-  'serial.release_time',
-  'serial.extra'
-];
+/** Convert v2/v4 schema (keyed object per page) to v5 format (array of objects with name property). */
+function schemasToV5(schemas) {
+  if (!schemas || !Array.isArray(schemas)) return [];
+  return schemas.map((pageSchema) => {
+    if (Array.isArray(pageSchema)) {
+      return pageSchema;
+    }
+    return Object.entries(pageSchema).map(([fieldName, fieldSpec]) => ({
+      ...fieldSpec,
+      name: fieldName,
+    }));
+  });
+}
 
 const { t, locale } = useI18n();
 const emptyTemplate = computed(() => ({
@@ -221,98 +227,238 @@ const emptyTemplate = computed(() => ({
   },
 }));
 
-const linkTypeOptions = computed(() => [
-  {
-    label: t('print_template_link_type.preset'),
-    value: 'preset',
-  },
-  {
-    label: t('print_template_link_type.custom_field'),
-    value: 'custom_field',
-  },
-]);
-
 const mode = ref();
 const workingTemplate = ref();
 
-/** @type {Designer} */
+/** Ant Design theme tokens mapped from app theme for pdfme Designer. */
+const pdfmeTheme = computed(() => {
+  const themeColors = store.getters.theme;
+  const isDark = Dark.isActive;
+  const textHigh = isDark ? 'rgba(255,255,255,0.87)' : 'rgba(30,52,58,1)';
+  const textSecondary = isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)';
+  const textTertiary = isDark ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.45)';
+  const textQuaternary = isDark ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.25)';
+  const inputBg = themeColors.surface2 || (isDark ? '#1F2A2D' : '#ffffff');
+  return {
+    token: {
+      colorPrimary: themeColors.blue || '#22AED1',
+      colorBgContainer: inputBg,
+      colorBgElevated: themeColors.surface2 || (isDark ? '#242E31' : '#ffffff'),
+      colorBgLayout: themeColors.surface1 || (isDark ? '#131E21' : '#eeeeee'),
+      colorText: textHigh,
+      colorTextSecondary: textSecondary,
+      colorTextTertiary: textTertiary,
+      colorTextQuaternary: textQuaternary,
+      colorBorder: themeColors.grey || '#707070',
+      colorSuccess: themeColors.green || '#0DAB76',
+      colorError: themeColors.red || '#E71D36',
+      colorWarning: themeColors.orange || '#FF9F1C',
+    },
+    components: {
+      Input: {
+        colorText: textHigh,
+        colorTextPlaceholder: textQuaternary,
+        colorBgContainer: inputBg,
+        colorBorder: themeColors.grey || '#707070',
+      },
+      Select: {
+        colorText: textHigh,
+        colorTextPlaceholder: textQuaternary,
+        colorBgContainer: inputBg,
+        colorBgElevated: themeColors.surface2 || (isDark ? '#242E31' : '#ffffff'),
+        colorBorder: themeColors.grey || '#707070',
+        optionSelectedBg: themeColors.blue || '#22AED1',
+      },
+      InputNumber: {
+        colorText: textHigh,
+        colorTextPlaceholder: textQuaternary,
+        colorBgContainer: inputBg,
+        colorBorder: themeColors.grey || '#707070',
+      },
+    },
+  };
+});
+
+/** @type {import('@pdfme/ui').Designer} */
 let designer;
+
+function getPlugins() {
+  return buildPlugins(customFields.value);
+}
+
 function initDesigner() {
   const container = document.getElementById('pdf-designer');
-  // Create a clean, cloneable version of the template
-  const cleanTemplate = {
-    basePdf: workingTemplate.value.template.basePdf,
-    schemas: toRaw(workingTemplate.value.template.schemas || []),
-    columns: toRaw(workingTemplate.value.template.columns ? [...workingTemplate.value.template.columns] : [])
-  };
+  if (!container) return;
+
+  const rawTemplate = workingTemplate.value.template;
+  const schemasV5 = schemasToV5(rawTemplate.schemas);
+  const cleanTemplate = JSON.parse(JSON.stringify({
+    basePdf: rawTemplate.basePdf,
+    schemas: schemasV5.length > 0 ? schemasV5 : [[]],
+  }));
+
+  const plugins = getPlugins();
 
   designer = new Designer({
     domContainer: container,
     template: cleanTemplate,
-    options: { lang: locale.value },
+    options: {
+      lang: locale.value,
+      theme: pdfmeTheme.value,
+    },
+    plugins,
   });
-  designer.onChangeTemplate((template) => {
-    let original_col = workingTemplate.value.links;
-    workingTemplate.value.template = cloneDeep(template);
-    workingTemplate.value.links = {};
 
-    for (const column of template.columns ?? []) {
-      if (original_col[column]) {
-        workingTemplate.value.links[column] = original_col[column];
-      } else {
-        workingTemplate.value.links[column] = {
-          type: 'preset',
-          value: null,
-        };
-      }
-    }
+  designer.onChangeTemplate((template) => {
+    workingTemplate.value.template = cloneDeep(template);
   });
 }
+
+watch(pdfmeTheme, (newTheme) => {
+  if (designer) {
+    designer.updateOptions({ theme: newTheme });
+  }
+});
+
+function addField(type, overrides = {}) {
+  if (!designer) return;
+  const template = designer.getTemplate();
+  const schemas = template.schemas && template.schemas.length > 0 ? [...template.schemas] : [[]];
+  const pageIndex = 0;
+  const pageSchemas = Array.isArray(schemas[pageIndex]) ? [...schemas[pageIndex]] : [];
+  const plugins = getPlugins();
+  const plugin = plugins[type];
+  if (!plugin?.propPanel?.defaultSchema) return;
+
+  const defaultSchema = cloneDeep(plugin.propPanel.defaultSchema);
+  const baseName = type === 'text' ? 'text' : type === 'image' ? 'image' : type;
+  const uniqueName = `${baseName}_${Date.now()}`;
+  defaultSchema.name = uniqueName;
+  defaultSchema.position = defaultSchema.position || { x: 20, y: 20 };
+  defaultSchema.position = {
+    x: defaultSchema.position.x,
+    y: defaultSchema.position.y + pageSchemas.length * 12,
+  };
+  if (defaultSchema.width == null) defaultSchema.width = type === 'image' ? 60 : 80;
+  if (defaultSchema.height == null) defaultSchema.height = type === 'image' ? 40 : 10;
+
+  Object.assign(defaultSchema, overrides);
+
+  pageSchemas.push(defaultSchema);
+  schemas[pageIndex] = pageSchemas;
+  designer.updateTemplate({ ...template, schemas });
+}
+
+function addTemplateExpressionField() {
+  addField('text', { linkType: 'template_expression', templateExpression: '' });
+}
+
 function closeDesigner() {
-  // TODO: Add alert if changes haven't been saved
-  designer.destroy();
+  if (designer) {
+    designer.destroy();
+    designer = null;
+  }
   workingTemplate.value = undefined;
   emit('close');
 }
+
 async function uploadPdf(file) {
+  if (!file) return;
   const reader = new FileReader();
   reader.readAsDataURL(file);
   reader.onload = () => {
     workingTemplate.value.template.basePdf = reader.result;
-    // Destroy the existing designer before creating a new one
     if (designer) {
       designer.destroy();
+      designer = null;
     }
     initDesigner();
   };
 }
 
+/** Migrate old customFieldKey to linkValue for backward compatibility */
+function migrateTemplateSchema(template) {
+  if (!template?.template?.schemas) return template;
+
+  const schemas = template.template.schemas;
+  schemas.forEach((pageSchema) => {
+    const fields = Array.isArray(pageSchema) ? pageSchema : Object.values(pageSchema);
+    fields.forEach((field) => {
+      // Migrate old customFieldKey to new unified linkValue field
+      if (field.customFieldKey && !field.linkValue) {
+        field.linkValue = field.customFieldKey;
+        delete field.customFieldKey;
+      }
+    });
+  });
+
+  return template;
+}
+
+/**
+ * Decode all template_expression fields in-place so the canvas and Expression input show the human-readable form.
+ * - Text fields: content = decoded expression (readable canvas preview)
+ * - Barcode/other fields: content = plugin defaultSchema.content (valid sample so designer renders correctly)
+ */
+function decodeTemplateExpressions(template, fields) {
+  if (!template?.template?.schemas) return;
+  const plugins = getPlugins();
+  template.template.schemas.forEach((pageSchema) => {
+    const schemaFields = Array.isArray(pageSchema) ? pageSchema : Object.values(pageSchema);
+    schemaFields.forEach((field) => {
+      if (field.linkType === 'template_expression') {
+        field.templateExpression = decodeExpression(field.templateExpression, fields);
+        if (field.type === 'text') {
+          field.content = field.templateExpression;
+        } else {
+          // Restore default sample content so the barcode renders in the designer
+          const defaultContent = plugins[field.type]?.propPanel?.defaultSchema?.content;
+          if (defaultContent) field.content = defaultContent;
+        }
+      }
+    });
+  });
+}
+
+/**
+ * Encode all template_expression fields in a deep-cloned template for storage.
+ * Never mutates the original — returns the encoded copy.
+ */
+function encodeTemplateExpressions(template, fields) {
+  const cloned = cloneDeep(template);
+  if (!cloned?.schemas) return cloned;
+  cloned.schemas.forEach((pageSchema) => {
+    const schemaFields = Array.isArray(pageSchema) ? pageSchema : Object.values(pageSchema);
+    schemaFields.forEach((field) => {
+      if (field.linkType === 'template_expression') {
+        field.templateExpression = encodeExpression(field.templateExpression, fields);
+      }
+    });
+  });
+  return cloned;
+}
+
 function initTemplate() {
   if (props.editTemplate) {
     mode.value = 'edit';
-    workingTemplate.value = cloneDeep(props.editTemplate);
+    const cloned = migrateTemplateSchema(cloneDeep(props.editTemplate));
+    decodeTemplateExpressions(cloned, customFields.value);
+    workingTemplate.value = cloned;
   } else {
     mode.value = 'new';
-    workingTemplate.value = emptyTemplate.value;
-  }
-}
-
-function updateExtraAttribute(column, attributeName) {
-  const baseValue = workingTemplate.value.links[column].value.split('.').slice(0,2).join('.');
-  if (['', null, undefined].includes(attributeName)) {
-    workingTemplate.value.links[column].value = baseValue;
-  } else {
-    workingTemplate.value.links[column].value = `${baseValue}.${attributeName}`;
+    workingTemplate.value = cloneDeep(emptyTemplate.value);
   }
 }
 
 async function saveTemplate() {
+  const templateFromDesigner = designer.getTemplate();
+  const encodedTemplate = encodeTemplateExpressions(cloneDeep(templateFromDesigner), customFields.value);
   await api.request({
     method: mode.value === 'new' ? 'POST' : 'PUT',
     url: 'print-template',
     data: {
       ...workingTemplate.value,
-      template: designer.getTemplate(),
+      template: encodedTemplate,
     },
   });
   emit('saved');
@@ -321,7 +467,46 @@ async function saveTemplate() {
 
 const showRename = ref(false);
 function cancelRename() {
-  // TODO: Reset name
   showRename.value = false;
 }
 </script>
+
+<style scoped>
+.pdf-designer-wrapper {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+}
+
+.custom-left-sidebar {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 100;
+  overflow-y: auto;
+}
+
+.pdf-designer-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+/* Hide pdfme left sidebar (45px icon bar) so our custom sidebar replaces it */
+.pdf-designer-container :deep([class*="LeftSidebar"]),
+.pdf-designer-container :deep([class*="left-sidebar"]),
+.pdf-designer-container :deep(> div > div:first-child[style*="width: 45px"]),
+.pdf-designer-container :deep(> div > div:first-child[style*="width:45px"]) {
+  display: none !important;
+}
+</style>
+
+<style>
+/* Ant Design Select/Cascader dropdowns are portalled to document.body with z-index ~1050.
+   Quasar q-dialog uses z-index ~6000. Override so pdfme prop-panel dropdowns are visible. */
+.ant-select-dropdown,
+.ant-cascader-dropdown {
+  z-index: 9999 !important;
+}
+</style>

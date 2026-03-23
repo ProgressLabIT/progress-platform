@@ -256,6 +256,7 @@ export default {
   field: 'field | fields',
   field_add: 'Add field',
   separator_add: 'Add separator',
+  field_slug_conflict: 'A field with the same name already exists. Choose a different name.',
   field_delete: 'Delete field',
   field_delete_success: 'Field deleted',
   field_delete_text:
@@ -273,6 +274,7 @@ export default {
   field_type_date: 'Date',
   field_type_number: 'Number',
   field_type_separator: 'Separator',
+  field_type_template_string: 'Template String',
   field_type_text: 'Text',
   field_type_ternary: 'True/False/NA',
   field_type_time: 'Time',
@@ -310,6 +312,13 @@ export default {
   printers: 'Printers',
   add_printer: 'add printer',
   remove_printer: 'remove printer',
+  printer: {
+    type: 'Type',
+    type_zpl: 'ZPL',
+    type_pdf: 'PDF',
+    timeout_seconds: 'Timeout (seconds)',
+    timeout: 'Timeout',
+  },
   issue: 'issue',
   issue_button_close: 'Close issue',
   issue_button_reopen: 'Reopen issue',
@@ -665,6 +674,13 @@ export default {
     },
 
     downloadWillBegin: 'Your download will begin shortly!',
+    requiredFieldsEmpty: '{count} required field(s) are empty. Please fill them before continuing.',
+    sendToPrinter: {
+      label: 'Send to {name}',
+      success: 'Label sent to printer',
+      error: 'Print failed. Check the printer and try again.',
+      timeout: 'No response from printer. Check the connection and try again.',
+    },
   },
   print_template: 'Template | Templates',
   print_template_confirm_delete_question:
@@ -682,6 +698,8 @@ export default {
   },
   print_template_preview: 'Preview template',
   print_template_rename: 'Rename template',
+  print_template_fields: 'Fields',
+  print_template_barcodes: 'Barcodes',
   procedure: 'procedure',
   process: 'process',
   processing_cost: 'processing cost',
@@ -825,6 +843,7 @@ export default {
     productLabelTemplate: 'Product label template',
     positionLabelTemplate: 'Position label template',
     mandatoryReasonForMovementTypes: 'Make reason mandatory for the following manual movements',
+    productPositionLabelSettings: 'Select product and position print templates',
   },
   session: {
     alerts: {
