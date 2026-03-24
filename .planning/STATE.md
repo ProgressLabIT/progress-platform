@@ -105,6 +105,7 @@ Decisions logged in PROJECT.md Key Decisions table.
 - [ui] Resolve orphaned linkedTemplateString plugin — register in buildPlugins() or delete
 - [api] Investigate verify_print_service_token USER_SESSION auth context
 - [ui] Fix warehouse config store missing template fields in updateAppConfig
+- [api] Support local printers with per-printer print service routing (Dymo + USB printers; per-printer SSE topics keyed by printer_key)
 
 ### Blockers/Concerns
 
