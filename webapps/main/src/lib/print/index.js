@@ -51,7 +51,7 @@ export async function generatePdf({ template, inputs }) {
 
 /**
  * Submit a print job to the main API.
- * @param {{ data: string, printer: { host: string, port: number, timeout_seconds?: number }, format: 'zpl'|'pdf', copies?: number }} params
+ * @param {{ data: string, printer: { name: string, host: string, port: number, timeout_seconds?: number }, format: 'zpl'|'pdf', copies?: number }} params
  * @returns {Promise<{ job_id: string }>}
  */
 export async function sendToPrintService({ data, printer, format, copies = 1 }) {
@@ -62,6 +62,7 @@ export async function sendToPrintService({ data, printer, format, copies = 1 }) 
     data,
     copies,
     timeout_seconds: printer.timeout_seconds ?? 5,
+    printer_key: printer.name,
   };
   const response = await api.post('print-job', payload);
   return response.data;  // { job_id: "uuid" }

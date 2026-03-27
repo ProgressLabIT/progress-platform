@@ -14,6 +14,7 @@ class PrintJobRequest(BaseModel):
     data: str  # ZPL text or base64-encoded PDF
     copies: int = 1
     timeout_seconds: float = 5.0
+    printer_key: str  # Required — identifies target printer for SSE routing
 
 
 class PrintJobResult(BaseModel):

@@ -204,7 +204,7 @@ async def create_print_job(job: PrintJobRequest):
     sse_payload = job.model_dump()
     sse_payload["format"] = job.format.value
     sse_payload["job_id"] = job_key
-    sse_payload["subtopic"] = "print-jobs"
+    sse_payload["subtopic"] = f"print-jobs:{job.printer_key}"
     ServerEventManager.getInstance().enqueue(json.dumps(sse_payload))
 
     return {"job_id": job_key}
@@ -214,8 +214,12 @@ async def create_print_job(job: PrintJobRequest):
   dependencies=[Depends(auth.verify_print_service_token)],
   response_class=EventSourceResponse
 )
-async def print_job_stream(request: Request) -> AsyncIterable[ServerSentEvent]:
-    async for event in ServerEventManager.getInstance().push_events(request, "print-jobs"):
+async def print_job_stream(
+    request: Request,
+    printer_key: str | None = None,
+) -> AsyncIterable[ServerSentEvent]:
+    topic = f"print-jobs:{printer_key}" if printer_key else "print-jobs:*"
+    async for event in ServerEventManager.getInstance().push_events(request, topic):
         yield event
 
 

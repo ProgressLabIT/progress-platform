@@ -33,9 +33,18 @@ class ServerEventManager:
 
     def enqueue(self, message: str):
         topic = json.loads(message)['subtopic']
-        if (self.queue.get(topic) != None):
-            for session in self.queue.get(topic):
-              self.queue.get(topic).get(session).put_nowait(message)
+        # Exact-topic delivery
+        if self.queue.get(topic) is not None:
+            for session in list(self.queue[topic].keys()):
+                self.queue[topic][session].put_nowait(message)
+
+        # Wildcard fan-out: deliver to {prefix}:* subscribers (per D-04)
+        if ':' in topic:
+            prefix, _ = topic.split(':', 1)
+            wildcard = f"{prefix}:*"
+            if self.queue.get(wildcard) is not None:
+                for session in list(self.queue[wildcard].keys()):
+                    self.queue[wildcard][session].put_nowait(message)
 
     def close(self):
         self.cancelled = True

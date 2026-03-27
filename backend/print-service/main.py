@@ -1,6 +1,7 @@
 import asyncio
 import json
 import logging
+from urllib.parse import quote
 
 import httpx
 from httpx_sse import aconnect_sse
@@ -88,8 +89,13 @@ async def subscribe_loop() -> None:
     global _sse_connected
     config = get_config()
     stream_url = f"{config.api_url}/print-jobs/stream"
+    if config.printer_key:
+        stream_url = f"{stream_url}?printer_key={quote(config.printer_key, safe='')}"
 
-    logger.info(f"Print service starting — API: {config.api_url}")
+    if config.printer_key:
+        logger.info(f"Print service starting — API: {config.api_url}, printer_key: {config.printer_key}")
+    else:
+        logger.info(f"Print service starting — API: {config.api_url} (wildcard — all jobs)")
 
     while True:
         try:

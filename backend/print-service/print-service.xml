@@ -1,0 +1,18 @@
+<service>
+  <id>ProgressPrintService</id>
+  <name>Progress Print Service</name>
+  <description>Progress Platform local print relay — routes print jobs to ZPL/PDF printers via TCP.</description>
+  <executable>python</executable>
+  <arguments>main.py</arguments>
+  <workingdirectory>%BASE%</workingdirectory>
+  <startmode>Automatic</startmode>
+  <onfailure action="restart" delay="10 sec"/>
+  <onfailure action="restart" delay="30 sec"/>
+  <onfailure action="restart" delay="1 min"/>
+  <resetfailure>1 hour</resetfailure>
+  <log mode="roll-by-size">
+    <logpath>%BASE%\logs</logpath>
+    <sizeThreshold>10240</sizeThreshold>
+    <keepFiles>5</keepFiles>
+  </log>
+</service>
