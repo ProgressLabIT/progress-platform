@@ -9,7 +9,7 @@ from utils.traceability import Queries as TraceabilityQueries
 class WorkSessionCreatedEvent(BaseProductionEvent):
   class InfoModel(EventInfoModel):
     user_key: str
-    user_session_key: str
+    user_session_key: str | None = None # Can be None for automated, unsupervised work
     job_key: str
     batch_key: str
     work_order_key: str
