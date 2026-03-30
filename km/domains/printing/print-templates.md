@@ -198,22 +198,66 @@ Browser
 
 ### Deployment
 
-Deploy the print service using `deploy/compose/print.yaml`. It is an optional on-prem service; the main API functions normally without it (the print job will stay pending in the database until a service picks it up).
+The print service is an optional on-prem add-on. The main API functions normally without it, but print jobs will not reach printers (without an active print service subscriber, clients eventually time out waiting for a result). It can be installed at initial setup or added later — provisioning is fully decoupled from the main Ansible playbook.
 
-**compose file:** `deploy/compose/print.yaml`
+#### Installation
+
+Prerequisites: the Progress Platform stack is running and ArangoDB is reachable on the `progress` Docker network.
+
+1. Run the setup script to create the `print_service` user in ArangoDB and generate the password file:
+
+```bash
+python3 deploy/scripts/setup_print_service.py
+```
+
+The script automatically runs inside a throwaway API container (no Python dependencies needed on the host). It prompts for the ArangoDB root password (hidden input), creates (or updates) the `print_service` user with `scope=print_service` and `reset_password=False`, generates a random password, and writes it to `/opt/progress/config/.print_service_pwd`.
+
+Extra flags are forwarded, e.g. `--db-name PROGRESS_DEV`. Pass `--local` to skip the Docker wrapper and run directly on the host (requires `python-arango` and `passlib`).
+
+Source: `deploy/scripts/setup_print_service.py`.
+
+2. Start the container:
+
+```bash
+cd /opt/progress/config && docker compose -f print.yaml up -d
+```
+
+#### Password rotation
+
+Re-run the same setup script. It overwrites the password file and updates the hash in ArangoDB. Then restart the container:
+
+```bash
+python3 deploy/scripts/setup_print_service.py
+cd /opt/progress/config && docker compose -f print.yaml up -d --force-recreate
+```
+
+#### Compose file
+
+`deploy/compose/print.yaml`:
 
 ```yaml
+networks:
+  progress:
+    external: true
+
+secrets:
+  print_service_pwd:
+    file: /opt/progress/config/.print_service_pwd
+
 services:
   print-service:
     image: registry.gitlab.com/progresslab/progress-platform/print-service:${VERSION}
     restart: unless-stopped
+    networks:
+      - progress
     environment:
-      PRINT_SERVICE_API_URL: ${PRINT_SERVICE_API_URL}
-      PRINT_SERVICE_NON_ASCII: replace
+      PRINT_SERVICE_API_URL: ${PRINT_SERVICE_API_URL:-http://api:8000}
+      PRINT_SERVICE_NON_ASCII: ${PRINT_SERVICE_NON_ASCII:-replace}
     secrets:
       - source: print_service_pwd
         target: api_password
     deploy:
+      replicas: 1
       labels:
         - "traefik.enable=false"
 ```
@@ -224,12 +268,12 @@ The service has `traefik.enable=false` and exposes no inbound ports. It only nee
 
 | Variable | Required | Description |
 |---|---|---|
-| `PRINT_SERVICE_API_URL` | Yes | Main API base URL including `/api` path, e.g. `https://progress.example.com/api` |
-| `PRINT_SERVICE_API_PASSWORD` | Yes | Password for the `print_service` service account (stored in Docker secret `print_service_pwd`, mounted at `/run/secrets/api_password`) |
+| `PRINT_SERVICE_API_URL` | Yes | Main API base URL, e.g. `http://api:8000` (default in compose) |
+| `PRINT_SERVICE_API_PASSWORD` | Yes | Auto-managed by the setup script. Stored in `/opt/progress/config/.print_service_pwd`, mounted at `/run/secrets/api_password` inside the container |
 | `PRINT_SERVICE_NON_ASCII` | No | How to handle non-ASCII characters in ZPL: `replace` (default) or `error` |
 | `PRINT_SERVICE_RECONNECT_DELAY` | No | Seconds between SSE reconnect attempts (default `5.0`) |
 
-The service authenticates to the main API using the `print_service` user account. The account must exist and have print permissions. No JWT management is needed — the service logs in on startup with username/password.
+The service authenticates to the main API using the `print_service` user account via `POST /api/auth`. The account is provisioned by `setup_print_service.py` with `scope=print_service` and `reset_password=False` so it can log in without the interactive password-reset flow.
 
 ### API contract
 
