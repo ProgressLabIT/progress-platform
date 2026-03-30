@@ -20,7 +20,7 @@ class BaseBatchEvent:
       self.info.active_batch_key = self.batch.key
       self.info.active_batch_qt = self.batch.qt_total
     except StopIteration:
-      pass
+      raise ValueError(f"Active batch {self.job.active_batch_key} not found")
 
   def get_batch_step_done_count(self):
     # Instead of looking at total count, use distinct to
