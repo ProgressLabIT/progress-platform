@@ -16,8 +16,19 @@ class JobResumedEvent(BaseProductionEvent):
   def get_event_type(cls):
     return EventType.JOB_RESUMED
 
+  def validate(self):
+    if self.job.active:
+      raise ValueError(f"Job {self.info.job_key} is already active.")
+    if not self.job.assigned_to:
+      raise ValueError(f"Job {self.info.job_key} has no assignee.")
+    if not self.job.stage == WorkStatus.STARTED:
+      raise ValueError(f"Job {self.info.job_key} is not started.")
+
+
   def apply(self):
     self._get_job_data()
+    self.validate()
+
 
     # Create batch if none is active and store data for work session creation
     if self.job.active_batch_key:
