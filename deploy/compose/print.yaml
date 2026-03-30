@@ -13,11 +13,10 @@ services:
     networks:
       - progress
     environment:
-      PRINT_SERVICE_API_URL: ${PRINT_SERVICE_API_URL:-http://api:8000}
-      PRINT_SERVICE_NON_ASCII: ${PRINT_SERVICE_NON_ASCII:-replace}
+      PROGRESS_PRINT_SERVICE_API_URL: http://api:8000/api
     secrets:
       - source: print_service_pwd
-        target: api_password
+        target: progress_print_service_api_password
     deploy:
       replicas: 1
       labels:
