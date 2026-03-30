@@ -2,6 +2,7 @@ from events.production.base_production import BaseProductionEvent
 from events.production.batch_created import BatchCreatedEvent
 from events.work_session.work_session_created import WorkSessionCreatedEvent
 from models.event import EventInfoModel, EventType
+from models.production import WorkStatus
 from utils.production import Queries as ProductionQueries
 
 
