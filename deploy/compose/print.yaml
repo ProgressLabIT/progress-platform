@@ -4,7 +4,7 @@ networks:
 
 secrets:
   print_service_pwd:
-    file: /opt/progress/print-service/pwd
+    file: /opt/progress/config/.print_service_pwd
 
 services:
   print-service:

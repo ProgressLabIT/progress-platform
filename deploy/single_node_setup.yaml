@@ -170,15 +170,6 @@
             cmd: "openssl rand -hex {{ item.length }} | docker secret create {{ item.name }} -"
           loop: "{{ secrets }}"
 
-        - name: Generate print service password
-          ansible.builtin.shell:
-            cmd: "openssl rand -hex 16"
-          register: print_service_pwd_result
-
-        - name: Create Docker swarm secret for print service password
-          ansible.builtin.shell:
-            cmd: "echo -n '{{ print_service_pwd_result.stdout }}' | docker secret create print_service_pwd -"
-
     - name: Deploy stack
       tags: deploy
       vars:
@@ -270,7 +261,6 @@
               - secret_name: progress_api_db_pwd
               - secret_name: progress_db_root_pwd
               - secret_name: progress_jwt_secret
-              - secret_name: print_service_pwd
             networks:
               - progress
             mounts:
@@ -281,29 +271,6 @@
                 target: /output
                 type: bind
             command: python3 /db_init.py
-
-        - name: Setup local print service
-          tags: print
-          block:
-            - name: Create print-service directory
-              ansible.builtin.file:
-                path: "{{ root_dir }}/print-service"
-                state: directory
-                mode: '0700'
-
-            - name: Write print service password file
-              ansible.builtin.copy:
-                content: "{{ print_service_pwd_result.stdout }}"
-                dest: "{{ root_dir }}/print-service/pwd"
-                mode: '0600'
-
-            - name: Start print service
-              ansible.builtin.shell:
-                executable: /bin/bash
-                cmd: |
-                  cd {{ root_dir }}/config && \
-                  export $(cat {{ progress_env_filename }} | xargs) && \
-                  docker compose -f print.yaml up -d
 
         # Last try failed when loading flows because the agent container was not ready, probably busy installing python dependencies
         # - name: Wait for agent setup to finish

@@ -107,8 +107,6 @@ with sys_db_connection.begin_batch_execution() as sys_db:
     'customer':'customer'
   }
 
-  print_service_pwd = get_secret('print_service_pwd')
-
   # TODO: Check if users are present
   for u, pwd in db_users.items():
     sys_db.create_user(username=u, password=pwd)
@@ -360,16 +358,6 @@ collections = [
       site_key = '0',
       reset_password = True
     ),
-    dict(
-      username = 'print_service',
-      name = 'Print',
-      surname = 'Service',
-      active = True,
-      psw_hash = pwd_context.hash(print_service_pwd),
-      scope = 'print_service',
-      site_key = '0',
-      reset_password = False
-    )
   ]),
   Collection(name='UserSession'),
   Collection(name='wip', indexes=[
