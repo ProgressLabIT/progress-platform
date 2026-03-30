@@ -27,7 +27,8 @@ class ActiveBatchChangedEvent(BaseProductionEvent):
 
     active_batch_qt_delta = self.info.new_active_batch_qt - self.job.active_batch_qt
 
-    if active_batch_qt_delta == 0 and not len(self.info.batch_serials):
+    no_batch_serials = self.info.batch_serials is None or not len(self.info.batch_serials)
+    if active_batch_qt_delta == 0 and no_batch_serials:
       raise ValueError("Active batch quantity already matches the quantity requested")
 
     # Update Batch
