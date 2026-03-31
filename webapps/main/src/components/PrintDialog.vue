@@ -201,7 +201,7 @@
               color="primary"
               icon="mdi-printer"
               :disable="isLoadingTemplate"
-              @click="sendToPrinter"
+              @click="showCopiesPrompt = true"
             />
           </template>
           <template v-else>
@@ -212,6 +212,17 @@
         </q-stepper-navigation>
       </q-step>
     </q-stepper>
+    <BasePrompt
+      :show="showCopiesPrompt"
+      :prompt="$t('printDialog.sendToPrinter.copiesPrompt')"
+      :help-text="$t('printDialog.sendToPrinter.copiesHelpText')"
+      input_type="number"
+      :initial_value="1"
+      :min="1"
+      confirm-label="print"
+      @close="showCopiesPrompt = false"
+      @update="onCopiesConfirmed"
+    />
   </BaseDialog>
 </template>
 
@@ -229,6 +240,7 @@ import { useConfigStore } from '@/stores/config';
 import { generateZpl } from '@/lib/print/zpl.js';
 import { sendToPrintService } from '@/lib/print/index.js';
 import BaseDialog from '@/components/BaseDialog.vue';
+import BasePrompt from '@/components/BasePrompt.vue';
 import LoadingSignal from '@/components/LoadingSignal.vue';
 import PrintTemplateCard from '@/components/PrintTemplateCard.vue';
 import BaseAutocompleteSerial from './BaseAutocompleteSerial.vue';
@@ -318,6 +330,7 @@ const getDialogRef = () => dialogRef;
 
 const { config } = useConfigStore();
 const isPrinting = ref(false);
+const showCopiesPrompt = ref(false);
 
 const selectedPrinter = computed(() => {
   const prefValue = store.state.session.user?.preferences?.printer;
@@ -706,7 +719,13 @@ async function goToPreview() {
   }
 }
 
-async function sendToPrinter() {
+function onCopiesConfirmed(value) {
+  showCopiesPrompt.value = false;
+  const copies = Math.max(1, parseInt(value, 10) || 1);
+  sendToPrinter(copies);
+}
+
+async function sendToPrinter(copies = 1) {
   if (!selectedPrinter.value) return;
   isPrinting.value = true;
 
@@ -718,7 +737,7 @@ async function sendToPrinter() {
     if (printer.type === 'zpl') {
       // ZPL path: generateZpl → send ZPL string
       const inputs = await prepareInputs();
-      const zplString = generateZpl(selectedTemplate.value.template, inputs, { dpi: 203, quantity: 1 });
+      const zplString = generateZpl(selectedTemplate.value.template, inputs, { dpi: 203, quantity: copies });
       data = zplString;
       format = 'zpl';
     } else {
