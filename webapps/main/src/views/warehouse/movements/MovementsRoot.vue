@@ -171,6 +171,7 @@ import BaseUserAvatar from '@/components/BaseUserAvatar.vue';
 import queryModel from '@/lib/queryModelFactory.js';
 import { sendEvent } from '@/composables/event.js';
 import { useMovementColumns } from 'app/src/composables/warehouse';
+import { useSSE } from '@/composables/useSSE';
 
 export default {
   name: 'MovementsRoot',
@@ -207,12 +208,14 @@ export default {
     }
 
     const movementColumns = useMovementColumns();
+    const { subscribe } = useSSE('inventory-notification');
 
     return {
       pagination,
       movementColumns,
       typeIconMap,
-      statusIconMap
+      statusIconMap,
+      subscribeSSE: subscribe,
     };
   },
 
@@ -220,7 +223,6 @@ export default {
     return {
       loading: false,
       loading_fields: false,
-      events: NaN,
       limit: 200,
       offset: 0,
       revert_movement_key: null
@@ -294,20 +296,12 @@ export default {
   created() {
     this.getMovements();
     this.$store.dispatch('loadUsers');
-    let eventURL =
-      this.$api.defaults.baseURL + '/notification/inventory-notification';
-    this.events = new EventSource(eventURL, {
-      withCredentials: false,
-    });
-    this.events.addEventListener('inventory-notification', (event) => {
-      this.handleMessage(event);
-    });
   },
 
-  beforeUnmount() {
-    if (this.events) {
-      this.events.close();
-    }
+  mounted() {
+    this.subscribeSSE((event) => {
+      this.handleMessage(event);
+    });
   },
 
   methods: {

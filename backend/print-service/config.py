@@ -7,9 +7,7 @@ _ENV_FILE = Path(__file__).resolve().parent / ".env"
 
 
 class Settings(BaseSettings):
-    api_url: str | None = "http://localhost:8000/api"
-    username: str | None = "print_service"
-    api_password: str | None = "1234"
+    nats_url: str = "nats://broker:4222"
     non_ascii: Literal["replace", "error"] | None = "replace"
     reconnect_delay: float | None = 5.0
     printer_key: str | None = None  # PROGRESS_PRINT_SERVICE_PRINTER_KEY

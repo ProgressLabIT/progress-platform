@@ -227,7 +227,7 @@ import { buildPlugins } from '@/lib/print/plugins';
 import { resolveExpression } from '@/lib/print/templateResolver.js';
 import { useConfigStore } from '@/stores/config';
 import { generateZpl } from '@/lib/print/zpl.js';
-import { sendToPrintService, waitForPrintResult } from '@/lib/print/index.js';
+import { sendToPrintService } from '@/lib/print/index.js';
 import BaseDialog from '@/components/BaseDialog.vue';
 import LoadingSignal from '@/components/LoadingSignal.vue';
 import PrintTemplateCard from '@/components/PrintTemplateCard.vue';
@@ -749,21 +749,19 @@ async function sendToPrinter() {
       format = 'pdf';
     }
 
-    const timeoutMs = ((printer.timeout_seconds ?? 5) + 5) * 1000;
-    // Subscribe before submitting: avoids the race where fast results arrive before the SSE
-    // connection is registered. waitForPrintResult buffers events until the job_id resolves.
-    const result = await waitForPrintResult(
-      sendToPrintService({ data, printer, format, copies: 1 }).then((r) => r.job_id),
-      timeoutMs,
-    );
+    const result = await sendToPrintService({ data, printer, format, copies });
 
     if (result.ok) {
       onDialogHide();
       Notify.create({ type: 'positive', message: t('printDialog.sendToPrinter.success') });
+    } else if (result.error === 'no_service' || result.error === 'internal') {
+      Notify.create({ type: 'negative', message: t('printDialog.sendToPrinter.noService') });
+    } else if (result.error === 'connection_refused') {
+      Notify.create({ type: 'negative', message: t('printDialog.sendToPrinter.connectionRefused') });
     } else if (result.error === 'timeout') {
       Notify.create({ type: 'negative', message: t('printDialog.sendToPrinter.timeout') });
     } else {
-      Notify.create({ type: 'negative', message: result.detail || t('printDialog.sendToPrinter.error') });
+      Notify.create({ type: 'negative', message: t('printDialog.sendToPrinter.error') });
     }
   } catch (err) {
     // POST failed or other error — stay open so user can retry

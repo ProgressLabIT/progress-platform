@@ -61,6 +61,7 @@
 import { ref } from 'vue';
 import queryModel from '@/lib/queryModelFactory.js';
 import { useMovementListColumns } from 'app/src/composables/warehouse';
+import { useSSE } from '@/composables/useSSE';
 
 export default {
   setup() {
@@ -73,6 +74,7 @@ export default {
     });
 
     const movementListColumns = useMovementListColumns();
+    const { subscribe } = useSSE('inventory-notification');
 
     const typeIconMap = {
       'receipt': 'mdi-import',
@@ -91,7 +93,8 @@ export default {
       pagination,
       movementListColumns,
       typeIconMap,
-      statusIconMap
+      statusIconMap,
+      subscribeSSE: subscribe,
     };
   },
 
@@ -99,7 +102,6 @@ export default {
     return {
       loading: false,
       loading_fields: false,
-      events: NaN,
       limit: 200,
       offset: 0,
 
@@ -149,20 +151,12 @@ export default {
 
   created() {
     this.getMovementLists();
-    let eventURL =
-      this.$api.defaults.baseURL + '/notification/inventory-notification';
-    this.events = new EventSource(eventURL, {
-      withCredentials: false,
-    });
-    this.events.addEventListener('inventory-notification', (event) => {
-      this.handleMessage(event);
-    });
   },
 
-  beforeUnmount() {
-    if (this.events) {
-      this.events.close();
-    }
+  mounted() {
+    this.subscribeSSE((event) => {
+      this.handleMessage(event);
+    });
   },
 
   methods: {

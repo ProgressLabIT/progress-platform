@@ -352,6 +352,7 @@ import queryModel, { useQueryModel } from '@/lib/queryModelFactory.js';
 import { XLSXDownload, XLSXGetData } from '@/lib/xlsxDownload';
 import SerialForm from 'app/src/components/traceability/SerialForm.vue';
 import { useSerialColumns } from 'app/src/composables/traceability';
+import { useSSE } from '@/composables/useSSE';
 
 export default {
   name: 'TraceabilityRoot',
@@ -381,6 +382,7 @@ export default {
     }
 
     const serialColumns = useSerialColumns();
+    const { subscribe } = useSSE('serial-notification');
 
     const advancedFilterQuery = useQueryModel(Object, 'advanced_filters', null);
     watch(
@@ -426,6 +428,7 @@ export default {
       addAdvancedFilter,
       advancedFilterQuery,
       serialColumns,
+      subscribeSSE: subscribe,
     };
   },
 
@@ -453,7 +456,6 @@ export default {
       loading: false,
       loading_fields: false,
       show_serial_form: false,
-      events: NaN,
       serial_fields: [],
       limit: 200,
       offset: 0,
@@ -533,20 +535,12 @@ export default {
   created() {
     this.getSerialFields();
     this.getSerials();
-    let eventURL =
-      this.$api.defaults.baseURL + '/notification/serial-notification';
-    this.events = new EventSource(eventURL, {
-      withCredentials: false,
-    });
-    this.events.addEventListener('serial-notification', (event) => {
-      this.handleMessage(event);
-    });
   },
 
-  beforeUnmount() {
-    if (this.events) {
-      this.events.close();
-    }
+  mounted() {
+    this.subscribeSSE((event) => {
+      this.handleMessage(event);
+    });
   },
 
   methods: {

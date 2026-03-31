@@ -7,7 +7,6 @@ from fastapi import APIRouter, HTTPException, Depends
 from utils.db import db
 from utils.serial import Queries as SerialQueries
 from models.production import WorkStatus
-from utils.kafka.kafka_admin import KafkaAdmin
 from utils.api import APIResponse
 from utils import auth
 
@@ -191,68 +190,5 @@ async def force_delete_work_order_data(work_order_key: str):
     raise HTTPException(status_code=500, detail=traceback.format_exc())
 
 
-@router.put("/kafka/topic/{topic}",
-    dependencies=[Depends(auth.verify_token)])
-async def put_kafka_topic(topic: str):
-  try:
-    message = KafkaAdmin.getInstance().create_topic(topic)
-    return APIResponse(message = message)
-  except:
-    status_code = 500
-    response = dict(
-      status=status_code,
-      message="There was an error while creating the topic",
-      error=traceback.format_exc(),
-    )
-    raise HTTPException(status_code=status_code, detail=response)
-
-@router.delete("/kafka/topic/{topic}",
-    dependencies=[Depends(auth.verify_token)])
-async def delete_kafka_topic(topic: str):
-  try:
-    topics = []
-    topics.append(topic)
-    message = KafkaAdmin.getInstance().delete_topic(topics)
-    return APIResponse(message = message)
-  except:
-    status_code = 500
-    response = dict(
-      status=status_code,
-      message="There was an error while deleting the topic",
-      error=traceback.format_exc(),
-    )
-    raise HTTPException(status_code=status_code, detail=response)
-
-@router.get("/kafka/topics",
-    dependencies=[Depends(auth.verify_token)])
-async def list_kafka_topic():
-  try:
-    message = KafkaAdmin.getInstance().list_topics()
-    return APIResponse(message = message)
-  except:
-    status_code = 500
-    response = dict(
-      status=status_code,
-      message="There was an error while retreiving topic list",
-      error=traceback.format_exc(),
-    )
-    raise HTTPException(status_code=status_code, detail=response)
-
-@router.get("/kafka/topic/{topic}",
-    dependencies=[Depends(auth.verify_token)])
-async def get_kafka_topic(topic: str):
-  try:
-    topics = []
-    topics.append(topic)
-    message = KafkaAdmin.getInstance().describe_topic(topics)
-    return APIResponse(message = message)
-  except:
-    status_code = 500
-    response = dict(
-      status=status_code,
-      message="There was an error while retreiving the topic",
-      error=traceback.format_exc(),
-    )
-    raise HTTPException(status_code=status_code, detail=response)
 
 

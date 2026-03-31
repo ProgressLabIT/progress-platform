@@ -2,10 +2,6 @@ networks:
   progress:
     external: true
 
-secrets:
-  print_service_pwd:
-    file: /opt/progress/config/.print_service_pwd
-
 services:
   print-service:
     image: registry.gitlab.com/progresslab/progress-platform/print-service:${VERSION}
@@ -13,10 +9,7 @@ services:
     networks:
       - progress
     environment:
-      PROGRESS_PRINT_SERVICE_API_URL: http://api:8000/api
-    secrets:
-      - source: print_service_pwd
-        target: progress_print_service_api_password
+      PROGRESS_PRINT_SERVICE_NATS_URL: nats://broker:4222
     deploy:
       replicas: 1
       labels:

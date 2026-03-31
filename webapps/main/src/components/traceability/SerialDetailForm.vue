@@ -177,11 +177,12 @@
 
 <script setup>
 import { storeToRefs } from 'pinia';
-import { ref, computed, onBeforeUnmount, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter, useRoute } from 'vue-router';
 import { useStore } from 'vuex';
 import { api as $api } from '@/boot/axios';
+import { useSSE } from '@/composables/useSSE';
 import { capitalize } from '@/boot/filters';
 import BaseDialog from '@/components/BaseDialog.vue';
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue';
@@ -225,7 +226,7 @@ const { open: openPrintDialog, isAvailable: printAvailable } = usePrintDialog({
 const tab = ref('form');
 const history = ref([]);
 const base_path = ref('/media/user/');
-const events = ref(null);
+const { subscribe: subscribeSSE } = useSSE('serial-notification');
 const serialAvailable = ref(false);
 const showAddFieldDialog = ref(false);
 
@@ -370,18 +371,8 @@ watch(() => props.serial_key, () => {
 onMounted(() => {
   store.dispatch('loadUsers');
   getInfo();
-  let eventURL = $api.defaults.baseURL + '/notification/serial-notification';
-  events.value = new EventSource(eventURL, {
-    withCredentials: false,
-  });
-  events.value.addEventListener('serial-notification', (event) => {
+  subscribeSSE((event) => {
     handleMessage(event);
   });
-});
-
-onBeforeUnmount(() => {
-  if (events.value) {
-    events.value.close();
-  }
 });
 </script>

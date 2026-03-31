@@ -18,8 +18,7 @@ six==1.15.0
 starlette>=0.13
 uvicorn>=0.11
 uvloop>=0.14
-confluent_kafka
-websockets
+nats-py
 python-jose
 httpx==0.*
 

@@ -414,6 +414,7 @@ import FilterDrawer from '@/components/FilterDrawer.vue';
 import NoDataAlert from '@/components/NoDataAlert.vue';
 import multiMatch from '@/lib/MultiFieldSearch.js';
 import queryModel from '@/lib/queryModelFactory.js';
+import { useSSE } from '@/composables/useSSE';
 
 const production_views = [
   { component: 'WorkOrderList', route_name: 'workOrderList' },
@@ -425,6 +426,11 @@ const header_plus_footer_height = 80;
 
 export default {
   name: 'ProductionOverview',
+
+  setup() {
+    const { subscribe } = useSSE('global-notification');
+    return { subscribeSSE: subscribe };
+  },
 
   components: {
     BaseAutocompleteUser,
@@ -460,7 +466,6 @@ export default {
       saving: false,
       //polling_instance: undefined,
       operator_search_text: undefined,
-      events: undefined,
       showFilterDrawer: false,
     };
   },
@@ -600,22 +605,12 @@ export default {
     //  this.$store.dispatch('updateWorkOrderList');
     //  this.$store.dispatch('loadJobAssignments');
     //}, 10000);
-    let eventURL =
-      this.$api.defaults.baseURL + '/notification/global-notification';
-    this.events = new EventSource(eventURL, {
-      withCredentials: false,
-    });
-    this.events.addEventListener('global-notification', (event) => {
-      this.handleMessage(event);
-    });
   },
 
-  beforeUnmount() {
-    //clearInterval(this.polling_instance);
-
-    if (this.events) {
-      this.events.close();
-    }
+  mounted() {
+    this.subscribeSSE((event) => {
+      this.handleMessage(event);
+    });
   },
 
   methods: {

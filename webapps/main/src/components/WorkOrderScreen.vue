@@ -57,9 +57,15 @@
 import BaseModalScreen from '@/components/BaseModalScreen.vue';
 import LoadingSignal from '@/components/LoadingSignal.vue';
 import WorkOrderDataColumn from '@/components/WorkOrderDataColumn.vue';
+import { useSSE } from '@/composables/useSSE';
 
 export default {
   name: 'WorkOrderScreen',
+
+  setup() {
+    const { subscribe } = useSSE('global-notification');
+    return { subscribeSSE: subscribe };
+  },
 
   components: {
     BaseModalScreen,
@@ -88,7 +94,6 @@ export default {
       ],
       vuex_ready: false,
       column_height: '80vh',
-      events: undefined,
       data_column_width: 25,
     };
   },
@@ -101,20 +106,12 @@ export default {
 
   created() {
     this.get_wo_data();
-    let eventURL =
-      this.$api.defaults.baseURL + '/notification/global-notification';
-    this.events = new EventSource(eventURL, {
-      withCredentials: false,
-    });
-    this.events.addEventListener('global-notification', (event) => {
-      this.handleMessage(event);
-    });
   },
 
-  beforeUnmount() {
-    if (this.events) {
-      this.events.close();
-    }
+  mounted() {
+    this.subscribeSSE((event) => {
+      this.handleMessage(event);
+    });
   },
 
   methods: {

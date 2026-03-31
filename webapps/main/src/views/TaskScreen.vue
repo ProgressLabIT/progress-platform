@@ -413,11 +413,12 @@
 <script setup>
 import { cloneDeep } from 'lodash';
 import { Notify, Dialog } from 'quasar';
-import { onMounted, onBeforeUnmount, ref, computed, watch } from 'vue';
+import { onMounted, ref, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter, useRoute } from 'vue-router';
 import { useStore } from 'vuex';
 import { api as $api } from '@/boot/axios';
+import { useSSE } from '@/composables/useSSE';
 import { capitalize } from '@/boot/filters';
 import BaseConfirmationDialog from '@/components/BaseConfirmationDialog.vue';
 import BaseModalScreen from '@/components/BaseModalScreen.vue';
@@ -454,7 +455,7 @@ const editMode = ref(false);
 const saving = ref(false);
 const originalTaskData = ref(null);
 const history = ref([]);
-const events = ref(null);
+const { subscribe: subscribeSSE } = useSSE('task-notification');
 const messages = ref([]);
 
 // Status management state
@@ -553,20 +554,9 @@ onMounted(async () => {
   // Load history
   getTaskHistory();
 
-  // Set up event listener for real-time updates
-  let eventURL = $api.defaults.baseURL + '/notification/task-notification';
-  events.value = new EventSource(eventURL, {
-    withCredentials: false,
-  });
-  events.value.addEventListener('task-notification', (event) => {
+  subscribeSSE((event) => {
     handleTaskMessage(event);
   });
-});
-
-onBeforeUnmount(() => {
-  if (events.value) {
-    events.value.close();
-  }
 });
 
 function getUserByKey(userKey) {

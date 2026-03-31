@@ -7,7 +7,7 @@ The Progress Platform uses an **immutable event-sourcing pattern** for all core 
 **Key Benefits:**
 - **Auditability**: Complete history of "who did what and when".
 - **Traceability**: Critical for manufacturing compliance.
-- **Decoupling**: Events trigger side effects (notifications, emails) asynchronously via Kafka.
+- **Decoupling**: Events trigger side effects (notifications, emails) asynchronously via NATS.
 
 ## Core Components
 
@@ -35,10 +35,10 @@ class BaseEvent(ABC):
 3.  **Application**: The event's `apply()` method is called inside an ArangoDB transaction.
     - Updates the document state (e.g., set `status='RUNNING'`).
     - Creates the `Event` document in the `Events` collection.
-4.  **Kafka Projection (Select Events)**:
-    - **Notifications**: The `NotificationManager` pushes updates to the `notifications` topic (triggered via middleware or managers).
-    - **Domain Events**: Specific events (e.g., Serial events) explicitly push data to Kafka topics (e.g., `serials`) for downstream integration.
-    - *Note: Not all events are automatically streamed to Kafka yet; this is implemented on a per-domain basis.*
+4.  **NATS Projection (Select Events)**:
+    - **Notifications**: The `NotificationManager` publishes updates to NATS subjects under `progress.notification.*` (triggered via middleware or managers). See `km/architecture/messaging.md` for the full subject hierarchy.
+    - **Domain Events**: Specific events (e.g., Serial events) explicitly publish data to NATS subjects (e.g., `progress.serial.events`) for downstream integration.
+    - *Note: Not all events are automatically streamed to NATS yet; this is implemented on a per-domain basis.*
 
 ## Rules for Developers
 

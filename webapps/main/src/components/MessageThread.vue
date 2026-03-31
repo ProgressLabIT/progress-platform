@@ -41,11 +41,12 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { useStore } from 'vuex';
 import { api } from '@/boot/axios.js';
 import MessageEntry from '@/components/MessageEntry.vue';
 import { sendEvent } from '@/composables/event.js';
+import { useSSE } from '@/composables/useSSE';
 
 const props = defineProps({
   context: {
@@ -69,7 +70,7 @@ const recipient_prefix_map = ref({
 });
 const messages = ref([]);
 const new_message = ref('');
-const events = ref(undefined);
+const { subscribe: subscribeSSE } = useSSE('global-notification');
 const loading = ref(false);
 
 // Computed properties
@@ -132,18 +133,8 @@ onMounted(() => {
   loading.value = false;
 
   getMessages();
-  let eventURL = api.defaults.baseURL + '/notification/global-notification';
-  events.value = new EventSource(eventURL, {
-    withCredentials: false,
-  });
-  events.value.addEventListener('global-notification', (event) => {
+  subscribeSSE((event) => {
     handleMessage(event);
   });
-});
-
-onUnmounted(() => {
-  if (events.value) {
-    events.value.close();
-  }
 });
 </script>

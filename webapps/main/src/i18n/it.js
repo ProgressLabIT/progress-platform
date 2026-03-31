@@ -679,6 +679,16 @@ export default {
 
     downloadWillBegin: 'Il download inizierà a breve!',
     requiredFieldsEmpty: '{count} campo/i obbligatorio/i vuoto/i. Compilarli prima di continuare.',
+    sendToPrinter: {
+      label: 'Invia a {name}',
+      copiesPrompt: 'Copie',
+      copiesHelpText: 'Inserire il numero di copie da stampare',
+      success: 'Etichetta inviata alla stampante',
+      error: 'Stampa non riuscita. Controllare la stampante e riprovare.',
+      noService: 'Il servizio di stampa non è attivo. Contattare l\'amministratore.',
+      connectionRefused: 'Impossibile connettersi alla stampante. Verificare che sia accesa e raggiungibile.',
+      timeout: 'Nessuna risposta dalla stampante. Controllare la connessione e riprovare.',
+    },
   },
   print_template: 'Stampa | Stampe',
   print_template_confirm_delete_question:

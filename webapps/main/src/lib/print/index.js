@@ -50,9 +50,11 @@ export async function generatePdf({ template, inputs }) {
 }
 
 /**
- * Submit a print job to the main API.
+ * Submit a print job to the API via NATS req/reply.
+ * The API forwards the request to the print-service over NATS and returns
+ * the result synchronously in the HTTP response.
  * @param {{ data: string, printer: { name: string, host: string, port: number, timeout_seconds?: number }, format: 'zpl'|'pdf', copies?: number }} params
- * @returns {Promise<{ job_id: string }>}
+ * @returns {Promise<{ ok: boolean, error: string|null, detail: string|null }>}
  */
 export async function sendToPrintService({ data, printer, format, copies = 1 }) {
   const payload = {
@@ -65,65 +67,7 @@ export async function sendToPrintService({ data, printer, format, copies = 1 }) 
     printer_key: printer.name,
   };
   const response = await api.post('print-job', payload);
-  return response.data;  // { job_id: "uuid" }
-}
-
-/**
- * Subscribe to SSE print-result events and wait for the one matching jobId.
- * Resolves with { ok, error, detail } on match or { ok: false, error: 'timeout' } on timeout.
- * Always closes the EventSource before resolving.
- * @param {string} jobId
- * @param {number} timeoutMs
- * @returns {Promise<{ ok: boolean, error: string|null, detail: string|null }>}
- */
-export function waitForPrintResult(jobIdOrPromise, timeoutMs) {
-  return new Promise((resolve, reject) => {
-    const url = api.defaults.baseURL + '/notification/print-result';
-    const source = new EventSource(url, { withCredentials: false });
-    let jobId = null;
-    const buffer = [];
-
-    const finish = (result) => {
-      clearTimeout(timer);
-      source.close();
-      resolve(result);
-    };
-
-    const timer = setTimeout(() => {
-      finish({ ok: false, error: 'timeout', detail: null });
-    }, timeoutMs);
-
-    source.addEventListener('print-result', (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        if (jobId !== null) {
-          if (data.job_id === jobId) finish({ ok: data.ok, error: data.error ?? null, detail: data.detail ?? null });
-        } else {
-          buffer.push(data);
-        }
-      } catch (e) {
-        // Ignore unparseable SSE events
-      }
-    });
-
-    // jobIdOrPromise may be a string (legacy) or a Promise<string> (subscribe-before-submit).
-    // Opening the EventSource before the job is submitted eliminates the race condition where
-    // fast results (e.g. connection-refused) arrive before the subscription is registered.
-    Promise.resolve(jobIdOrPromise).then(
-      (id) => {
-        jobId = id;
-        const hit = buffer.find((d) => d.job_id === jobId);
-        if (hit) finish({ ok: hit.ok, error: hit.error ?? null, detail: hit.detail ?? null });
-      },
-      (err) => {
-        clearTimeout(timer);
-        source.close();
-        reject(err);
-      },
-    );
-
-    source.onerror = () => {};
-  });
+  return response.data;
 }
 
 export function usePrintDialog({ context: contextType, contextData }) {

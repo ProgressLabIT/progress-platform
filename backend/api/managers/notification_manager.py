@@ -1,10 +1,14 @@
-import traceback
+import asyncio
 import json
+import logging
+import traceback
 import uuid
 
-from utils.kafka.kafka_producer import KafkaProducer
 from utils.delayedqueue.conflated_delayedqueue import ConflatedDelayedQueue
+from utils.nats_client import subtopic_to_subject, get_nats, get_loop
 from threading import Thread
+
+logger = logging.getLogger("notification_manager")
 
 
 class NotificationManager:
@@ -13,7 +17,7 @@ class NotificationManager:
   def __init__(self):
         self.cancelled = False
         self.delayed_queue = ConflatedDelayedQueue()
-        self.poll_thread = Thread(target=self.consume_delayed_loop)
+        self.poll_thread = Thread(target=self.consume_delayed_loop, daemon=True)
         self.poll_thread.start()
 
   @staticmethod
@@ -27,9 +31,18 @@ class NotificationManager:
 
   def notify(self, key, notification):
     try:
-       KafkaProducer.getInstance().produce_async(topic="notifications", key=key, value=notification)
+       data = notification if isinstance(notification, str) else json.dumps(notification)
+       parsed = json.loads(data)
+       subtopic = parsed.get("subtopic", "global-notification")
+       subject = subtopic_to_subject(subtopic)
+
+       loop = get_loop()
+       asyncio.run_coroutine_threadsafe(
+           get_nats().publish(subject, data.encode()),
+           loop,
+       )
     except:
-       print(traceback.format_exc())
+       logger.error(traceback.format_exc())
 
   def consume_delayed_loop(self):
     while not self.cancelled:

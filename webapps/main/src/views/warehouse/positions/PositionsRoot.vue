@@ -58,6 +58,7 @@
 import { ref } from 'vue';
 import queryModel from '@/lib/queryModelFactory.js';
 import { usePositionColumns } from 'app/src/composables/warehouse';
+import { useSSE } from '@/composables/useSSE';
 
 export default {
   name: 'PositionsRoot',
@@ -72,10 +73,12 @@ export default {
     });
 
     const positionColumns = usePositionColumns();
+    const { subscribe } = useSSE('inventory-notification');
 
     return {
       pagination,
       positionColumns,
+      subscribeSSE: subscribe,
     };
   },
 
@@ -83,7 +86,6 @@ export default {
     return {
       loading: false,
       loading_fields: false,
-      events: NaN,
       limit: 200,
       offset: 0,
 
@@ -134,20 +136,12 @@ export default {
 
   created() {
     this.getPositions();
-    let eventURL =
-      this.$api.defaults.baseURL + '/notification/inventory-notification';
-    this.events = new EventSource(eventURL, {
-      withCredentials: false,
-    });
-    this.events.addEventListener('inventory-notification', (event) => {
-      this.handleMessage(event);
-    });
   },
 
-  beforeUnmount() {
-    if (this.events) {
-      this.events.close();
-    }
+  mounted() {
+    this.subscribeSSE((event) => {
+      this.handleMessage(event);
+    });
   },
 
   methods: {

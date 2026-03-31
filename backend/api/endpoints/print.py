@@ -1,18 +1,19 @@
 import json
+import logging
 import traceback
-import uuid
-from collections.abc import AsyncIterable
-from fastapi import APIRouter, HTTPException, Depends, Request
-from fastapi.sse import EventSourceResponse, ServerSentEvent
+from fastapi import APIRouter, HTTPException, Depends
+from nats.errors import NoRespondersError
 from utils import auth
 
 from managers.notification_manager import NotificationManager
-from managers.server_event_manager import ServerEventManager
 from models.print import PrintTemplateRecord, TemplateAssignmentUpdate, TemplateAssignmentUpdateType, TemplateAssignmentContext
-from models.print_job import PrintJobRequest, PrintJobResult
+from models.print_job import PrintJobRequest
 from utils.api import APIResponse
 from utils.db import db
+from utils.nats_client import request as nats_request
 from utils.print import preprocess_template, build_template_assignment_record
+
+logger = logging.getLogger("print")
 
 router = APIRouter()
 
@@ -195,44 +196,33 @@ async def update_template_assignments(updates: list[TemplateAssignmentUpdate]):
       tx.abort_transaction()
 
 
-# Print Job Endpoints
+# Print Job Endpoint — NATS Request/Reply
 
 @router.post('/print-job', dependencies=[Depends(auth.verify_token)])
 async def create_print_job(job: PrintJobRequest):
-    job_key = str(uuid.uuid4())
+    subject = f"progress.print.jobs.{job.printer_key}"
 
-    sse_payload = job.model_dump()
-    sse_payload["format"] = job.format.value
-    sse_payload["job_id"] = job_key
-    sse_payload["subtopic"] = f"print-jobs:{job.printer_key}"
-    ServerEventManager.getInstance().enqueue(json.dumps(sse_payload))
+    payload = job.model_dump()
+    payload["format"] = job.format.value
 
-    return {"job_id": job_key}
+    base_timeout = job.timeout_seconds or 5
+    nats_timeout = (base_timeout * max(job.copies, 1)) + 5
 
+    logger.info(f"NATS request to {subject} (timeout={nats_timeout}s)")
+    try:
+        response_data = await nats_request(subject, json.dumps(payload), timeout=nats_timeout)
+        result = json.loads(response_data)
+        logger.info(f"Print job result on {subject}: ok={result.get('ok')}")
+    except NoRespondersError:
+        logger.warning(f"No print service listening on {subject}")
+        result = {"ok": False, "error": "no_service", "detail": "Print service is not running"}
+    except TimeoutError:
+        result = {"ok": False, "error": "timeout", "detail": "Print service did not respond"}
+    except Exception as e:
+        logger.error(f"Print job NATS error: {e}")
+        result = {"ok": False, "error": "internal", "detail": str(e)}
 
-@router.get('/print-jobs/stream',
-  dependencies=[Depends(auth.verify_print_service_token)],
-  response_class=EventSourceResponse
-)
-async def print_job_stream(
-    request: Request,
-    printer_key: str | None = None,
-) -> AsyncIterable[ServerSentEvent]:
-    topic = f"print-jobs:{printer_key}" if printer_key else "print-jobs:*"
-    async for event in ServerEventManager.getInstance().push_events(request, topic):
-        yield event
+    if result.get("ok"):
+        NotificationManager.getInstance().notifyGlobalRefresh()
 
-
-@router.post('/print-jobs/{job_id}/result', dependencies=[Depends(auth.verify_print_service_token)])
-async def print_job_result(job_id: str, result: PrintJobResult):
-    sse_result = {
-        "subtopic": "print-result",
-        "job_id": job_id,
-        "ok": result.ok,
-        "error": result.error if not result.ok else None,
-        "detail": result.detail if not result.ok else None,
-    }
-    ServerEventManager.getInstance().enqueue(json.dumps(sse_result))
-    NotificationManager.getInstance().notifyGlobalRefresh()
-
-    return {"ok": True}
+    return result

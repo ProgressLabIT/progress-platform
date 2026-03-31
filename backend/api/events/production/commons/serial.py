@@ -1,4 +1,6 @@
+import asyncio
 import json
+import logging
 import traceback
 from datetime import datetime
 
@@ -6,8 +8,10 @@ from events.serial.serial_created import SerialCreatedEvent
 from fastapi import HTTPException
 from models.form import SerialFormFieldValue
 from models.serial import SerialNotificationErrorCode, SerialNotificationType
-from utils.kafka.kafka_producer import KafkaProducer
+from utils.nats_client import get_nats, get_loop
 from utils.process import Queries as ProcessQueries
+
+logger = logging.getLogger("serial_event")
 
 # ===================================================================
 # Serial
@@ -16,7 +20,12 @@ from utils.process import Queries as ProcessQueries
 class BaseSerialEvent:
   def send_to_consumer(self, serial_event):
     try:
-      KafkaProducer.getInstance().produce_async(topic="serials", key=serial_event.get('_key'), value=json.dumps(serial_event))
+      data = json.dumps(serial_event).encode()
+      loop = get_loop()
+      asyncio.run_coroutine_threadsafe(
+          get_nats().publish("progress.serial.events", data),
+          loop,
+      )
     except Exception:
       raise HTTPException(
         status_code=500,

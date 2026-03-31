@@ -677,8 +677,12 @@ export default {
     requiredFieldsEmpty: '{count} required field(s) are empty. Please fill them before continuing.',
     sendToPrinter: {
       label: 'Send to {name}',
+      copiesPrompt: 'Copies',
+      copiesHelpText: 'Enter the number of copies to print',
       success: 'Label sent to printer',
       error: 'Print failed. Check the printer and try again.',
+      noService: 'Print service is not running. Contact your administrator.',
+      connectionRefused: 'Could not connect to the printer. Check that it is turned on and reachable.',
       timeout: 'No response from printer. Check the connection and try again.',
     },
   },

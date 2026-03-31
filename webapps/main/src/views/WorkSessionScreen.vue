@@ -277,9 +277,15 @@ import ProgressBtn from '@/components/ProgressBtn.vue';
 import QuantityPickerDialog from '@/components/QuantityPickerDialog.vue';
 import StartPauseResumeBtn from '@/components/StartPauseResumeBtn.vue';
 import SerialBatchSelectionDialog from '@/components/job/SerialBatchSelectionDialog.vue';
+import { useSSE } from '@/composables/useSSE';
 
 export default {
   name: 'WorkSessionScreen',
+
+  setup() {
+    const { subscribe } = useSSE('global-notification');
+    return { subscribeSSE: subscribe };
+  },
 
   components: {
     BaseProgressBar,
@@ -316,7 +322,6 @@ export default {
       show_issue_form: false,
       alert_timeout: 4000,
       can_leave: false,
-      events: undefined,
     };
   },
 
@@ -497,17 +502,12 @@ export default {
   created() {
     // Load job data
     this.loadJob();
-    let eventURL =
-      this.$api.defaults.baseURL + '/notification/global-notification';
-    this.events = new EventSource(eventURL, {
-      withCredentials: false,
-    });
-    this.events.addEventListener('global-notification', (event) => {
-      this.handleMessage(event);
-    });
   },
 
   async mounted() {
+    this.subscribeSSE((event) => {
+      this.handleMessage(event);
+    });
     // Go to first tab according to user preference if path doesn't specify one
     if (this.$route.name === 'workSession') {
       this.$router.push({ name: this.links_order[0] });
@@ -551,9 +551,6 @@ export default {
     window.removeEventListener('beforeunload', this.beforeUnloadAlert);
     this.$store.state.traceability.current_step_key = undefined;
     this.$store.commit('UPDATE_BATCH_SERIALS', []);
-    if (this.events) {
-      this.events.close();
-    }
   },
 
   methods: {

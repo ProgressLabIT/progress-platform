@@ -172,64 +172,39 @@ Each label page is wrapped in a standard ZPL envelope:
 
 ## Print Service
 
-The print service is a lightweight Python process that subscribes to the main API's SSE stream, receives print jobs, and sends ZPL or PDF data to printers over raw TCP.
+The print service is a lightweight Python process that subscribes to NATS subjects for print job requests and sends ZPL or PDF data to printers over raw TCP. It uses NATS request/reply — the API sends a request, the print service processes the job and replies with the result, which the API returns synchronously to the browser.
 
 ### Architecture
 
 ```
-Browser
-  ├─► EventSource GET /api/print-result/stream  (opened first, one-shot)
-  └─► POST /api/print-job  ──►  Main API
-                                  │
-                                  ├─► SSE stream (GET /api/print-jobs/stream)
-                                  │         ▲
-                                  │    Print Service subscribes (outbound)
-                                  │         │
-                                  │         └─► TCP ──► Printer
-                                  │                        │
-                                  │    POST /api/print-jobs/{id}/result ◄─┘
-                                  │         │
-                                  │         └─► enqueue → print-result SSE ──► Browser toast
+Browser → POST /api/print-job → API → NATS request → Print Service → TCP → Printer
+                                                            │
+                                                      NATS reply ← result
+                                                            │
+                                  API ← NATS reply ← ──────┘
+                                    │
+Browser ← HTTP response ← ─────────┘
 ```
 
 **Key constraints:**
-- The browser never calls the print service directly. The print service only makes outbound connections — to the main API and to printers. No inbound ports are needed.
-- Print jobs are fire-and-forget — there is no `PrintJob` database collection. The result callback (`POST /print-jobs/{id}/result`) enqueues an SSE event for the browser and returns immediately.
+- The browser never calls the print service directly. The print service only makes outbound connections — to NATS and to printers. No inbound ports are needed.
+- Print jobs are synchronous from the browser's perspective — the HTTP response contains the result directly. There is no `PrintJob` database collection, no SSE, and no callback endpoints.
 
 ### Deployment
 
-The print service is an optional on-prem add-on. The main API functions normally without it, but print jobs will not reach printers (without an active print service subscriber, clients eventually time out waiting for a result). It can be installed at initial setup or added later — provisioning is fully decoupled from the main Ansible playbook.
+The print service is an optional on-prem add-on. The main API functions normally without it, but print jobs will fail with a `no_service` error when no print service is subscribed. It can be installed at initial setup or added later — provisioning is fully decoupled from the main Ansible playbook.
 
 #### Installation
 
-Prerequisites: the Progress Platform stack is running and ArangoDB is reachable on the `progress` Docker network.
+Prerequisites: the Progress Platform stack is running and the NATS broker is reachable on the `progress` Docker network.
 
-1. Run the setup script to create the `print_service` user in ArangoDB and generate the password file:
-
-```bash
-python3 deploy/scripts/setup_print_service.py
-```
-
-The script automatically runs inside a throwaway API container (no Python dependencies needed on the host). It prompts for the ArangoDB root password (hidden input), creates (or updates) the `print_service` user with `scope=print_service` and `reset_password=False`, generates a random password, and writes it to `/opt/progress/config/.print_service_pwd`.
-
-Extra flags are forwarded, e.g. `--db-name PROGRESS_DEV`. Pass `--local` to skip the Docker wrapper and run directly on the host (requires `python-arango` and `passlib`).
-
-Source: `deploy/scripts/setup_print_service.py`.
-
-2. Start the container:
+Start the container:
 
 ```bash
 cd /opt/progress/config && docker compose -f print.yaml up -d
 ```
 
-#### Password rotation
-
-Re-run the same setup script. It overwrites the password file and updates the hash in ArangoDB. Then restart the container:
-
-```bash
-python3 deploy/scripts/setup_print_service.py
-cd /opt/progress/config && docker compose -f print.yaml up -d --force-recreate
-```
+No API credentials or setup scripts are needed — the print service connects directly to NATS, not to the API.
 
 #### Compose file
 
@@ -240,10 +215,6 @@ networks:
   progress:
     external: true
 
-secrets:
-  print_service_pwd:
-    file: /opt/progress/config/.print_service_pwd
-
 services:
   print-service:
     image: registry.gitlab.com/progresslab/progress-platform/print-service:${VERSION}
@@ -251,33 +222,27 @@ services:
     networks:
       - progress
     environment:
-      PRINT_SERVICE_API_URL: ${PRINT_SERVICE_API_URL:-http://api:8000}
-      PRINT_SERVICE_NON_ASCII: ${PRINT_SERVICE_NON_ASCII:-replace}
-    secrets:
-      - source: print_service_pwd
-        target: api_password
+      PROGRESS_PRINT_SERVICE_NATS_URL: nats://broker:4222
     deploy:
       replicas: 1
       labels:
         - "traefik.enable=false"
 ```
 
-The service has `traefik.enable=false` and exposes no inbound ports. It only needs outbound network access to the main API and to the local printer network.
+The service has `traefik.enable=false` and exposes no inbound ports. It only needs outbound network access to NATS and to the local printer network.
 
 ### Environment variables
 
-| Variable | Required | Description |
-|---|---|---|
-| `PRINT_SERVICE_API_URL` | Yes | Main API base URL, e.g. `http://api:8000` (default in compose) |
-| `PRINT_SERVICE_API_PASSWORD` | Yes | Auto-managed by the setup script. Stored in `/opt/progress/config/.print_service_pwd`, mounted at `/run/secrets/api_password` inside the container |
-| `PRINT_SERVICE_NON_ASCII` | No | How to handle non-ASCII characters in ZPL: `replace` (default) or `error` |
-| `PRINT_SERVICE_RECONNECT_DELAY` | No | Seconds between SSE reconnect attempts (default `5.0`) |
-
-The service authenticates to the main API using the `print_service` user account via `POST /api/auth`. The account is provisioned by `setup_print_service.py` with `scope=print_service` and `reset_password=False` so it can log in without the interactive password-reset flow.
+| Variable | Required | Default | Description |
+|---|---|---|---|
+| `PROGRESS_PRINT_SERVICE_NATS_URL` | Yes | `nats://broker:4222` | NATS server URL |
+| `PROGRESS_PRINT_SERVICE_NON_ASCII` | No | `replace` | How to handle non-ASCII characters in ZPL: `replace` or `error` |
+| `PROGRESS_PRINT_SERVICE_RECONNECT_DELAY` | No | `5.0` | Seconds between NATS reconnect attempts |
+| `PROGRESS_PRINT_SERVICE_PRINTER_KEY` | No | *(all printers)* | Optional printer key filter — when set, the service subscribes only to `progress.print.jobs.{key}` instead of `progress.print.jobs.*` |
 
 ### API contract
 
-**Submit a print job (browser → main API):**
+**Submit a print job (browser → main API → NATS → print service):**
 
 ```
 POST /api/print-job
@@ -289,11 +254,10 @@ Content-Type: application/json
   "format": "zpl",
   "data": "^XA^FO50,50^FDHello^FS^XZ",
   "copies": 1,
-  "timeout_seconds": 5
+  "timeout_seconds": 5,
+  "printer_key": "zebra-warehouse"
 }
 ```
-
-Response: `{ "job_id": "abc123" }`
 
 | Field | Type | Default | Description |
 |---|---|---|---|
@@ -302,42 +266,26 @@ Response: `{ "job_id": "abc123" }`
 | `format` | `"zpl"` \| `"pdf"` | — | Data format |
 | `data` | string | — | ZPL text string, or base64-encoded PDF bytes |
 | `copies` | integer | `1` | Number of copies to print |
-| `timeout_seconds` | float | `5.0` | TCP connection/send timeout in seconds |
+| `timeout_seconds` | float | `5.0` | TCP connection/send timeout per copy |
+| `printer_key` | string | — | Printer name, used as the NATS subject suffix (`progress.print.jobs.{printer_key}`) |
 
-**SSE stream (print service → main API):**
+**Success response:** `{ "ok": true }`
 
-```
-GET /api/print-jobs/stream
-```
+**Error response:** `{ "ok": false, "error": "<code>", "detail": "<message>" }`
 
-The print service subscribes to this endpoint after login and receives new print jobs as SSE events. Authentication uses session cookies from the login step.
+| Error code | Cause |
+|---|---|
+| `no_service` | No print service is subscribed to the NATS subject (service not running) |
+| `timeout` | Print service did not respond within the NATS request timeout |
+| `connection_refused` | Print service could not connect to the printer |
+| `send_error` | TCP send to printer failed (encoding error, unknown format, etc.) |
+| `internal` | Unexpected error in the API or print service |
 
-**Result callback (print service → main API):**
-
-```
-POST /api/print-jobs/{job_id}/result
-Content-Type: application/json
-
-{ "ok": true, "error": null, "detail": null }
-```
-
-On failure: `{ "ok": false, "error": "connection_refused", "detail": "Connection refused by 192.168.1.100:9100" }`
-
-Error codes: `connection_refused`, `timeout`, `send_error`.
-
-**SSE notification (main API → browser):**
-
-After the result callback is received, the main API enqueues an SSE event on the `print-result` topic via `ServerEventManager.enqueue()`:
-
-- Endpoint: `GET /api/print-result/stream` (dedicated one-shot SSE stream; the generator uses `max_events=1` and self-terminates after delivering one event)
-- Event type: `print-result`
-- Payload: `{ "job_id": "abc123", "ok": true, "error": null, "detail": null }`
-
-The browser opens an `EventSource` to this endpoint before submitting the print job, then filters by `job_id` to match the event to the originating request. The server-side generator exits after one event; the HTTP connection closes within a few seconds via `sse_starlette` cleanup.
+**NATS timeout calculation:** The API sets the NATS request timeout to `(timeout_seconds × copies) + 5` seconds — enough to cover the TCP send time for each copy plus a buffer for network latency.
 
 ### Health check
 
-The print service exposes a health endpoint at `:8200` using a raw TCP server (not HTTP). The endpoint returns `ok` when the SSE subscription is active, or an error state when disconnected.
+The print service exposes a health endpoint at `:8200` using a minimal HTTP server. The endpoint returns `{ "status": "ok", "nats_connected": true }` when the NATS connection is active, or `"nats_connected": false` when disconnected.
 
 ---
 
@@ -363,8 +311,9 @@ The `type` field determines which code path is used at print time:
 
 ### Timeout behavior
 
-- The print service waits `timeout_seconds` for the TCP connection and data send to complete.
-- The frontend waits `timeout_seconds + 5` seconds for the SSE result event before showing a timeout toast. The extra 5 seconds accounts for network round-trip latency between printer, print service, main API, and browser.
+- The print service waits `timeout_seconds` for the TCP connection and data send to complete per copy.
+- The API sets the NATS request timeout to `(timeout_seconds × copies) + 5` seconds. If the print service doesn't reply within this window, the API returns a `timeout` error to the browser.
+- The browser simply `await`s the HTTP response — there is no separate frontend timeout.
 
 ---
 
@@ -384,19 +333,18 @@ The button shows the name of the configured printer: `"Send to [printer name]"`.
 
 1. User clicks "Send to [printer name]"
 2. Both buttons are hidden; a centered spinner appears (printing in progress)
-3. `sendToPrintService()` POSTs to `POST /api/print-job`
-4. `waitForPrintResult()` opens an SSE stream to `GET /print-result/stream` (dedicated one-shot endpoint, closes after one event), filtered by `job_id`
-5. On result or timeout: spinner clears; toast appears. The dialog **closes only on success** so the user can fix data or retry after printer errors or timeouts.
-6. Toast notification appears (see table below)
+3. `sendToPrintService()` POSTs to `POST /api/print-job` and awaits the HTTP response (the API forwards to the print service via NATS request/reply and returns the result synchronously)
+4. On response: spinner clears; toast appears. The dialog **closes only on success** so the user can fix data or retry after printer errors or timeouts.
 
 ### Toast outcomes
 
 | Outcome | Toast type | Message |
 |---|---|---|
-| Success | Positive (green) | "Label sent to printer"; dialog closes |
-| Error | Negative (red) | Error detail from print service; dialog stays open |
+| Success (`ok: true`) | Positive (green) | "Label sent to printer"; dialog closes |
+| No service / internal error | Negative (red) | "Print service is not running"; dialog stays open |
+| Connection refused | Negative (red) | Printer connection error detail; dialog stays open |
 | Timeout | Negative (red) | "No response from printer"; dialog stays open |
-| POST failure | Negative (red) | Dialog stays open, `isPrinting` reset; user can retry |
+| Other error | Negative (red) | Generic error message; dialog stays open |
 
 ### Download PDF
 

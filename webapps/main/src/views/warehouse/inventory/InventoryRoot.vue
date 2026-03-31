@@ -63,6 +63,7 @@ import {
   useInventoryColumns,
   useInventoryFilters,
 } from 'app/src/composables/warehouse';
+import { useSSE } from '@/composables/useSSE';
 
 export default {
   name: 'InventoryRoot',
@@ -78,11 +79,13 @@ export default {
 
     const inventoryColumns = useInventoryColumns();
     const { filters } = useInventoryFilters();
+    const { subscribe } = useSSE('inventory-notification');
 
     return {
       pagination,
       inventoryColumns,
       filters,
+      subscribeSSE: subscribe,
     };
   },
 
@@ -90,7 +93,6 @@ export default {
     return {
       loading: false,
       loading_fields: false,
-      events: NaN,
       limit: 200,
       offset: 0,
 
@@ -118,20 +120,12 @@ export default {
 
   created() {
     this.getInventory();
-    let eventURL =
-      this.$api.defaults.baseURL + '/notification/inventory-notification';
-    this.events = new EventSource(eventURL, {
-      withCredentials: false,
-    });
-    this.events.addEventListener('inventory-notification', (event) => {
-      this.handleMessage(event);
-    });
   },
 
-  beforeUnmount() {
-    if (this.events) {
-      this.events.close();
-    }
+  mounted() {
+    this.subscribeSSE((event) => {
+      this.handleMessage(event);
+    });
   },
 
   methods: {

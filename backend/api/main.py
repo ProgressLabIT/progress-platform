@@ -1,27 +1,22 @@
-import requests
-from fastapi import FastAPI, APIRouter
-from starlette.middleware.cors import CORSMiddleware
-from fastapi.middleware.gzip import GZipMiddleware
+import asyncio
+import logging
 
-import endpoints.inventory
+from fastapi import FastAPI
+from starlette.middleware.cors import CORSMiddleware
+
 from utils.config import get_config
-from utils.kafka.kafka_producer import KafkaProducer
-from managers.kafka_consumer_manager import KafkaConsumerManager
-from utils.kafka.kafka_admin import KafkaAdmin
+import utils.nats_client as nats_client
 from managers.executor_manager import ExecutorManager
-from managers.websocket_manager import WebsocketManager
 from managers.server_event_manager import ServerEventManager
 from managers.notification_manager import NotificationManager
-from utils.notification_kafka_consumer import NotificationsKafkaConsumer
 from middlewares.notification_middleware import NotificationMiddleware
 from middlewares.gzipfilter_middleware import GZipFilterMiddleware
 
-
 import endpoints
 
-config = get_config()
+logger = logging.getLogger("main")
 
-KafkaAdmin.getInstance().create_topic("notifications")
+config = get_config()
 
 app = FastAPI(
 	root_path=config.api_root_path
@@ -52,23 +47,21 @@ async def hello():
 
 @app.on_event("startup")
 async def startup_event():
-    KafkaProducer.getInstance()
-    notificationsConsumer = NotificationsKafkaConsumer()
-    KafkaConsumerManager.getInstance().registerConsumer(notificationsConsumer)
-    WebsocketManager.getInstance()
+    nc = await nats_client.connect(config.nats_url)
 
-def broadcast_message(self, msg):
-      print("%% %s [%d] at offset %d with key %s:\n" %(msg.topic(), msg.partition(), msg.offset(),str(msg.key())))
-      WebsocketManager.getInstance().enqueue(msg.value().decode('utf-8'))
+    async def on_notification(msg):
+        data = msg.data.decode()
+        ServerEventManager.getInstance().enqueue(data)
+
+    await nats_client.subscribe("progress.notification.>", cb=on_notification)
 
 @app.on_event("shutdown")
-def shutdown_event():
-   KafkaProducer.getInstance().close()
-   KafkaConsumerManager.getInstance().closeAllConsumers()
-   WebsocketManager.getInstance().close()
-   ExecutorManager.getInstance().close()
+async def shutdown_event():
    ServerEventManager.getInstance().close()
    NotificationManager.getInstance().close()
+   ExecutorManager.getInstance().close()
+   await asyncio.sleep(0.5)
+   await nats_client.drain()
 
 app.include_router(endpoints.admin, tags=['Administration'])
 app.include_router(endpoints.auth, tags=['Security'])
@@ -90,8 +83,6 @@ app.include_router(endpoints.counter, tags=['Traceability'])
 app.include_router(endpoints.notification, tags=['Notification'])
 app.include_router(endpoints.inventory, tags=['Warehouse'])
 app.include_router(endpoints.counting, tags=['Warehouse'])
-
-# app.include_router(global_router, prefix="/v1")
 
 if __name__ == "__main__":
   app.main()
