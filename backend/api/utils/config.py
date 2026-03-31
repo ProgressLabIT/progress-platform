@@ -13,11 +13,7 @@ class Settings(BaseSettings):
   api_db_pwd: str = ""
   jwt_secret: str = ""
   cors_allowed_origins: list[str] = ["*"]
-  kafka_bootstrap_server: str = "broker:19092"
-  kafka_group_id: str = "backend"
-  kafka_client_id_consumer: str = "backend-service-consumer"
-  kafka_client_id_producer: str = "backend-service-producer"
-  kafka_session_to_ms: int = 10000
+  nats_url: str = "nats://broker:4222"
 
   model_config = SettingsConfigDict(
     env_prefix = "progress_",
