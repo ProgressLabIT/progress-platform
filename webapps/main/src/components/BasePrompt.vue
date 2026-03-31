@@ -16,6 +16,7 @@
         </div>
 
         <q-input
+          v-if="input_type !== 'number'"
           v-model="value"
           autofocus
           filled
@@ -23,9 +24,21 @@
           class="q-mt-md"
           input-class="text-body1"
           hide-bottom-space
-          :type="input_type"
+          type="text"
+          @keyup.enter="update"
+        />
+        <q-input
+          v-if="input_type === 'number'"
+          v-model.number="value"
+          autofocus
+          filled
+          class="q-mt-md"
+          input-class="text-body1"
+          hide-bottom-space
+          type="number"
           :max="max"
           :min="min"
+          @keyup.enter="update"
         />
       </q-card-section>
 
@@ -38,11 +51,11 @@
           @click="$emit('close')"
         />
         <q-btn
-          v-if="/* eslint-disable-line vue/eqeqeq */ value != initial_value"
+          v-if="parsedValue != initial_value"
           size="12px"
           flat
           color="theme-blue"
-          :label="$t('save')"
+          :label="$t(confirmLabel)"
           @click="update"
         />
       </q-card-actions>
@@ -92,6 +105,10 @@ export default {
       type: Number,
       default: null,
     },
+    confirmLabel: {
+      type: String,
+      default: 'save',
+    },
   },
 
   emits: ['close', 'update'],
@@ -106,11 +123,18 @@ export default {
     this.value = this.initial_value;
   },
 
+  computed: {
+    parsedValue() {
+      if (this.input_type === 'number' && this.value !== '' && this.value !== null) {
+        return Number(this.value);
+      }
+      return this.value;
+    },
+  },
+
   methods: {
     update(event) {
-      if (event?.key !== 'Enter') {
-        this.$emit('update', this.value);
-      }
+        this.$emit('update', this.parsedValue);
     },
   },
 };
