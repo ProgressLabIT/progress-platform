@@ -39,7 +39,7 @@ A full-stack **Manufacturing Operations Management** system (MOM) built to manag
 - **Event Sourcing** — Factory activities are modeled through immutable events, from which state is derived, enabling full auditability and traceability (critical for manufacturing compliance). Every mutation is modeled as an `Event` with a transactional `apply()` method.
 - **Multi-Model Database** — ArangoDB provides document storage and graph traversal in a single engine, used for everything from inventory hierarchies to production genealogy.
 - **Async Workflows** — Long-running operations (e.g. bulk inventory adjustments across 500+ records) are offloaded to Prefect, keeping the API responsive. The workflow engine is also used to add custom plugins to integrate the platform with ERPs and other business systems.
-- **Real-time Communication** — Kafka for inter-service event streaming, WebSockets and SSE for live UI updates.
+- **Real-time Communication** — NATS for inter-service event streaming, SSE for live UI updates.
 
 ---
 
@@ -84,8 +84,7 @@ A full-stack **Manufacturing Operations Management** system (MOM) built to manag
 ### Printing
 - Drag and Drop Report/Label template design
 - Auto filling of forms from UI context
-- PDF generation and download
-- ZPL integration (industrial label printing language)
+- PDF and ZPL (industrial label printing language) generation and direct print
 
 ---
 
@@ -111,24 +110,127 @@ A full-stack **Manufacturing Operations Management** system (MOM) built to manag
 
 ---
 
-## What I Built & Learned
+## Setup
 
-This platform was designed and developed largely by me, from database schema to deployment automation. Some highlights:
+> *Progress CLI coming soon! In the meantime, you can follow the procedures below.*
 
-- **Implemented event sourcing from scratch** on top of ArangoDB — no ORM, no framework magic. Every domain event is an explicit, auditable state transition with transactional `apply()` semantics. Events can generate child events for modularity, but all are handled within the same database transaction for data consistency.
-- **Designed a multi-app frontend architecture** with a shared design system across a desktop SPA and a mobile warehouse app (Capacitor/Android with barcode scanning), both built with Vue 3 and Quasar.
-- **Built real-time collaboration features** using Kafka, WebSockets, and SSE to keep operators' screens in sync on the factory floor.
-- **Security-conscious design** — JWT authentication with server-side token records for revocation, single active session enforcement, bcrypt password hashing, ACL-based permission scopes, and Docker Swarm secrets for credential management. TLS termination via Traefik with support for both Let's Encrypt and custom certificates for private networks.
-- **Infrastructure as Code** — Ansible playbooks automate full single-node provisioning: system packages, Docker Swarm init, network/secret creation, compose deployment, and database initialization. GitLab CI handles tag-triggered image builds.
-- **Maintained living documentation** (`km/`) — architecture decisions, domain logic, and test case specifications co-evolve with the codebase, following a "read first, write back" protocol.
+
+### Prerequisites
+
+- **Docker** with Compose v2 (local stack uses Docker Compose; production uses Docker Swarm).
+- **Node.js** — use the version in [`.nvmrc`](.nvmrc) for the Quasar webapps (`webapps/main`, `webapps/warehouse`).
+- **Python 3.11+** — only if you run Prefect or workflow tooling on the host (see below).
 
 ---
 
-## What's missing / Next steps
-- Robust testing framework
-- User oriented/UI documentation 
-- Cloud readiness
+### Run locally (Docker Compose)
 
-## License
+The local API, Traefik, ArangoDB, and NATS are defined under [`deploy/compose/`](deploy/compose/): merge [`base.yaml`](deploy/compose/base.yaml) with [`dev.yaml`](deploy/compose/dev.yaml). The dev overlay mounts the API source for hot reload and enables the debugpy port.
 
-This project is proprietary. Source code is shared for portfolio purposes only.
+**1. One-time: create external volumes** (required by `base.yaml` / `dev.yaml`):
+
+```bash
+docker volume create media
+docker volume create db_data
+docker volume create db_backup
+```
+
+**2. Hostname**
+
+Traefik router rules default to the hostname **`progress.localhost`**. Either map that name or override the variable:
+
+- Add to `/etc/hosts`: `127.0.0.1 progress.localhost`, or  
+- Set `PROGRESS_ADDRESS` when starting Compose (e.g. `export PROGRESS_ADDRESS=localhost` and ensure labels match your setup).
+
+**3. Start the stack**
+
+From the repository root:
+
+```bash
+cd deploy/compose
+docker compose -f base.yaml -f dev.yaml up -d --build
+```
+
+**4. URLs and ports (typical defaults)**
+
+| Service | Access |
+|--------|--------|
+| Traefik dashboard | [http://localhost:8080](http://localhost:8080) |
+| API (direct, bypass Traefik) | [http://localhost:8000](http://localhost:8000) (also debugpy on `5678` if you attach a debugger) |
+| API via Traefik | `http://<PROGRESS_ADDRESS>/api/...` (default host: `progress.localhost`) |
+| ArangoDB web UI via Traefik | `http://<PROGRESS_ADDRESS>/_db/` |
+| ArangoDB (direct) | [http://localhost:8529](http://localhost:8529) (dev uses `ARANGO_NO_AUTH=1`) |
+| NATS client / monitoring | `localhost:4222` / `localhost:8222` |
+
+**5. API environment**
+
+The API loads `PROGRESS_*` settings from environment and optional `backend/api/.env` (see [`backend/api/utils/config.py`](backend/api/utils/config.py)). Compose already sets `PROGRESS_ARANGO_URL`, `PROGRESS_MEDIA_PATH`, and `PROGRESS_WEBAPP_URL`. For **Prefect** triggered from the API container, set `PREFECT_API_URL` (defaults in dev to `http://host.docker.internal:4200/api`). Full host-side steps: [`deploy/compose/prefect-local-dev.md`](deploy/compose/prefect-local-dev.md). On Linux you may need `extra_hosts: host.docker.internal:host-gateway` on the `api` service.
+
+**6. Webapps (main / warehouse)**
+
+The compose dev stack does not build the SPAs. Run them on the host:
+
+```bash
+cd webapps/main   # or webapps/warehouse
+corepack enable   # if you use Yarn via Corepack
+yarn install
+yarn dev
+```
+
+Point the app at your API origin (Quasar dev server and `PROGRESS_WEBAPP_URL` / CORS as needed). The dev compose file sets `PROGRESS_WEBAPP_URL=http://localhost:9000` for the API process.
+
+---
+
+### Run in production (Docker Swarm)
+
+Production is deployed as a **Docker Swarm stack** on a single node using **Ansible**: [`deploy/single_node_setup.yaml`](deploy/single_node_setup.yaml). Images are pulled from `registry.gitlab.com/progresslab/progress-platform` (tag from `VERSION`).
+
+**1. Configure deployment variables**
+
+Edit [`deploy/config/progress.env.yaml`](deploy/config/progress.env.yaml) (or your copy on the deploy host):
+
+| Variable | Purpose |
+|----------|---------|
+| `DOMAIN` | Base domain (e.g. `progresslab.it`) |
+| `SUBDOMAIN` | Tenant host segment (`<SUBDOMAIN>.<DOMAIN>`) |
+| `VERSION` | Image tag (e.g. GitLab registry tag from CI) |
+| `ENABLE_TLS` | `true` to include Let’s Encrypt (`tls.yaml`); `false` for HTTP-only |
+| `TLS_EMAIL` | ACME registration email when TLS is enabled |
+
+**2. Registry authentication**
+
+Provide GitLab registry credentials in [`deploy/registry_creds`](deploy/registry_creds) as expected by the playbook (`vars_files`).
+
+**3. What the playbook does (high level)**
+
+- Installs Docker, initializes Swarm, creates external volumes and **Docker secrets** (`progress_api_db_pwd`, `progress_admin_pwd`, `progress_jwt_secret`, `progress_db_root_pwd`).
+- Copies [`deploy/compose/`](deploy/compose/) and config templates to `/opt/progress/config/` on the server.
+- Renders `/opt/progress/config/progress.env` from `progress.env.yaml` via [`deploy/config/env_template.j2`](deploy/config/env_template.j2).
+- Runs `docker stack deploy` from `/opt/progress/config` with compose files:
+  - **With TLS:** `base.yaml`, `stack.yaml`, `tls.yaml`, `warehouse.yaml`, `workflow.yaml`, `integration.yaml`, `reporting.yaml`, `notebooks.yaml`
+  - **Without TLS:** same list except `tls.yaml`
+- Mounts API env file at **`/opt/progress/config/api.env`** into the API container (see [`deploy/config/api.env`](deploy/config/api.env) for optional overrides such as CORS).
+- Runs database initialization via a one-off `init-db` service ([`deploy/scripts/db_init.py`](deploy/scripts/db_init.py)).
+
+**4. Run Ansible**
+
+From the machine that orchestrates the install (with Ansible and SSH access to the target):
+
+```bash
+cd deploy
+ansible-playbook -i <inventory> single_node_setup.yaml
+```
+
+Air-gapped installs can use [`deploy/single_node_setup_local.yaml`](deploy/single_node_setup_local.yaml) with a local image tarball (see that file for scope and limitations).
+
+**5. Optional stack pieces**
+
+Additional compose files in the same directory cover **print** ([`print.yaml`](deploy/compose/print.yaml)), **TLS** overrides ([`tls.yaml`](deploy/compose/tls.yaml)), and other services—wire them into your deploy process if you use those features.
+
+---
+
+### CI-built images
+
+GitLab CI builds and pushes images on tag pipelines; set `VERSION` in `progress.env.yaml` to the tag you deploy. The main application image is `app`; the API image is `api` (see [`deploy/compose/stack.yaml`](deploy/compose/stack.yaml)).
+
+
