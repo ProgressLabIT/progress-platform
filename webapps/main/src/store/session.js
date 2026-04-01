@@ -1,5 +1,6 @@
 import VueCookies from 'vue-cookies';
 import { api } from '@/boot/axios.js';
+import { getAppRouter } from '@/lib/appRouter';
 
 const session = {
   state: {
@@ -101,7 +102,10 @@ const session = {
       }
       await commit('CLOSE_USER_SESSION');
       VueCookies.remove('Authorization');
-      await this.$router.push({ name: 'login' });
+      const router = getAppRouter();
+      if (router) {
+        await router.push({ name: 'login' });
+      }
     },
 
     unlockSession({ commit }) {

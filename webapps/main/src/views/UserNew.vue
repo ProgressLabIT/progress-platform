@@ -65,7 +65,7 @@
                     dense
                     :val="check.name"
                   >
-                    {{ check.label }}
+                    {{ $capitalize($t(`user.permissions.${check.name}`)) }}
                   </q-checkbox>
                 </div>
               </div>

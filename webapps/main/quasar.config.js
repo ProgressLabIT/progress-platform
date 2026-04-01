@@ -28,7 +28,7 @@ export default configure(function (ctx) {
     // app boot file (/src/boot)
     // --> boot files are part of "main.js"
     // https://v2.quasar.dev/quasar-cli/boot-files
-    boot: ['store', 'pinia', 'i18n', 'axios', 'filters', 'form', 'theme'],
+    boot: ['store', 'registerRouter', 'pinia', 'i18n', 'axios', 'filters', 'form', 'theme'],
 
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-js#css
     css: ['app.scss'],
