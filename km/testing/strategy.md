@@ -72,17 +72,34 @@ E2E tests will not be implemented until the backend integration test infrastruct
 ## The Feature Development Loop
 
 ```
-1. SPEC   → Write acceptance criteria in specs/features/<name>.md
-2. TESTS  → Generate pytest integration tests from the spec
-3. RED    → Run tests, confirm they fail (contract is set)
-4. CODE   → Write implementation to make tests pass
-5. GREEN  → Tests pass, spec is now living documentation
-6. COMMIT → Tests travel with the feature forever
+1. SPEC     → Write a spec file in specs/ (the contract for this feature)
+2. TESTS    → Generate pytest integration tests from the spec
+3. RED      → Run tests, confirm they fail (contract is set)
+4. CODE     → Write implementation to make tests pass
+5. GREEN    → Tests pass
+6. MERGE    → Move the spec into km/domains/ as permanent documentation
+7. COMMIT   → Tests + km doc travel with the feature forever
+```
+
+### Spec Files
+
+A spec file is a **working contract** for a feature under development. It lives in `specs/` while the feature is being built and defines the context, business rules, and acceptance criteria that tests are generated from.
+
+Once the feature is complete and tests pass, the spec is merged into the appropriate `km/domains/` folder as permanent documentation. The `specs/` directory only contains active, in-progress work.
+
+```
+specs/                         # Active feature contracts (in progress)
+  work-order-release.md
+  batch-hold.md
+
+km/domains/                    # Permanent documentation (completed features)
+  production/
+    queue-management.md        # ← was once a spec file
+  inventory/
+    stock-movements.md
 ```
 
 ### Spec Format
-
-Specs live in `specs/features/` as markdown files. They define the feature context and acceptance criteria that directly map to test cases.
 
 ```markdown
 # Feature: Work Order Release
@@ -91,6 +108,11 @@ Specs live in `specs/features/` as markdown files. They define the feature conte
 Production managers release work orders to authorize shop floor execution.
 A work order requires a valid BOM before it can be released.
 
+## Business Rules
+- Only DRAFT work orders can be released.
+- A valid BOM must be attached before release.
+- Release creates an immutable traceability event.
+
 ## Acceptance Criteria
 - AC1: A DRAFT work order with a valid BOM can be released → status becomes RELEASED
 - AC2: A DRAFT work order without a BOM cannot be released → 422 with BOM_REQUIRED
@@ -98,7 +120,7 @@ A work order requires a valid BOM before it can be released.
 - AC4: Release creates a traceability event with timestamp and acting user
 ```
 
-Each acceptance criterion becomes one or more test functions. The spec file is the source of truth; the tests are its executable form.
+Each acceptance criterion becomes one or more test functions. The spec is the source of truth while the feature is in development; once merged into `km/`, the domain doc takes over as living documentation.
 
 ## Tooling
 
@@ -114,10 +136,13 @@ Each acceptance criterion becomes one or more test functions. The spec file is t
 ## Project Structure
 
 ```
-specs/
-  features/                    # Markdown specs (source of truth for behavior)
-    work_order_lifecycle.md
-    batch_release.md
+specs/                             # Active feature contracts (in progress)
+  work-order-release.md
+
+km/domains/                        # Completed feature docs (specs merged here)
+  production/
+    work-order-release.md
+    queue-management.md
 
 backend/api/
   tests/

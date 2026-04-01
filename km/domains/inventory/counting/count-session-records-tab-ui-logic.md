@@ -612,8 +612,8 @@ The component subscribes to Server-Sent Events for automatic updates:
 
 ```javascript
 // On mount
-events.value = new EventSource(`${api.defaults.baseURL}/notification/inventory-notification`);
-events.value.addEventListener('inventory-notification', () => {
+events.value = new EventSource(`${api.defaults.baseURL}/notification/inventory`);
+events.value.addEventListener('inventory', () => {
   loadRecords();
 });
 ```
@@ -672,7 +672,7 @@ Matchers are built once at filter computation time via `buildWildcardMatcher()`.
 - [ ] Orange warning icon for incomplete positions
 - [ ] Coverage icon hidden in "All levels" mode
 - [ ] Tooltip shows appropriate message for each state
-- [ ] Completed positions refresh on inventory-notification event
+- [ ] Completed positions refresh on inventory event
 
 ### Uncounted Inventory (Phase 3)
 - [ ] Uncounted Qt column hidden in "All levels" mode
@@ -720,7 +720,7 @@ Matchers are built once at filter computation time via `buildWildcardMatcher()`.
 
 ### Real-Time Updates
 - [ ] EventSource subscription established on mount
-- [ ] Records reload on inventory-notification event
+- [ ] Records reload on inventory event
 - [ ] EventSource closed on unmount
 
 ### Discarded Records
