@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from nats.errors import NoRespondersError
 from utils import auth
 
-from managers.notification_manager import NotificationManager
+from utils.nats_client import publish_sync, subtopic_to_subject
 from models.print import PrintTemplateRecord, TemplateAssignmentUpdate, TemplateAssignmentUpdateType, TemplateAssignmentContext
 from models.print_job import PrintJobRequest
 from utils.api import APIResponse
@@ -223,6 +223,11 @@ async def create_print_job(job: PrintJobRequest):
         result = {"ok": False, "error": "internal", "detail": str(e)}
 
     if result.get("ok"):
-        NotificationManager.getInstance().notifyGlobalRefresh()
+        notification = {
+            "subtopic": "production",
+            "notification": "PRINT_JOB_COMPLETED",
+        }
+        subject = subtopic_to_subject("production")
+        publish_sync(subject, json.dumps(notification))
 
     return result

@@ -1,7 +1,10 @@
 from events.base_event import BaseEvent
 from models.event import EventInfoModel, EventType
 
+
 class BatchReleasedEvent(BaseEvent):
+  _notification_subtopic = "production"
+
   class InfoModel(EventInfoModel):
     batch_key: str
     product_key: str

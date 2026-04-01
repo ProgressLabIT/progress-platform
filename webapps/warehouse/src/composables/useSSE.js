@@ -39,11 +39,9 @@ function release(topic) {
 }
 
 /**
- * Composable for shared SSE subscriptions.
- * Maintains one EventSource per topic (ref-counted across components).
- * Auto-cleans up when the component unmounts.
+ * Shared SSE subscriptions (one EventSource per topic, ref-counted).
  *
- * @param {string} topic - The notification topic (e.g. 'production')
+ * @param {string} topic - e.g. 'inventory'
  * @returns {{ subscribe: (cb: (event: MessageEvent) => void) => void }}
  */
 export function useSSE(topic) {

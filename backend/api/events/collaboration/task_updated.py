@@ -4,7 +4,8 @@ from fastapi import HTTPException
 from pydantic import BaseModel, model_validator
 from typing import Any
 
-from events.base_event import BaseEvent, EventInfoModel
+from events.base_event import EventInfoModel
+from events.collaboration.base_task import BaseTaskEvent
 from models.event import EventType
 from models.collaboration import TaskAssignment, TaskAssignmentRole
 
@@ -12,7 +13,7 @@ from models.collaboration import TaskAssignment, TaskAssignmentRole
 class TaskFieldUpdate(BaseModel):
   form_field_key: str
   value: Any | None = None
-class TaskUpdatedEvent(BaseEvent):
+class TaskUpdatedEvent(BaseTaskEvent):
 
   class InfoModel(EventInfoModel):
     task_key: str

@@ -1,7 +1,7 @@
-from events.collaboration.base_collaboration import BaseCollaboration
+from events.collaboration.base_message import BaseMessageEvent
 from models.event import EventInfoModel, EventType
 
-class MessageDeletedEvent(BaseCollaboration):
+class MessageDeletedEvent(BaseMessageEvent):
   class InfoModel(EventInfoModel):
     message_key: str
 
@@ -19,4 +19,3 @@ class MessageDeletedEvent(BaseCollaboration):
     self.response = dict(
       message=f"Message {self.info.message_key} deleted correctly",
     )
-

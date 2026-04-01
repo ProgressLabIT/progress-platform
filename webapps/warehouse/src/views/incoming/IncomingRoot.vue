@@ -6,14 +6,18 @@
 <script setup>
 import { useNavStore } from 'app/src/stores/navigation';
 import { useListsStore } from 'app/src/stores/lists';
+import { useWarehouseMovementListEvents } from '@/composables/useWarehouseMovementListEvents';
 import { onBeforeRouteLeave } from 'vue-router';
+
 const nav = useNavStore();
 const lists = useListsStore();
+
+useWarehouseMovementListEvents('receipt');
 
 lists.loadLists('receipt'); // includes reset + loading UI
 
 onBeforeRouteLeave(() => {
-  lists.$reset()
+  lists.$reset();
 });
 
 </script>

@@ -70,7 +70,7 @@ const recipient_prefix_map = ref({
 });
 const messages = ref([]);
 const new_message = ref('');
-const { subscribe: subscribeSSE } = useSSE('global-notification');
+const { subscribe: subscribeSSE } = useSSE('message');
 const loading = ref(false);
 
 // Computed properties
@@ -90,7 +90,7 @@ const recipient_id = computed(() => {
 // Methods
 function handleMessage(message) {
   let event = JSON.parse(message.data);
-  if (event.notification === 'REFRESH') {
+  if (event.recipient_id === recipient_id.value) {
     getMessages();
   }
 }

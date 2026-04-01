@@ -56,7 +56,7 @@ class SerialUnlinkedEvent(BaseSerialEvent, BaseInventoryEvent):
         raise ValueError('Multiple serials found to unlink')
     except Exception as e:
       print(traceback.format_exc())
-      self.notify_results(dict(
+      self.notify_error(dict(
         notification=SerialNotificationType.ERROR,
         error_code=SerialNotificationErrorCode.EXCEPTION,
         error=traceback.format_exc()
@@ -66,9 +66,6 @@ class SerialUnlinkedEvent(BaseSerialEvent, BaseInventoryEvent):
     if self.info.process_inventory:
       self._process_inventory()
 
-    self.notify_results(dict(
-      notification=SerialNotificationType.UPDATED
-    ))
     self.response = dict(
       message=f"Serial {self.info.child_serial_key} unlinked from parent {self.info.parent_serial_key}."
     )

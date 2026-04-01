@@ -85,14 +85,10 @@ class MovementUpdatedEvent(BaseInventoryEvent):
 
 
 
-      self.notify_results(dict(
-         movement_key = self.info.movement_key,
-         notification = InventoryNotificationType.MOVEMENT_UPDATED,
-         message="Movement confirmed correctly",
-      ))
+      pass
     except Exception as e:
       print(traceback.format_exc())
-      self.notify_results(dict(
+      self.notify_error(dict(
         notification = InventoryNotificationErrorCode.EXCEPTION,
         error_code = InventoryNotificationType.ERROR,
         error = traceback.format_exc()

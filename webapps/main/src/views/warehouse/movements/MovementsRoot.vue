@@ -208,7 +208,7 @@ export default {
     }
 
     const movementColumns = useMovementColumns();
-    const { subscribe } = useSSE('inventory-notification');
+    const { subscribe } = useSSE('inventory');
 
     return {
       pagination,
@@ -306,7 +306,6 @@ export default {
 
   methods: {
     handleMessage(message) {
-      this.refreshMovements();
       let event = JSON.parse(message.data);
       if (event.notification === 'ERROR') {
         this.$q.notify({
@@ -315,6 +314,15 @@ export default {
           timeout: 1500,
           movement: 'top',
         });
+        return;
+      }
+      const type = event.event_type || event.notification;
+      const RELEVANT = [
+        'MOVEMENT_COMPLETED', 'MOVEMENT_CREATED', 'MOVEMENT_PLANNED',
+        'MOVEMENT_UPDATED', 'MOVEMENT_REVERSED', 'MOVEMENT_CANCELED', 'MOVEMENT_DELETED',
+      ];
+      if (!type || RELEVANT.includes(type)) {
+        this.refreshMovements();
       }
     },
 

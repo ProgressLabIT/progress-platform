@@ -2,12 +2,12 @@ from datetime import datetime
 
 from pydantic import Field
 
-from events.collaboration.base_collaboration import BaseCollaboration
+from events.collaboration.base_message import BaseMessageEvent
 from models.collaboration import Message
 from models.event import EventType, EventInfoModel
 from utils.dt import timestamp
 
-class MessagePostedEvent(BaseCollaboration):
+class MessagePostedEvent(BaseMessageEvent):
 
   class InfoModel(EventInfoModel):
     sender: str
@@ -29,4 +29,3 @@ class MessagePostedEvent(BaseCollaboration):
       message=f"Message posted correctly",
       message_key=self.info.message_key
     )
-

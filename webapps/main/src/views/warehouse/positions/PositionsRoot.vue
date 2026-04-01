@@ -73,7 +73,7 @@ export default {
     });
 
     const positionColumns = usePositionColumns();
-    const { subscribe } = useSSE('inventory-notification');
+    const { subscribe } = useSSE('inventory');
 
     return {
       pagination,
@@ -146,7 +146,6 @@ export default {
 
   methods: {
     handleMessage(message) {
-      this.refreshPositions();
       let event = JSON.parse(message.data);
       if (event.notification === 'ERROR') {
         this.$q.notify({
@@ -155,6 +154,15 @@ export default {
           timeout: 1500,
           position: 'top',
         });
+        return;
+      }
+      const type = event.event_type || event.notification;
+      const RELEVANT = [
+        'MOVEMENT_COMPLETED', 'MOVEMENT_REVERSED',
+        'INVENTORY_PRODUCED', 'INVENTORY_CONSUMED', 'INVENTORY_CHANGED',
+      ];
+      if (!type || RELEVANT.includes(type)) {
+        this.refreshPositions();
       }
     },
 

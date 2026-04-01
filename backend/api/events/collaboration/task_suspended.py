@@ -1,9 +1,10 @@
-from events.base_event import BaseEvent, EventInfoModel
+from events.base_event import EventInfoModel
+from events.collaboration.base_task import BaseTaskEvent
 from models.collaboration import TaskStatus
 from models.event import EventType
 
 
-class TaskSuspendedEvent(BaseEvent):
+class TaskSuspendedEvent(BaseTaskEvent):
 
   class InfoModel(EventInfoModel):
     task_key: str

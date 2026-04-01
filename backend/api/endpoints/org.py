@@ -18,9 +18,6 @@ from fastapi.encoders import jsonable_encoder
 
 
 
-from collections.abc import AsyncIterable
-from managers.server_event_manager import ServerEventManager
-from fastapi.sse import EventSourceResponse, ServerSentEvent
 
 ACCESS_TOKEN_EXPIRE_MINUTES = 52596000 # 100 years
 
@@ -289,9 +286,5 @@ async def archive_user(user_key: str):
     )
     raise HTTPException(status_code=status_code, detail=response)
 
-@router.get("/notification/{topic}", response_class=EventSourceResponse)
-async def message_stream(request: Request, topic: str) -> AsyncIterable[ServerSentEvent]:
-    async for event in ServerEventManager.getInstance().push_events(request, topic):
-        yield event
 
 

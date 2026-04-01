@@ -6,10 +6,7 @@ from starlette.middleware.cors import CORSMiddleware
 
 from utils.config import get_config
 import utils.nats_client as nats_client
-from managers.executor_manager import ExecutorManager
 from managers.server_event_manager import ServerEventManager
-from managers.notification_manager import NotificationManager
-from middlewares.notification_middleware import NotificationMiddleware
 from middlewares.gzipfilter_middleware import GZipFilterMiddleware
 
 import endpoints
@@ -32,8 +29,6 @@ app.add_middleware(
 )
 
 app.add_middleware(GZipFilterMiddleware, minimum_size=500, filtered_api="/notification")
-
-app.add_middleware(NotificationMiddleware)
 
 
 """
@@ -58,8 +53,6 @@ async def startup_event():
 @app.on_event("shutdown")
 async def shutdown_event():
    ServerEventManager.getInstance().close()
-   NotificationManager.getInstance().close()
-   ExecutorManager.getInstance().close()
    await asyncio.sleep(0.5)
    await nats_client.drain()
 

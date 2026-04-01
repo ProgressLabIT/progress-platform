@@ -63,7 +63,7 @@ export default {
   name: 'WorkOrderScreen',
 
   setup() {
-    const { subscribe } = useSSE('global-notification');
+    const { subscribe } = useSSE('production');
     return { subscribeSSE: subscribe };
   },
 
@@ -117,7 +117,7 @@ export default {
   methods: {
     handleMessage(message) {
       let event = JSON.parse(message.data);
-      if (event.notification === 'REFRESH') {
+      if (event.work_order_key === this.wo_key) {
         this.get_wo_data();
       }
     },

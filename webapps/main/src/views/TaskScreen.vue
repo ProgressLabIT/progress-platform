@@ -455,7 +455,7 @@ const editMode = ref(false);
 const saving = ref(false);
 const originalTaskData = ref(null);
 const history = ref([]);
-const { subscribe: subscribeSSE } = useSSE('task-notification');
+const { subscribe: subscribeSSE } = useSSE('task');
 const messages = ref([]);
 
 // Status management state
@@ -545,14 +545,7 @@ watch(() => props.taskKey, async () => {
 
 onMounted(async () => {
   await store.dispatch('loadUsers');
-  task.value = await taskStore.getTaskData(props.taskKey);
-  // Store original data for cancel functionality
-  originalTaskData.value = cloneDeep(task.value);
-
-  // No longer need to initialize assignment dialog state - handled by component
-
-  // Load history
-  getTaskHistory();
+  await fetchTaskData();
 
   subscribeSSE((event) => {
     handleTaskMessage(event);
@@ -596,10 +589,10 @@ function getTaskHistory() {
     });
 }
 
-function handleTaskMessage(message) {
+async function handleTaskMessage(message) {
   let event = JSON.parse(message.data);
   if (event?.task_key === props.taskKey) {
-    getTaskHistory();
+    await fetchTaskData();
   }
 }
 

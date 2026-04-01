@@ -132,6 +132,14 @@ export const useListsStore = defineStore('lists', {
         })
       }
     },
+    /** Refetch open list headers without resetting list movements (for SSE refresh). */
+    async refreshHeaders(type) {
+      try {
+        this.headers = (await api.get('/movement-list', { params: { type, open_only: true }})).data;
+      } catch (err) {
+        console.error(err);
+      }
+    },
     async ensureProductTraceability(productKey) {
       // Check if product is already cached
       if (!(productKey in this.productTraceabilityMap)) {

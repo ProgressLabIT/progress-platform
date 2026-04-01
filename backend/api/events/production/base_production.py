@@ -1,4 +1,3 @@
-
 from events.base_event import BaseEvent
 from events.production.commons.batch import BaseBatchEvent
 from events.production.commons.job import BaseJobEvent
@@ -11,6 +10,7 @@ from utils.traceability import Queries as TraceabilityQueries
 
 
 class BaseProductionEvent(BaseEvent, BaseBatchEvent, BaseJobEvent, BaseSerialEvent):
+  _notification_subtopic = "production"
 
   def post_processing(self):
     self.update_job_last_online()

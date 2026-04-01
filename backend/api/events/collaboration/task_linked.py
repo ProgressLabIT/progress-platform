@@ -1,9 +1,10 @@
-from events.base_event import BaseEvent, EventInfoModel
+from events.base_event import EventInfoModel
+from events.collaboration.base_task import BaseTaskEvent
 from models.collaboration import TaskLink
 from models.event import EventType
 from typing import Literal
 
-class TaskLinkedEvent(BaseEvent):
+class TaskLinkedEvent(BaseTaskEvent):
 
   class InfoModel(EventInfoModel):
     task_key: str
@@ -98,4 +99,3 @@ class TaskLinkedEvent(BaseEvent):
     self.tx.collection('task_rel').insert(new_link.model_dump(by_alias=True, exclude_unset=True))
 
     self.response = dict(message='Task linked successfully')
-

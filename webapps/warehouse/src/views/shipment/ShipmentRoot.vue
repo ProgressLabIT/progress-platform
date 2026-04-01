@@ -1,3 +1,4 @@
+
 <template>
   <template v-if="nav.loading" />
   <router-view v-else/>
@@ -6,14 +7,18 @@
 <script setup>
 import { useNavStore } from 'app/src/stores/navigation';
 import { useListsStore } from 'app/src/stores/lists';
+import { useWarehouseMovementListEvents } from '@/composables/useWarehouseMovementListEvents';
 import { onBeforeRouteLeave } from 'vue-router';
+
 const nav = useNavStore();
 const lists = useListsStore();
+
+useWarehouseMovementListEvents('shipment');
 
 lists.loadLists('shipment'); // includes reset + loading UI
 
 onBeforeRouteLeave(() => {
-  lists.$reset()
+  lists.$reset();
 });
 
 </script>

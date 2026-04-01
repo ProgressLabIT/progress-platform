@@ -283,7 +283,7 @@ export default {
   name: 'WorkSessionScreen',
 
   setup() {
-    const { subscribe } = useSSE('global-notification');
+    const { subscribe } = useSSE('production');
     return { subscribeSSE: subscribe };
   },
 
@@ -556,7 +556,7 @@ export default {
   methods: {
     handleMessage(message) {
       let event = JSON.parse(message.data);
-      if (event.notification === 'REFRESH') {
+      if (event.job_key === this.jobKey || event.work_order_key === this.j?.wo_key) {
         this.updateJobData();
       }
     },

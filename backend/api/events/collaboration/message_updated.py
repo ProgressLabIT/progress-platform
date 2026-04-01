@@ -1,9 +1,9 @@
-from events.collaboration.base_collaboration import BaseCollaboration
+from events.collaboration.base_message import BaseMessageEvent
 from models.collaboration import Message, MessageUpdate
 from utils.dt import timestamp
 from models.event import EventType, EventInfoModel
 
-class MessageUpdatedEvent(BaseCollaboration):
+class MessageUpdatedEvent(BaseMessageEvent):
 
   class InfoModel(EventInfoModel):
     message_key: str

@@ -1,14 +1,15 @@
 from datetime import date, datetime
 from typing import Any
 
-from events.base_event import BaseEvent, EventInfoModel
+from events.base_event import EventInfoModel
+from events.collaboration.base_task import BaseTaskEvent
 from models.event import EventType
 from models.form import TaskFormFieldValue
 from models.collaboration import Task, TaskAssignment
 from utils.counter import _generate_counter
 
 
-class TaskCreatedEvent(BaseEvent):
+class TaskCreatedEvent(BaseTaskEvent):
 
   class InfoModel(EventInfoModel):
     task_key: str | None = None # So it appears in the event record

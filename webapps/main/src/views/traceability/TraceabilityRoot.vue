@@ -382,7 +382,7 @@ export default {
     }
 
     const serialColumns = useSerialColumns();
-    const { subscribe } = useSSE('serial-notification');
+    const { subscribe } = useSSE('serial');
 
     const advancedFilterQuery = useQueryModel(Object, 'advanced_filters', null);
     watch(
@@ -553,7 +553,6 @@ export default {
     },
 
     handleMessage(message) {
-      this.refreshSerial();
       let event = JSON.parse(message.data);
       if (event.notification === 'ERROR') {
         this.$q.notify({
@@ -562,7 +561,9 @@ export default {
           timeout: 1500,
           position: 'top',
         });
+        return;
       }
+      this.refreshSerial();
     },
 
     refreshSerial() {

@@ -12,10 +12,11 @@ _nc: NatsClient | None = None
 _loop: asyncio.AbstractEventLoop | None = None
 
 SUBTOPIC_TO_SUBJECT = {
-    "global-notification": "progress.notification.global",
-    "inventory-notification": "progress.notification.inventory",
-    "serial-notification": "progress.notification.serial",
-    "task-notification": "progress.notification.task",
+    "inventory": "progress.notification.inventory",
+    "serial": "progress.notification.serial",
+    "task": "progress.notification.task",
+    "production": "progress.notification.production",
+    "message": "progress.notification.message",
 }
 
 SUBJECT_TO_SUBTOPIC = {v: k for k, v in SUBTOPIC_TO_SUBJECT.items()}
@@ -69,6 +70,16 @@ def get_loop() -> asyncio.AbstractEventLoop:
     if _loop is None:
         raise RuntimeError("NATS event loop not set. Call connect() first.")
     return _loop
+
+
+def publish_sync(subject: str, data: str | bytes) -> None:
+    """Publish to NATS from synchronous (non-async) code by scheduling on the event loop."""
+    if isinstance(data, str):
+        data = data.encode()
+    asyncio.run_coroutine_threadsafe(
+        get_nats().publish(subject, data),
+        get_loop(),
+    )
 
 
 async def publish(subject: str, data: str | bytes) -> None:

@@ -1,10 +1,8 @@
 import asyncio
+import json
+
 from fastapi import Request
 from fastapi.sse import ServerSentEvent
-import json
-from utils.delayedqueue.conflated_delayedqueue import ConflatedDelayedQueue
-from utils.delayedqueue.delayed_queue_item import DelayedQueueItem
-from threading import Thread
 
 class ServerEventManager:
     _instance = None
@@ -59,7 +57,7 @@ class ServerEventManager:
                 try:
                     event = await asyncio.wait_for(
                         ServerEventManager.getInstance().getQueue(topic, request).get(),
-                        timeout=1.0
+                        timeout=14.0
                     )
                 except asyncio.TimeoutError:
                     yield ServerSentEvent(comment="")

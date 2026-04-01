@@ -1,13 +1,15 @@
-import copy
 import json
+import logging
 from abc import ABC
 from typing import Any
 
 from events.base_event import BaseEvent
-from managers.notification_manager import NotificationManager
 from models.event import EventInfoModel
 from models.serial import Serial, SerialNotificationType
+from utils.nats_client import publish_sync, subtopic_to_subject
 from utils.serial import Queries
+
+logger = logging.getLogger("base_serial")
 
 
 class BaseSerialModel(EventInfoModel):
@@ -18,6 +20,7 @@ class BaseSerialModel(EventInfoModel):
 
 
 class BaseSerialEvent(BaseEvent, ABC):
+  _notification_subtopic = "serial"
 
   @classmethod
   def get_tx_collections(cls):
@@ -37,23 +40,14 @@ class BaseSerialEvent(BaseEvent, ABC):
       'Counter'
     ]
 
-
-  def can_be_conflated(self, notification_type):
-     return notification_type not in [SerialNotificationType.ERROR]
-
-  def notify_results(self, notification):
-    notification['subtopic'] = "serial-notification"
-    serial_event = copy.deepcopy(self.info)
-    if 'error' in notification:
-      serial_event.event_type = "SERIAL_"+notification['notification']+" ("+notification['error']+")"
-    else:
-      serial_event.event_type = "SERIAL_"+notification['notification']
-    serial_event.serial_key = notification.get('serial_key')
-    #self.tx.collection('Event').insert(serial_event)
-    if self.can_be_conflated(notification.get('notification')):
-       NotificationManager.getInstance().notifyConflated(subtopic="serial-notification", message=json.dumps(notification), delay=5)
-    else:
-       NotificationManager.getInstance().notify(key=notification.get('serial_key'), notification=json.dumps(notification))
+  def notify_error(self, notification):
+    """Send an immediate error notification via NATS (bypasses auto-publish since tx will abort)."""
+    notification['subtopic'] = "serial"
+    try:
+      subject = subtopic_to_subject("serial")
+      publish_sync(subject, json.dumps(notification, default=str))
+    except Exception:
+      logger.exception("Failed to publish serial error notification")
 
   def verify_serial_code_free(self, serial_key, product_key, serial):
      cursor = self.tx.aql.execute(
@@ -68,5 +62,3 @@ class BaseSerialEvent(BaseEvent, ABC):
         return len([Serial(**t) for t in cursor])<=0
      except:
       return False
-
-

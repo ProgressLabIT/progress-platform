@@ -24,7 +24,7 @@ class SerialDeletedEvent(BaseSerialEvent):
     # Do not allow user to directly delete serials if not allowed by configuration
     # Serials can still be deleted as a consequence of other events, such as job reset
     if (allow_serial_delete == None or allow_serial_delete['value'] == False) and self.info.primary:
-       self.notify_results(dict(
+       self.notify_error(dict(
           serial_key = serial_key,
           notification = SerialNotificationType.ERROR,
           error_code = SerialNotificationErrorCode.EXCEPTION,
@@ -39,17 +39,13 @@ class SerialDeletedEvent(BaseSerialEvent):
           for child in children:
              self.do_delete(serial_key=child.get("serial_key"))
        self.do_delete(serial_key=serial_key)
-       self.notify_results(dict(
-          serial_key = serial_key,
-          notification = SerialNotificationType.DELETED
-       ))
        self.response = dict(
            message="Serial deleted correctly",
            serial_key=serial_key
          )
     except:
        print(traceback.format_exc())
-       self.notify_results(dict(
+       self.notify_error(dict(
           serial_key = serial_key,
           notification = SerialNotificationType.ERROR,
           error_code = SerialNotificationErrorCode.EXCEPTION,

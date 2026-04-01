@@ -3,6 +3,8 @@ from models.event import EventInfoModel, EventType
 
 
 class QueueUpdatedEvent(BaseEvent):
+  _notification_subtopic = "production"
+
   class InfoModel(EventInfoModel):
     queue_key: str
 

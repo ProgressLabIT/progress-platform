@@ -79,7 +79,7 @@ export default {
 
     const inventoryColumns = useInventoryColumns();
     const { filters } = useInventoryFilters();
-    const { subscribe } = useSSE('inventory-notification');
+    const { subscribe } = useSSE('inventory');
 
     return {
       pagination,
@@ -130,7 +130,6 @@ export default {
 
   methods: {
     handleMessage(message) {
-      this.refreshInventory();
       let event = JSON.parse(message.data);
       if (event.notification === 'ERROR') {
         this.$q.notify({
@@ -139,6 +138,15 @@ export default {
           timeout: 1500,
           inventory: 'top',
         });
+        return;
+      }
+      const type = event.event_type || event.notification;
+      const RELEVANT = [
+        'MOVEMENT_COMPLETED', 'MOVEMENT_REVERSED',
+        'INVENTORY_PRODUCED', 'INVENTORY_CONSUMED', 'INVENTORY_CHANGED',
+      ];
+      if (!type || RELEVANT.includes(type)) {
+        this.refreshInventory();
       }
     },
 

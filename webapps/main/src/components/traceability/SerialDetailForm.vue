@@ -226,7 +226,7 @@ const { open: openPrintDialog, isAvailable: printAvailable } = usePrintDialog({
 const tab = ref('form');
 const history = ref([]);
 const base_path = ref('/media/user/');
-const { subscribe: subscribeSSE } = useSSE('serial-notification');
+const { subscribe: subscribeSSE } = useSSE('serial');
 const serialAvailable = ref(false);
 const showAddFieldDialog = ref(false);
 

@@ -1,14 +1,16 @@
-import copy
 import json
+import logging
 from abc import ABC
 
 from events.base_event import BaseEvent
-from managers.notification_manager import NotificationManager
 from models.event import EventModel
 from models.inventory import *
 from models.product import ProductFull
 from utils.exceptions import InventoryMovementException
 from utils.inventory import Queries as InventoryQueries
+from utils.nats_client import publish_sync, subtopic_to_subject
+
+logger = logging.getLogger("base_inventory")
 
 
 class BaseInventoryModel(EventModel):
@@ -18,6 +20,7 @@ class BaseInventoryModel(EventModel):
   movement_key: str | None = None
 
 class BaseInventoryEvent(BaseEvent, ABC):
+  _notification_subtopic = "inventory"
 
   @classmethod
   def get_tx_collections(cls):
@@ -70,11 +73,6 @@ class BaseInventoryEvent(BaseEvent, ABC):
     wo = self.tx.collection('WorkOrder').get(self.info.references.work_order_key)
     return wo['output_position_key']
 
-  def post_processing(self):
-    self.notify_results(dict(
-      notification = InventoryNotificationType.MOVEMENT_ADDED
-    ))
-
   def _get_product(self):
     if self.info.product_key is None:
       self.product = None
@@ -85,22 +83,14 @@ class BaseInventoryEvent(BaseEvent, ABC):
     except StopIteration:
       raise InventoryMovementException('Product not found')
 
-  def can_be_conflated(self, notification_type):
-    return notification_type not in [InventoryNotificationType.ERROR]
-
-  def notify_results(self, notification):
-    notification['subtopic'] = "inventory-notification"
-    inventory_event = copy.deepcopy(self.info)
-    if 'error' in notification:
-      inventory_event.event_type = "INVENTORY_"+notification['notification']+" ("+notification['error']+")"
-    else:
-      inventory_event.event_type = "INVENTORY_"+notification['notification']
-    inventory_event.movement_key = notification.get('movement_key')
-    #self.tx.collection('Event').insert(inventory_event.model_dump())
-    if self.can_be_conflated(notification.get('notification')):
-      NotificationManager.getInstance().notifyConflated(subtopic="inventory-notification", message=json.dumps(notification), delay=5)
-    else:
-      NotificationManager.getInstance().notify(key=notification.get('movement_key'), notification=json.dumps(notification))
+  def notify_error(self, notification):
+    """Send an immediate error notification via NATS (bypasses auto-publish since tx will abort)."""
+    notification['subtopic'] = "inventory"
+    try:
+      subject = subtopic_to_subject("inventory")
+      publish_sync(subject, json.dumps(notification, default=str))
+    except Exception:
+      logger.exception("Failed to publish inventory error notification")
 
 
 

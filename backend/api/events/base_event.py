@@ -1,3 +1,5 @@
+import json
+import logging
 import uuid
 from abc import ABC, abstractmethod
 from typing import Self
@@ -7,12 +9,17 @@ from models.event import EventInfoModel, EventModel, EventType
 from pydantic import BaseModel
 from utils.db import db
 from utils.event import get_event_class
+from utils.nats_client import publish_sync, subtopic_to_subject
+
+logger = logging.getLogger("base_event")
 
 
 class BaseEvent(ABC):
   """
   Base class for all events.
   """
+  _notification_subtopic: str | None = None
+
   @classmethod
   @abstractmethod
   def get_event_type(cls) -> EventType:
@@ -102,6 +109,10 @@ class BaseEvent(ABC):
       collections.update(['Event', 'event_source'])  # Ensure Event and event_source collections are included
       tx = db.begin_transaction(write=collections)
 
+    # Initialize pending events list for NATS publishing
+    if not hasattr(tx, '_pending_events'):
+      tx._pending_events = []
+
     # Create and process each event
     created_events = []
     for data in event_data:
@@ -116,6 +127,7 @@ class BaseEvent(ABC):
 
     if commit:
       tx.commit_transaction()
+      BaseEvent._publish_collected_events(tx)
 
 
   # ================================
@@ -154,6 +166,35 @@ class BaseEvent(ABC):
     pass
 
   # ================================
+  # NATS EVENT PUBLISHING
+  # ================================
+  def _build_event_payload(self) -> dict | None:
+    """
+    Build the NATS notification payload for this event.
+    Returns None if this event class does not publish notifications.
+    Subclasses can override to enrich the payload with derived fields
+    (e.g. recipient_id for messages) while the transaction is still active.
+    """
+    subtopic = getattr(self, '_notification_subtopic', None)
+    if not subtopic:
+      return None
+    payload = self.info.model_dump(exclude_extra=True, by_alias=False)
+    payload['subtopic'] = subtopic
+    payload['notification'] = str(self.info.event_type)
+    return payload
+
+  @staticmethod
+  def _publish_collected_events(tx):
+    """Publish all event payloads collected during a transaction."""
+    for payload in getattr(tx, '_pending_events', []):
+      try:
+        subtopic = payload['subtopic']
+        subject = subtopic_to_subject(subtopic)
+        publish_sync(subject, json.dumps(payload, default=str))
+      except Exception:
+        logger.exception("Failed to publish event to NATS")
+
+  # ================================
   # STORE EVENT DATA
   # ================================
   def store_event(self):
@@ -190,6 +231,10 @@ class BaseEvent(ABC):
       if self._owns_transaction:
         self.tx = db.begin_transaction(write=collections)
 
+      # Initialize pending events list for NATS publishing
+      if not hasattr(self.tx, '_pending_events'):
+        self.tx._pending_events = []
+
       # Initialize event group for primary events if not already set
       if self.info.primary and self.info.event_group is None:
         self.info.event_group = str(uuid.uuid4())
@@ -206,9 +251,15 @@ class BaseEvent(ABC):
       # Store event with all final data
       self.store_event()
 
+      # Collect NATS payload (built while tx is active so derived fields can read DB)
+      payload = self._build_event_payload()
+      if payload:
+        self.tx._pending_events.append(payload)
+
       # Commit transaction only if this event owns it
       if self._owns_transaction:
         self.tx.commit_transaction()
+        self._publish_collected_events(self.tx)
 
       # Return any required value
       return self.response

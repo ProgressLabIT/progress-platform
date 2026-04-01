@@ -29,7 +29,7 @@ class SerialCreatedEvent(BaseSerialEvent):
   def apply(self):
     # Ensure serial code is available if provided
     if self.info.code != None and not self.verify_serial_code_free(None, self.info.product_key, self.info.code):
-      self.notify_results(dict(
+      self.notify_error(dict(
         serial = self.info.code,
         notification = SerialNotificationType.ERROR,
         error_code = SerialNotificationErrorCode.SERIAL_ALREADY_PRESENT,
@@ -61,12 +61,6 @@ class SerialCreatedEvent(BaseSerialEvent):
       new_serial = Serial(**self.info.model_dump())
       self.info.serial_key = self.tx.collection('Serial').insert(new_serial.model_dump(by_alias=True))['_key']
 
-      self.notify_results(dict(
-        serial_key = self.info.serial_key,
-        serial = self.info.code,
-        notification = SerialNotificationType.CREATED
-      ))
-
       self.response = dict(
         message="Serial created correctly",
         serial_key=self.info.serial_key
@@ -74,7 +68,7 @@ class SerialCreatedEvent(BaseSerialEvent):
 
     except Exception as e:
       print(traceback.format_exc())
-      self.notify_results(dict(
+      self.notify_error(dict(
         notification = SerialNotificationType.ERROR,
         error_code = SerialNotificationErrorCode.EXCEPTION,
         error = traceback.format_exc()

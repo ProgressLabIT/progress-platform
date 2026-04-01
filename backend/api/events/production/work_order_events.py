@@ -3,6 +3,8 @@ from models.event import EventInfoModel, EventType
 
 
 class WorkOrderStartedEvent(BaseEvent):
+  _notification_subtopic = "production"
+
   class InfoModel(EventInfoModel):
     work_order_key: str
 
@@ -19,6 +21,8 @@ class WorkOrderStartedEvent(BaseEvent):
 
 
 class WorkOrderClosedEvent(BaseEvent):
+  _notification_subtopic = "production"
+
   class InfoModel(EventInfoModel):
     work_order_key: str
 
@@ -34,8 +38,9 @@ class WorkOrderClosedEvent(BaseEvent):
     pass
 
 
-
 class WorkOrderUpdatedEvent(BaseEvent):
+  _notification_subtopic = "production"
+
   class InfoModel(EventInfoModel):
     work_order_key: str
 
@@ -52,6 +57,8 @@ class WorkOrderUpdatedEvent(BaseEvent):
 
 
 class WorkOrderCreatedEvent(BaseEvent):
+  _notification_subtopic = "production"
+
   class InfoModel(EventInfoModel):
     work_order_key: str
 

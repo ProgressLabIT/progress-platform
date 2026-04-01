@@ -33,14 +33,9 @@ class SerialBooked(BaseSerialEvent):
     ) for serial_key in batch_serials]
     try:
        self.tx.collection('batch_serial').insert_many(new_batch_serial_records)
-       for serial_key in batch_serials:
-          self.notify_results(dict(
-             serial_key = serial_key,
-             notification = SerialNotificationType.UPDATED
-          ))
     except:
        print(traceback.format_exc())
-       self.notify_results(dict(
+       self.notify_error(dict(
           notification = SerialNotificationType.ERROR,
           error_code = SerialNotificationErrorCode.EXCEPTION,
           error = traceback.format_exc()

@@ -6,6 +6,8 @@ from utils.traceability import Queries as TraceabilityQueries
 
 
 class JobClosedEvent(BaseEvent):
+  _notification_subtopic = "production"
+
   class InfoModel(EventInfoModel):
     job_key: str
     completed_qt: float
@@ -51,6 +53,3 @@ class JobClosedEvent(BaseEvent):
       )
 
     self.response = completed_job
-
-
-

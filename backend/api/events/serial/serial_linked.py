@@ -108,16 +108,13 @@ class SerialLinkedEvent(BaseSerialEvent, BaseInventoryEvent):
 
     except Exception as e:
       print(traceback.format_exc())
-      self.notify_results(dict(
+      self.notify_error(dict(
         notification=SerialNotificationType.ERROR,
         error_code=SerialNotificationErrorCode.EXCEPTION,
         error=traceback.format_exc()
       ))
       raise SerialNotLinkedError('Cannot link serials') from e
 
-    self.notify_results(dict(
-      notification=SerialNotificationType.UPDATED
-    ))
     self.response = dict(
       message="Serial linked correctly"
     )

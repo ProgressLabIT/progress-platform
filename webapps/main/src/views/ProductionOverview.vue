@@ -428,7 +428,7 @@ export default {
   name: 'ProductionOverview',
 
   setup() {
-    const { subscribe } = useSSE('global-notification');
+    const { subscribe } = useSSE('production');
     return { subscribeSSE: subscribe };
   },
 
@@ -616,7 +616,17 @@ export default {
   methods: {
     handleMessage(message) {
       let event = JSON.parse(message.data);
-      if (event.notification === 'REFRESH') {
+      const type = event.event_type || event.notification;
+
+      const EVENTS = [
+        'WORK_ORDER_STARTED', 'WORK_ORDER_UPDATED',
+        'JOB_STARTED', 'JOB_PAUSED', 'JOB_RESUMED', 'STEP_COMPLETED',
+        'JOB_PAUSED_OFFLINE', 'JOB_BACK_ONLINE', 'JOB_RESET',
+        'BATCH_CANCELED', 'BATCH_RELEASED', 'BATCH_COMPLETED',
+        'QUEUE_UPDATED', 'PROGRESS_OVERRIDE_REQUESTED'
+      ];
+
+      if (EVENTS.includes(type)) {
         this.$store.dispatch('loadWorkOrders');
         this.$store.dispatch('loadJobAssignments');
       }

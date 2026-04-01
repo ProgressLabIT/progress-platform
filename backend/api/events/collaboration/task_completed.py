@@ -1,10 +1,13 @@
 from datetime import datetime
 
-from events.base_event import BaseEvent, EventInfoModel
+from events.base_event import EventInfoModel
+from events.collaboration.base_task import BaseTaskEvent
 from models.collaboration import TaskStatus
 from models.event import EventType
 from models.form import FieldType
-class TaskCompletedEvent(BaseEvent):
+
+
+class TaskCompletedEvent(BaseTaskEvent):
 
   class InfoModel(EventInfoModel):
     task_key: str
@@ -106,6 +109,3 @@ class TaskCompletedEvent(BaseEvent):
     self.response = dict(
       message=f"Task {self.info.task_key} flagged as completed",
     )
-
-
-

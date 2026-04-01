@@ -116,9 +116,5 @@ class SerialUpdatedEvent(BaseSerialEvent):
         serial_key=self.info.serial_key
       )
 
-    self.notify_results(dict(
-      serial_key = self.info.serial_key,
-      notification = SerialNotificationType.UPDATED
-    ))
 
 

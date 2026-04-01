@@ -74,7 +74,7 @@ export default {
     });
 
     const movementListColumns = useMovementListColumns();
-    const { subscribe } = useSSE('inventory-notification');
+    const { subscribe } = useSSE('inventory');
 
     const typeIconMap = {
       'receipt': 'mdi-import',
@@ -161,7 +161,6 @@ export default {
 
   methods: {
     handleMessage(message) {
-      this.reloadMovementLists();
       let event = JSON.parse(message.data);
       if (event.notification === 'ERROR') {
         this.$q.notify({
@@ -170,6 +169,12 @@ export default {
           timeout: 1500,
           position: 'top',
         });
+        return;
+      }
+      const type = event.event_type || event.notification;
+      const RELEVANT = ['WAREHOUSE_LIST_CREATED', 'WAREHOUSE_LIST_CLOSED'];
+      if (!type || RELEVANT.includes(type)) {
+        this.reloadMovementLists();
       }
     },
 

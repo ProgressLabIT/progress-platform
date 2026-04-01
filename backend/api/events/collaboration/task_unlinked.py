@@ -1,9 +1,10 @@
 from fastapi import HTTPException
 
-from events.base_event import BaseEvent, EventInfoModel
+from events.base_event import EventInfoModel
+from events.collaboration.base_task import BaseTaskEvent
 from models.event import EventType
 
-class TaskUnlinkedEvent(BaseEvent):
+class TaskUnlinkedEvent(BaseTaskEvent):
 
   class InfoModel(EventInfoModel):
     task_key: str
@@ -43,4 +44,3 @@ class TaskUnlinkedEvent(BaseEvent):
 
     else:
       raise HTTPException(status_code=404, detail='Task not linked to this item')
-
