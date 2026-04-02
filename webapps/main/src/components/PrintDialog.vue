@@ -219,6 +219,7 @@
       input_type="number"
       :initial_value="1"
       :min="1"
+      :require-change="false"
       confirm-label="print"
       @close="showCopiesPrompt = false"
       @update="onCopiesConfirmed"

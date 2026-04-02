@@ -3,7 +3,7 @@
     :show="show"
     :no-backdrop-dismiss="false"
     @keyup.enter="update"
-    @close="$emit('close')"
+    @close="emit('close')"
   >
     <q-card class="surface2 q-pa-md" :style="`width: ${width}`">
       <q-card-section>
@@ -48,10 +48,10 @@
           flat
           color="theme-grey"
           :label="$t('cancel')"
-          @click="$emit('close')"
+          @click="emit('close')"
         />
         <q-btn
-          v-if="parsedValue != initial_value"
+          v-if="canConfirm"
           size="12px"
           flat
           color="theme-blue"
@@ -63,79 +63,80 @@
   </BaseDialog>
 </template>
 
-<script>
+<script setup>
+import { computed, ref, watch } from 'vue';
 import BaseDialog from '@/components/BaseDialog.vue';
-export default {
-  name: 'BasePrompt',
 
-  components: {
-    BaseDialog,
+const props = defineProps({
+  show: {
+    type: Boolean,
+    default: true,
   },
-
-  props: {
-    show: {
-      type: Boolean,
-      default: true,
-    },
-    width: {
-      type: String,
-      default: '300px',
-    },
-    prompt: {
-      type: String,
-      default: undefined,
-    },
-    helpText: {
-      type: String,
-      default: undefined,
-    },
-    input_type: {
-      type: String,
-      default: 'text',
-    },
-    initial_value: {
-      type: [String, Number, null],
-      required: true,
-    },
-    max: {
-      type: Number,
-      default: null,
-    },
-    min: {
-      type: Number,
-      default: null,
-    },
-    confirmLabel: {
-      type: String,
-      default: 'save',
-    },
+  width: {
+    type: String,
+    default: '300px',
   },
-
-  emits: ['close', 'update'],
-
-  data() {
-    return {
-      value: null,
-    };
+  prompt: {
+    type: String,
+    default: undefined,
   },
-
-  updated() {
-    this.value = this.initial_value;
+  helpText: {
+    type: String,
+    default: undefined,
   },
-
-  computed: {
-    parsedValue() {
-      if (this.input_type === 'number' && this.value !== '' && this.value !== null) {
-        return Number(this.value);
-      }
-      return this.value;
-    },
+  input_type: {
+    type: String,
+    default: 'text',
   },
-
-  methods: {
-    update(event) {
-        this.$emit('update', this.parsedValue);
-    },
+  initial_value: {
+    type: [String, Number, null],
+    required: true,
   },
-};
+  max: {
+    type: Number,
+    default: null,
+  },
+  min: {
+    type: Number,
+    default: null,
+  },
+  confirmLabel: {
+    type: String,
+    default: 'save',
+  },
+  /** When true, confirm (button and Enter) only applies if the value differs from initial_value. */
+  requireChange: {
+    type: Boolean,
+    default: true,
+  },
+});
+
+const emit = defineEmits(['close', 'update']);
+
+const value = ref(null);
+
+watch(
+  () => props.initial_value,
+  (v) => {
+    value.value = v;
+  },
+  { immediate: true },
+);
+
+const parsedValue = computed(() => {
+  if (props.input_type === 'number' && value.value !== '' && value.value !== null) {
+    return Number(value.value);
+  }
+  return value.value;
+});
+
+const canConfirm = computed(() => {
+  if (!props.requireChange) return true;
+  return parsedValue.value != props.initial_value;
+});
+
+function update() {
+  if (!canConfirm.value) return;
+  emit('update', parsedValue.value);
+}
 </script>
