@@ -61,6 +61,9 @@ services:
   broker:
     networks:
       - progress
+    environment:
+      - PROGRESS_PRINT_SERVICE_NATS_URL=${PROGRESS_PRINT_SERVICE_NATS_URL:-nats://broker:4222}
+      - PROGRESS_PRINT_SERVICE_API_URL=${PROGRESS_PRINT_SERVICE_API_URL:-http://api:8000/api}
 
   api:
     image: registry.gitlab.com/progresslab/progress-platform/api:${VERSION}
