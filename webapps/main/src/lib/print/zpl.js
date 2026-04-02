@@ -212,6 +212,7 @@ function renderField(field, value, dpi) {
       return renderCode39(field, value, dpi);
     case 'ean13':
       return renderEan13(field, value, dpi);
+    case 'datamatrix':
     case 'gs1datamatrix':
       return renderDataMatrix(field, value, dpi);
     default:

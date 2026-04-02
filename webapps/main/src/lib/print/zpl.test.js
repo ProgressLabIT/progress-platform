@@ -244,6 +244,20 @@ describe('GS1 DataMatrix field', () => {
 });
 
 // ---------------------------------------------------------------------------
+// Plain DataMatrix (freeform text)
+// ---------------------------------------------------------------------------
+
+describe('Plain DataMatrix field', () => {
+  it('produces ^BXN,{h},200 with freeform text value', () => {
+    const template = makeTemplate([makeField({ type: 'datamatrix', height: 8 })]);
+    const result = generateZpl(template, [{ field1: 'ESSETI|CS0000123|ABCDEF' }], { dpi: 203 });
+    expect(result).toContain('^BXN,');
+    expect(result).toContain(',200');
+    expect(result).toContain('^FDESSETI|CS0000123|ABCDEF^FS');
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Image skip (ZPL-04)
 // ---------------------------------------------------------------------------
 

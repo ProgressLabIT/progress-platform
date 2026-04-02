@@ -151,7 +151,8 @@ Default DPI is 203 (standard Zebra label printer). Use 300 for high-resolution p
 | `code128` | `^BCN` | Code 128 with HRI below |
 | `code39` | `^B3N` | Code 39, no check digit |
 | `ean13` | `^BEN` | EAN-13; pass 12 digits — printer computes the 13th check digit |
-| `gs1datamatrix` | `^BXN` | DataMatrix ECC 200 |
+| `datamatrix` | `^BXN` | DataMatrix ECC 200; freeform text content |
+| `gs1datamatrix` | `^BXN` | DataMatrix ECC 200; strict GS1 AI format |
 | `image` / `linkedImage` | (skipped) | Silently skipped with `console.warn`; deferred to v3 |
 
 Unknown field types are also skipped with `console.warn`.
