@@ -1,3 +1,5 @@
+from utils.exceptions import HTTPError
+
 
 class Queries:
 
@@ -402,3 +404,18 @@ def _update_job_progress(db, job_key):
   db.aql.execute(Queries.UPDATE_JOB_PROGRESS, bind_vars=dict(job_key=job_key))
 
 
+def _get_phase_batch_available_state(db, wo_key: str, phase_key: str) -> bool | None:
+  """
+  Returns the next batch available state for a given work order and phase.
+  Used to determine the state for new jobs in the phase.
+  Raises HTTPError 422 if no sibling job exists in the phase.
+  """
+  try:
+    phase_nba = db.aql.execute(
+      'FOR j IN Job FILTER j.wo_key == @wo_key && j.phase_key == @phase_key LIMIT 1 RETURN j.next_batch_available',
+      bind_vars=dict(wo_key=wo_key, phase_key=phase_key)
+    ).next()
+  except StopIteration:
+    raise HTTPError(422, "There is no other job in the same phase to determine next batch available state")
+
+  return phase_nba

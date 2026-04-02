@@ -20,7 +20,11 @@ from utils.production import (
   close_job_and_update_queues,
   reassign_job_in_queues
 )
-from utils.traceability import _update_job_progress, Queries as TraceabilityQueries
+from utils.traceability import (
+  _update_job_progress,
+  _get_phase_batch_available_state,
+  Queries as TraceabilityQueries
+)
 
 
 router = APIRouter()
@@ -258,6 +262,8 @@ async def update_work_order_quantities(
       if update.action == JobUpdateType.INSERT:
         if 'phase_key' not in update.data:
           raise HTTPError(422, "Please provide a phase key for each new job")
+
+        update.data['next_batch_available'] = _get_phase_batch_available_state(db=tx, wo_key=wo_key, phase_key=update.data['phase_key'])
 
         create_job_record(
           tx,
@@ -754,6 +760,10 @@ async def update_jobs(job_updates:List[JobUpdate]):
 
       if u.action == JobUpdateType.INSERT:
         wo_data = WorkOrderFull(**tx.collection('WorkOrder').get(u.data['work_order_key']))
+
+        # Get next batch available state for the job
+        u.data['next_batch_available'] = _get_phase_batch_available_state(db=tx, wo_key=u.data['work_order_key'], phase_key=u.data['phase_key'])
+
         new_job_data = create_job_record(
           tx,
           wo_data = wo_data,
