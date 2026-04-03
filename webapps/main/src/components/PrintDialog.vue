@@ -773,20 +773,20 @@ async function sendToPrinter(copies = 1) {
 
     if (result.ok) {
       onDialogHide();
-      Notify.create({ type: 'positive', message: t('printDialog.sendToPrinter.success') });
+      Notify.create({ type: 'positive', color: 'theme-green', message: t('printDialog.sendToPrinter.success') });
     } else if (result.error === 'no_service' || result.error === 'internal') {
-      Notify.create({ type: 'negative', message: t('printDialog.sendToPrinter.noService') });
+      Notify.create({ type: 'warning', color: 'theme-orange', message: t('printDialog.sendToPrinter.noService') });
     } else if (result.error === 'connection_refused') {
-      Notify.create({ type: 'negative', message: t('printDialog.sendToPrinter.connectionRefused') });
+      Notify.create({ type: 'negative', color: 'theme-red', message: t('printDialog.sendToPrinter.connectionRefused') });
     } else if (result.error === 'timeout') {
-      Notify.create({ type: 'negative', message: t('printDialog.sendToPrinter.timeout') });
+      Notify.create({ type: 'warning', color: 'theme-orange', message: t('printDialog.sendToPrinter.timeout') });
     } else {
-      Notify.create({ type: 'negative', message: t('printDialog.sendToPrinter.error') });
+      Notify.create({ type: 'negative', color: 'theme-red', message: t('printDialog.sendToPrinter.error') });
     }
   } catch (err) {
     // POST failed or other error — stay open so user can retry
     isPrinting.value = false;
-    Notify.create({ type: 'negative', message: err.message || t('printDialog.sendToPrinter.error') });
+    Notify.create({ type: 'negative', color: 'theme-red', message: err.message || t('printDialog.sendToPrinter.error') });
     return;
   }
   isPrinting.value = false;

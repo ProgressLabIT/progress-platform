@@ -2,7 +2,7 @@
   <BaseDialog
     :show="show"
     :no-backdrop-dismiss="false"
-    @keyup.enter="update"
+    @keyup.enter.self.stop="update"
     @close="emit('close')"
   >
     <q-card class="surface2 q-pa-md" :style="`width: ${width}`">
