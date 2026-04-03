@@ -673,6 +673,7 @@ export default {
     fillData: {
       title: 'Fill data',
       page: 'Page {number}',
+      unnamedField: 'Field {n}',
     },
 
     preview: {

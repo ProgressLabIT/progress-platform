@@ -17,7 +17,7 @@ Each schema field in a template can carry:
 |----------------|---------|--------|
 | `readOnly`     | boolean | If true, the field is not shown in the print dialog form (auto-filled from link, not editable). |
 | `required`     | boolean | If true, the field is mandatory; label shows a red asterisk and preview is blocked until filled. |
-| `linkType`     | string  | `'none'`, `'preset'`, `'custom_field'`, or `'template_expression'`. |
+| `linkType`     | string  | `'none'`, `'preset'`, `'custom_field'`, `'template_expression'`, or `'computed'`. |
 | `linkValue`    | string  | Preset key when `linkType === 'preset'` (e.g. `job.key`, `serial.extra`). |
 | `extraPath`    | string  | When preset is an `.extra` preset (e.g. `serial.extra`), this is the nested path (e.g. `one.two`). Resolved as `linkValue + '.' + extraPath`. |
 | `customFieldKey` | string | Custom field `_key` when `linkType === 'custom_field'`. |
@@ -33,7 +33,7 @@ Backend models: [backend/api/models/print.py](backend/api/models/print.py) — `
 ## Data flow
 
 1. **Designer**: User adds fields via toolbar, configures link type/value/extra path and editable/required in the pdfme property panel. Template is saved with schemas in v5 format (array of arrays, each field has `name`).
-2. **Print dialog**: Template loaded → `getFieldNamesAndLinks()` collects all field names, link config (including `extraPath` combination), and `content` per field. Form model is filled from context for linked fields. Only non–read-only fields are rendered; required fields get an asterisk and are validated before preview.
+2. **Print dialog**: Template loaded → `getFieldNamesAndLinks()` collects all field names, link config (including `extraPath` combination), and `content` per field. Form model is filled from context for linked fields. Only non–read-only fields are rendered; required fields get an asterisk and are validated before preview. Form field captions use `printFieldDisplayLabel()` in [PrintDialog.vue](webapps/main/src/components/PrintDialog.vue): for `linkType === 'custom_field'`, the title comes from the matching entry in `store.state.form.customFields` (`name` / `default_label`); if that is missing (deleted field, unloaded store), the caption falls back to optional `field.label` then the template field `name`. Array-shaped pdfme schemas normalize `name` from `field.key` when `name` is absent so keys and labels stay consistent. Captions are rendered **above** each `q-input` (not via the floating `#label` slot): with `filled` inputs, floating labels often disappear once the field has a value or under dark theme, while plain text above the control matches the image-field pattern and stays visible.
 3. **Generation**: `prepareInputs()` builds inputs for all fields (including read-only); `generate()` uses the same plugins (via `buildPlugins([])`).
 
 ### Field content fallback rule
@@ -109,6 +109,101 @@ Missing values resolve to an empty string. The function is a pure ES module with
 ### Link type
 
 To create a template string field in the Designer, select **Link Type → `template_expression`** in the field property panel. The input shows a textarea where the expression is authored.
+
+---
+
+## Computed Fields
+
+Computed fields derive their value from a formula that can reference other template fields, preset values, and custom field values. Unlike template expressions (pure string substitution), computed fields support arithmetic, parentheses, and built-in functions. In PrintDialog, computed fields are **visible but read-only** and update reactively whenever the user edits a source field.
+
+### Link type
+
+Select **Link Type → `computed`** in the Designer property panel. A textarea appears where the expression is authored.
+
+### Expression syntax
+
+Tokens use `{{...}}` with a `field::` prefix for sibling field references:
+
+| Token | Resolves to |
+|---|---|
+| `{{field::FieldName}}` | Current value of another template field |
+| `{{preset.key}}` | Preset value from context (same as template_expression) |
+| `{{cf::_key}}` | Custom field value (same as template_expression) |
+
+Arithmetic operators: `+`, `-`, `*`, `/`, parentheses. Unary minus is supported.
+
+Comparison operators: `==`, `!=`, `<`, `>`, `<=`, `>=`. Return boolean values for use with `IF`.
+
+The `+` operator auto-coerces: when both sides are numeric, it performs addition; otherwise string concatenation.
+
+### Built-in functions
+
+**String:**
+
+| Function | Description | Example |
+|---|---|---|
+| `CONCAT(a, b, ...)` | Joins all arguments as strings | `CONCAT({{product.code}}, "-", {{field::Batch}})` |
+| `UPPER(s)` | Uppercase | `UPPER({{field::Name}})` |
+| `LOWER(s)` | Lowercase | `LOWER({{field::Code}})` |
+| `SPLIT(str, delim, index)` | Split string by delimiter, return part at index (0-based) | `SPLIT({{field::Input}}, "/", 0)` |
+
+**Math:**
+
+| Function | Description | Example |
+|---|---|---|
+| `ROUND(n, decimals?)` | Round to `decimals` places (default 0) | `ROUND({{field::Total}} / {{field::Count}}, 2)` |
+| `ABS(n)` | Absolute value | `ABS({{field::Delta}})` |
+| `CEIL(n)` | Round up | `CEIL({{field::Ratio}})` |
+| `FLOOR(n)` | Round down | `FLOOR({{field::Ratio}})` |
+
+**Date:**
+
+| Function | Description | Example |
+|---|---|---|
+| `NOW()` | Current date/time as ISO string | `FORMAT_DATE(NOW(), "DD/MM/YYYY")` |
+| `DATE(fmt, ...)` | Build a date from parts. See formats below. | `DATE("YW", 2026, 12)` |
+| `FORMAT_DATE(dateStr, pattern)` | Format a date. Patterns: `YYYY`, `YY`, `MM`, `DD`, `HH`, `mm`, `ss` | `FORMAT_DATE({{serial.create_date}}, "DD/MM/YYYY")` |
+| `DATE_ADD(dateStr, amount, unit)` | Add time to a date. Units: `"years"`, `"months"`, `"days"`, `"hours"`, `"minutes"`. Negative amount for subtraction. | `DATE_ADD({{serial.create_date}}, 2, "years")` |
+| `DAYS_BETWEEN(d1, d2)` | Absolute difference in days | `DAYS_BETWEEN({{job.start_date}}, {{job.end_date}})` |
+| `YEAR(d)` / `MONTH(d)` / `DAY(d)` | Extract date part (month is 1-indexed) | `YEAR({{serial.create_date}})` |
+| `WEEK(d)` | ISO 8601 week number | `WEEK({{serial.create_date}})` |
+
+`DATE` format modes:
+
+| Format | Arguments | Result |
+|---|---|---|
+| `"Y"` | `year` | Jan 1 of that year |
+| `"YM"` | `year, month` | 1st of that month |
+| `"YMD"` | `year, month, day` | Exact date |
+| `"YW"` | `year, week` | Monday of that ISO week |
+
+**Conditional:**
+
+| Function | Description | Example |
+|---|---|---|
+| `IF(condition, then, else)` | Returns `then` when condition is truthy, `else` otherwise. Truthy = non-empty, non-zero, non-false. | `IF({{serial.extra.class}} == "A", 12, 6)` |
+
+Functions compose — for example, a manually entered `"12/2026"` (week/year) field with a conditional 6- or 12-month offset based on an extra attribute:
+
+```
+CONCAT(
+  WEEK(DATE_ADD(DATE("YW", SPLIT({{field::Input}}, "/", 1), SPLIT({{field::Input}}, "/", 0)), IF({{serial.extra.class}} == "A", 12, 6), "months")),
+  "/",
+  YEAR(DATE_ADD(DATE("YW", SPLIT({{field::Input}}, "/", 1), SPLIT({{field::Input}}, "/", 0)), IF({{serial.extra.class}} == "A", 12, 6), "months"))
+)
+```
+
+With `Input = "12/2026"` and `class = "B"` this produces `"38/2026"` (week 12 + 6 months). With `class = "A"` it produces `"11/2027"` (week 12 + 12 months).
+
+### Reactive behavior in PrintDialog
+
+Computed fields are displayed as read-only inputs with a formula icon (ƒ) in the label. When the user edits any source field, all computed fields re-evaluate automatically. The watcher only observes non-computed fields to prevent infinite loops. Multi-level computed dependencies (computed A depends on computed B) are resolved via multiple passes (max 5) until values stabilize.
+
+### Implementation
+
+- **Evaluator**: `webapps/main/src/lib/print/computedResolver.js` (also copied to `webapps/warehouse/src/lib/print/computedResolver.js`). Safe recursive-descent parser — no `eval()`. Exports `evaluateComputed(expression, valuesMap)`, `extractTokens(expression)`, and `buildValuesMap(formModel, context, customFields)`.
+- **Designer**: `linkConfig.js` includes `computed` in the Link Type dropdown. The `templateExpression` textarea is reused with a placeholder listing available functions.
+- **Backend**: `LinkType` enum in `print.py` includes `COMPUTED = 'computed'`.
 
 ---
 

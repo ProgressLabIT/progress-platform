@@ -684,6 +684,7 @@ export default {
     fillData: {
       title: 'Compila i dati',
       page: 'Pagina {number}',
+      unnamedField: 'Campo {n}',
     },
 
     preview: {

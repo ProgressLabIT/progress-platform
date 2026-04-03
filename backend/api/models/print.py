@@ -34,6 +34,7 @@ class LinkType(str, Enum):
   PRESET = 'preset'
   CUSTOM_FIELD = 'custom_field'
   TEMPLATE_EXPRESSION = 'template_expression'
+  COMPUTED = 'computed'
 
 
 class DynamicFontSize(BaseModel):

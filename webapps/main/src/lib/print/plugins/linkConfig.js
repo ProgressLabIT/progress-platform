@@ -99,6 +99,11 @@ export function createLinkSchema(customFields = [], activeSchema = {}) {
   const needsExtraPath = isPreset && effectiveValue && effectiveValue.endsWith('.extra');
 
   const isTemplateExpression = activeSchema?.linkType === 'template_expression';
+  const isComputed = activeSchema?.linkType === 'computed';
+
+  const expressionPlaceholder = isComputed
+    ? 'e.g. {{field::Quantity}} * {{field::UnitPrice}}\nFunctions: IF, CONCAT, SPLIT, UPPER, LOWER, ROUND, ABS, CEIL, FLOOR, NOW, DATE, FORMAT_DATE, DATE_ADD, DAYS_BETWEEN, YEAR, MONTH, DAY, WEEK\nOperators: + - * / == != < > <= >='
+    : 'e.g. {{product.code}}-{{serial.qt}}';
 
   return {
     linkType: {
@@ -111,16 +116,17 @@ export function createLinkSchema(customFields = [], activeSchema = {}) {
           { label: 'Preset', value: 'preset' },
           { label: 'Custom Field', value: 'custom_field' },
           { label: 'Template Expression', value: 'template_expression' },
+          { label: 'Computed', value: 'computed' },
         ],
       },
     },
     templateExpression: {
-      title: 'Expression',
+      title: isComputed ? 'Computed Expression' : 'Expression',
       type: 'string',
       span: 24,
-      hidden: !isTemplateExpression,
+      hidden: !isTemplateExpression && !isComputed,
       props: {
-        placeholder: 'e.g. {{product.code}}-{{serial.qt}}',
+        placeholder: expressionPlaceholder,
       },
     },
     linkValue: {
@@ -128,7 +134,7 @@ export function createLinkSchema(customFields = [], activeSchema = {}) {
       type: 'string',
       widget: 'select',
       disabled: isNone,
-      hidden: isTemplateExpression,
+      hidden: isTemplateExpression || isComputed,
       default: effectiveValue,
       props: {
         options: linkValueOptions,

@@ -98,13 +98,16 @@
               </legend>
 
               <template
-                v-for="field in normalizePageSchema(pageSchema)"
-                :key="field.name"
+                v-for="(field, fIndex) in normalizePageSchema(pageSchema)"
+                :key="`${index}-${fIndex}-${field.name || fIndex}`"
               >
-                <!-- Skip read-only fields (auto-populated from link, not editable) -->
-                <template v-if="!field.readOnly">
+                <!-- Skip read-only fields, but always show computed fields -->
+                <template v-if="!field.readOnly || field.linkType === 'computed'">
                   <template v-if="field.type === 'image'">
-                    <div>{{ field.name }}</div>
+                    <div class="text-body2 text-weight-medium">
+                      {{ printFieldDisplayLabel(field, fIndex) }}
+                      <span v-if="field.required" class="text-theme-red"> * </span>
+                    </div>
                     <q-img
                       :src="formModel[field.name]"
                       fit="contain"
@@ -121,16 +124,27 @@
                       </template>
                     </q-img>
                   </template>
-                  <q-input
-                    v-else
-                    v-model="formModel[field.name]"
-                    filled
-                  >
-                    <template #label>
-                      {{ field.name }}
+                  <!-- External label: q-input #label + filled hides floating labels once filled / in some themes -->
+                  <div v-else class="column q-gutter-xs">
+                    <div class="row items-center no-wrap q-gutter-xs text-body2 text-weight-medium">
+                      <q-icon
+                        v-if="field.linkType === 'computed'"
+                        name="mdi-function-variant"
+                        size="xs"
+                        class="flex-none"
+                      />
+                      <span>{{ printFieldDisplayLabel(field, fIndex) }}</span>
                       <span v-if="field.required" class="text-theme-red"> * </span>
-                    </template>
-                  </q-input>
+                    </div>
+                    <q-input
+                      v-model="formModel[field.name]"
+                      filled
+                      dense
+                      hide-bottom-space
+                      :readonly="field.linkType === 'computed'"
+                      @blur="recomputeFields"
+                    />
+                  </div>
                 </template>
               </template>
             </fieldset>
@@ -230,13 +244,14 @@
 <script setup>
 import { generate } from '@pdfme/generator';
 import { useDialogPluginComponent, Notify } from 'quasar';
-import { nextTick, ref, reactive, toRaw, computed } from 'vue';
+import { nextTick, ref, reactive, toRaw, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useStore } from 'vuex';
 import VuePdfEmbed from 'vue-pdf-embed';
 import { api } from '@/boot/axios';
 import { buildPlugins } from '@/lib/print/plugins';
 import { resolveExpression } from '@/lib/print/templateResolver.js';
+import { evaluateComputed, buildValuesMap } from '@/lib/print/computedResolver.js';
 import { useConfigStore } from '@/stores/config';
 import { generateZpl } from '@/lib/print/zpl.js';
 import { processZplImageFields } from '@/lib/print/zplImage.js';
@@ -252,11 +267,35 @@ const pdfmePlugins = buildPlugins([]);
 /** Normalize page schema to array of { name, type, ... } (v5 format). Supports v2/v4 (keyed object) and v5 (array). */
 function normalizePageSchema(pageSchema) {
   if (!pageSchema) return [];
-  if (Array.isArray(pageSchema)) return pageSchema;
+  if (Array.isArray(pageSchema)) {
+    return pageSchema.map((field) => ({
+      ...field,
+      name: field.name || field.key,
+    }));
+  }
   return Object.entries(pageSchema).map(([fieldName, fieldSpec]) => ({
     ...fieldSpec,
     name: fieldName,
   }));
+}
+
+/** Label shown above print form fields: custom field title when linked, else optional schema label, else template field name. */
+function printFieldDisplayLabel(field, fieldIndex = null) {
+  const templateName = String(field.name ?? field.key ?? field.id ?? '').trim();
+  const schemaLabel = typeof field.label === 'string' ? field.label.trim() : '';
+  if (field.linkType === 'custom_field') {
+    const cfKey = field.linkValue || field.customFieldKey || '';
+    const list = store.state.form.customFields || [];
+    const cf = list.find((c) => c._key === cfKey);
+    const fromCf = (cf?.name || cf?.default_label || '').trim();
+    if (fromCf) return fromCf;
+    const rest = schemaLabel || templateName;
+    if (rest) return rest;
+    return fieldIndex != null ? t('printDialog.fillData.unnamedField', { n: fieldIndex + 1 }) : '';
+  }
+  const rest = schemaLabel || templateName;
+  if (rest) return rest;
+  return fieldIndex != null ? t('printDialog.fillData.unnamedField', { n: fieldIndex + 1 }) : '';
 }
 
 /** Get field names and link config from template + record. Supports v2/v4 (columns + links) and v5 (linkType/linkValue on schema). */
@@ -355,7 +394,28 @@ const serialModelInitalValue = ref([]);
 const selectedTemplateBK = ref();
 const hasSerialLink = ref(false);
 const previewSrc = ref();
+let computedFieldDefs = [];
+let computedFieldNames = new Set();
+let stopComputedWatcher = null;
 
+function recomputeFields() {
+  if (computedFieldDefs.length === 0 || !formModel) return;
+  const allCustomFields = store.state.form.customFields;
+  const valMap = buildValuesMap(formModel, props.context, allCustomFields);
+  const MAX_PASSES = 5;
+  for (let pass = 0; pass < MAX_PASSES; pass++) {
+    let changed = false;
+    for (const { name, expression } of computedFieldDefs) {
+      const newVal = String(evaluateComputed(expression, valMap) ?? '');
+      if (formModel[name] !== newVal) {
+        formModel[name] = newVal;
+        valMap.set(`field::${name}`, newVal);
+        changed = true;
+      }
+    }
+    if (!changed) break;
+  }
+}
 
 function resetState() {
   activeStep.value = 0;
@@ -367,6 +427,9 @@ function resetState() {
   selectedTemplateBK.value = undefined;
   hasSerialLink.value = false;
   previewSrc.value = undefined;
+  if (stopComputedWatcher) { stopComputedWatcher(); stopComputedWatcher = null; }
+  computedFieldDefs = [];
+  computedFieldNames = new Set();
 }
 
 function initialize() {
@@ -504,6 +567,9 @@ async function selectTemplate(template) {
     await store.dispatch('getCustomFields');
     const allCustomFields = store.state.form.customFields;
 
+    computedFieldDefs = [];
+    computedFieldNames = new Set();
+
     formModel = reactive(
       Object.fromEntries(
         fieldNames.map((fieldName) => {
@@ -518,9 +584,12 @@ async function selectTemplate(template) {
           if (link.value && String(link.value).includes('serial')) {
             hasSerialLink.value = true;
           }
+          if (link.type === 'computed') {
+            computedFieldDefs.push({ name: fieldName, expression: link.templateExpression });
+            computedFieldNames.add(fieldName);
+            return [fieldName, ''];
+          }
           if (link.type === 'template_expression') {
-            // field.templateExpression holds the encoded expression ({{cf::_key}} form from DB)
-            // resolveExpression handles both preset tokens and cf:: tokens
             const resolved = resolveExpression(link.templateExpression, props.context, allCustomFields);
             return [fieldName, String(resolved ?? '')];
           }
@@ -533,6 +602,15 @@ async function selectTemplate(template) {
         }),
       ),
     );
+
+    if (computedFieldDefs.length > 0) {
+      const sourceFields = fieldNames.filter(n => !computedFieldNames.has(n));
+      recomputeFields();
+      stopComputedWatcher = watch(
+        () => sourceFields.map(n => formModel[n]),
+        recomputeFields,
+      );
+    }
 
 
   } catch (error) {
