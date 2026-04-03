@@ -239,6 +239,7 @@ import { buildPlugins } from '@/lib/print/plugins';
 import { resolveExpression } from '@/lib/print/templateResolver.js';
 import { useConfigStore } from '@/stores/config';
 import { generateZpl } from '@/lib/print/zpl.js';
+import { processZplImageFields } from '@/lib/print/zplImage.js';
 import { sendToPrintService } from '@/lib/print/index.js';
 import BaseDialog from '@/components/BaseDialog.vue';
 import BasePrompt from '@/components/BasePrompt.vue';
@@ -274,12 +275,14 @@ function getFieldNamesAndLinks(data) {
 
   const fieldNames = [];
   const linkByField = {};
+  const contentByField = {};
   for (const pageSchema of schemas) {
     const fields = normalizePageSchema(pageSchema);
     for (const field of fields) {
       const name = field.name || field.key;
       if (name) {
         fieldNames.push(name);
+        if (field.content) contentByField[name] = field.content;
         if (field.linkType && field.linkType !== 'none') {
           // Support both new linkValue field and old customFieldKey for backward compatibility
           let value = field.linkValue || field.customFieldKey || '';
@@ -299,6 +302,7 @@ function getFieldNamesAndLinks(data) {
   return {
     fieldNames: [...new Set(fieldNames)],
     getLink: (fieldName) => linkByField[fieldName] || null,
+    getContent: (fieldName) => contentByField[fieldName] || '',
   };
 }
 
@@ -494,7 +498,7 @@ async function selectTemplate(template) {
       throw new Error('Invalid template data: missing template or schemas');
     }
 
-    const { fieldNames, getLink } = getFieldNamesAndLinks(data);
+    const { fieldNames, getLink, getContent } = getFieldNamesAndLinks(data);
 
     // Ensure custom fields are loaded — idempotent, safe to call every time
     await store.dispatch('getCustomFields');
@@ -509,7 +513,7 @@ async function selectTemplate(template) {
           }
           const link = getLink(fieldName);
           if (!link) {
-            return [fieldName, ''];
+            return [fieldName, getContent(fieldName)];
           }
           if (link.value && String(link.value).includes('serial')) {
             hasSerialLink.value = true;
@@ -736,9 +740,13 @@ async function sendToPrinter(copies = 1) {
     let format;
 
     if (printer.type === 'zpl') {
-      // ZPL path: generateZpl → send ZPL string
       const inputs = await prepareInputs();
-      const zplString = generateZpl(selectedTemplate.value.template, inputs, { dpi: 203, quantity: copies });
+      const zplInputs = await processZplImageFields(
+        schemasToV5(selectedTemplate.value.template.schemas),
+        inputs,
+        203,
+      );
+      const zplString = generateZpl(selectedTemplate.value.template, zplInputs, { dpi: 203, quantity: copies });
       data = zplString;
       format = 'zpl';
     } else {

@@ -11,7 +11,7 @@
  *   code39               → ^B3N (Code 39)
  *   ean13                → ^BEN (EAN-13; caller must pass 12 numeric digits)
  *   gs1datamatrix        → ^BXN (DataMatrix ECC 200)
- *   image / linkedImage  → skipped with console.warn (^GFA deferred to v3)
+ *   image / linkedImage  → ^GFA (pre-processed by zplImage.js into ^GFA hex)
  *
  * @module zpl
  */
@@ -52,8 +52,8 @@ const DEFAULT_DPI = 203;
 /** pdfme alignment → ZPL ^FB justification character */
 const ALIGN_MAP = { left: 'L', center: 'C', right: 'R' };
 
-/** Field type substrings that indicate an image field to skip */
-const IMAGE_TYPES = ['image', 'linkedimage'];
+/** Regex to detect image field types (case-insensitive) */
+const IMAGE_TYPE_RE = /image/i;
 
 // ---------------------------------------------------------------------------
 // Coordinate helpers
@@ -182,23 +182,40 @@ function renderDataMatrix(field, value, dpi) {
   return `^FO${x},${y}^BXN,${h},200^FD${value}^FS`;
 }
 
+/**
+ * Render an image field whose value has already been converted to a ^GFA
+ * command string by processZplImageFields() in zplImage.js.
+ * @param {object} field
+ * @param {string} value - pre-computed ^GFA command string, or empty
+ * @param {number} dpi
+ * @returns {string}
+ */
+function renderImage(field, value, dpi) {
+  if (!value) return '';
+  if (!value.startsWith('^GFA')) {
+    console.warn(`[generateZpl] Image field "${field.name}" has unexpected value format (expected ^GFA)`);
+    return '';
+  }
+  const x = mmToDots(field.position.x, dpi);
+  const y = mmToDots(field.position.y, dpi);
+  return `^FO${x},${y}${value}^FS`;
+}
+
 // ---------------------------------------------------------------------------
 // Field dispatcher
 // ---------------------------------------------------------------------------
 
 /**
  * Dispatch a single field to the appropriate renderer based on field.type.
- * Image-type fields are silently skipped with a console.warn.
- * Unknown types are also skipped with a console.warn.
+ * Unknown types are skipped with a console.warn.
  * @param {object} field
  * @param {string} value
  * @param {number} dpi
  * @returns {string}
  */
 function renderField(field, value, dpi) {
-  if (IMAGE_TYPES.some(t => field.type.toLowerCase().includes(t))) {
-    console.warn(`[generateZpl] Image field "${field.name}" skipped (type: ${field.type})`);
-    return '';
+  if (IMAGE_TYPE_RE.test(field.type)) {
+    return renderImage(field, value, dpi);
   }
   switch (field.type) {
     case 'text':

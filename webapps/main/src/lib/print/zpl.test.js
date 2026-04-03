@@ -258,33 +258,50 @@ describe('Plain DataMatrix field', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Image skip (ZPL-04)
+// Image rendering (ZPL-04)
 // ---------------------------------------------------------------------------
 
-describe('Image field skip', () => {
+describe('Image field rendering', () => {
   beforeEach(() => {
     vi.spyOn(console, 'warn').mockImplementation(() => {});
   });
 
-  it('image field type returns no ZPL output', () => {
+  it('pre-computed ^GFA value produces ^FO{x},{y}^GFA,...^FS', () => {
+    const gfa = '^GFA,4,4,2,FF00FF00';
+    const template = makeTemplate([makeField({ type: 'image', name: 'logo', position: { x: 10, y: 20 } })]);
+    // x=10 → round(10*203/25.4) = 80, y=20 → 160
+    const result = generateZpl(template, [{ logo: gfa }], { dpi: 203 });
+    expect(result).toContain('^FO80,160^GFA,4,4,2,FF00FF00^FS');
+  });
+
+  it('linkedImage type also renders with ^GFA value', () => {
+    const gfa = '^GFA,2,2,1,FFFF';
+    const template = makeTemplate([makeField({ type: 'linkedImage', name: 'pic', position: { x: 5, y: 5 } })]);
+    const result = generateZpl(template, [{ pic: gfa }], { dpi: 203 });
+    expect(result).toContain('^GFA,2,2,1,FFFF^FS');
+  });
+
+  it('empty/falsy image value produces no ZPL output (graceful skip)', () => {
+    const template = makeTemplate([makeField({ type: 'image', name: 'img1' })]);
+    const result = generateZpl(template, [{ img1: '' }]);
+    expect(result).not.toContain('^GFA');
+  });
+
+  it('missing image input produces no ZPL output', () => {
     const template = makeTemplate([makeField({ type: 'image', name: 'img1' })]);
     const result = generateZpl(template, [{}]);
-    expect(result).not.toContain('^FO');
+    expect(result).not.toContain('^GFA');
   });
 
-  it('console.warn is called with field name for image field', () => {
-    const template = makeTemplate([makeField({ type: 'image', name: 'myImage' })]);
-    generateZpl(template, [{}]);
-    expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('myImage'));
+  it('unexpected value format (not ^GFA) logs console.warn and produces no output', () => {
+    const template = makeTemplate([makeField({ type: 'image', name: 'bad' })]);
+    const result = generateZpl(template, [{ bad: 'data:image/png;base64,abc' }]);
+    expect(result).not.toContain('data:');
+    expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('bad'));
+    expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('expected ^GFA'));
   });
 
-  it('linkedImage field type also skipped', () => {
-    const template = makeTemplate([makeField({ type: 'linkedImage', name: 'logo' })]);
-    const result = generateZpl(template, [{}]);
-    expect(result).not.toContain('^FO');
-  });
-
-  it('unknown field types skipped with console.warn', () => {
+  it('unknown field types still skipped with console.warn', () => {
     const template = makeTemplate([makeField({ type: 'unknownCustomType', name: 'unk' })]);
     const result = generateZpl(template, [{}]);
     expect(result).not.toContain('^FD');
@@ -297,18 +314,15 @@ describe('Image field skip', () => {
 // ---------------------------------------------------------------------------
 
 describe('Integration', () => {
-  it('full template with text + barcode + image: image skipped, others rendered, envelope correct', () => {
-    beforeEach(() => {
-      vi.spyOn(console, 'warn').mockImplementation(() => {});
-    });
-
+  it('full template with text + barcode + image: all rendered, envelope correct', () => {
+    const gfa = '^GFA,4,4,2,FF00FF00';
     const fields = [
       makeField({ name: 'label', type: 'text', position: { x: 5, y: 5 }, fontSize: 10 }),
       makeField({ name: 'barcode', type: 'code128', position: { x: 5, y: 20 }, height: 15 }),
       makeField({ name: 'photo', type: 'image', position: { x: 5, y: 40 } }),
     ];
     const template = makeTemplate(fields);
-    const inputs = [{ label: 'Part A', barcode: '9876543210', photo: 'data:...' }];
+    const inputs = [{ label: 'Part A', barcode: '9876543210', photo: gfa }];
     const result = generateZpl(template, inputs, { dpi: 203, quantity: 2 });
 
     expect(result.trim().startsWith('^XA')).toBe(true);
@@ -316,6 +330,6 @@ describe('Integration', () => {
     expect(result).toContain('^PQ2');
     expect(result).toContain('^A0N');           // text field rendered
     expect(result).toContain('^BCN');           // code128 rendered
-    expect(result).not.toContain('data:...');   // image field value not in output
+    expect(result).toContain('^GFA,4,4,2,FF00FF00^FS'); // image field rendered
   });
 });

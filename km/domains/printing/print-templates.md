@@ -33,8 +33,17 @@ Backend models: [backend/api/models/print.py](backend/api/models/print.py) — `
 ## Data flow
 
 1. **Designer**: User adds fields via toolbar, configures link type/value/extra path and editable/required in the pdfme property panel. Template is saved with schemas in v5 format (array of arrays, each field has `name`).
-2. **Print dialog**: Template loaded → `getFieldNamesAndLinks()` collects all field names and link config (including `extraPath` combination). Form model is filled from context for linked fields. Only non–read-only fields are rendered; required fields get an asterisk and are validated before preview.
+2. **Print dialog**: Template loaded → `getFieldNamesAndLinks()` collects all field names, link config (including `extraPath` combination), and `content` per field. Form model is filled from context for linked fields. Only non–read-only fields are rendered; required fields get an asterisk and are validated before preview.
 3. **Generation**: `prepareInputs()` builds inputs for all fields (including read-only); `generate()` uses the same plugins (via `buildPlugins([])`).
+
+### Field content fallback rule
+
+When initialising field values (form model in PrintDialog, `resolveTemplateInputs` in warehouse):
+
+- **`linkType === 'none'` or absent** → use `field.content` from the schema (the static value the designer embedded in the template). For PDF generation pdfme does this fallback internally; for ZPL it must be explicit.
+- **`linkType` is set** (`preset`, `custom_field`, `template_expression`) but the resolved value is empty → **keep it empty**. The linked data source genuinely has no value and the designer's content must not mask that.
+
+This rule applies to all field types (text, image, barcode). It ensures that a logo placed in the designer with no link prints correctly on ZPL, while a custom-field image that has no data does not accidentally show a stale placeholder.
 
 ## Barcode types
 
@@ -154,9 +163,29 @@ Default DPI is 203 (standard Zebra label printer). Use 300 for high-resolution p
 | `ean13` | `^BEN` | EAN-13; pass 12 digits — printer computes the 13th check digit |
 | `datamatrix` | `^BXN` | DataMatrix ECC 200; freeform text content |
 | `gs1datamatrix` | `^BXN` | DataMatrix ECC 200; strict GS1 AI format |
-| `image` / `linkedImage` | (skipped) | Silently skipped with `console.warn`; deferred to v3 |
+| `image` / `linkedImage` | `^GFA` | Graphic Field ASCII; image must be pre-processed into a `^GFA` hex string before calling `generateZpl` (see Image pre-processing below) |
 
 Unknown field types are also skipped with `console.warn`.
+
+### Image pre-processing
+
+`generateZpl` is synchronous and expects image field values to already be `^GFA` command strings. The async conversion pipeline lives in `zplImage.js` (also copied verbatim to `webapps/warehouse/src/lib/print/zplImage.js`).
+
+```js
+import { processZplImageFields } from '@/lib/print/zplImage'
+
+const zplInputs = await processZplImageFields(schemas, inputs, dpi)
+const zpl = generateZpl(template, zplInputs, { dpi, quantity })
+```
+
+**`processZplImageFields(schemas, inputs, dpi)`** iterates over each image-type field and:
+
+1. Uses the runtime input value if non-empty (linked image resolved from context).
+2. Falls back to `field.content` from the schema **only when** `linkType` is `'none'` or absent (static image with no link). If the field has a link (`preset`, `custom_field`, `template_expression`) but the resolved value is empty, the empty value is kept — the linked data source genuinely has no value and it must not be masked by the designer's placeholder.
+3. Converts the resolved data URL to a monochrome 1-bit bitmap via Canvas API (luminance threshold, transparent pixels become white).
+4. Encodes the bitmap as `^GFA,{totalBytes},{totalBytes},{bytesPerRow},{hexData}`.
+
+**`imageToZplGraphic(base64DataUrl, widthMm, heightMm, dpi)`** handles a single image. It resizes to the field's dot dimensions and returns the `^GFA` string, or `''` if the input is empty.
 
 ### Output envelope
 
@@ -166,6 +195,7 @@ Each label page is wrapped in a standard ZPL envelope:
 ^XA
 ^FO...^A0N...^FB...^FD...^FS
 ^FO...^BQN,...^FD...^FS
+^FO...^GFA,...^FS
 ^PQ{quantity}
 ^XZ
 ```

@@ -2,6 +2,7 @@ import { Notify } from 'quasar';
 import { i18n } from 'boot/i18n';
 import { api } from 'src/boot/axios';
 import { generateZpl } from './zpl.js';
+import { processZplImageFields } from './zplImage.js';
 import { resolveExpression } from './templateResolver.js';
 import { useConfigStore } from '@/stores/config';
 import store from '@/store/index.js';
@@ -15,6 +16,11 @@ function normalizePageSchema(pageSchema) {
   if (!pageSchema) return [];
   if (Array.isArray(pageSchema)) return pageSchema;
   return Object.entries(pageSchema).map(([fieldName, fieldSpec]) => ({ ...fieldSpec, name: fieldName }));
+}
+
+function schemasToV5(schemas) {
+  if (!schemas || !Array.isArray(schemas)) return [];
+  return schemas.map(normalizePageSchema);
 }
 
 /**
@@ -58,6 +64,8 @@ function resolveTemplateInputs(templateData, context) {
           value = context.getPresetValue(field.linkValue) ?? '';
         } else if (field.linkType === 'template_expression' && field.templateExpression) {
           value = resolveExpression(field.templateExpression, context, []) ?? '';
+        } else if (!field.linkType || field.linkType === 'none') {
+          value = field.content ?? '';
         }
         return [field.name, String(value)];
       })
@@ -133,7 +141,12 @@ export async function printProductLabel(productCode, productDescription) {
 
     const context = buildProductContext({ code: productCode, description: productDescription });
     const inputs = resolveTemplateInputs(templateData, context);
-    const zpl = generateZpl(templateData.template, inputs, { dpi: 203, quantity: 1 });
+    const zplInputs = await processZplImageFields(
+      schemasToV5(templateData.template?.schemas),
+      inputs,
+      203,
+    );
+    const zpl = generateZpl(templateData.template, zplInputs, { dpi: 203, quantity: 1 });
 
     const result = await submitPrintJob(zpl, printer);
     if (result.ok) {
@@ -178,7 +191,12 @@ export async function printPositionLabel(position) {
     const positionCode = typeof position === 'object' ? position.code : position;
     const context = buildPositionContext(positionCode);
     const inputs = resolveTemplateInputs(templateData, context);
-    const zpl = generateZpl(templateData.template, inputs, { dpi: 203, quantity: 1 });
+    const zplInputs = await processZplImageFields(
+      schemasToV5(templateData.template?.schemas),
+      inputs,
+      203,
+    );
+    const zpl = generateZpl(templateData.template, zplInputs, { dpi: 203, quantity: 1 });
 
     const result = await submitPrintJob(zpl, printer);
     if (result.ok) {
