@@ -47,6 +47,19 @@
         round
         size="sm"
         color="high"
+        icon="mdi-content-copy"
+        :loading="copying"
+        @click="copyTemplate"
+      >
+        <q-tooltip>{{ $capitalize($t('print_template_copy')) }}</q-tooltip>
+      </q-btn>
+
+      <q-btn
+        v-if="allowEdit"
+        flat
+        round
+        size="sm"
+        color="high"
         icon="mdi-pencil"
         @click="editTemplate"
       >
@@ -204,6 +217,7 @@ export default {
       showDelete: false,
       showUnlink: false,
       templateToEdit: null,
+      copying: false,
     };
   },
 
@@ -224,6 +238,36 @@ export default {
         `print-template/${this.template._key}`,
       );
       this.templateToEdit = data;
+    },
+
+    async copyTemplate() {
+      if (!this.template._key || this.template.temp) return;
+      this.copying = true;
+      try {
+        const { data } = await this.$api.get(
+          `print-template/${this.template._key}`,
+        );
+        const body = { ...data };
+        delete body._key;
+        delete body._id;
+        delete body._rev;
+        delete body.entities;
+        delete body.temp;
+        delete body.trash;
+        body.name = this.$t('print_template_copy_name', {
+          name: data.name ?? '',
+        });
+        await this.$api.post('print-template', body);
+        this.$emit('saved');
+      } catch (err) {
+        this.$q.notify({
+          message: this.$t('print_template_copy_error'),
+          color: 'negative',
+          icon: 'mdi-alert',
+        });
+      } finally {
+        this.copying = false;
+      }
     },
 
     async deleteTemplate() {
