@@ -52,6 +52,26 @@
       class="q-mt-md"
       hide-bottom-space
     />
+    <div v-if="type === 'zpl'" class="row q-col-gutter-md q-mt-none">
+      <q-input
+        v-model.number="offset_x"
+        type="number"
+        :label="$t('printer.offset_x')"
+        :hint="$t('printer.offset_hint')"
+        filled
+        class="col"
+        hide-bottom-space
+      />
+      <q-input
+        v-model.number="offset_y"
+        type="number"
+        :label="$t('printer.offset_y')"
+        :hint="$t('printer.offset_hint')"
+        filled
+        class="col"
+        hide-bottom-space
+      />
+    </div>
     <q-input
       v-model.number="timeout_seconds"
       type="number"
@@ -80,6 +100,8 @@ const host = ref('');
 const port = ref(9100);
 const type = ref('');
 const dpi = ref(203);
+const offset_x = ref(0);
+const offset_y = ref(0);
 const timeout_seconds = ref(5);
 
 const emit = defineEmits(['addPrinter', 'updatePrinter', 'close']);
@@ -95,6 +117,8 @@ watch(
       port.value = printer.port ?? 9100;
       type.value = printer.type || '';
       dpi.value = printer.dpi ?? 203;
+      offset_x.value = printer.offset_x ?? 0;
+      offset_y.value = printer.offset_y ?? 0;
       timeout_seconds.value = printer.timeout_seconds ?? 5;
     } else {
       name.value = '';
@@ -102,6 +126,8 @@ watch(
       port.value = 9100;
       type.value = '';
       dpi.value = 203;
+      offset_x.value = 0;
+      offset_y.value = 0;
       timeout_seconds.value = 5;
     }
   },
@@ -116,7 +142,11 @@ function submit() {
     type: type.value,
     timeout_seconds: timeout_seconds.value,
   };
-  if (type.value === 'zpl') printer.dpi = dpi.value;
+  if (type.value === 'zpl') {
+    printer.dpi = dpi.value;
+    printer.offset_x = offset_x.value || 0;
+    printer.offset_y = offset_y.value || 0;
+  }
 
   if (mode.value === 'edit') {
     emit('updatePrinter', printer);

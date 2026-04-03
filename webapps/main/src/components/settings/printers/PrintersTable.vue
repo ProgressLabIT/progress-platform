@@ -5,76 +5,72 @@
     <div class="full-height column col">
       <div class="row justify-between q-pr-md"></div>
 
-      <div
-        class="row q-mt-md q-px-lg q-py-sm text-h6 text-uppercase weight-bold"
+      <q-table
+        class="col q-mt-md transparent"
+        flat
+        :rows="tableRows"
+        :columns="columns"
+        row-key="_rowId"
+        :pagination="{ rowsPerPage: 0 }"
+        hide-bottom
+        :dense="dense"
       >
-        <div class="col-3">
-          {{ $t('name') }}
-        </div>
-        <div class="col-2">
-          {{ $t('host') }}
-        </div>
-        <div class="col-1">
-          {{ $t('port') }}
-        </div>
-        <div class="col-2">
-          {{ $t('printer.type') }}
-        </div>
-        <div class="col-1">
-          {{ $t('printer.dpi') }}
-        </div>
-        <div class="col-1">
-          {{ $t('printer.timeout') }}
-        </div>
-      </div>
-
-      <q-separator />
-
-      <!-- PRINTER LIST -->
-      <div class="scroll col">
-        <div
-          v-for="(printer, index) in printer_list"
-          :key="index"
-          :dense="dense"
-          :readonly="!editMode"
-          class="row pointer q-px-lg q-py-xs medium full-width"
-          :class="{
-            'alternate-row': index % 2 === 0,
-            'bg-blue-backdrop': printer === selected_printer_obj,
-          }"
-          style="white-space: nowrap"
-          @click="selectPrinter(printer)"
-        >
-          <div class="col-3">
-            {{ $capitalize(printer.name) }}
-          </div>
-          <div class="col-2">
-            {{ $capitalize(printer.host) }}
-          </div>
-          <div class="col-1">
-            {{ $capitalize(printer.port) }}
-          </div>
-          <div class="col-2">
-            {{ (printer.type || '').toUpperCase() }}
-          </div>
-          <div class="col-1">
-            {{ printer.type === 'zpl' ? (printer.dpi || 203) : '' }}
-          </div>
-          <div class="col-1">
-            {{ printer.timeout_seconds ? printer.timeout_seconds + 's' : '' }}
-          </div>
-          <div v-if="editMode" class="col flex justify-end">
-            <q-btn
-              flat
-              dense
-              icon="mdi-pencil"
-              size="xs"
-              :label="$t('edit')"
-              @click.stop="editPrinter(index, printer)"
-            />
-          </div>
-        </div>
-      </div>
+        <template #body="props">
+          <q-tr
+            :props="props"
+            :class="{
+              'alternate-row': props.row._rowId % 2 === 0,
+            }"
+            style="white-space: nowrap"
+          >
+            <q-td key="name" :props="props">
+              {{ $capitalize(props.row.name) }}
+            </q-td>
+            <q-td key="host" :props="props">
+              {{ $capitalize(props.row.host) }}
+            </q-td>
+            <q-td key="port" :props="props">
+              {{ $capitalize(props.row.port) }}
+            </q-td>
+            <q-td key="type" :props="props">
+              {{ (props.row.type || '').toUpperCase() }}
+            </q-td>
+            <q-td key="dpi" :props="props">
+              {{ props.row.type === 'zpl' ? (props.row.dpi || 203) : '' }}
+            </q-td>
+            <q-td key="offset" :props="props">
+              {{
+                props.row.type === 'zpl'
+                  ? `${props.row.offset_x || 0}, ${props.row.offset_y || 0}`
+                  : ''
+              }}
+            </q-td>
+            <q-td key="timeout" :props="props">
+              {{ props.row.timeout_seconds ? props.row.timeout_seconds + 's' : '' }}
+            </q-td>
+            <q-td key="actions" :props="props" class="text-right">
+              <q-btn
+                v-if="editMode"
+                flat
+                icon="mdi-pencil"
+                size="xs"
+                :label="$t('edit')"
+                @click.stop="editPrinter(props.row._rowId)"
+              />
+              <q-btn
+                v-if="editMode"
+                flat
+                class="q-ml-sm"
+                icon="mdi-delete"
+                size="xs"
+                color="theme-red"
+                :label="$t('delete')"
+                @click.stop="confirmDeletePrinter(props.row._rowId)"
+              />
+            </q-td>
+          </q-tr>
+        </template>
+      </q-table>
 
       <q-separator />
 
@@ -90,17 +86,7 @@
           class="col-auto"
           size="12px"
           :label="$t('add_printer')"
-          @click="show_new_printer_form = true"
-        >
-        </q-btn>
-        <q-btn
-          v-if="selected_printer_obj && editMode"
-          color="theme-red"
-          class="col-auto"
-          size="12px"
-          :label="$t('remove_printer')"
-          :readonly="!editMode"
-          @click="show_delete = true"
+          @click="openNewPrinterForm"
         >
         </q-btn>
       </div>
@@ -109,11 +95,11 @@
     <BaseDialog
       :show="show_new_printer_form"
       :no-backdrop-dismiss="false"
-      @close="show_new_printer_form = false"
+      @close="closePrinterForm"
     >
       <PrinterNew
         :printer="editing_printer_index !== null ? printer_list[editing_printer_index] : null"
-        @close="show_new_printer_form = false"
+        @close="closePrinterForm"
         @add-printer="addPrinter"
         @update-printer="updatePrinter"
       >
@@ -123,14 +109,14 @@
     <BaseDialog
       :show="show_delete"
       :no-backdrop-dismiss="false"
-      @close="show_delete = false"
+      @close="closeDeleteDialog"
     >
       <BaseActionCard
         :title="$t('printer_delete')"
         :save-label="$t('confirm')"
         save-color="theme-red"
         @save="deletePrinter"
-        @cancel="show_delete = false"
+        @cancel="closeDeleteDialog"
       >
         {{ $t('printer_delete_text') }}
       </BaseActionCard>
@@ -180,53 +166,79 @@ export default {
       search_text: undefined,
       show_new_printer_form: false,
       show_delete: false,
-      selected_printer_obj: undefined,
-          editing_printer_index: null,
+      deleting_printer_index: null,
+      editing_printer_index: null,
     };
   },
 
   computed: {
-    selected_printer() {
-      return this.printer_list.findIndex(
-        (printer) => printer === this.selected_printer_obj,
-      );
+    tableRows() {
+      return this.printer_list.map((printer, index) => ({
+        ...printer,
+        _rowId: index,
+      }));
+    },
+    columns() {
+      return [
+        { name: 'name', label: this.$t('name'), field: 'name', align: 'left', sortable: true },
+        { name: 'host', label: this.$t('host'), field: 'host', align: 'left', sortable: true },
+        { name: 'port', label: this.$t('port'), field: 'port', align: 'left', sortable: true },
+        { name: 'type', label: this.$t('printer.type'), field: 'type', align: 'left', sortable: true },
+        { name: 'dpi', label: this.$t('printer.dpi'), field: 'dpi', align: 'left' },
+        { name: 'offset', label: this.$t('printer.offset'), field: 'offset', align: 'left' },
+        { name: 'timeout', label: this.$t('printer.timeout'), field: 'timeout_seconds', align: 'left' },
+        { name: 'actions', label: '', field: 'actions', align: 'right' },
+      ];
     },
   },
   methods: {
-    selectPrinter(printer) {
-      this.selected_printer_obj = printer;
+    openNewPrinterForm() {
+      this.editing_printer_index = null;
+      this.show_new_printer_form = true;
+    },
+    closePrinterForm() {
+      this.show_new_printer_form = false;
+      this.editing_printer_index = null;
+    },
+    confirmDeletePrinter(index) {
+      this.deleting_printer_index = index;
+      this.show_delete = true;
+    },
+    closeDeleteDialog() {
+      this.show_delete = false;
+      this.deleting_printer_index = null;
     },
     addPrinter(printer) {
-      this.show_new_printer_form = false;
+      this.closePrinterForm();
       const temp_values = [...this.printer_list, printer];
       this.$emit('update:printer_list', temp_values);
       this.$emit('reload');
     },
 
-    editPrinter(index, printer) {
+    editPrinter(index) {
       this.editing_printer_index = index;
-      this.selected_printer_obj = printer;
       this.show_new_printer_form = true;
     },
 
     updatePrinter(updatedPrinter) {
       if (this.editing_printer_index === null) {
-        this.show_new_printer_form = false;
+        this.closePrinterForm();
         return;
       }
       const temp_values = [...this.printer_list];
       temp_values.splice(this.editing_printer_index, 1, updatedPrinter);
       this.$emit('update:printer_list', temp_values);
-      this.editing_printer_index = null;
-      this.show_new_printer_form = false;
+      this.closePrinterForm();
       this.$emit('reload');
     },
 
     deletePrinter() {
       this.show_delete = false;
+      if (this.deleting_printer_index === null || this.deleting_printer_index < 0) return;
       const temp_values = [...this.printer_list];
-      temp_values.splice(this.selected_printer, 1);
+      temp_values.splice(this.deleting_printer_index, 1);
       this.$emit('update:printer_list', temp_values);
+      this.deleting_printer_index = null;
       this.$emit('reload');
     },
   },

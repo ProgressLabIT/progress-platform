@@ -123,7 +123,7 @@ The ZPL transpiler converts a pdfme template and resolved field values into a ZP
 ```js
 import { generateZpl } from '@/lib/print/zpl'
 
-const zplString = generateZpl(template, inputs, { dpi, quantity })
+const zplString = generateZpl(template, inputs, { dpi, quantity, offsetX, offsetY })
 ```
 
 | Parameter | Type | Default | Description |
@@ -132,6 +132,8 @@ const zplString = generateZpl(template, inputs, { dpi, quantity })
 | `inputs` | `object[]` | — | Array of per-page input objects, e.g. `[{ fieldName: resolvedValue }]` |
 | `options.dpi` | `number` | `203` | Printer DPI (203 or 300) |
 | `options.quantity` | `number` | `1` | Copies to print (sets `^PQ` per label) |
+| `options.offsetX` | `number` | `0` | Horizontal calibration offset in mm (positive = shift right). From printer record `offset_x`. |
+| `options.offsetY` | `number` | `0` | Vertical calibration offset in mm (positive = shift down). From printer record `offset_y`. |
 
 Returns a ZPL string. For multi-page templates, each page produces one `^XA...^XZ` block; blocks are joined with newlines.
 
@@ -193,12 +195,25 @@ Each label page is wrapped in a standard ZPL envelope:
 
 ```
 ^XA
+^LH0,0
+^LT{offsetYDots}
+^LS{offsetXDots}
 ^FO...^A0N...^FB...^FD...^FS
 ^FO...^BQN,...^FD...^FS
 ^FO...^GFA,...^FS
 ^PQ{quantity}
 ^XZ
 ```
+
+Three calibration commands are emitted on every label:
+
+| Command  | Purpose |
+|----------|---------|
+| `^LH0,0` | Reset label home — origin for all `^FO` field coordinates |
+| `^LT{offsetYDots}` | Vertical shift from printer record `offset_y` (mm → dots). Positive = shift down. |
+| `^LS{offsetXDots}` | Horizontal shift from printer record `offset_x` (mm → dots). Positive = shift right. |
+
+When both offsets are 0 (default), coordinates are absolute from the physical top-left corner. Non-zero offsets compensate for physical printhead-to-media misalignment without editing templates.
 
 ---
 
@@ -331,15 +346,17 @@ Each printer record now carries two additional fields that control how print job
 |---|---|---|---|---|
 | `type` | `"zpl"` \| `"pdf"` | Yes | — | Determines the print path (ZPL transpiler or PDF generator) |
 | `dpi` | integer | No | `203` | Printer resolution in dots per inch; used for ZPL coordinate and font size conversion. Only relevant for ZPL printers (common values: 203, 300) |
+| `offset_x` | number | No | `0` | Horizontal calibration offset in mm. Positive values shift all content right. Compensates for physical printhead-to-media misalignment. Only relevant for ZPL printers. |
+| `offset_y` | number | No | `0` | Vertical calibration offset in mm. Positive values shift all content down. Compensates for physical printhead-to-media misalignment. Only relevant for ZPL printers. |
 | `timeout_seconds` | integer | No | `5` | How long the print service waits for a TCP response from the printer |
 
 ### Configuration
 
-Printers are configured in **Settings > Printers**. A shared form dialog is used for both creating new printers and editing existing ones: in edit mode each printer row in the library shows an edit (pencil) icon that opens the same form pre-filled with that printer's values. When configuring or editing a printer, the admin must select a type (no default) and may set a timeout. The DPI field is shown only when the type is ZPL.
+Printers are configured in **Settings > Printers**. A shared form dialog is used for both creating new printers and editing existing ones: in edit mode each printer row in the library shows an edit (pencil) icon that opens the same form pre-filled with that printer's values, plus a delete action that opens a confirmation dialog for that specific row (no persistent row selection state). When configuring or editing a printer, the admin must select a type (no default) and may set a timeout. The DPI and offset fields are shown only when the type is ZPL.
 
 The `type` field determines which code path is used at print time:
 
-- **`zpl`**: `generateZpl(template, resolvedInputs, { dpi, quantity })` produces a ZPL string, sent as-is over TCP. The `dpi` value is read from the printer record (fallback 203).
+- **`zpl`**: `generateZpl(template, resolvedInputs, { dpi, quantity, offsetX, offsetY })` produces a ZPL string, sent as-is over TCP. The `dpi` and offset values are read from the printer record (fallback 203 and 0 respectively).
 - **`pdf`**: `@pdfme/generator`'s `generate()` produces PDF bytes, base64-encoded, sent as a PDF payload.
 
 ### Timeout behavior

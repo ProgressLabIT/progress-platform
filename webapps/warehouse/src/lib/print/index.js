@@ -140,6 +140,8 @@ export async function printProductLabel(productCode, productDescription) {
     }
 
     const dpi = printer.dpi || 203;
+    const offsetX = printer.offset_x || 0;
+    const offsetY = printer.offset_y || 0;
     const context = buildProductContext({ code: productCode, description: productDescription });
     const inputs = resolveTemplateInputs(templateData, context);
     const zplInputs = await processZplImageFields(
@@ -147,7 +149,7 @@ export async function printProductLabel(productCode, productDescription) {
       inputs,
       dpi,
     );
-    const zpl = generateZpl(templateData.template, zplInputs, { dpi, quantity: 1 });
+    const zpl = generateZpl(templateData.template, zplInputs, { dpi, quantity: 1, offsetX, offsetY });
 
     const result = await submitPrintJob(zpl, printer);
     if (result.ok) {
@@ -190,6 +192,8 @@ export async function printPositionLabel(position) {
     }
 
     const dpi = printer.dpi || 203;
+    const offsetX = printer.offset_x || 0;
+    const offsetY = printer.offset_y || 0;
     const positionCode = typeof position === 'object' ? position.code : position;
     const context = buildPositionContext(positionCode);
     const inputs = resolveTemplateInputs(templateData, context);
@@ -198,7 +202,7 @@ export async function printPositionLabel(position) {
       inputs,
       dpi,
     );
-    const zpl = generateZpl(templateData.template, zplInputs, { dpi, quantity: 1 });
+    const zpl = generateZpl(templateData.template, zplInputs, { dpi, quantity: 1, offsetX, offsetY });
 
     const result = await submitPrintJob(zpl, printer);
     if (result.ok) {

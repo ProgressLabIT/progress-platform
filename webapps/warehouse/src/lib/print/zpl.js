@@ -248,13 +248,15 @@ function renderField(field, value, dpi) {
  * @param {object}   inputValues - { [fieldName]: resolvedValue } for this page
  * @param {number}   dpi
  * @param {number}   quantity
+ * @param {number}   offsetXDots - horizontal offset in dots (^LS)
+ * @param {number}   offsetYDots - vertical offset in dots (^LT)
  * @returns {string}
  */
-function renderPage(fields, inputValues, dpi, quantity) {
+function renderPage(fields, inputValues, dpi, quantity, offsetXDots, offsetYDots) {
   const fieldLines = fields
     .map(f => renderField(f, inputValues[f.name] ?? '', dpi))
     .filter(Boolean);
-  return `^XA\n${fieldLines.join('\n')}\n^PQ${quantity}\n^XZ`;
+  return `^XA\n^LH0,0\n^LT${offsetYDots}\n^LS${offsetXDots}\n${fieldLines.join('\n')}\n^PQ${quantity}\n^XZ`;
 }
 
 // ---------------------------------------------------------------------------
@@ -269,11 +271,15 @@ function renderPage(fields, inputValues, dpi, quantity) {
  * @param {object}  [options]
  * @param {number}  [options.dpi=203] - Printer DPI (203 or 300)
  * @param {number}  [options.quantity=1] - ^PQ print quantity per label
+ * @param {number}  [options.offsetX=0] - Horizontal calibration offset in mm (positive = shift right)
+ * @param {number}  [options.offsetY=0] - Vertical calibration offset in mm (positive = shift down)
  * @returns {string} ZPL string, one ^XA...^XZ block per template page, joined with newlines
  */
-export function generateZpl(template, inputs, { dpi = DEFAULT_DPI, quantity = 1 } = {}) {
+export function generateZpl(template, inputs, { dpi = DEFAULT_DPI, quantity = 1, offsetX = 0, offsetY = 0 } = {}) {
+  const offsetXDots = mmToDots(offsetX, dpi);
+  const offsetYDots = mmToDots(offsetY, dpi);
   const pages = schemasToV5(template.schemas);
   return pages
-    .map((fields, pageIndex) => renderPage(fields, inputs?.[pageIndex] ?? {}, dpi, quantity))
+    .map((fields, pageIndex) => renderPage(fields, inputs?.[pageIndex] ?? {}, dpi, quantity, offsetXDots, offsetYDots))
     .join('\n');
 }
