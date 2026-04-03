@@ -139,14 +139,15 @@ export async function printProductLabel(productCode, productDescription) {
       return;
     }
 
+    const dpi = printer.dpi || 203;
     const context = buildProductContext({ code: productCode, description: productDescription });
     const inputs = resolveTemplateInputs(templateData, context);
     const zplInputs = await processZplImageFields(
       schemasToV5(templateData.template?.schemas),
       inputs,
-      203,
+      dpi,
     );
-    const zpl = generateZpl(templateData.template, zplInputs, { dpi: 203, quantity: 1 });
+    const zpl = generateZpl(templateData.template, zplInputs, { dpi, quantity: 1 });
 
     const result = await submitPrintJob(zpl, printer);
     if (result.ok) {
@@ -188,15 +189,16 @@ export async function printPositionLabel(position) {
       return;
     }
 
+    const dpi = printer.dpi || 203;
     const positionCode = typeof position === 'object' ? position.code : position;
     const context = buildPositionContext(positionCode);
     const inputs = resolveTemplateInputs(templateData, context);
     const zplInputs = await processZplImageFields(
       schemasToV5(templateData.template?.schemas),
       inputs,
-      203,
+      dpi,
     );
-    const zpl = generateZpl(templateData.template, zplInputs, { dpi: 203, quantity: 1 });
+    const zpl = generateZpl(templateData.template, zplInputs, { dpi, quantity: 1 });
 
     const result = await submitPrintJob(zpl, printer);
     if (result.ok) {

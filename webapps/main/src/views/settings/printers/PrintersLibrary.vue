@@ -6,7 +6,7 @@
     @cancel="cancel"
   >
     <PrintersTable
-      :printer_list="printers"
+      v-model:printer_list="printers"
       process-has-steps
       :edit-mode="editMode"
       dense

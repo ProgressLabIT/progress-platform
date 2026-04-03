@@ -20,7 +20,10 @@
         <div class="col-2">
           {{ $t('printer.type') }}
         </div>
-        <div class="col-2">
+        <div class="col-1">
+          {{ $t('printer.dpi') }}
+        </div>
+        <div class="col-1">
           {{ $t('printer.timeout') }}
         </div>
       </div>
@@ -54,8 +57,21 @@
           <div class="col-2">
             {{ (printer.type || '').toUpperCase() }}
           </div>
-          <div class="col-2">
+          <div class="col-1">
+            {{ printer.type === 'zpl' ? (printer.dpi || 203) : '' }}
+          </div>
+          <div class="col-1">
             {{ printer.timeout_seconds ? printer.timeout_seconds + 's' : '' }}
+          </div>
+          <div v-if="editMode" class="col flex justify-end">
+            <q-btn
+              flat
+              dense
+              icon="mdi-pencil"
+              size="xs"
+              :label="$t('edit')"
+              @click.stop="editPrinter(index, printer)"
+            />
           </div>
         </div>
       </div>
@@ -96,8 +112,10 @@
       @close="show_new_printer_form = false"
     >
       <PrinterNew
+        :printer="editing_printer_index !== null ? printer_list[editing_printer_index] : null"
         @close="show_new_printer_form = false"
         @add-printer="addPrinter"
+        @update-printer="updatePrinter"
       >
       </PrinterNew>
     </BaseDialog>
@@ -163,6 +181,7 @@ export default {
       show_new_printer_form: false,
       show_delete: false,
       selected_printer_obj: undefined,
+          editing_printer_index: null,
     };
   },
 
@@ -179,15 +198,33 @@ export default {
     },
     addPrinter(printer) {
       this.show_new_printer_form = false;
-      let temp_values = this.printer_list;
-      temp_values.push(printer);
+      const temp_values = [...this.printer_list, printer];
       this.$emit('update:printer_list', temp_values);
+      this.$emit('reload');
+    },
+
+    editPrinter(index, printer) {
+      this.editing_printer_index = index;
+      this.selected_printer_obj = printer;
+      this.show_new_printer_form = true;
+    },
+
+    updatePrinter(updatedPrinter) {
+      if (this.editing_printer_index === null) {
+        this.show_new_printer_form = false;
+        return;
+      }
+      const temp_values = [...this.printer_list];
+      temp_values.splice(this.editing_printer_index, 1, updatedPrinter);
+      this.$emit('update:printer_list', temp_values);
+      this.editing_printer_index = null;
+      this.show_new_printer_form = false;
       this.$emit('reload');
     },
 
     deletePrinter() {
       this.show_delete = false;
-      let temp_values = this.printer_list;
+      const temp_values = [...this.printer_list];
       temp_values.splice(this.selected_printer, 1);
       this.$emit('update:printer_list', temp_values);
       this.$emit('reload');

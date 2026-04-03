@@ -330,15 +330,16 @@ Each printer record now carries two additional fields that control how print job
 | Field | Type | Required | Default | Description |
 |---|---|---|---|---|
 | `type` | `"zpl"` \| `"pdf"` | Yes | — | Determines the print path (ZPL transpiler or PDF generator) |
+| `dpi` | integer | No | `203` | Printer resolution in dots per inch; used for ZPL coordinate and font size conversion. Only relevant for ZPL printers (common values: 203, 300) |
 | `timeout_seconds` | integer | No | `5` | How long the print service waits for a TCP response from the printer |
 
 ### Configuration
 
-Printers are configured in **Settings > Printers**. When adding a new printer, the admin must select a type (no default) and may set a timeout.
+Printers are configured in **Settings > Printers**. A shared form dialog is used for both creating new printers and editing existing ones: in edit mode each printer row in the library shows an edit (pencil) icon that opens the same form pre-filled with that printer's values. When configuring or editing a printer, the admin must select a type (no default) and may set a timeout. The DPI field is shown only when the type is ZPL.
 
 The `type` field determines which code path is used at print time:
 
-- **`zpl`**: `generateZpl(template, resolvedInputs, { dpi, quantity })` produces a ZPL string, sent as-is over TCP.
+- **`zpl`**: `generateZpl(template, resolvedInputs, { dpi, quantity })` produces a ZPL string, sent as-is over TCP. The `dpi` value is read from the printer record (fallback 203).
 - **`pdf`**: `@pdfme/generator`'s `generate()` produces PDF bytes, base64-encoded, sent as a PDF payload.
 
 ### Timeout behavior

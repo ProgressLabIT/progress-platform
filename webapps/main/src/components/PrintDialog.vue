@@ -740,13 +740,14 @@ async function sendToPrinter(copies = 1) {
     let format;
 
     if (printer.type === 'zpl') {
+      const dpi = printer.dpi || 203;
       const inputs = await prepareInputs();
       const zplInputs = await processZplImageFields(
         schemasToV5(selectedTemplate.value.template.schemas),
         inputs,
-        203,
+        dpi,
       );
-      const zplString = generateZpl(selectedTemplate.value.template, zplInputs, { dpi: 203, quantity: copies });
+      const zplString = generateZpl(selectedTemplate.value.template, zplInputs, { dpi, quantity: copies });
       data = zplString;
       format = 'zpl';
     } else {

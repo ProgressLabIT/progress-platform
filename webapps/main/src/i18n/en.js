@@ -312,10 +312,12 @@ export default {
   printers: 'Printers',
   add_printer: 'add printer',
   remove_printer: 'remove printer',
+  edit_printer: 'edit printer',
   printer: {
     type: 'Type',
     type_zpl: 'ZPL',
     type_pdf: 'PDF',
+    dpi: 'DPI',
     timeout_seconds: 'Timeout (seconds)',
     timeout: 'Timeout',
   },
