@@ -21,7 +21,6 @@
         </template>
         <q-item
           v-for="item in workOrderItems"
-          v-show="item.show"
           :key="item.label"
           v-ripple
           v-close-popup
@@ -934,7 +933,7 @@ const workOrderItems = computed(() => [
   {
     label: 'project_update',
     icon: 'mdi-folder-edit-outline',
-    show: !woData.active,
+    disable: woData.active,
     action: async () => {
       await initTempData();
       action.value = saveWorkOrderUpdate;
@@ -944,7 +943,7 @@ const workOrderItems = computed(() => [
   {
     label: 'quantity.update',
     icon: 'mdi-plus-minus-variant',
-    show: !woData.active,
+    disable: woData.active,
     action: async () => {
       await initTempData();
       action.value = saveWorkOrderUpdate;
@@ -954,7 +953,7 @@ const workOrderItems = computed(() => [
   {
     label: 'work_order.update_from_date',
     icon: 'mdi-calendar-start',
-    show: !woData.active,
+    disable: woData.active,
     action: async () => {
       await initTempData();
       action.value = saveWorkOrderUpdate;
@@ -964,7 +963,7 @@ const workOrderItems = computed(() => [
   {
     label: 'work_order.update_due_date',
     icon: 'mdi-calendar-end',
-    show: !woData.active,
+    disable: woData.active,
     action: async () => {
       await initTempData();
       action.value = saveWorkOrderUpdate;
@@ -974,13 +973,13 @@ const workOrderItems = computed(() => [
   {
     label: 'edit_extra',
     icon: 'mdi-code-json',
-    show: !woData.active,
+    disable: woData.active,
     action: editWorkOrderExtra,
   },
   {
     label: 'work_order.delete_action',
     icon: 'mdi-delete-outline',
-    show: !woData.active && woData.status === 'created',
+    disable: woData.status !== 'created',
     color: 'theme-red',
     action: () => {
       action.value = deleteWorkOrder
