@@ -148,6 +148,31 @@ describe('FORMAT_DATE', () => {
   it('returns empty for invalid date', () => {
     expect(evaluateComputed('FORMAT_DATE("not-a-date", "DD/MM/YYYY")', vals({}))).toBe('');
   });
+
+  it('formats ISO week number with IW token', () => {
+    // 2024-06-15 is a Saturday in ISO week 24
+    expect(evaluateComputed('FORMAT_DATE("2024-06-15T10:30:00Z", "IW")', vals({}))).toBe('24');
+  });
+
+  it('formats ISO week-year with IYYY token', () => {
+    expect(evaluateComputed('FORMAT_DATE("2024-06-15T10:30:00Z", "IW/IYYY")', vals({}))).toBe('24/2024');
+  });
+
+  it('formats ISO week-year short with IYY token', () => {
+    expect(evaluateComputed('FORMAT_DATE("2024-06-15T10:30:00Z", "IW/IYY")', vals({}))).toBe('24/24');
+  });
+
+  it('handles year boundary where ISO week-year differs from calendar year', () => {
+    // 2024-12-30 is a Monday → ISO week 1 of 2025
+    expect(evaluateComputed('FORMAT_DATE("2024-12-30T12:00:00Z", "IW/IYYY")', vals({}))).toBe('01/2025');
+    // Calendar year is still 2024
+    expect(evaluateComputed('FORMAT_DATE("2024-12-30T12:00:00Z", "DD/MM/YYYY")', vals({}))).toBe('30/12/2024');
+  });
+
+  it('pads single-digit ISO week with leading zero', () => {
+    // 2025-01-06 is Monday of ISO week 2
+    expect(evaluateComputed('FORMAT_DATE("2025-01-06T12:00:00Z", "IW")', vals({}))).toBe('02');
+  });
 });
 
 describe('DAYS_BETWEEN', () => {
@@ -414,6 +439,20 @@ describe('week/year expiry use case', () => {
     ].join('');
     const result = evaluateComputed(expr, v);
     // Week 12 of 2026 → Mon 2026-03-16, + 12 months → 2027-03-16 → week 11
+    expect(result).toBe('11/2027');
+  });
+
+  it('simplified with FORMAT_DATE IW/IYYY — 6 month offset', () => {
+    const v = vals({ 'field::Input': '12/2026', 'serial.extra.class': 'B' });
+    const expr = 'FORMAT_DATE(DATE_ADD(DATE("YW", SPLIT({{field::Input}}, "/", 1), SPLIT({{field::Input}}, "/", 0)), IF({{serial.extra.class}} == "A", 12, 6), "months"), "IW/IYYY")';
+    const result = evaluateComputed(expr, v);
+    expect(result).toBe('38/2026');
+  });
+
+  it('simplified with FORMAT_DATE IW/IYYY — 12 month offset', () => {
+    const v = vals({ 'field::Input': '12/2026', 'serial.extra.class': 'A' });
+    const expr = 'FORMAT_DATE(DATE_ADD(DATE("YW", SPLIT({{field::Input}}, "/", 1), SPLIT({{field::Input}}, "/", 0)), IF({{serial.extra.class}} == "A", 12, 6), "months"), "IW/IYYY")';
+    const result = evaluateComputed(expr, v);
     expect(result).toBe('11/2027');
   });
 });

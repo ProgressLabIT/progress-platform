@@ -37,10 +37,24 @@ function pad(n, len = 2) {
   return String(n).padStart(len, '0');
 }
 
+/** ISO 8601 week number and week-year for a Date. */
+function isoWeekData(d) {
+  const target = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  target.setUTCDate(target.getUTCDate() + 4 - (target.getUTCDay() || 7));
+  const isoYear = target.getUTCFullYear();
+  const yearStart = new Date(Date.UTC(isoYear, 0, 1));
+  const isoWeek = Math.ceil(((target - yearStart) / 86_400_000 + 1) / 7);
+  return { isoWeek, isoYear };
+}
+
 function formatDate(dateStr, pattern) {
   const d = toDate(dateStr);
   if (!d) return '';
+  const { isoWeek, isoYear } = isoWeekData(d);
   return String(pattern)
+    .replace('IYYY', String(isoYear))
+    .replace('IYY', String(isoYear).slice(-2))
+    .replace('IW', pad(isoWeek))
     .replace('YYYY', String(d.getFullYear()))
     .replace('YY', String(d.getFullYear()).slice(-2))
     .replace('MM', pad(d.getMonth() + 1))
@@ -100,10 +114,7 @@ const FUNCTIONS = {
   WEEK: (d) => {
     const dt = toDate(d);
     if (!dt) return 0;
-    const target = new Date(Date.UTC(dt.getFullYear(), dt.getMonth(), dt.getDate()));
-    target.setUTCDate(target.getUTCDate() + 4 - (target.getUTCDay() || 7));
-    const yearStart = new Date(Date.UTC(target.getUTCFullYear(), 0, 1));
-    return Math.ceil(((target - yearStart) / 86_400_000 + 1) / 7);
+    return isoWeekData(dt).isoWeek;
   },
 
   // Conditional

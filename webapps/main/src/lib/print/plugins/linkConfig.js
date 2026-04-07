@@ -123,6 +123,7 @@ export function createLinkSchema(customFields = [], activeSchema = {}) {
     templateExpression: {
       title: isComputed ? 'Computed Expression' : 'Expression',
       type: 'string',
+      widget: 'FormulaEditor',
       span: 24,
       hidden: !isTemplateExpression && !isComputed,
       props: {

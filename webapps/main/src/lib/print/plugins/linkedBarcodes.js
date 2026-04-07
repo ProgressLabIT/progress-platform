@@ -4,6 +4,7 @@
  */
 import { barcodes } from '@pdfme/schemas';
 import { createLinkSchema, linkDefaults } from './linkConfig.js';
+import { formulaEditorWidget } from './formulaWidget.js';
 
 // Custom icons matching mdi icons used in sidebar
 const qrcodeIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M3,11H11V3H3M5,5H9V9H5M13,3V11H21V3M19,9H15V5H19M3,21H11V13H3M5,15H9V19H5M13,13H15V15H13M15,15H17V17H15M17,13H19V15H17M19,15H21V17H19M17,17H19V19H17M13,17H15V19H13M15,19H17V21H15M19,19H21V21H19"/></svg>';
@@ -28,7 +29,7 @@ function wrapBarcode(barcodeSchema, customFields = [], customIcon = null) {
           ? barcodeSchema.propPanel.schema(props)
           : barcodeSchema.propPanel.schema),
       }),
-      widgets: barcodeSchema.propPanel.widgets || {},
+      widgets: { ...(barcodeSchema.propPanel.widgets || {}), FormulaEditor: formulaEditorWidget },
       defaultSchema: {
         ...barcodeSchema.propPanel.defaultSchema,
         ...linkDefaults,

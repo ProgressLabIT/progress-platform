@@ -162,7 +162,7 @@ The `+` operator auto-coerces: when both sides are numeric, it performs addition
 |---|---|---|
 | `NOW()` | Current date/time as ISO string | `FORMAT_DATE(NOW(), "DD/MM/YYYY")` |
 | `DATE(fmt, ...)` | Build a date from parts. See formats below. | `DATE("YW", 2026, 12)` |
-| `FORMAT_DATE(dateStr, pattern)` | Format a date. Patterns: `YYYY`, `YY`, `MM`, `DD`, `HH`, `mm`, `ss` | `FORMAT_DATE({{serial.create_date}}, "DD/MM/YYYY")` |
+| `FORMAT_DATE(dateStr, pattern)` | Format a date. Patterns: `IYYY` (ISO week-year), `IYY` (2-digit), `IW` (ISO week, zero-padded), `YYYY`, `YY`, `MM`, `DD`, `HH`, `mm`, `ss` | `FORMAT_DATE({{serial.create_date}}, "DD/MM/YYYY")` |
 | `DATE_ADD(dateStr, amount, unit)` | Add time to a date. Units: `"years"`, `"months"`, `"days"`, `"hours"`, `"minutes"`. Negative amount for subtraction. | `DATE_ADD({{serial.create_date}}, 2, "years")` |
 | `DAYS_BETWEEN(d1, d2)` | Absolute difference in days | `DAYS_BETWEEN({{job.start_date}}, {{job.end_date}})` |
 | `YEAR(d)` / `MONTH(d)` / `DAY(d)` | Extract date part (month is 1-indexed) | `YEAR({{serial.create_date}})` |
@@ -183,17 +183,22 @@ The `+` operator auto-coerces: when both sides are numeric, it performs addition
 |---|---|---|
 | `IF(condition, then, else)` | Returns `then` when condition is truthy, `else` otherwise. Truthy = non-empty, non-zero, non-false. | `IF({{serial.extra.class}} == "A", 12, 6)` |
 
-Functions compose — for example, a manually entered `"12/2026"` (week/year) field with a conditional 6- or 12-month offset based on an extra attribute:
+Functions compose — for example, a manually entered `"12/2026"` (week/year) field with a conditional 6- or 12-month offset based on an extra attribute. Using `FORMAT_DATE` with ISO week tokens (`IW`/`IYYY`) the date is computed once:
 
 ```
-CONCAT(
-  WEEK(DATE_ADD(DATE("YW", SPLIT({{field::Input}}, "/", 1), SPLIT({{field::Input}}, "/", 0)), IF({{serial.extra.class}} == "A", 12, 6), "months")),
-  "/",
-  YEAR(DATE_ADD(DATE("YW", SPLIT({{field::Input}}, "/", 1), SPLIT({{field::Input}}, "/", 0)), IF({{serial.extra.class}} == "A", 12, 6), "months"))
+FORMAT_DATE(
+  DATE_ADD(
+    DATE("YW", SPLIT({{field::Input}}, "/", 1), SPLIT({{field::Input}}, "/", 0)),
+    IF({{serial.extra.class}} == "A", 12, 6),
+    "months"
+  ),
+  "IW/IYYY"
 )
 ```
 
 With `Input = "12/2026"` and `class = "B"` this produces `"38/2026"` (week 12 + 6 months). With `class = "A"` it produces `"11/2027"` (week 12 + 12 months).
+
+> **Note:** `IYYY` is the ISO week-year, which can differ from the calendar year (`YYYY`) around January 1st. Always use `IYYY` together with `IW` to avoid mismatches at year boundaries.
 
 ### Reactive behavior in PrintDialog
 

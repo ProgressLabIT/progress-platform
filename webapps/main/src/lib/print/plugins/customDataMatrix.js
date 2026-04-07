@@ -8,6 +8,7 @@
 import bwipjs from 'bwip-js';
 import { b64toUint8Array, mm2pt } from '@pdfme/common';
 import { createLinkSchema, linkDefaults } from './linkConfig.js';
+import { formulaEditorWidget } from './formulaWidget.js';
 
 const DEFAULT_BG = '#ffffff';
 const DEFAULT_BAR = '#000000';
@@ -148,6 +149,7 @@ export function createDataMatrixPlugin(customFields = []) {
     icon: dataMatrixIcon,
 
     propPanel: {
+      widgets: { FormulaEditor: formulaEditorWidget },
       schema: (props) => ({
         ...createLinkSchema(customFields, props.activeSchema),
         barColor: {
