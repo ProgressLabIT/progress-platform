@@ -62,4 +62,31 @@ describe('resolveExpression', () => {
       resolveExpression('{{missing.var}}', mockCtx, [])
     ).toBe('');
   });
+
+  it('resolves field:: tokens from formModel', () => {
+    const fm = { QT: '12', 'Data Code': '14/2027' };
+    expect(
+      resolveExpression('QT: {{field::QT}}, DC: {{field::Data Code}}', mockCtx, [], fm)
+    ).toBe('QT: 12, DC: 14/2027');
+  });
+
+  it('resolves field:: tokens with spaces in names', () => {
+    const fm = { 'Shelf Life': '14/2028' };
+    expect(
+      resolveExpression('{{field::Shelf Life}}', mockCtx, [], fm)
+    ).toBe('14/2028');
+  });
+
+  it('resolves field:: to empty when formModel is not provided', () => {
+    expect(
+      resolveExpression('{{field::QT}}', mockCtx, [])
+    ).toBe('');
+  });
+
+  it('mixes preset, cf, and field:: tokens in one expression', () => {
+    const fm = { QT: '5' };
+    expect(
+      resolveExpression('{{product.code}} x{{field::QT}} ({{cf::abc123}})', mockCtx, [{ _key: 'abc123' }], fm)
+    ).toBe('ABC x5 (Red)');
+  });
 });

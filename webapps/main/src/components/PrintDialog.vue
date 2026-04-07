@@ -396,24 +396,37 @@ const hasSerialLink = ref(false);
 const previewSrc = ref();
 let computedFieldDefs = [];
 let computedFieldNames = new Set();
+let templateExprFieldDefs = [];
+let templateExprFieldNames = new Set();
 let stopComputedWatcher = null;
 
 function recomputeFields() {
-  if (computedFieldDefs.length === 0 || !formModel) return;
+  if (computedFieldDefs.length === 0 && templateExprFieldDefs.length === 0) return;
+  if (!formModel) return;
   const allCustomFields = store.state.form.customFields;
-  const valMap = buildValuesMap(formModel, props.context, allCustomFields);
-  const MAX_PASSES = 5;
-  for (let pass = 0; pass < MAX_PASSES; pass++) {
-    let changed = false;
-    for (const { name, expression } of computedFieldDefs) {
-      const newVal = String(evaluateComputed(expression, valMap) ?? '');
-      if (formModel[name] !== newVal) {
-        formModel[name] = newVal;
-        valMap.set(`field::${name}`, newVal);
-        changed = true;
+
+  if (computedFieldDefs.length > 0) {
+    const valMap = buildValuesMap(formModel, props.context, allCustomFields);
+    const MAX_PASSES = 5;
+    for (let pass = 0; pass < MAX_PASSES; pass++) {
+      let changed = false;
+      for (const { name, expression } of computedFieldDefs) {
+        const newVal = String(evaluateComputed(expression, valMap) ?? '');
+        if (formModel[name] !== newVal) {
+          formModel[name] = newVal;
+          valMap.set(`field::${name}`, newVal);
+          changed = true;
+        }
       }
+      if (!changed) break;
     }
-    if (!changed) break;
+  }
+
+  for (const { name, expression } of templateExprFieldDefs) {
+    const newVal = resolveExpression(expression, props.context, allCustomFields, formModel);
+    if (formModel[name] !== newVal) {
+      formModel[name] = newVal;
+    }
   }
 }
 
@@ -430,6 +443,8 @@ function resetState() {
   if (stopComputedWatcher) { stopComputedWatcher(); stopComputedWatcher = null; }
   computedFieldDefs = [];
   computedFieldNames = new Set();
+  templateExprFieldDefs = [];
+  templateExprFieldNames = new Set();
 }
 
 function initialize() {
@@ -569,6 +584,8 @@ async function selectTemplate(template) {
 
     computedFieldDefs = [];
     computedFieldNames = new Set();
+    templateExprFieldDefs = [];
+    templateExprFieldNames = new Set();
 
     formModel = reactive(
       Object.fromEntries(
@@ -590,6 +607,11 @@ async function selectTemplate(template) {
             return [fieldName, ''];
           }
           if (link.type === 'template_expression') {
+            const hasFieldRef = link.templateExpression?.includes('{{field::');
+            if (hasFieldRef) {
+              templateExprFieldDefs.push({ name: fieldName, expression: link.templateExpression });
+              templateExprFieldNames.add(fieldName);
+            }
             const resolved = resolveExpression(link.templateExpression, props.context, allCustomFields);
             return [fieldName, String(resolved ?? '')];
           }
@@ -603,8 +625,10 @@ async function selectTemplate(template) {
       ),
     );
 
-    if (computedFieldDefs.length > 0) {
-      const sourceFields = fieldNames.filter(n => !computedFieldNames.has(n));
+    const hasDerivedFields = computedFieldDefs.length > 0 || templateExprFieldDefs.length > 0;
+    if (hasDerivedFields) {
+      const derivedNames = new Set([...computedFieldNames, ...templateExprFieldNames]);
+      const sourceFields = fieldNames.filter(n => !derivedNames.has(n));
       recomputeFields();
       stopComputedWatcher = watch(
         () => sourceFields.map(n => formModel[n]),

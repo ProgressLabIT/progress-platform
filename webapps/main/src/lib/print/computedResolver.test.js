@@ -51,6 +51,11 @@ describe('arithmetic', () => {
   it('treats missing tokens as empty string / 0 in arithmetic', () => {
     expect(evaluateComputed('{{field::Missing}} * 5', vals({}))).toBe(0);
   });
+
+  it('resolves tokens with spaces in field names', () => {
+    const v = vals({ 'field::Data Code': '14/2027', 'field::Shelf Life': '14/2028' });
+    expect(evaluateComputed('CONCAT({{field::Data Code}}, " / ", {{field::Shelf Life}})', v)).toBe('14/2027 / 14/2028');
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -513,6 +518,11 @@ describe('extractTokens', () => {
   it('extracts all token keys', () => {
     const tokens = extractTokens('{{field::A}} + {{serial.code}} * {{cf::abc}}');
     expect(tokens).toEqual(['field::A', 'serial.code', 'cf::abc']);
+  });
+
+  it('extracts tokens with spaces in field names', () => {
+    const tokens = extractTokens('{{field::Data Code}} + {{field::Shelf Life}}');
+    expect(tokens).toEqual(['field::Data Code', 'field::Shelf Life']);
   });
 
   it('returns empty array for no tokens', () => {

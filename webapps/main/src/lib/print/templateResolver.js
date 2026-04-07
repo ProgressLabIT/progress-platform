@@ -4,12 +4,14 @@
  * Pure-logic encode/decode/resolve trio for template string expressions.
  * No framework dependencies — plain ES module.
  *
- * Token format: {{token}} where token contains word chars, colons, dots.
+ * Token format: {{token}} where token contains word chars, colons, dots,
+ * and optionally spaces (for field names like {{field::Data Code}}).
  * Custom field tokens: {{cf::_key}} (encoded) / {{cf::slug}} (decoded)
+ * Field ref tokens: {{field::FieldName}} (resolved from sibling form values)
  * Preset tokens: {{preset.key}} (unchanged through encode/decode)
  */
 
-const TOKEN_REGEX = /\{\{\s*([\w:.]+)\s*\}\}/g;
+const TOKEN_REGEX = /\{\{\s*([\w:.]+(?:\s+[\w:.]+)*)\s*\}\}/g;
 
 /**
  * slugify(name) -> string
@@ -76,8 +78,9 @@ export function decodeExpression(expr, customFields) {
 }
 
 /**
- * resolveExpression(expr, context, customFields) -> string
+ * resolveExpression(expr, context, customFields, formModel?) -> string
  * Resolves all tokens to their runtime values.
+ * Field ref tokens ({{field::Name}}) use formModel values.
  * Custom field tokens use context.getCustomFieldValue(_key).
  * Preset tokens use context.getPresetValue(key).
  * Missing values resolve to empty string.
@@ -85,11 +88,16 @@ export function decodeExpression(expr, customFields) {
  * @param {string | null | undefined} expr
  * @param {{ getPresetValue(key: string): string | undefined; getCustomFieldValue(key: string): string | undefined }} context
  * @param {Array<{ _key: string }>} customFields
+ * @param {Record<string, string> | null | undefined} [formModel] - Sibling field values for {{field::Name}} tokens
  * @returns {string}
  */
-export function resolveExpression(expr, context, customFields) {
+export function resolveExpression(expr, context, customFields, formModel) {
   if (expr == null) return '';
   return expr.replace(TOKEN_REGEX, (_match, token) => {
+    if (token.startsWith('field::')) {
+      const fieldName = token.slice(7);
+      return String(formModel?.[fieldName] ?? '');
+    }
     if (token.startsWith('cf::')) {
       const key = token.slice(4);
       return String(context.getCustomFieldValue(key) ?? '');

@@ -22,7 +22,7 @@ import Prism from 'prismjs';
 
 Prism.languages.formula = {
   'token-ref': {
-    pattern: /\{\{[\w:.]+\}\}/,
+    pattern: /\{\{[\w:.]+(?:\s+[\w:.]+)*\}\}/,
     greedy: false,
   },
   'function': {

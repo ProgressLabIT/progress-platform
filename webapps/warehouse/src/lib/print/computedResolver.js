@@ -433,7 +433,7 @@ export function evaluateComputed(expression, valuesMap) {
  */
 export function extractTokens(expression) {
   if (!expression) return [];
-  const regex = /\{\{\s*([\w:.]+)\s*\}\}/g;
+  const regex = /\{\{\s*([\w:.]+(?:\s+[\w:.]+)*)\s*\}\}/g;
   const tokens = [];
   let match;
   while ((match = regex.exec(expression)) !== null) {
