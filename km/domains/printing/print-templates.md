@@ -4,7 +4,7 @@ Print templates define PDF layouts (text, images, barcodes) and how fields are l
 
 ## Architecture
 
-- **Designer**: [PrintTemplateDesigner.vue](webapps/main/src/components/PrintTemplateDesigner.vue) — toolbar with add-field buttons (no pdfme left sidebar), pdfme Designer for layout. Plugins built with `buildPlugins(customFields)` so the property panel can show Custom Field dropdowns. Link Type and Custom Field appear above graphical/formatting options in the prop panel. An unscoped CSS rule in the Designer raises Ant Design Select/Cascader dropdown z-index (`.ant-select-dropdown`, `.ant-cascader-dropdown` → 9999) so dropdowns are visible above the Quasar dialog (z-index ~6000).
+- **Designer**: [PrintTemplateDesigner.vue](webapps/main/src/components/PrintTemplateDesigner.vue) — toolbar with add-field buttons (no pdfme left sidebar), pdfme Designer for layout. Plugins built with `buildPlugins(customFields)` so the property panel can show Custom Field dropdowns. Link Type and Custom Field appear above graphical/formatting options in the prop panel. An unscoped CSS rule in the Designer raises Ant Design Select/Cascader dropdown z-index (`.ant-select-dropdown`, `.ant-cascader-dropdown` → 9999) so dropdowns are visible above the Quasar dialog (z-index ~6000). A **help button** (`mdi-help-circle-outline`) at the right of the toolbar opens a `BaseDialog` with plain-language explanations of field types, link types, token syntax, and a full table of computed field functions (grouped by category: String, Math, Date, Conditional).
 - **Library card**: [PrintTemplateCard.vue](webapps/main/src/components/PrintTemplateCard.vue) — when `allowEdit` is set (e.g. [PrintTemplateLibrary.vue](webapps/main/src/views/PrintTemplateLibrary.vue)), a copy action loads the full template via `GET /print-template/{key}`, strips `_key` / `_id` / `_rev` (and UI-only fields), sets `name` to the original name plus a locale-specific “(COPY)” suffix, and creates a new document with `POST /print-template` (same payload shape as designer save). Template assignments (`can_use_print_template`) are not copied; the new template is global until linked elsewhere.
 - **Fill & generate**: [PrintDialog.vue](webapps/main/src/components/PrintDialog.vue) shows only editable fields, validates required fields, and uses `buildPlugins([])` for PDF generation. [print.js](webapps/main/src/lib/print.js) uses `buildPlugins([])` for programmatic `generatePdf()`.
 - **Plugins**: [webapps/main/src/lib/print/plugins/](webapps/main/src/lib/print/plugins/) — `createLinkedText`, `createLinkedImage`, `createLinkedBarcodes` (factory functions taking `customFields`), and `createDataMatrixPlugin`. Link configuration is form-render format with `props.options` for selects and boolean `hidden` from `activeSchema`.
@@ -77,6 +77,7 @@ Any token in `{{...}}` is replaced at print time with the corresponding live val
 | `{{preset.key}}` | Preset value (job, serial, date, etc.) | `{{serial.code}}`, `{{current_date}}` |
 | `{{cf::slug}}` | Custom field (display form, in Designer) | `{{cf::batch_number}}` |
 | `{{cf::_key}}` | Custom field (storage form, in database) | `{{cf::1234567890}}` |
+| `{{field::Name}}` | Sibling template field value (supports spaces in names) | `{{field::QT}}`, `{{field::Data Code}}` |
 | `{{product.code}}` | Warehouse preset context | `{{product.code}}`, `{{position.code}}` |
 
 ### Storage format
@@ -89,22 +90,25 @@ The Designer works with human-readable slugs (`{{cf::batch_number}}`), but the d
 
 ### Resolution at print time
 
-`resolveExpression(expr, context, customFields)` in `webapps/main/src/lib/print/templateResolver.js` replaces all `{{tokens}}` with live data values:
+`resolveExpression(expr, context, customFields, formModel?)` in `webapps/main/src/lib/print/templateResolver.js` replaces all `{{tokens}}` with live data values:
 
 ```js
 import { resolveExpression } from '@/lib/print/templateResolver'
 
 const resolved = resolveExpression(
-  '{{product.code}} / {{cf::_key123}}',
+  '{{product.code}} / {{cf::_key123}} / {{field::QT}}',
   {
     getPresetValue: (key) => presetLookup[key],
     getCustomFieldValue: (key) => customFieldLookup[key],
   },
-  customFields
+  customFields,
+  formModel   // optional — needed for {{field::Name}} tokens
 )
 ```
 
 Missing values resolve to an empty string. The function is a pure ES module with no framework dependencies.
+
+When a template expression contains `{{field::...}}` tokens, PrintDialog detects this and sets up a reactive watcher so the expression re-resolves whenever the referenced sibling fields change (similar to computed fields).
 
 ### Link type
 
