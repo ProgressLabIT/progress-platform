@@ -64,6 +64,18 @@
             @click="saveTemplate"
           />
         </div>
+
+        <div class="col-auto">
+          <q-btn
+            flat
+            round
+            dense
+            icon="mdi-help-circle-outline"
+            @click="showHelp = true"
+          >
+            <q-tooltip>{{ $t('print_template_help.title') }}</q-tooltip>
+          </q-btn>
+        </div>
       </div>
 
       <!-- Designer container with custom left sidebar overlay -->
@@ -141,6 +153,92 @@
           @cancel="cancelRename"
           @save="showRename = false"
         />
+      </BaseDialog>
+
+      <BaseDialog :show="showHelp" :no-backdrop-dismiss="false" @close="showHelp = false">
+        <q-card class="surface2" style="width: 660px; max-width: 95vw; max-height: 90vh; display: flex; flex-direction: column;">
+          <q-card-section class="row items-center q-pb-none">
+            <div class="text-h6 display highlight">{{ $t('print_template_help.title') }}</div>
+            <q-space />
+            <q-btn flat round dense icon="mdi-close" @click="showHelp = false" />
+          </q-card-section>
+
+          <q-card-section class="scroll col q-pt-sm" style="min-height: 0;">
+            <p class="text-body2">{{ $t('print_template_help.overview') }}</p>
+
+            <div class="text-subtitle2 highlight text-weight-medium q-mt-md q-mb-xs">
+              {{ $t('print_template_help.field_types_title') }}
+            </div>
+            <q-list dense>
+              <q-item v-for="ft in fieldTypeHelp" :key="ft.key" class="q-px-none">
+                <q-item-section avatar>
+                  <q-icon :name="ft.icon" size="sm" />
+                </q-item-section>
+                <q-item-section>
+                  <q-item-label class="text-weight-medium">{{ ft.label }}</q-item-label>
+                  <q-item-label caption>{{ ft.desc }}</q-item-label>
+                </q-item-section>
+              </q-item>
+            </q-list>
+
+            <div class="text-subtitle2 highlight text-weight-medium q-mt-md q-mb-xs">
+              {{ $t('print_template_help.link_types_title') }}
+            </div>
+            <q-list dense>
+              <q-item v-for="lt in linkTypeHelp" :key="lt.key" class="q-px-none">
+                <q-item-section>
+                  <q-item-label><code class="text-caption">{{ lt.key }}</code></q-item-label>
+                  <q-item-label caption>{{ lt.desc }}</q-item-label>
+                </q-item-section>
+              </q-item>
+            </q-list>
+
+            <div class="text-subtitle2 highlight text-weight-medium q-mt-md q-mb-xs">
+              {{ $t('print_template_help.token_syntax_title') }}
+            </div>
+            <p class="text-body2 q-mb-xs">{{ $t('print_template_help.token_syntax') }}</p>
+            <div class="text-body2 q-mb-xs q-pl-sm">
+              <div><code>{{ tokenExamples.field }}</code> — {{ $t('print_template_help.token_field') }}</div>
+              <div><code>{{ tokenExamples.preset }}</code> — {{ $t('print_template_help.token_preset') }}</div>
+              <div><code>{{ tokenExamples.cf }}</code> — {{ $t('print_template_help.token_cf') }}</div>
+            </div>
+            <p class="text-body2 q-mt-sm">{{ $t('print_template_help.operators') }}</p>
+
+            <div class="text-subtitle2 highlight text-weight-medium q-mt-md q-mb-xs">
+              {{ $t('print_template_help.computed_title') }}
+            </div>
+            <p class="text-body2 q-mb-sm">{{ $t('print_template_help.computed_intro') }}</p>
+            <q-markup-table flat dense bordered wrap-cells class="text-body2">
+              <thead>
+                <tr>
+                  <th class="text-left" style="width: 45%">{{ $t('print_template_help.col_function') }}</th>
+                  <th class="text-left">{{ $t('print_template_help.col_description') }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <template v-for="group in helpFunctionGroups" :key="group.title">
+                  <tr>
+                    <td
+                      colspan="2"
+                      class="text-caption text-weight-bold q-py-xs"
+                      style="background: rgba(128,128,128,0.08)"
+                    >
+                      {{ group.title }}
+                    </td>
+                  </tr>
+                  <tr v-for="fn in group.fns" :key="fn.fn">
+                    <td><code>{{ fn.fn }}</code></td>
+                    <td>{{ fn.desc }}</td>
+                  </tr>
+                </template>
+              </tbody>
+            </q-markup-table>
+          </q-card-section>
+
+          <q-card-actions align="right" class="q-pt-none">
+            <q-btn flat :label="$capitalize($t('close'))" @click="showHelp = false" />
+          </q-card-actions>
+        </q-card>
       </BaseDialog>
     </template>
   </BaseModalScreen>
@@ -469,6 +567,69 @@ const showRename = ref(false);
 function cancelRename() {
   showRename.value = false;
 }
+
+const showHelp = ref(false);
+
+/** Token examples for the help dialog — kept as data so Vue does not parse the braces. */
+const tokenExamples = {
+  field: '{{field::FieldName}}',
+  preset: '{{preset.key}}',
+  cf: '{{cf::slug}}',
+};
+
+const fieldTypeHelp = computed(() => [
+  { key: 'text', icon: 'mdi-format-text', label: t('field_type_text'), desc: t('print_template_help.field_type_text') },
+  { key: 'image', icon: 'mdi-image', label: t('image'), desc: t('print_template_help.field_type_image') },
+  { key: 'template_string', icon: 'mdi-text-box-outline', label: t('field_type_template_string'), desc: t('print_template_help.field_type_template_string') },
+  { key: 'barcode', icon: 'mdi-barcode', label: t('print_template_barcodes'), desc: t('print_template_help.field_type_barcode') },
+]);
+
+const linkTypeHelp = computed(() => [
+  { key: 'none', desc: t('print_template_help.link_none') },
+  { key: 'preset', desc: t('print_template_help.link_preset') },
+  { key: 'custom_field', desc: t('print_template_help.link_custom_field') },
+  { key: 'template_expression', desc: t('print_template_help.link_template_expression') },
+  { key: 'computed', desc: t('print_template_help.link_computed') },
+]);
+
+const helpFunctionGroups = computed(() => [
+  {
+    title: t('print_template_help.category_string'),
+    fns: [
+      { fn: 'CONCAT(a, b, ...)', desc: t('print_template_help.fn_concat') },
+      { fn: 'UPPER(s)', desc: t('print_template_help.fn_upper') },
+      { fn: 'LOWER(s)', desc: t('print_template_help.fn_lower') },
+      { fn: 'SPLIT(str, delim, index)', desc: t('print_template_help.fn_split') },
+    ],
+  },
+  {
+    title: t('print_template_help.category_math'),
+    fns: [
+      { fn: 'ROUND(n, decimals?)', desc: t('print_template_help.fn_round') },
+      { fn: 'ABS(n)', desc: t('print_template_help.fn_abs') },
+      { fn: 'CEIL(n)', desc: t('print_template_help.fn_ceil') },
+      { fn: 'FLOOR(n)', desc: t('print_template_help.fn_floor') },
+    ],
+  },
+  {
+    title: t('print_template_help.category_date'),
+    fns: [
+      { fn: 'NOW()', desc: t('print_template_help.fn_now') },
+      { fn: 'DATE(fmt, ...)', desc: t('print_template_help.fn_date') },
+      { fn: 'FORMAT_DATE(d, pattern)', desc: t('print_template_help.fn_format_date') },
+      { fn: 'DATE_ADD(d, amount, unit)', desc: t('print_template_help.fn_date_add') },
+      { fn: 'DAYS_BETWEEN(d1, d2)', desc: t('print_template_help.fn_days_between') },
+      { fn: 'YEAR(d) / MONTH(d) / DAY(d)', desc: t('print_template_help.fn_ymd') },
+      { fn: 'WEEK(d)', desc: t('print_template_help.fn_week') },
+    ],
+  },
+  {
+    title: t('print_template_help.category_conditional'),
+    fns: [
+      { fn: 'IF(cond, then, else)', desc: t('print_template_help.fn_if') },
+    ],
+  },
+]);
 </script>
 
 <style scoped>
