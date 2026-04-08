@@ -714,6 +714,10 @@ export default {
   print_template_none: 'Nessun template',
   print_template_add: 'Aggiungi stampa',
   print_template_load_pdf: 'Carica pdf base',
+  print_template_page_size: 'Formato pagina',
+  print_template_page_preset: 'Preimpostato',
+  width_mm: 'Larghezza',
+  height_mm: 'Altezza',
   print_template_link_type: {
     preset: 'Preimpostato',
     custom_field: 'Campo personalizzato',

@@ -703,6 +703,10 @@ export default {
   print_template_none: 'No templates',
   print_template_add: 'Add print template',
   print_template_load_pdf: 'Upload base pdf',
+  print_template_page_size: 'Page size',
+  print_template_page_preset: 'Preset',
+  width_mm: 'Width',
+  height_mm: 'Height',
   print_template_link_type: {
     preset: 'Preset',
     custom_field: 'Custom Field',

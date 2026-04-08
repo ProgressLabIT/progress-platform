@@ -20,7 +20,7 @@
         class="row q-pa-md q-col-gutter-md items-center surface1"
         style="border-bottom: 1px solid rgba(0,0,0,0.12)"
       >
-        <div class="col-12 col-md-4">
+        <div class="col-12 col-md-auto">
           <q-input
             v-model="workingTemplate.name"
             filled
@@ -50,6 +50,18 @@
             padding="sm"
             size="sm"
             @click="$refs.pdfFileInput.click()"
+          />
+        </div>
+
+        <div class="col-auto">
+          <q-btn
+            :label="$t('print_template_page_size')"
+            color="primary"
+            icon="mdi-resize"
+            outline
+            padding="sm"
+            size="sm"
+            @click="openPageSizeDialog"
           />
         </div>
 
@@ -155,6 +167,53 @@
         />
       </BaseDialog>
 
+      <BaseDialog :show="showPageSize" :no-backdrop-dismiss="false" @close="showPageSize = false">
+        <q-card class="surface2" style="width: 360px; max-width: 95vw">
+          <q-card-section>
+            <div class="text-h6 display highlight">{{ $t('print_template_page_size') }}</div>
+          </q-card-section>
+
+          <q-card-section class="q-pt-none q-col-gutter-sm column">
+            <q-select
+              v-model="pageSizePreset"
+              :options="PAGE_SIZE_PRESETS"
+              option-label="label"
+              filled
+              dense
+              :label="$t('print_template_page_preset')"
+              @update:model-value="onPresetSelected"
+            />
+            <div class="row q-col-gutter-sm">
+              <div class="col">
+                <q-input
+                  v-model.number="pageSizeWidth"
+                  type="number"
+                  filled
+                  dense
+                  :label="$t('width_mm')"
+                  suffix="mm"
+                />
+              </div>
+              <div class="col">
+                <q-input
+                  v-model.number="pageSizeHeight"
+                  type="number"
+                  filled
+                  dense
+                  :label="$t('height_mm')"
+                  suffix="mm"
+                />
+              </div>
+            </div>
+          </q-card-section>
+
+          <q-card-actions align="right">
+            <q-btn flat :label="$t('cancel')" @click="showPageSize = false" />
+            <q-btn flat color="primary" :label="$t('confirm')" @click="confirmPageSize" />
+          </q-card-actions>
+        </q-card>
+      </BaseDialog>
+
       <BaseDialog :show="showHelp" :no-backdrop-dismiss="false" @close="showHelp = false">
         <q-card class="surface2" style="width: 660px; max-width: 95vw; max-height: 90vh; display: flex; flex-direction: column;">
           <q-card-section class="row items-center q-pb-none">
@@ -245,7 +304,7 @@
 </template>
 
 <script setup>
-import { BLANK_PDF } from '@pdfme/common';
+import { BLANK_A4_PDF } from '@pdfme/common';
 import { Designer } from '@pdfme/ui';
 import { cloneDeep } from 'lodash';
 import { computed, ref, watch } from 'vue';
@@ -315,12 +374,22 @@ function schemasToV5(schemas) {
 }
 
 const { t, locale } = useI18n();
+const PAGE_SIZE_PRESETS = [
+  { label: 'A4 Portrait',   width: 210,   height: 297,  padding: [10, 10, 10, 10] },
+  { label: 'A4 Landscape',  width: 297,   height: 210,  padding: [10, 10, 10, 10] },
+  { label: 'A5 Portrait',   width: 148,   height: 210,  padding: [10, 10, 10, 10] },
+  { label: 'A3 Portrait',   width: 297,   height: 420,  padding: [10, 10, 10, 10] },
+  { label: 'Letter',        width: 215.9, height: 279.4, padding: [10, 10, 10, 10] },
+  { label: 'Label 100×50',  width: 100,   height: 50,   padding: [2, 2, 2, 2] },
+  { label: 'Label 100×70',  width: 100,   height: 70,   padding: [2, 2, 2, 2] },
+];
+
 const emptyTemplate = computed(() => ({
   name: t('print_template_new'),
   description: undefined,
   links: {},
   template: {
-    basePdf: BLANK_PDF,
+    basePdf: { ...BLANK_A4_PDF },
     schemas: [],
   },
 }));
@@ -408,7 +477,14 @@ function initDesigner() {
   });
 
   designer.onChangeTemplate((template) => {
+    // Preserve blank PDF basePdf: the designer keeps its initial basePdf internally
+    // and does not update it via updateTemplate, so we must not let it overwrite
+    // the dimensions the user has set in the toolbar.
+    const trackedBasePdf = workingTemplate.value.template?.basePdf;
     workingTemplate.value.template = cloneDeep(template);
+    if (trackedBasePdf != null && typeof trackedBasePdf === 'object') {
+      workingTemplate.value.template.basePdf = trackedBasePdf;
+    }
   });
 }
 
@@ -458,6 +534,51 @@ function closeDesigner() {
   }
   workingTemplate.value = undefined;
   emit('close');
+}
+
+const showPageSize = ref(false);
+const pageSizePreset = ref(null);
+const pageSizeWidth = ref(210);
+const pageSizeHeight = ref(297);
+const pageSizePadding = ref([10, 10, 10, 10]);
+
+function openPageSizeDialog() {
+  const bp = workingTemplate.value?.template?.basePdf;
+  if (bp != null && typeof bp === 'object') {
+    pageSizeWidth.value = bp.width;
+    pageSizeHeight.value = bp.height;
+    pageSizePadding.value = bp.padding ?? [10, 10, 10, 10];
+  } else {
+    pageSizeWidth.value = 210;
+    pageSizeHeight.value = 297;
+    pageSizePadding.value = [10, 10, 10, 10];
+  }
+  pageSizePreset.value = PAGE_SIZE_PRESETS.find(
+    (p) => p.width === pageSizeWidth.value && p.height === pageSizeHeight.value,
+  ) ?? null;
+  showPageSize.value = true;
+}
+
+function onPresetSelected(preset) {
+  if (!preset) return;
+  pageSizeWidth.value = preset.width;
+  pageSizeHeight.value = preset.height;
+  pageSizePadding.value = preset.padding;
+}
+
+function confirmPageSize() {
+  if (!workingTemplate.value) return;
+  workingTemplate.value.template.basePdf = {
+    width: pageSizeWidth.value,
+    height: pageSizeHeight.value,
+    padding: pageSizePadding.value,
+  };
+  showPageSize.value = false;
+  if (designer) {
+    designer.destroy();
+    designer = null;
+  }
+  initDesigner();
 }
 
 async function uploadPdf(file) {
@@ -550,7 +671,11 @@ function initTemplate() {
 
 async function saveTemplate() {
   const templateFromDesigner = designer.getTemplate();
-  const encodedTemplate = encodeTemplateExpressions(cloneDeep(templateFromDesigner), customFields.value);
+  const templateToSave = cloneDeep(templateFromDesigner);
+  // Use the tracked basePdf from workingTemplate: the designer keeps its initial basePdf
+  // internally and does not reflect live dimension changes from the toolbar inputs.
+  templateToSave.basePdf = workingTemplate.value.template?.basePdf ?? templateFromDesigner.basePdf;
+  const encodedTemplate = encodeTemplateExpressions(templateToSave, customFields.value);
   await api.request({
     method: mode.value === 'new' ? 'POST' : 'PUT',
     url: 'print-template',

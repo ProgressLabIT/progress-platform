@@ -106,8 +106,14 @@ class VisualFieldSpec(BaseModel):
 FieldSpec = TextFieldSpec | VisualFieldSpec
 PageSchema = list[FieldSpec] # v5: array of field specs, each with a name property
 
+class BlankPdf(BaseModel):
+  """pdfme BlankPdf format — blank page with explicit dimensions in mm."""
+  width: float
+  height: float
+  padding: list[float] = [0, 0, 0, 0]
+
 class PrintTemplate(BaseModel):
-  basePdf: str | None = None
+  basePdf: str | BlankPdf | None = None
   sampledata: list[dict[str, str]] = []
   schemas: list[PageSchema]
   pdfmeVersion: str | None = None

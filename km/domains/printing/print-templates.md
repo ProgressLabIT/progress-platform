@@ -4,10 +4,52 @@ Print templates define PDF layouts (text, images, barcodes) and how fields are l
 
 ## Architecture
 
-- **Designer**: [PrintTemplateDesigner.vue](webapps/main/src/components/PrintTemplateDesigner.vue) — toolbar with add-field buttons (no pdfme left sidebar), pdfme Designer for layout. Plugins built with `buildPlugins(customFields)` so the property panel can show Custom Field dropdowns. Link Type and Custom Field appear above graphical/formatting options in the prop panel. An unscoped CSS rule in the Designer raises Ant Design Select/Cascader dropdown z-index (`.ant-select-dropdown`, `.ant-cascader-dropdown` → 9999) so dropdowns are visible above the Quasar dialog (z-index ~6000). A **help button** (`mdi-help-circle-outline`) at the right of the toolbar opens a `BaseDialog` with plain-language explanations of field types, link types, token syntax, and a full table of computed field functions (grouped by category: String, Math, Date, Conditional).
+- **Designer**: [PrintTemplateDesigner.vue](webapps/main/src/components/PrintTemplateDesigner.vue) — toolbar with add-field buttons (no pdfme left sidebar), pdfme Designer for layout. Plugins built with `buildPlugins(customFields)` so the property panel can show Custom Field dropdowns. Link Type and Custom Field appear above graphical/formatting options in the prop panel. An unscoped CSS rule in the Designer raises Ant Design Select/Cascader dropdown z-index (`.ant-select-dropdown`, `.ant-cascader-dropdown` → 9999) so dropdowns are visible above the Quasar dialog (z-index ~6000). A **help button** (`mdi-help-circle-outline`) at the right of the toolbar opens a `BaseDialog` with plain-language explanations of field types, link types, token syntax, and a full table of computed field functions (grouped by category: String, Math, Date, Conditional). The toolbar also exposes **page size controls** when the template uses a blank page (see below).
 - **Library card**: [PrintTemplateCard.vue](webapps/main/src/components/PrintTemplateCard.vue) — when `allowEdit` is set (e.g. [PrintTemplateLibrary.vue](webapps/main/src/views/PrintTemplateLibrary.vue)), a copy action loads the full template via `GET /print-template/{key}`, strips `_key` / `_id` / `_rev` (and UI-only fields), sets `name` to the original name plus a locale-specific “(COPY)” suffix, and creates a new document with `POST /print-template` (same payload shape as designer save). Template assignments (`can_use_print_template`) are not copied; the new template is global until linked elsewhere.
 - **Fill & generate**: [PrintDialog.vue](webapps/main/src/components/PrintDialog.vue) shows only editable fields, validates required fields, and uses `buildPlugins([])` for PDF generation. [print.js](webapps/main/src/lib/print.js) uses `buildPlugins([])` for programmatic `generatePdf()`.
 - **Plugins**: [webapps/main/src/lib/print/plugins/](webapps/main/src/lib/print/plugins/) — `createLinkedText`, `createLinkedImage`, `createLinkedBarcodes` (factory functions taking `customFields`), and `createDataMatrixPlugin`. Link configuration is form-render format with `props.options` for selects and boolean `hidden` from `activeSchema`.
+
+## Page size / basePdf
+
+A template's `basePdf` can take two forms (pdfme v5):
+
+| Form | Type | When to use |
+|------|------|-------------|
+| Base64 data URL string | `string` | Uploaded PDF used as a background/form |
+| Blank page object | `{ width, height, padding }` | Pure layout with no background; page size is controlled in the designer |
+
+New templates default to a blank A4 page (`{ width: 210, height: 297, padding: [10, 10, 10, 10] }`). All dimensions are in millimetres.
+
+### Designer controls
+
+The designer toolbar has a **Page size** button that opens a dialog with:
+
+- **Preset** dropdown: A4 Portrait, A4 Landscape, A5 Portrait, A3 Portrait, Letter, Label 100×50, Label 100×70 — selecting a preset fills in width and height
+- **Width / Height** number inputs (mm): for custom dimensions
+
+On confirm, `basePdf` is set to a blank page object with the chosen dimensions and the designer reinitializes. This also works when switching from an uploaded PDF to a blank page — the uploaded background is replaced. To use an uploaded PDF instead, click **Upload base PDF** in the toolbar.
+
+### Backend model
+
+`PrintTemplate.basePdf` in [backend/api/models/print.py](backend/api/models/print.py) accepts both forms:
+
+```python
+class BlankPdf(BaseModel):
+    width: float
+    height: float
+    padding: list[float] = [0, 0, 0, 0]
+
+class PrintTemplate(BaseModel):
+    basePdf: str | BlankPdf | None = None
+```
+
+Pydantic discriminates on JSON type automatically. Existing templates with a base64 string continue to work unchanged.
+
+### Consumer compatibility
+
+All consumers (`PrintDialog.vue`, `LabelPrintTemplates.vue`, `PrintLabelForm.vue`, `generatePdf()`) pass `basePdf` through to pdfme's `generate()` unchanged — pdfme accepts both forms natively. ZPL generation ignores `basePdf` entirely (schema-driven).
+
+---
 
 ## Field properties (v5)
 
