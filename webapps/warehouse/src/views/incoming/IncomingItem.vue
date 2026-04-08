@@ -155,10 +155,12 @@ function prepareMovementUpdates() {
   }
   // Quantity
   else {
-    const splitData = positionsTo.value.map(position => ({
-      position_to: position._key,
-      qt_confirmed: position.quantity,
-    }));
+    const splitData = positionsTo.value
+      .filter(position => position.quantity > 0)
+      .map(position => ({
+        position_to: position._key,
+        qt_confirmed: position.quantity,
+      }));
     const referenceMovement = lists.selectedItem.movements.find(m => m.status === 'planned' && m._key !== null)
     updates.push({
       ...referenceMovement,

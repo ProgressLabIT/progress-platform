@@ -40,7 +40,7 @@
             :min="0"
             :max="refQuantity"
             :inner-max="Math.max(position.quantity, freeQuantity)"
-            :step="1"
+            :step="step"
             :disable="position.locked || allOthersLocked[position._key]"
             @change="adjust(position)"
           />
@@ -52,7 +52,7 @@
             size="sm"
             color="theme-blue"
             icon="mdi-minus"
-            @click="() => { position.quantity -= 1; adjust(position) }"
+            @click="() => { position.quantity = roundQuantity(position.quantity - step); adjust(position) }"
           />
         </div>
         <div class="col-auto">
@@ -63,7 +63,7 @@
             color="theme-blue"
             padding="0px"
             icon="mdi-plus"
-            @click="() => { position.quantity += 1; adjust(position) }"
+            @click="() => { position.quantity = roundQuantity(position.quantity + step); adjust(position) }"
           />
         </div>
       </div>
@@ -73,10 +73,17 @@
 
 <script setup>
 import { computed, ref } from 'vue';
+import { roundQuantity } from '@/lib/rounding';
 
 const positions = defineModel('positions');
 const refQuantity = defineModel('refQuantity');
 const freeQuantity = ref(refQuantity.value);
+
+const step = computed(() => {
+  const str = String(refQuantity.value);
+  const decimals = str.includes('.') ? str.split('.')[1].length : 0;
+  return decimals > 0 ? 1 / (10 ** decimals) : 1;
+});
 
 const allOthersLocked = computed(() => {
   return positions.value.reduce((acc, pos) => {

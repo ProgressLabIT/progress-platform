@@ -218,7 +218,7 @@ function adjustQuantityPerPosition() {
   let remainingQty = lists.movementQuantity;
   let remainingPos = tempPositions.value.length;
   for (let position of tempPositions.value) {
-    let posQty = Math.floor(remainingQty / remainingPos);
+    let posQty = remainingPos === 1 ? remainingQty : Math.floor(remainingQty / remainingPos);
     position.quantity = posQty;
     remainingPos--;
     remainingQty -= posQty;
