@@ -164,6 +164,7 @@ class BatchCompletedEvent(BaseProductionEvent):
     else:
       new_progress = round(100 * new_job_qt_completed / self.job.qt_planned)
 
+      # Update job first so child events (BatchCreatedEvent) read correct qt_completed
       job_update = dict(
         _key = self.info.job_key,
         active_batch_key = None,
@@ -173,6 +174,7 @@ class BatchCompletedEvent(BaseProductionEvent):
         progress = new_progress,
         active = False
       )
+      self.job = Job(**self.tx.collection('Job').update(job_update, check_rev=False, return_new=True)['new'])
 
       # Auto new batch ignored if serials must be selected for new batch. Clients must select new serials to start the new one
       # The batch_serials event property could be confused with the ones of the batch being declared.
@@ -199,15 +201,14 @@ class BatchCompletedEvent(BaseProductionEvent):
         ))
 
         # Update job with new batch/work session data
-        job_update.update(dict(
+        job_update = dict(
+          _key = self.info.job_key,
           active_batch_qt = self.batch.qt_total,
           active_batch_key = self.batch.key,
           last_work_session_started = self.work_session.key,
           active = True
-        ))
-
-      # Store job update
-      self.job = Job(**self.tx.collection('Job').update(job_update, check_rev=False, return_new=True)['new'])
+        )
+        self.job = Job(**self.tx.collection('Job').update(job_update, check_rev=False, return_new=True)['new'])
 
 
       # SET RESPONSE

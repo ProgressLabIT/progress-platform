@@ -439,7 +439,9 @@ export default {
           });
 
           if (current_step_was_last) {
-            if (current_batch_was_last || !this.job.next_batch_available) {
+            if (current_batch_was_last ||
+              (!this.job.next_batch_available && !this.job.active_batch_qt)
+            ) {
               this.$router.push({ name: 'userJobs' });
               return;
             } else {

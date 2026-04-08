@@ -318,7 +318,8 @@ class Queries:
       RETURN w.quantity
     )
 
-    LET qt_remaining = j.qt_planned - j.qt_completed
+    LET qt_in_production = TO_NUMBER(j.active_batch_qt)
+    LET qt_remaining = j.qt_planned - j.qt_completed - qt_in_production
     LET default_batch = j.parameters.production_batch_qt
     LET qt_next_batch = default_batch == 0 ? qt_remaining : MIN([default_batch, qt_remaining])
 
