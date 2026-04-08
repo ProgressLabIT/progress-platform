@@ -71,6 +71,18 @@ const workorder = {
     RESET_TEMP_QUEUE(state) {
       state.temp_queue = [...state.saved_queue];
     },
+
+    UPDATE_SINGLE_WO(state, wo) {
+      const existing = state.wo_map[wo._key];
+      if (existing) {
+        state.wo_map[wo._key] = {
+          ...wo,
+          sequence: existing.sequence,
+          issue_count: existing.issue_count,
+          qt_remaining: wo.qt_planned - wo.qt_completed,
+        };
+      }
+    },
   },
 
   actions: {

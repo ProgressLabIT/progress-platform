@@ -46,6 +46,8 @@ The auto-published payload is the full `InfoModel` dump of the event, enriched w
 
 This is a superset of the old minimal notification dict. It includes all entity keys (`work_order_key`, `job_key`, `serial_key`, etc.) that the frontend uses for filtering.
 
+`BaseProductionEvent` further enriches its payload with `wo_data` — a snapshot of the affected `WorkOrder` document read from the transaction after all mutations are applied (including `update_work_order()`). This allows the client to patch its local state directly without an extra API call.
+
 ### Producers
 
 | Base class | `_notification_subtopic` | Entity keys in InfoModel |
@@ -57,6 +59,12 @@ This is a superset of the old minimal notification dict. It includes all entity 
 | `BaseSerialEvent` | `serial` | `serial_key`, `product_key` |
 
 Standalone events that inherit `BaseEvent` directly (e.g. `WorkOrderCreatedEvent`, `QueueUpdatedEvent`, `BatchReleasedEvent`, `JobClosedEvent`) declare their own `_notification_subtopic = "production"`.
+
+### Special case: BaseProductionEvent
+
+`BaseProductionEvent` overrides `_build_event_payload()` to add `wo_data` — the full `WorkOrder` document read from the transaction after `apply()` and `post_processing()` have run. This is used by `ProductionOverview` to patch the affected WO in `wo_map` without a follow-up API call.
+
+`wo_data` does **not** include `issue_count` (which only changes from issue events, not production events) or `qt_remaining` (derived client-side as `qt_planned - qt_completed`). The client preserves both from its existing local state when merging.
 
 ### Special case: BaseMessageEvent
 
@@ -151,16 +159,30 @@ handleMessage(message) {
 }
 ```
 
-**Type-filtered views** (e.g. `ProductionOverview`):
+**Payload-enriched patch** (e.g. `ProductionOverview`):
+
+Rather than reacting to event type and re-fetching, views that display WO list data commit a targeted Vuex mutation directly from the event payload:
 ```javascript
 handleMessage(message) {
     let event = JSON.parse(message.data);
     const type = event.event_type || event.notification;
-    if (['WORK_ORDER_CREATED', 'WORK_ORDER_CLOSED', ...].includes(type)) {
+
+    if (type === 'QUEUE_UPDATED') {
+        // Queue order/membership changed — full reload required
         this.$store.dispatch('loadWorkOrders');
+        this.$store.dispatch('loadJobAssignments');
+        return;
+    }
+
+    if (event.wo_data) {
+        // Patch the affected WO in-place — no API call
+        this.$store.commit('UPDATE_SINGLE_WO', event.wo_data);
+        this.debouncedLoadAssignments(); // trailing 5s debounce
     }
 }
 ```
+
+`wo_data` is attached to every `BaseProductionEvent` payload. The `UPDATE_SINGLE_WO` mutation preserves `sequence` and `issue_count` from local state and recomputes `qt_remaining`.
 
 **Error-aware views** (e.g. warehouse roots, `TraceabilityRoot`):
 ```javascript

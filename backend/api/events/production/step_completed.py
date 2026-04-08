@@ -14,6 +14,7 @@ class StepCompletedEvent(BaseProductionEvent):
     batch_key: str
     step_key: str
     job_key: str | None = None
+    work_order_key: str | None = None
     form_data: list[FormFieldValue] | None = None
     batch_serials: list[str] | None = None
 

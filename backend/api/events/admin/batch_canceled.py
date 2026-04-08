@@ -14,6 +14,7 @@ class BatchCanceledEvent(BaseAdmin):
   class InfoModel(EventInfoModel):
     job_key: str
     batch_key: str | None = None
+    work_order_key: str | None = None
 
   @classmethod
   def get_tx_collections(cls):

@@ -618,19 +618,27 @@ export default {
       let event = JSON.parse(message.data);
       const type = event.event_type || event.notification;
 
-      const EVENTS = [
-        'WORK_ORDER_STARTED', 'WORK_ORDER_UPDATED',
-        'JOB_STARTED', 'JOB_PAUSED', 'JOB_RESUMED', 'STEP_COMPLETED',
-        'JOB_PAUSED_OFFLINE', 'JOB_BACK_ONLINE', 'JOB_RESET',
-        'BATCH_CANCELED', 'BATCH_RELEASED', 'BATCH_COMPLETED',
-        'QUEUE_UPDATED', 'PROGRESS_OVERRIDE_REQUESTED'
-      ];
-
-      if (EVENTS.includes(type)) {
+      if (type === 'QUEUE_UPDATED') {
         this.$store.dispatch('loadWorkOrders');
         this.$store.dispatch('loadJobAssignments');
+        return;
+      }
+
+      if (event.wo_data) {
+        this.$store.commit('UPDATE_SINGLE_WO', event.wo_data);
+        this.debouncedLoadAssignments();
       }
     },
+
+    debouncedLoadAssignments: (() => {
+      let timer = null;
+      return function () {
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+          this.$store.dispatch('loadJobAssignments');
+        }, 5000);
+      };
+    })(),
 
     updateHeight() {
       this.content_height =

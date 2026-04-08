@@ -17,6 +17,20 @@ const job = {
       state.unassigned_job_list = data.unassigned_jobs;
     },
 
+    UPDATE_SINGLE_JOB(state, job) {
+      for (const assignment of state.assigned_job_list) {
+        const idx = assignment.assigned_jobs.findIndex((j) => j._key === job._key);
+        if (idx !== -1) {
+          assignment.assigned_jobs.splice(idx, 1, { ...assignment.assigned_jobs[idx], ...job });
+          return;
+        }
+      }
+      const idx = state.unassigned_job_list.findIndex((j) => j._key === job._key);
+      if (idx !== -1) {
+        state.unassigned_job_list.splice(idx, 1, { ...state.unassigned_job_list[idx], ...job });
+      }
+    },
+
     UPDATE_ASSIGNMENT(state, { operator_key, assignment }) {
       const currentAssignment = state.assigned_job_list.find(
         ({ operator }) => operator._key === operator_key,

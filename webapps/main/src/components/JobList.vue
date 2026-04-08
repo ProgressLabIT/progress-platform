@@ -443,6 +443,7 @@ import BaseUserAvatar from '@/components/BaseUserAvatar.vue';
 import NoDataAlert from '@/components/NoDataAlert.vue';
 import multiMatch from '@/lib/MultiFieldSearch.js';
 import { useConfigStore } from '../stores/config';
+import { useSSE } from '@/composables/useSSE';
 import OperatorJobsReorderDialog from './OperatorJobsReorderDialog.vue';
 import ProductionAdminMenu from './ProductionAdminMenu.vue';
 
@@ -494,6 +495,7 @@ export default {
     const { t } = useI18n();
     const { config } = storeToRefs(useConfigStore());
     const store = useStore();
+    const { subscribe: subscribeSSE } = useSSE('production');
 
     async function updateAssignmentDependency({ operator, independent }) {
       if (independent === false) {
@@ -548,6 +550,7 @@ export default {
 
     return {
       config,
+      subscribeSSE,
       updateAssignmentDependency,
       openReorderDialog,
     };
@@ -818,6 +821,15 @@ export default {
         this.batch_assign_to = null;
       }
     },
+  },
+
+  mounted() {
+    this.subscribeSSE((message) => {
+      const event = JSON.parse(message.data);
+      if (event.job_data) {
+        this.$store.commit('UPDATE_SINGLE_JOB', event.job_data);
+      }
+    });
   },
 
   methods: {

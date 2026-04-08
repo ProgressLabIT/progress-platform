@@ -97,6 +97,20 @@ class BaseProductionEvent(BaseEvent, BaseBatchEvent, BaseJobEvent, BaseSerialEve
         bind_vars=dict(new_wo_key=self.info.work_order_key)
       )
 
+  def _build_event_payload(self):
+    payload = super()._build_event_payload()
+    if not payload:
+      return payload
+    if getattr(self.info, 'work_order_key', None):
+      wo = self.tx.collection('WorkOrder').get(self.info.work_order_key)
+      if wo:
+        payload['wo_data'] = wo
+    if getattr(self.info, 'job_key', None):
+      job = self.tx.collection('Job').get(self.info.job_key)
+      if job:
+        payload['job_data'] = job
+    return payload
+
   def update_wip_availability_for_phases(self, phase_keys: list[str]):
     self.tx.aql.execute(
       TraceabilityQueries.UPDATE_NEXT_BATCH_AVAILABLE_STATE_FOR_JOBS_IN_PHASES,
