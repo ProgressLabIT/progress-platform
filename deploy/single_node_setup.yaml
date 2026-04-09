@@ -8,8 +8,7 @@
     # Deployment vars
     public_env_vars:
       - VERSION
-      - DOMAIN
-      - SUBDOMAIN
+      - HOST
     private_env_vars: []
     # Optional vars (not required, have defaults)
     optional_env_vars:

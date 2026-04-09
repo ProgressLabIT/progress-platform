@@ -3,3 +3,4 @@
 {{ var }}={{ progress_env_vars[var] }}
 {% endif %}
 {% endfor %}
+PROTOCOL={{ 'https' if progress_env_vars.ENABLE_TLS | default('true') | bool else 'http' }}

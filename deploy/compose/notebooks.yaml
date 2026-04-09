@@ -39,7 +39,5 @@ services:
         - "traefik.enable=true"
         - "traefik.docker.network=progress"
         - "traefik.http.services.notebooks.loadbalancer.server.port=8888"
-        - "traefik.http.routers.notebooks.entrypoints=websecure"
-        - "traefik.http.routers.notebooks.rule=Host(`${SUBDOMAIN}.${DOMAIN:-progresslab.it}`) && PathPrefix(`/notebooks`)"
+        - "traefik.http.routers.notebooks.rule=Host(`${HOST}`) && PathPrefix(`/notebooks`)"
         - "traefik.http.routers.notebooks.priority=10"
-        - "traefik.http.routers.notebooks.tls.certresolver=letsencrypt"

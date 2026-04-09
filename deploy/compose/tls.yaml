@@ -96,3 +96,17 @@ services:
       labels:
         - "traefik.http.routers.warehouse.entrypoints=websecure"
         - "traefik.http.routers.warehouse.tls.certresolver=letsencrypt"
+
+  # TLS configuration for notebooks service
+  notebooks:
+    deploy:
+      labels:
+        - "traefik.http.routers.notebooks.entrypoints=websecure"
+        - "traefik.http.routers.notebooks.tls.certresolver=letsencrypt"
+
+  # TLS configuration for notebooks service
+  notebooks:
+    deploy:
+      labels:
+        - "traefik.http.routers.notebooks.entrypoints=websecure"
+        - "traefik.http.routers.notebooks.tls.certresolver=letsencrypt"

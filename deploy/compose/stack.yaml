@@ -53,7 +53,7 @@ services:
         - "traefik.docker.network=progress"
         - "traefik.http.services.db.loadbalancer.server.port=8529"
         - "traefik.http.routers.db.priority=10"
-        - "traefik.http.routers.db.rule=Host(`${SUBDOMAIN}.${DOMAIN:-progresslab.it}`) && PathPrefix(`/_db`)"
+        - "traefik.http.routers.db.rule=Host(`${HOST}`) && PathPrefix(`/_db`)"
         - "traefik.http.routers.db.middlewares=db_root"
         - "traefik.http.middlewares.db_root.replacepathregex.regex=^/_db/?$$"
         - "traefik.http.middlewares.db_root.replacepathregex.replacement=/"
@@ -102,7 +102,7 @@ services:
         - "traefik.enable=true"
         - "traefik.docker.network=progress"
         - "traefik.http.services.api.loadbalancer.server.port=8000"
-        - "traefik.http.routers.api.rule=Host(`${SUBDOMAIN}.${DOMAIN:-progresslab.it}`) && PathPrefix(`/api`)"
+        - "traefik.http.routers.api.rule=Host(`${HOST}`) && PathPrefix(`/api`)"
         - "traefik.http.routers.api.priority=10"
         - "traefik.http.routers.api.middlewares=strip_api_prefix"
         - "traefik.http.middlewares.strip_api_prefix.stripprefix.prefixes=/api"
@@ -126,7 +126,7 @@ services:
         - "traefik.enable=true"
         - "traefik.docker.network=progress"
         - "traefik.http.services.app.loadbalancer.server.port=80"
-        - "traefik.http.routers.app.rule=Host(`${SUBDOMAIN}.${DOMAIN:-progresslab.it}`)"
+        - "traefik.http.routers.app.rule=Host(`${HOST}`) && PathPrefix(`/`)"
         # Lower priority so path-based routes (workflow, notebooks, reports) take precedence
         - "traefik.http.routers.app.priority=1"
 

@@ -28,9 +28,7 @@ services:
     secrets:
       - progress_api_db_pwd
     environment:
-      # Load SUBDOMAIN and DOMAIN variables for entrypoint.sh
-      SUBDOMAIN: ${SUBDOMAIN}
-      DOMAIN: ${DOMAIN:-progresslab.it}
+      HOST: ${HOST}
     entrypoint: >
       sh -c "chmod +x /app/entrypoint.sh && /app/entrypoint.sh"
     deploy:
@@ -40,9 +38,9 @@ services:
         - "traefik.docker.network=progress"
         - "traefik.http.services.reporting.loadbalancer.server.port=8501"
         - "traefik.http.routers.reporting.priority=10"
-        - "traefik.http.routers.reporting.rule=Host(`${SUBDOMAIN}.${DOMAIN:-progresslab.it}`) && PathPrefix(`/reports`)"
+        - "traefik.http.routers.reporting.rule=Host(`${HOST}`) && PathPrefix(`/reports`)"
         # Ensure access is only via iframe from main sub.domain url
         - "traefik.http.routers.reporting.middlewares=reporting-embed"
         - "traefik.http.middlewares.reporting-embed.headers.framedeny=false"
         # Allows embedding in iframe from main sub.domain url
-        - "traefik.http.middlewares.reporting-embed.headers.customresponseheaders.Content-Security-Policy=frame-ancestors 'self' https://${SUBDOMAIN}.${DOMAIN:-progresslab.it}"
+        - "traefik.http.middlewares.reporting-embed.headers.customresponseheaders.Content-Security-Policy=frame-ancestors 'self' ${PROTOCOL:-https}://${HOST}"

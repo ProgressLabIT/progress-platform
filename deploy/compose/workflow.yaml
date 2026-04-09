@@ -33,7 +33,7 @@ services:
       # Set base path for API - Prefect will serve API at /workflow/api
       PREFECT_SERVER_API_BASE_PATH: /workflow/api
       # Tell the UI where to find the API
-      PREFECT_UI_API_URL: https://${SUBDOMAIN}.${DOMAIN:-progresslab.it}/workflow/api
+      PREFECT_UI_API_URL: ${PROTOCOL:-https}://${HOST}/workflow/api
     deploy:
       replicas: 1
       labels:
@@ -42,11 +42,11 @@ services:
         - "traefik.docker.network=progress"
         - "traefik.http.services.wf-server.loadbalancer.server.port=4200"
         # Route all /workflow/* requests to Prefect - no path manipulation needed
-        - "traefik.http.routers.wf-server.rule=Host(`${SUBDOMAIN}.${DOMAIN:-progresslab.it}`) && PathPrefix(`/workflow`)"
+        - "traefik.http.routers.wf-server.rule=Host(`${HOST}`) && PathPrefix(`/workflow`)"
         - "traefik.http.routers.wf-server.priority=10"
         # Setting /wf-api route on main domain to bypass CORS for requests from main webapp
         - "traefik.http.routers.wf-api-from-app.priority=10"
-        - "traefik.http.routers.wf-api-from-app.rule=Host(`${SUBDOMAIN}.${DOMAIN:-progresslab.it}`) && PathPrefix(`/wf-api`)"
+        - "traefik.http.routers.wf-api-from-app.rule=Host(`${HOST}`) && PathPrefix(`/wf-api`)"
         - "traefik.http.routers.wf-api-from-app.service=wf-server"
         - "traefik.http.routers.wf-api-from-app.middlewares=wf-api-rewrite"
         - "traefik.http.middlewares.wf-api-rewrite.chain.middlewares=strip-wf-api,add-workflow-api"
