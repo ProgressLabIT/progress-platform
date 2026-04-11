@@ -13,7 +13,7 @@ A full-stack **Manufacturing Operations Management** system (MOM) built to manag
                   │  Main Webapp │     │ Warehouse App │
                   │  Vue 3 / SPA │     │ Vue 3 / Mobile│
                   └──────┬───────┘     └──────┬────────┘
-                         │                    │
+                         │  SSE (live updates) │
                          └────────┬───────────┘
                                   │
                          ┌────────▼────────┐
@@ -29,8 +29,8 @@ A full-stack **Manufacturing Operations Management** system (MOM) built to manag
                    ┌─────────┘     │    └─────────┐
                    │               │              │
             ┌──────▼──────┐ ┌──────▼──────┐ ┌────▼─────┐
-            │  ArangoDB   │ │    Kafka    │ │  Prefect │
-            │  Multi-Model│ │  Streaming  │ │ Workflows│
+            │  ArangoDB   │ │    NATS     │ │  Prefect │
+            │  Multi-Model│ │  JetStream  │ │ Workflows│
             └─────────────┘ └─────────────┘ └──────────┘
 ```
 
@@ -39,7 +39,7 @@ A full-stack **Manufacturing Operations Management** system (MOM) built to manag
 - **Event Sourcing** — Factory activities are modeled through immutable events, from which state is derived, enabling full auditability and traceability (critical for manufacturing compliance). Every mutation is modeled as an `Event` with a transactional `apply()` method.
 - **Multi-Model Database** — ArangoDB provides document storage and graph traversal in a single engine, used for everything from inventory hierarchies to production genealogy.
 - **Async Workflows** — Long-running operations (e.g. bulk inventory adjustments across 500+ records) are offloaded to Prefect, keeping the API responsive. The workflow engine is also used to add custom plugins to integrate the platform with ERPs and other business systems.
-- **Real-time Communication** — NATS for inter-service event streaming, SSE for live UI updates.
+- **Real-time Communication** — NATS with JetStream for inter-service pub/sub messaging, Server-Sent Events (SSE) for pushing live updates to the browser.
 
 ---
 
@@ -49,7 +49,7 @@ A full-stack **Manufacturing Operations Management** system (MOM) built to manag
 |---|---|
 | **Backend API** | Python 3.11, FastAPI, Pydantic v2, Gunicorn/Uvicorn |
 | **Database** | ArangoDB 3.11 (documents + graphs) |
-| **Messaging** | Apache Kafka (KRaft mode) |
+| **Messaging** | NATS with JetStream |
 | **Workflows** | Prefect 3 |
 | **Frontend** | Vue 3, Quasar 2, Pinia, Vite, vue-i18n |
 | **Infrastructure** | Docker, Docker Swarm, Traefik v2 |
