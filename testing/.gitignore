@@ -15,3 +15,6 @@ yarn-error.log*
 *.sln
 
 package-lock.json
+
+# pytest
+.hypothesis/

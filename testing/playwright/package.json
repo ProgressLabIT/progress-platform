@@ -1,0 +1,16 @@
+{
+  "name": "progress-e2e",
+  "version": "1.0.0",
+  "description": "Playwright E2E tests for Progress Platform — manual-run, requires full stack at localhost",
+  "private": true,
+  "scripts": {
+    "test": "playwright test",
+    "test:login": "playwright test login_to_batch_complete.spec.js",
+    "test:workorder": "playwright test work_order_creation.spec.js",
+    "test:stock": "playwright test stock_receipt.spec.js",
+    "install-browsers": "playwright install chromium"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.51.0"
+  }
+}

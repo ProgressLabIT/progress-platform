@@ -1,126 +1,53 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: milestone
-status: unknown
-stopped_at: Completed quick/260320-w3j-PLAN.md
-last_updated: "2026-03-20T23:09:32.858Z"
+milestone: v2.0
+milestone_name: Test Suite
+status: completed
+stopped_at: Milestone v2.0 archived
+last_updated: "2026-04-11T00:00:00.000Z"
+last_activity: 2026-04-11 -- v2.0 Test Suite milestone archived
 progress:
   total_phases: 4
   completed_phases: 4
-  total_plans: 14
-  completed_plans: 14
+  total_plans: 15
+  completed_plans: 15
+  percent: 100
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-03-12)
+See: .planning/PROJECT.md (updated 2026-04-11)
 
-**Core value:** Factory operators can print labels directly to any ZPL printer by pressing one button — no manual downloads, no proprietary endpoints.
-**Current focus:** Phase 04 — full-integration
+**Core value:** Catch regressions in the critical production event chain before they reach users
+**Current focus:** v2.0 milestone complete — ready for next milestone planning
 
 ## Current Position
 
-Phase: 04 (full-integration) — EXECUTING
-Plan: 1 of 6
+Phase: 4 (frontend-tests) — COMPLETE
+Plan: 3 of 3
+Status: All 4 phases, 15 plans complete. Milestone archived.
 
-## Performance Metrics
-
-**Velocity:**
-
-- Total plans completed: 1
-- Average duration: 14 min
-- Total execution time: 0.23 hours
-
-**By Phase:**
-
-| Phase | Plans | Total | Avg/Plan |
-|-------|-------|-------|----------|
-| 01-template-string-plugin | 1/5 | 14 min | 14 min |
-
-**Recent Trend:**
-
-- Last 5 plans: 14 min
-- Trend: baseline
-
-*Updated after each plan completion*
-| Phase 01-template-string-plugin P02 | 3 | 1 tasks | 1 files |
-| Phase 01-template-string-plugin P03 | 1 | 1 tasks | 2 files |
-| Phase 01-template-string-plugin P04 | 2 | 2 tasks | 3 files |
-| Phase 01-template-string-plugin P05 | 2 | 2 tasks | 2 files |
-| Phase 01-template-string-plugin P04 | 45 | 3 tasks | 4 files |
-| Phase 01-template-string-plugin P05 | 45 | 3 tasks | 3 files |
-| Phase 02-zpl-generator P01 | 4 | 2 tasks | 3 files |
-| Phase 03-print-service P01 | 5 | 2 tasks | 2 files |
-| Phase 03-print-service P02 | 5 | 2 tasks | 7 files |
-| Phase 04-full-integration P01 | 3 | 2 tasks | 4 files |
-| Phase 04-full-integration P02 | 2 | 2 tasks | 1 files |
-| Phase 04-full-integration P03 | 8 | 2 tasks | 4 files |
-| Phase 04-full-integration P04 | 2 | 1 tasks | 1 files |
-| Phase 04-full-integration P05 | 1 | 1 tasks | 1 files |
-| Phase 04-full-integration P06 | 1 | 1 tasks | 1 files |
+Progress: [██████████] 100%
 
 ## Accumulated Context
 
 ### Decisions
 
-Decisions logged in PROJECT.md Key Decisions table.
-
-- Initial: One pdfme template serves both PDF and ZPL output (avoids separate ZPL editor)
-- Initial: Print service is stateless TCP relay (~100 lines) — no DB, no auth, easy on-prem deploy
-- Initial: Browser calls print service directly on LAN IP; `traefik.enable=false`
-- Initial: ZPL image fields (`^GFA`) deferred to v3
-- [Phase 01-template-string-plugin]: Used yarn instead of npm for vitest install — project has yarn.lock, npm fails on rolldown peer dependency
-- [Phase 01-template-string-plugin]: vitest.config.js uses node environment with src/**/*.test.js glob pattern
-- [Phase 01-template-string-plugin]: presetOptions import skipped — non-cf:: tokens route to getPresetValue() without static allowlist, keeping templateResolver.js decoupled
-- [Phase 01-template-string-plugin]: Omitted createLinkSchema() from templateExpression propPanel — linkType is fixed to template_expression, no link selector UI needed
-- [Phase 01-template-string-plugin]: encodeTemplateExpressions() receives flat pdfme Template (designer.getTemplate() output) — operates on .schemas not .template.schemas
-- [Phase 01-template-string-plugin]: Used mdi-text-box-outline icon for template_string toolbar button (distinct from mdi-format-text for plain text)
-- [Phase 01-template-string-plugin]: Python-side slug comparison in form.py avoids AQL REGEX_REPLACE dependency
-- [Phase 01-template-string-plugin]: getFieldNamesAndLinks() forwards templateExpression onto link object for use in selectTemplate()
-- [Phase 01-template-string-plugin]: template_expression implemented as a linkType option on all existing plugins via linkConfig.js — not a separate pdfme plugin. Avoids unregistered widget errors.
-- [Phase 01-template-string-plugin]: Plain string widget used for templateExpression input — textarea widget is not registered in pdfme v5
-- [Phase 01-template-string-plugin]: field.content only updated for text-type fields during decode — barcode fields preserve sample content so canvas renders correctly
-- [Phase 01-template-string-plugin]: FieldSpec models use extra='allow' so barcode plugin fields survive round-trips — silent data loss found during verification
-- [Phase 01-template-string-plugin]: 409 slug collision surfaced as user-facing toast notification in custom field save handler
-- [Phase 02-zpl-generator]: Inlined schemasToV5/normalizePageSchema into zpl.js — index.js Vue/Quasar deps unresolvable in Vitest node environment
-- [Phase 03-print-service]: data field excluded from PrintJobRecord DB storage (large base64 PDF payloads); passes through SSE only
-- [Phase 03-print-service]: SVC-03 CORS requirement claimed for traceability only — SSE-subscriber pattern means browser never calls print service
-- [Phase 03-print-service]: Health endpoint implemented as raw asyncio TCP server on :8200 — no FastAPI/uvicorn needed for client process
-- [Phase 03-print-service]: compose file for on-prem optional service: no networks, no volumes, traefik.enable=false, reaches main API via public PRINT_SERVICE_API_URL
-- [Phase 04-full-integration]: api import added to lib/print/index.js from @/boot/axios (was absent from file)
-- [Phase 04-full-integration]: sendToPrinter uses onDialogHide() not onDialogOK() — keeps download and print paths independent with no code changes to usePrintDialog
-- [Phase 04-full-integration]: No printServerURL or appConfig.js changes (DIAL-01 superseded) — button visibility driven by selectedPrinter computed
-- [Phase 04-full-integration]: Used existing settings.productLabelTemplate and settings.positionLabelTemplate i18n keys (not warehouse-namespaced path) — keys already existed at top-level settings path
-- [Phase 04-full-integration]: BrowserPrint removed from lib/print/ only; PrintLabelForm.vue BrowserPrint usage is out of scope for this plan
-- [Phase 04-full-integration]: PRINT_SERVICE_API_PASSWORD documented (secret-mounted) rather than PRINT_SERVICE_API_TOKEN - matches actual config.py field name (api_password via secret)
-- [Phase 04-full-integration]: chunkSize=8192 chosen for btoa loop in PrintDialog — safely under V8 ~65000 arg limit, eliminates stack overflow for any PDF size
-- [Phase 04-full-integration]: timeout derived from printer.timeout_seconds + 5s buffer matches main app PrintDialog pattern
-- [Phase 04-full-integration]: waitForPrintResult added as module-private function — callers don't need direct SSE access
+All key decisions logged in PROJECT.md Key Decisions table.
 
 ### Pending Todos
 
-- [ui] Resolve orphaned linkedTemplateString plugin — register in buildPlugins() or delete
-- [api] Investigate verify_print_service_token USER_SESSION auth context
-- [ui] Fix warehouse config store missing template fields in updateAppConfig
-- [api] Support local printers with per-printer print service routing (Dymo + USB printers; per-printer SSE topics keyed by printer_key)
+- BATCH-13, PROG-10, PROG-11 — uncovered warehouse-interaction test paths (tech debt)
+- GitLab CI/CD integration for pytest + Playwright
 
 ### Blockers/Concerns
 
-None yet.
-
-### Quick Tasks Completed
-
-| # | Description | Date | Commit | Directory |
-|---|-------------|------|--------|-----------|
-| 260319-ios | Update ROADMAP Phase 3+4 for stateless print arch + SSE print-result subscription | 2026-03-19 | fda25f62 | [260319-ios-update-roadmap-phase-4-print-result-sse-](./quick/260319-ios-update-roadmap-phase-4-print-result-sse-/) |
-| 260320-w3j | add position.code to the preset fields | 2026-03-20 | 308173ba | [260320-w3j-add-position-code-to-the-preset-fields](./quick/260320-w3j-add-position-code-to-the-preset-fields/) |
-| 260320-w3j | Add position.code to the preset fields (designer dropdown + TemplateContext runtime) | 2026-03-20 | b756a12f | [260320-w3j-add-position-code-to-the-preset-fields](./quick/260320-w3j-add-position-code-to-the-preset-fields/) |
+None.
 
 ## Session Continuity
 
-Last session: 2026-03-20T22:10:55Z
-Stopped at: Completed quick/260320-w3j-PLAN.md
-Resume file: None
+Last session: 2026-04-11
+Stopped at: Milestone v2.0 archived
+Next step: `/gsd-new-milestone` to plan next milestone

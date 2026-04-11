@@ -51,6 +51,57 @@
 
 ---
 
+## Milestone: v2.0 — Test Suite
+
+**Shipped:** 2026-04-11
+**Phases:** 4 | **Plans:** 15 | **Timeline:** 3 days (2026-04-09 → 2026-04-11)
+
+### What Was Built
+
+- pytest + testcontainers harness with db singleton override, NATS mock, httpx ASGI client, per-class collection truncation
+- 14 domain factory fixtures covering the full object graph (WorkOrder → Job → Batch → WorkSession → StepExecution → Config → Serial → WIP → Position)
+- Dual-layer test suites for 4 critical events: StepCompleted (8), BatchCompleted (24), ProgressOverrideRequested (16), MovementCompleted (18)
+- OpenAPI audit (75+ routes, warn-only) + Schemathesis fuzzing (zero 5xx) + Locust load scenarios (3 endpoints)
+- Vitest component tests for ProgressBtn (8) + WorkSessionSteps (11) + Playwright E2E (3 journeys)
+
+### What Worked
+
+- **Dual-layer strategy paid off immediately**: Direct event instantiation tests caught edge cases (form_data type mismatch, SXD factory collision, _rev conflicts) that HTTP tests would have missed entirely. The separation of "realism" vs "coverage" is load-bearing.
+- **Testcontainers + db singleton override**: The env-vars-before-import + lru_cache-clear pattern worked reliably. Zero flaky container startup failures across 15 plans.
+- **Curated parametrize matrix for BatchCompleted**: 9 rows covering all branch points was the right call — 32-row exhaustive matrix would have been brittle and unmaintainable. Trade-off: left BATCH-13 uncovered.
+- **Warn-only OpenAPI audit**: Correct framing — audit reveals state, doesn't gate CI. Avoids blocking development on a 75+ endpoint remediation effort.
+- **3-day execution**: All 15 plans in 3 days with yolo+coarse granularity. No friction from planning overhead.
+
+### What Was Inefficient
+
+- **SUMMARY frontmatter inconsistency**: Phases 1-3 used different SUMMARY structures (YAML tags vs narrative vs frontmatter-only). gsd-tools milestone complete extracted junk accomplishments as a result. Needs a consistent structured one_liner field enforced during execution.
+- **BATCH-13 / PROG-10 / PROG-11 left uncovered**: These require `manage_inventory=True` + warehouse interaction in factory fixtures — a path not built during Phase 1. Should have been flagged as factory gap in Phase 1 PLAN and addressed before Phase 2. Audit surfaced these too late.
+- **Nyquist validation skipped entirely**: All 4 phases missing VALIDATION.md. The validation step was disabled in config (nyquist_validation: false) and no manual override was done. Coverage quality unvalidated.
+- **STATE.md milestone field not updated by gsd-tools**: milestone field remained v1.0 after archive; needed manual correction.
+
+### Patterns Established
+
+- **db singleton override pattern**: Set `PROGRESS_ARANGO_URL`, `PROGRESS_DB_NAME` via `os.environ.update()` at module level in conftest.py before any backend import. Call `get_config.cache_clear()` after. Override `db_module.db` and `auth_module.db` with the test db object.
+- **NATS mock pattern**: `monkeypatch.setattr` on 5 namespaces: the nats module + 4 local import paths across event files. Session-scoped, autouse.
+- **Dual-layer test structure**: One file per event, two `TestXxxHTTP` / `TestXxxDirect` classes. HTTP tests use `httpx.AsyncClient` with `ASGITransport`. Direct tests instantiate event class with factory-built objects.
+- **Factory fixture ordering**: `conftest_helpers/schema.py` must import before backend modules. Factory fixtures are function-scoped; container + db are session-scoped; truncation is autouse function-scoped.
+- **Warn-only test audit**: Collect findings into a `warnings` list, log at WARNING level, assert only on structural completeness (>= N routes), never on content quality.
+
+### Key Lessons
+
+1. **Factory gaps compound**: Missing fields in factory fixtures (manage_inventory, product_key, batch_serial edges) silently skip business logic branches. Factory completeness should be validated against all event apply() methods before Phase 2, not discovered during audit.
+2. **SUMMARY frontmatter needs a one_liner field**: The milestone archive tool relies on structured extraction. Free-form SUMMARYs produce garbage accomplishments. Enforce `one_liner:` as a required field in SUMMARY frontmatter.
+3. **Curated > exhaustive for parametrize**: 9 rows covering all branch points beats 32 rows covering all combinations. Exhaustive matrices create maintenance burden without proportional coverage gain — but document explicitly which combinations are excluded and why.
+4. **Testcontainers is the right call for ArangoDB**: Zero shared state issues, zero test ordering dependencies, zero environment assumptions. The 20-30s startup cost is worth it for the isolation guarantee.
+
+### Cost Observations
+
+- Model mix: primarily sonnet (balanced profile)
+- Sessions: ~5-6 sessions across 3 days
+- Notable: 15 plans in 3 days at yolo+coarse — fastest milestone execution yet; planning was proportionally small vs execution
+
+---
+
 ## Cross-Milestone Trends
 
 ### Process Evolution
@@ -58,14 +109,18 @@
 | Milestone | Sessions | Phases | Plans | Key Change |
 |-----------|----------|--------|-------|------------|
 | v1.0 | ~10 | 4 | 14 | First milestone on this project |
+| v2.0 | ~6 | 4 | 15 | New project (test suite); fastest execution yet |
 
 ### Cumulative Quality
 
-| Milestone | Tests | Zero-Dep Additions | Audit Status |
-|-----------|-------|--------------------|--------------|
+| Milestone | Tests | Key Additions | Audit Status |
+|-----------|-------|---------------|--------------|
 | v1.0 | 38 (vitest) + 8 (pytest) | templateResolver.js, zpl.js, tcp_sender.py | tech_debt |
+| v2.0 | 75+ (pytest) + 19 (vitest) + 10 (playwright) | testcontainers harness, 14 factory fixtures, 4 event test suites | gaps_found (3/106) |
 
 ### Top Lessons (Verified Across Milestones)
 
 1. Document architectural deviations in requirements at decision time, not retrospectively
 2. UAT is the right gate for runtime-only failures that static verification cannot catch
+3. Factory/fixture completeness must be verified against all downstream business logic paths before dependent phases begin
+4. Structured SUMMARY frontmatter (one_liner field) is required for automated milestone archive quality
