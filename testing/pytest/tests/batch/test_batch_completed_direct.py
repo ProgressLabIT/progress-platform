@@ -112,6 +112,12 @@ class TestBatchCompletedDirect:
         auto_new_batch,
         expected_children,
     ):
+        """BATCH-20: Parametrized matrix covers pairwise flag interactions.
+
+        Given a production graph with the specified phase/traceability/warehouse/auto_new_batch flags
+        When a BatchCompletedEvent is saved
+        Then the expected child events are dispatched
+        """
         batch_qty = 1
         g = create_production_graph(
             first_phase=first_phase,
@@ -156,7 +162,13 @@ class TestBatchCompletedDirect:
     # -----------------------------------------------------------------------
 
     def test_batch_record_updated_and_work_session_closed(self, db, create_production_graph):
-        """BATCH-01: Direct event.save() updates batch record and closes work session."""
+        """BATCH-01: Batch completion deactivates batch and closes work session.
+
+        Given a production graph with an active batch and work session
+        When a BatchCompletedEvent is saved
+        Then the batch is deactivated
+        And a WORK_SESSION_CLOSED event is dispatched
+        """
         g = create_production_graph()
         _set_last_work_session(db, g["job"]["_key"], g["work_session"]["_key"])
 
@@ -172,7 +184,12 @@ class TestBatchCompletedDirect:
     # -----------------------------------------------------------------------
 
     def test_last_batch_triggers_job_closed(self, db, create_production_graph):
-        """BATCH-02: Last batch (new_job_qt_completed >= qt_planned) triggers JOB_CLOSED child."""
+        """BATCH-02: Last batch triggers job closure.
+
+        Given a job where qt_planned equals the batch quantity
+        When a BatchCompletedEvent is saved
+        Then a JOB_CLOSED event is dispatched
+        """
         g = create_production_graph(batch_qt=1)
         # Set qt_planned equal to batch_qt so this batch is the last one
         db.collection("Job").update({"_key": g["job"]["_key"], "qt_planned": 1.0})
@@ -188,7 +205,12 @@ class TestBatchCompletedDirect:
     # -----------------------------------------------------------------------
 
     def test_auto_new_batch_creates_batch_and_work_session(self, db, create_production_graph):
-        """BATCH-03: auto_new_batch=True creates BATCH_CREATED + WORK_SESSION_CREATED children."""
+        """BATCH-03: Auto-new-batch creates next batch and work session.
+
+        Given a job with auto_new_batch=True and next_batch_available=True
+        When a BatchCompletedEvent is saved
+        Then BATCH_CREATED and WORK_SESSION_CREATED events are dispatched
+        """
         g = create_production_graph(auto_new_batch=True)
         # Keep job open and set next_batch_available=True (required by BatchCompletedEvent)
         db.collection("Job").update({
@@ -209,7 +231,13 @@ class TestBatchCompletedDirect:
     # -----------------------------------------------------------------------
 
     def test_no_auto_batch_sets_job_inactive(self, db, create_production_graph):
-        """BATCH-04: Non-last batch without auto_new_batch sets job.active=False, active_batch_key=None."""
+        """BATCH-04: Non-last batch without auto-new-batch deactivates job.
+
+        Given a non-last batch with auto_new_batch=False
+        When a BatchCompletedEvent is saved
+        Then the job is set to active=False
+        And active_batch_key is set to None
+        """
         g = create_production_graph(auto_new_batch=False, last_phase=False)
         # Keep job open
         db.collection("Job").update({"_key": g["job"]["_key"], "qt_planned": 100.0})
@@ -227,7 +255,12 @@ class TestBatchCompletedDirect:
     # -----------------------------------------------------------------------
 
     def test_first_phase_no_wip_removed(self, db, create_production_graph):
-        """BATCH-05: First phase batch completion does not generate WIP_REMOVED event."""
+        """BATCH-05: First phase skips WIP removal.
+
+        Given a batch in the first production phase
+        When a BatchCompletedEvent is saved
+        Then no WIP_REMOVED event is dispatched
+        """
         g = create_production_graph(first_phase=True)
         _set_last_work_session(db, g["job"]["_key"], g["work_session"]["_key"])
 
@@ -242,7 +275,12 @@ class TestBatchCompletedDirect:
     # -----------------------------------------------------------------------
 
     def test_non_first_phase_wip_removed(self, db, create_production_graph):
-        """BATCH-06: Non-first phase batch completion generates WIP_REMOVED child event."""
+        """BATCH-06: Non-first phase removes upstream WIP.
+
+        Given a batch in a non-first phase with booked WIP
+        When a BatchCompletedEvent is saved
+        Then a WIP_REMOVED event is dispatched
+        """
         g = create_production_graph(first_phase=False)
         # Book WIP to job so WIPRemovedEvent can find it
         _book_wip_to_job(db, g["wip_records"], g["job"]["_key"])
@@ -258,7 +296,12 @@ class TestBatchCompletedDirect:
     # -----------------------------------------------------------------------
 
     def test_non_last_phase_wip_declared(self, db, create_production_graph):
-        """BATCH-07: Non-last phase batch completion generates WIP_DECLARED child event."""
+        """BATCH-07: Non-last phase declares downstream WIP.
+
+        Given a batch in a non-last phase
+        When a BatchCompletedEvent is saved
+        Then a WIP_DECLARED event is dispatched
+        """
         g = create_production_graph(last_phase=False)
         # Keep job open
         db.collection("Job").update({"_key": g["job"]["_key"], "qt_planned": 100.0})
@@ -274,7 +317,12 @@ class TestBatchCompletedDirect:
     # -----------------------------------------------------------------------
 
     def test_last_phase_batch_released(self, db, create_production_graph):
-        """BATCH-08: Last phase batch completion triggers BATCH_RELEASED child event."""
+        """BATCH-08: Last phase releases the batch.
+
+        Given a batch in the last production phase
+        When a BatchCompletedEvent is saved
+        Then a BATCH_RELEASED event is dispatched
+        """
         g = create_production_graph(last_phase=True)
         _set_last_work_session(db, g["job"]["_key"], g["work_session"]["_key"])
 
@@ -288,7 +336,12 @@ class TestBatchCompletedDirect:
     # -----------------------------------------------------------------------
 
     def test_warehouse_last_phase_production_movement(self, db, create_production_graph):
-        """BATCH-09: Last phase + warehouse management generates MOVEMENT_COMPLETED (production) child."""
+        """BATCH-09: Warehouse + last phase generates production movement.
+
+        Given a batch in the last phase with warehouse management enabled
+        When a BatchCompletedEvent is saved
+        Then a MOVEMENT_COMPLETED event is dispatched
+        """
         g = create_production_graph(last_phase=True, warehouse_management=True)
         _set_last_work_session(db, g["job"]["_key"], g["work_session"]["_key"])
 
@@ -304,7 +357,12 @@ class TestBatchCompletedDirect:
     def test_warehouse_consumption_movement_per_bom_line(
         self, db, create_production_graph, create_inventory_at_position
     ):
-        """BATCH-10: BOM + warehouse management generates MOVEMENT_COMPLETED (consumption) per BOM line."""
+        """BATCH-10: BOM consumption generates movement per component.
+
+        Given a batch with warehouse management and a BOM with component inventory
+        When a BatchCompletedEvent is saved
+        Then a MOVEMENT_COMPLETED event is dispatched for the BOM component
+        """
         g = create_production_graph(
             last_phase=True,
             warehouse_management=True,
@@ -325,11 +383,11 @@ class TestBatchCompletedDirect:
     # -----------------------------------------------------------------------
 
     def test_traceability_serial_updated_per_serial(self, db, create_production_graph):
-        """BATCH-11: Traceability enabled triggers SERIAL_UPDATED per serial.
+        """BATCH-11: Traceability triggers serial update with code generation.
 
-        SerialUpdatedEvent fires when serial_data > 0 OR serial_code is not None.
-        We use first_phase=True + a counter_key on the serial (no existing code)
-        to trigger serial code generation, which satisfies the serial_code != None condition.
+        Given a first-phase batch with traceability and a serial with counter_key but no code
+        When a BatchCompletedEvent is saved
+        Then a SERIAL_UPDATED event is dispatched
         """
         g = create_production_graph(traceability_level="batch", first_phase=True, last_phase=False)
         db.collection("Job").update({"_key": g["job"]["_key"], "qt_planned": 100.0})
@@ -364,7 +422,12 @@ class TestBatchCompletedDirect:
     # -----------------------------------------------------------------------
 
     def test_traceability_last_phase_serial_released(self, db, create_production_graph):
-        """BATCH-12: Traceability + last phase triggers SERIAL_RELEASED per serial."""
+        """BATCH-12: Traceability + last phase releases serials.
+
+        Given a last-phase batch with traceability and linked serials
+        When a BatchCompletedEvent is saved
+        Then a SERIAL_RELEASED event is dispatched
+        """
         g = create_production_graph(traceability_level="batch", last_phase=True)
         _set_last_work_session(db, g["job"]["_key"], g["work_session"]["_key"])
 
@@ -382,7 +445,12 @@ class TestBatchCompletedDirect:
     # -----------------------------------------------------------------------
 
     def test_step_data_stored_without_step_check(self, db, create_production_graph):
-        """BATCH-14: step_data included without step_check stores StepExecutionData records."""
+        """BATCH-14: Step data is stored when step_check is disabled.
+
+        Given a batch with step_check=False and step_data in the payload
+        When a BatchCompletedEvent is saved
+        Then StepExecutionData records are created for the completed steps
+        """
         g = create_production_graph(step_check=False, num_steps=1)
         _set_last_work_session(db, g["job"]["_key"], g["work_session"]["_key"])
 
@@ -400,7 +468,12 @@ class TestBatchCompletedDirect:
     # -----------------------------------------------------------------------
 
     def test_serial_code_generation_first_phase(self, db, create_production_graph):
-        """BATCH-18: First phase serial with no code and a counter_key gets code generated."""
+        """BATCH-18: Serial code is generated from counter on first phase.
+
+        Given a first-phase batch with a serial that has counter_key but no code
+        When a BatchCompletedEvent is saved
+        Then the serial's code field is populated from the counter
+        """
         g = create_production_graph(traceability_level="batch", first_phase=True)
 
         if not g["serials"]:
@@ -442,8 +515,12 @@ class TestBatchCompletedDirect:
     # -----------------------------------------------------------------------
 
     def test_batch_media_files_not_required_for_event_completion(self, db, create_production_graph):
-        """BATCH-19: Media file copy is skipped safely in testcontainer (no /media mount).
-        The event must complete successfully regardless."""
+        """BATCH-19: Event completes without media mount.
+
+        Given a batch with traceability in a testcontainer without /media
+        When a BatchCompletedEvent is saved
+        Then the event completes successfully without raising
+        """
         g = create_production_graph(traceability_level="batch")
         _set_last_work_session(db, g["job"]["_key"], g["work_session"]["_key"])
 

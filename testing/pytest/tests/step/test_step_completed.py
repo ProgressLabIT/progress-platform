@@ -51,10 +51,12 @@ class TestStepCompletedDirect:
     """
 
     def test_happy_path_non_last_step(self, db, create_production_graph):
-        """STEP-01: Completing a non-last step sets StepExecutionData status to done.
+        """STEP-01: Non-last step completion sets status to done without triggering batch completion.
 
-        Two steps exist; completing the first should NOT trigger BatchCompleted.
-        The StepExecutionData record for that step should have status='done'.
+        Given a job with two steps in the target phase
+        When the first step is completed
+        Then the StepExecutionData record has status='done'
+        And no BATCH_COMPLETED event is dispatched
         """
         g = create_production_graph(num_steps=2)
         job = g["job"]
@@ -92,10 +94,11 @@ class TestStepCompletedDirect:
         assert not batch_events, "BatchCompleted should not be dispatched for non-last step"
 
     def test_last_step_triggers_batch_completed(self, db, create_production_graph):
-        """STEP-02: Completing the last (and only) step dispatches a BatchCompletedEvent.
+        """STEP-02: Last step completion dispatches BatchCompletedEvent.
 
-        Per D-05/D-06: Assert the BATCH_COMPLETED event was recorded in the Event collection.
-        Do NOT assert BatchCompleted's own DB side effects here.
+        Given a job with a single step in the target phase
+        When that step is completed
+        Then a BATCH_COMPLETED event is recorded in the Event collection
         """
         g = create_production_graph(num_steps=1)
         job = g["job"]
@@ -117,7 +120,12 @@ class TestStepCompletedDirect:
         assert_event_dispatched(db, "BATCH_COMPLETED")
 
     def test_form_data_stored(self, db, create_production_graph):
-        """STEP-03: Form data is correctly stored in StepExecutionData record."""
+        """STEP-03: Form data is persisted in StepExecutionData.
+
+        Given a job with steps and a CustomField document
+        When a step is completed with form_data referencing that field
+        Then the StepExecutionData record contains the submitted form_data values
+        """
         # CustomField must exist before inserting form_data referencing it
         cf_key = "cf-weight-test"
         if not db.collection("CustomField").has(cf_key):
@@ -159,7 +167,13 @@ class TestStepCompletedDirect:
         ), f"Expected form_data with form_field_key={cf_key} value='42.5', got: {stored_form_data}"
 
     def test_work_session_key_set(self, db, create_production_graph):
-        """STEP-04: Work session key is correctly set from the current active work session."""
+        """STEP-04: Work session key is resolved from the active session.
+
+        Given a job with an active work session
+        When a step is completed
+        Then the event's work_session_key matches the active session
+        And the StepExecutionData record stores the same work_session_key
+        """
         g = create_production_graph(num_steps=2)
         job = g["job"]
         batch = g["batch"]
@@ -188,10 +202,12 @@ class TestStepCompletedDirect:
         assert results[0]["work_session_key"] == ws["_key"]
 
     def test_temp_step_data_overwritten(self, db, create_production_graph):
-        """STEP-05: Existing temp StepExecutionData (status=None) is overwritten on completion.
+        """STEP-05: Temporary StepExecutionData is overwritten on completion.
 
-        The event finds existing uncompleted SXD via find(batch_key, step_key, canceled=None)
-        and reuses its _key for the overwrite=True upsert, resulting in exactly one record.
+        Given a batch with a pre-existing temp StepExecutionData record (status=None)
+        When the step is completed
+        Then exactly one StepExecutionData record exists for that step
+        And its status is 'done'
         """
         g = create_production_graph(num_steps=2)
         job = g["job"]
@@ -246,7 +262,12 @@ class TestStepCompletedDirect:
         )
 
     def test_missing_batch_raises_value_error(self, db, create_production_graph):
-        """STEP-06: Non-existent batch_key raises ValueError during event apply."""
+        """STEP-06: Non-existent batch raises ValueError.
+
+        Given a non-existent batch_key
+        When a StepCompletedEvent is saved
+        Then a ValueError is raised with 'not found' in the message
+        """
         g = create_production_graph()
         user = g["user"]
 
@@ -271,7 +292,13 @@ class TestStepCompletedAPI:
     """
 
     async def test_http_endpoint_success(self, db, client, auth_headers, create_production_graph):
-        """STEP-07, STEP-08: POST /event with STEP_COMPLETED returns 200 with job_data in detail."""
+        """STEP-07, STEP-08: Successful step completion returns 200 with job_data.
+
+        Given an active job with a single step
+        When POST /event is called with a valid STEP_COMPLETED payload
+        Then the response status is 200
+        And the response detail contains job_data
+        """
         g = create_production_graph(num_steps=1)
         job = g["job"]
         batch = g["batch"]
@@ -303,7 +330,12 @@ class TestStepCompletedAPI:
         )
 
     async def test_http_missing_batch_returns_422(self, db, client, auth_headers, create_production_graph):
-        """STEP-06 (HTTP layer): Non-existent batch returns 422."""
+        """STEP-06 (HTTP): Non-existent batch returns 422.
+
+        Given a non-existent batch_key in the payload
+        When POST /event is called with STEP_COMPLETED
+        Then the response status is 422
+        """
         g = create_production_graph()
         user = g["user"]
 

@@ -40,10 +40,12 @@ class TestBatchCompletedAPI:
     async def test_step_check_active_returns_422(
         self, db, client, auth_headers, create_production_graph
     ):
-        """BATCH-15: POST /event with BATCH_COMPLETED and step_check active returns 422.
+        """BATCH-15: Step check conflict returns 422.
 
-        When step_data is included in the payload AND the job has step_check=True,
-        the event raises ValueError which the endpoint maps to 422.
+        Given a job with step_check=True and an active work session
+        When POST /event is called with BATCH_COMPLETED including step_data
+        Then the response status is 422
+        And the error message references step check
         """
         g = create_production_graph(step_check=True, num_steps=1)
         job = g["job"]
@@ -72,10 +74,12 @@ class TestBatchCompletedAPI:
     async def test_quantity_mismatch_returns_422(
         self, db, client, auth_headers, create_production_graph
     ):
-        """BATCH-16: POST /event with mismatched completed_batch_qt returns 422.
+        """BATCH-16: Quantity mismatch returns 422.
 
-        The batch has qt_total=5.0 but the payload sends completed_batch_qt=3.0.
-        BatchCompletedEvent raises ValueError about quantity mismatch -> 422.
+        Given a batch with qt_total=5.0
+        When POST /event is called with completed_batch_qt=3.0
+        Then the response status is 422
+        And the error message references quantity mismatch
         """
         g = create_production_graph(batch_qt=5)
         job = g["job"]
@@ -101,10 +105,12 @@ class TestBatchCompletedAPI:
     async def test_closed_job_returns_422(
         self, db, client, auth_headers, create_production_graph
     ):
-        """BATCH-17: POST /event with BATCH_COMPLETED on a closed job returns 422.
+        """BATCH-17: Closed job returns 422.
 
-        After closing the job (stage='closed'), BatchCompletedEvent raises
-        ValueError('Job is already closed') -> 422.
+        Given a job with stage='closed'
+        When POST /event is called with BATCH_COMPLETED
+        Then the response status is 422
+        And the error message contains 'closed'
         """
         g = create_production_graph()
         job = g["job"]
@@ -131,12 +137,13 @@ class TestBatchCompletedAPI:
     async def test_happy_path_returns_200(
         self, db, client, auth_headers, create_production_graph
     ):
-        """BATCH-21: POST /event with valid BATCH_COMPLETED returns 200 with job_data in detail.
+        """BATCH-21: Valid batch completion returns 200 with job_data.
 
-        Happy path: single phase, no traceability, no warehouse management.
-        Job must have last_work_session_started set for WorkSessionClosedEvent.
-
-        Per D-04: Assert HTTP response shape only — do not assert DB state.
+        Given a single-phase job with no traceability or warehouse management
+        And an active work session
+        When POST /event is called with a valid BATCH_COMPLETED payload
+        Then the response status is 200
+        And the response detail contains job_data
         """
         g = create_production_graph(
             first_phase=True,

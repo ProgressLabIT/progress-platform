@@ -51,7 +51,12 @@ class TestProgressOverrideDirect:
     # -----------------------------------------------------------------------
 
     def test_no_assignee_raises_error(self, db, create_production_graph):
-        """PROG-12: Job with no assignee raises JobHasNoAssigneeError."""
+        """PROG-12: Unassigned job raises error.
+
+        Given a job with assigned_to=None
+        When a ProgressOverrideRequestedEvent is saved
+        Then a JobHasNoAssigneeError is raised
+        """
         g = create_production_graph()
         _clear_active_batch(db, g["job"]["_key"])
         db.collection("Job").update({"_key": g["job"]["_key"], "assigned_to": None})
@@ -62,7 +67,12 @@ class TestProgressOverrideDirect:
             event.save()
 
     def test_active_job_raises_error(self, db, create_production_graph):
-        """PROG-13: Active job raises JobIsActiveError."""
+        """PROG-13: Active job raises error.
+
+        Given a job with active=True
+        When a ProgressOverrideRequestedEvent is saved
+        Then a JobIsActiveError is raised
+        """
         g = create_production_graph()
         _clear_active_batch(db, g["job"]["_key"])
         db.collection("Job").update({"_key": g["job"]["_key"], "active": True})
@@ -73,7 +83,12 @@ class TestProgressOverrideDirect:
             event.save()
 
     def test_active_batch_raises_error(self, db, create_production_graph):
-        """PROG-14: Job with active_batch_qt > 0 raises JobHasActiveBatchError."""
+        """PROG-14: Job with active batch raises error.
+
+        Given a job with active_batch_qt > 0
+        When a ProgressOverrideRequestedEvent is saved
+        Then a JobHasActiveBatchError is raised
+        """
         g = create_production_graph()
         # Do NOT clear — set active_batch_qt > 0 to trigger the check
         db.collection("Job").update({
@@ -88,7 +103,12 @@ class TestProgressOverrideDirect:
             event.save()
 
     def test_traceability_enabled_raises_not_implemented(self, db, create_production_graph):
-        """PROG-15: Job with traceability enabled raises NotImplementedError."""
+        """PROG-15: Traceable job raises NotImplementedError.
+
+        Given a job with traceability_level='serial'
+        When a ProgressOverrideRequestedEvent is saved
+        Then a NotImplementedError is raised
+        """
         g = create_production_graph(traceability_level="serial")
         _clear_active_batch(db, g["job"]["_key"])
         event = ProgressOverrideRequestedEvent(
@@ -98,11 +118,12 @@ class TestProgressOverrideDirect:
             event.save()
 
     def test_insufficient_upstream_wip_raises_error(self, db, create_production_graph):
-        """PROG-16: Non-first phase with insufficient upstream WIP raises WipNotAvailableError.
+        """PROG-16: Insufficient upstream WIP raises error.
 
-        create_production_graph(first_phase=False) creates WIP with quantity=batch_qt=1.
-        Requesting quantity_change=10 (new_job_qt_completed=10) exceeds available WIP.
-        WorkOrder.phase_sequence must be set so AQL can find upstream phase.
+        Given a non-first phase job with upstream WIP quantity=1
+        And a phase_sequence seeded in the work order
+        When a progress override requesting 10 units is saved
+        Then a WipNotAvailableError is raised
         """
         g = create_production_graph(first_phase=False, batch_qt=1)
         _clear_active_batch(db, g["job"]["_key"])
@@ -124,7 +145,13 @@ class TestProgressOverrideDirect:
     # -----------------------------------------------------------------------
 
     def test_quantity_increase_creates_forced_batch(self, db, create_production_graph):
-        """PROG-01: Quantity increase creates forced batch and work session."""
+        """PROG-01: Quantity increase creates forced batch.
+
+        Given a job with no active batch in a single-phase setup
+        When a progress override increases quantity to 1
+        Then a new batch is created for the job
+        And a work session is created
+        """
         g = create_production_graph(first_phase=True, last_phase=True)
         _clear_active_batch(db, g["job"]["_key"])
         _seed_phase_sequence(db, g["work_order"]["_key"],
@@ -142,7 +169,13 @@ class TestProgressOverrideDirect:
         assert len(sessions) >= 1
 
     def test_time_redistribution_with_should_adjust_duration_false(self, db, create_production_graph):
-        """PROG-04: should_adjust_duration=False triggers time redistribution — event must not raise."""
+        """PROG-04: Time redistribution executes without error.
+
+        Given a job with no active batch
+        When a progress override is saved with should_adjust_duration=False
+        Then the event completes successfully
+        And a batch is created
+        """
         g = create_production_graph(first_phase=True, last_phase=True)
         _clear_active_batch(db, g["job"]["_key"])
         _seed_phase_sequence(db, g["work_order"]["_key"],
@@ -160,7 +193,12 @@ class TestProgressOverrideDirect:
         assert len(batches) >= 1
 
     def test_job_transition_created_to_started(self, db, create_production_graph):
-        """PROG-05: CREATED->STARTED on first quantity increase."""
+        """PROG-05: First quantity increase transitions job from CREATED to STARTED.
+
+        Given a job with stage='created' and qt_completed=0
+        When a progress override increases quantity to 1
+        Then the job stage transitions to 'started'
+        """
         g = create_production_graph(first_phase=True, last_phase=True)
         _clear_active_batch(db, g["job"]["_key"])
         db.collection("Job").update({
@@ -180,7 +218,12 @@ class TestProgressOverrideDirect:
         assert updated_job["stage"] == "started"
 
     def test_upstream_wip_reduced_on_increase_non_first_phase(self, db, create_production_graph):
-        """PROG-08: Non-first phase quantity increase reduces upstream WIP."""
+        """PROG-08: Quantity increase on non-first phase reduces upstream WIP.
+
+        Given a non-first phase job with upstream WIP quantity=5
+        When a progress override increases quantity by 1
+        Then the upstream WIP quantity is reduced
+        """
         g = create_production_graph(first_phase=False, batch_qt=5)
         _clear_active_batch(db, g["job"]["_key"])
 
@@ -211,10 +254,11 @@ class TestProgressOverrideDirect:
     # -----------------------------------------------------------------------
 
     def test_quantity_decrease_cancels_batches(self, db, create_production_graph):
-        """PROG-02: Quantity decrease cancels batches newest-to-oldest.
+        """PROG-02: Quantity decrease cancels batches.
 
-        _cancel_batches_for_quantity_decrease sums batch.qt_pass to find enough quantity.
-        qt_pass must be set to the completed quantity on each batch.
+        Given a job with qt_completed=2 and a batch with qt_pass=2.0
+        When a progress override decreases quantity to 0
+        Then the batch is canceled
         """
         g = create_production_graph(first_phase=True, last_phase=True, batch_qt=2)
         _clear_active_batch(db, g["job"]["_key"])
@@ -243,7 +287,12 @@ class TestProgressOverrideDirect:
         assert batch["canceled"] is not None, "Batch should be canceled after quantity decrease"
 
     def test_job_reopened_when_quantity_decreased_from_closed(self, db, create_production_graph):
-        """PROG-06: CLOSED->STARTED when qty decreased below completed (job reopened)."""
+        """PROG-06: Quantity decrease reopens a closed job.
+
+        Given a closed job with qt_completed equal to qt_planned
+        When a progress override decreases the quantity
+        Then the job stage transitions to 'started'
+        """
         g = create_production_graph(first_phase=True, last_phase=True, batch_qt=2)
         _clear_active_batch(db, g["job"]["_key"])
         _seed_phase_sequence(db, g["work_order"]["_key"],
@@ -272,7 +321,13 @@ class TestProgressOverrideDirect:
         assert updated_job["stage"] == "started"
 
     def test_queue_reordered_when_job_reopened(self, db, create_production_graph, create_queue):
-        """PROG-07: Reopened job triggers REORDER_JOB_QUEUES in post_processing — must not raise."""
+        """PROG-07: Queue reordering executes on job reopen.
+
+        Given a closed job with an operator queue
+        When a progress override reopens the job
+        Then the post_processing queue reorder completes without error
+        And the job stage transitions to 'started'
+        """
         g = create_production_graph(first_phase=True, last_phase=True, batch_qt=2)
         _clear_active_batch(db, g["job"]["_key"])
         _seed_phase_sequence(db, g["work_order"]["_key"],
@@ -305,7 +360,12 @@ class TestProgressOverrideDirect:
     def test_downstream_wip_reduced_on_decrease_non_last_phase(
         self, db, create_production_graph, create_wip
     ):
-        """PROG-09: Downstream WIP reduced on quantity decrease for non-last phase."""
+        """PROG-09: Quantity decrease on non-last phase reduces downstream WIP.
+
+        Given a non-last phase job with downstream WIP quantity=2
+        When a progress override decreases quantity to 1
+        Then the downstream WIP quantity is reduced
+        """
         g = create_production_graph(first_phase=True, last_phase=False, batch_qt=2)
         _clear_active_batch(db, g["job"]["_key"])
 
@@ -347,10 +407,12 @@ class TestProgressOverrideDirect:
             assert wip_after["quantity"] < 2, "Downstream WIP should be reduced"
 
     def test_over_cancel_creates_compensating_batch(self, db, create_production_graph):
-        """PROG-03: Quantity decrease with over-cancel creates compensating forced batch.
+        """PROG-03: Over-cancel creates compensating batch.
 
-        When canceled batch qty > needed reduction, remaining_qt < 0 → compensating batch created.
-        Setup: job completed 2 (one batch of qt=2), decrease to 1 (cancel 2, need 1, over by 1).
+        Given a job with qt_completed=2 and a single batch of qt_pass=2.0
+        When a progress override decreases quantity to 1
+        Then the original batch is canceled
+        And a compensating batch is created for the remaining quantity
         """
         g = create_production_graph(first_phase=True, last_phase=True, batch_qt=2)
         _clear_active_batch(db, g["job"]["_key"])
@@ -392,7 +454,12 @@ class TestProgressOverrideAPI:
     async def test_http_endpoint_success(
         self, db, client, auth_headers, create_production_graph
     ):
-        """PROG-17: HTTP POST /event with PROGRESS_OVERRIDE_REQUESTED returns 200."""
+        """PROG-17: Valid progress override returns 200.
+
+        Given a job with stage='created' and no active batch
+        When POST /event is called with a valid PROGRESS_OVERRIDE_REQUESTED payload
+        Then the response status is 200
+        """
         g = create_production_graph(first_phase=True, last_phase=True)
         _clear_active_batch(db, g["job"]["_key"])
         db.collection("Job").update({
@@ -420,7 +487,12 @@ class TestProgressOverrideAPI:
     async def test_http_validation_error_active_job_returns_422(
         self, db, client, auth_headers, create_production_graph
     ):
-        """PROG-13 HTTP layer: Active job returns 422."""
+        """PROG-13 (HTTP): Active job returns 422.
+
+        Given a job with active=True
+        When POST /event is called with PROGRESS_OVERRIDE_REQUESTED
+        Then the response status is 422
+        """
         g = create_production_graph()
         _clear_active_batch(db, g["job"]["_key"])
         db.collection("Job").update({"_key": g["job"]["_key"], "active": True})
