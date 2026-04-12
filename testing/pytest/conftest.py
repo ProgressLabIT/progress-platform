@@ -1171,3 +1171,59 @@ def create_production_graph(
         }
 
     return _create
+
+
+# ---------------------------------------------------------------------------
+# SECTION 8: Authenticated client fixture — AUTH-01
+# Used by auth migration tests (Phase 5) and all subsequent phases (6-9).
+# Performs the real auth flow via the API, not dependency overrides.
+# ---------------------------------------------------------------------------
+
+@pytest.fixture
+async def authed_client(db, client, create_user):
+    """AUTH-01: Authenticated client factory — performs real POST /api/auth + POST /api/session.
+
+    Returns a dict with:
+        client       — httpx.AsyncClient with auth cookie set
+        user         — the User document dict
+        session_key  — the active UserSession _key
+        user_key     — the User _key
+        access_token — the Bearer token from auth
+
+    Unlike auth_headers (which overrides verify_token dependency),
+    this fixture exercises the real auth endpoints end-to-end.
+    The password for all test users is 'test' (matching the bcrypt hash in create_user).
+    """
+    user = create_user()
+    username = user["username"]
+
+    # Step 1: POST /api/auth with form data (OAuth2PasswordRequestForm)
+    auth_response = await client.post(
+        "/api/auth",
+        data={"username": username, "password": "test"},
+    )
+    assert auth_response.status_code == 200, f"Auth failed: {auth_response.text}"
+    auth_body = auth_response.json()
+    assert auth_body["detail"]["action"] == "start_session"
+
+    # Extract the access_token from response body (it's in the OAuth2 response)
+    access_token = auth_body.get("access_token")
+    assert access_token is not None, "Auth response missing access_token"
+
+    # Step 2: POST /api/session with user_key
+    session_response = await client.post(
+        "/api/session",
+        json={"user_key": user["_key"]},
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+    assert session_response.status_code == 200, f"Session start failed: {session_response.text}"
+    session_body = session_response.json()
+    session_key = session_body["detail"]["session_key"]
+
+    return {
+        "client": client,
+        "user": user,
+        "session_key": session_key,
+        "user_key": user["_key"],
+        "access_token": access_token,
+    }
