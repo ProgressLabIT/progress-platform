@@ -47,7 +47,7 @@ Pydantic discriminates on JSON type automatically. Existing templates with a bas
 
 ### Consumer compatibility
 
-All consumers (`PrintDialog.vue`, `LabelPrintTemplates.vue`, `PrintLabelForm.vue`, `generatePdf()`) pass `basePdf` through to pdfme's `generate()` unchanged — pdfme accepts both forms natively. ZPL generation ignores `basePdf` entirely (schema-driven).
+All consumers (`PrintDialog.vue`, `LabelPrintTemplates.vue`, `PrintLabelForm.vue`, `generatePdf()`) pass `basePdf` through to pdfme's `generate()`. When `basePdf` is the blank-page object, the main app normalizes it to a plain non-reactive clone before calling `generate()` because pdfme internally uses `structuredClone` and cannot clone Vue proxies. ZPL generation ignores `basePdf` entirely (schema-driven).
 
 ---
 
@@ -151,6 +151,12 @@ const resolved = resolveExpression(
 Missing values resolve to an empty string. The function is a pure ES module with no framework dependencies.
 
 When a template expression contains `{{field::...}}` tokens, PrintDialog detects this and sets up a reactive watcher so the expression re-resolves whenever the referenced sibling fields change (similar to computed fields).
+
+### Newlines in barcode template expressions
+
+Template expressions on barcode fields (e.g. DataMatrix, QR Code) support newline characters (`\n` in the stored JSON string). At print time, `prepareInputs()` re-resolves the expression directly from the stored `templateExpression` instead of reading from `formModel`, because HTML `<input type="text">` elements strip newline characters per the value sanitization algorithm. This ensures newlines survive into the barcode encoding.
+
+In the print dialog form, barcode template expression fields are displayed as readonly `textarea` inputs (preserving visible line breaks) since their value is auto-derived and should not be hand-edited.
 
 ### Link type
 

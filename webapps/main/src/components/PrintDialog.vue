@@ -101,8 +101,8 @@
                 v-for="(field, fIndex) in normalizePageSchema(pageSchema)"
                 :key="`${index}-${fIndex}-${field.name || fIndex}`"
               >
-                <!-- Skip read-only fields, but always show computed fields -->
-                <template v-if="!field.readOnly || field.linkType === 'computed'">
+                <!-- Skip read-only fields, but always show computed and template_expression fields -->
+                <template v-if="!field.readOnly || field.linkType === 'computed' || field.linkType === 'template_expression'">
                   <template v-if="field.type === 'image'">
                     <div class="text-body2 text-weight-medium">
                       {{ printFieldDisplayLabel(field, fIndex) }}
@@ -141,7 +141,9 @@
                       filled
                       dense
                       hide-bottom-space
-                      :readonly="field.linkType === 'computed'"
+                      :type="field.linkType === 'template_expression' && field.type !== 'text' ? 'textarea' : undefined"
+                      :autogrow="field.linkType === 'template_expression' && field.type !== 'text'"
+                      :readonly="field.linkType === 'computed' || (field.linkType === 'template_expression' && field.type !== 'text')"
                       @blur="recomputeFields"
                     />
                   </div>
@@ -351,6 +353,14 @@ function schemasToV5(schemas) {
   return schemas.map(normalizePageSchema);
 }
 
+/** Convert reactive/proxy basePdf into a plain clone for pdfme generate(). */
+function normalizeBasePdf(basePdf) {
+  if (basePdf != null && typeof basePdf === 'object') {
+    return JSON.parse(JSON.stringify(toRaw(basePdf)));
+  }
+  return basePdf;
+}
+
 const props = defineProps({
   context: {
     type: Object,
@@ -399,6 +409,7 @@ let computedFieldNames = new Set();
 let templateExprFieldDefs = [];
 let templateExprFieldNames = new Set();
 let stopComputedWatcher = null;
+let currentGetLink = null;
 
 function recomputeFields() {
   if (computedFieldDefs.length === 0 && templateExprFieldDefs.length === 0) return;
@@ -445,6 +456,7 @@ function resetState() {
   computedFieldNames = new Set();
   templateExprFieldDefs = [];
   templateExprFieldNames = new Set();
+  currentGetLink = null;
 }
 
 function initialize() {
@@ -577,6 +589,7 @@ async function selectTemplate(template) {
     }
 
     const { fieldNames, getLink, getContent } = getFieldNamesAndLinks(data);
+    currentGetLink = getLink;
 
     // Ensure custom fields are loaded — idempotent, safe to call every time
     await store.dispatch('getCustomFields');
@@ -727,9 +740,17 @@ async function prepareInputs() {
           schemaFields.push([fieldName, '']);
         }
       } else {
-        const fieldValue = formModel[fieldName];
-        const safeValue = fieldValue != null ? String(fieldValue) : '';
-        schemaFields.push([fieldName, safeValue]);
+        const link = currentGetLink?.(fieldName);
+        const needsFreshResolve = link?.type === 'template_expression' && field.type !== 'text';
+        if (needsFreshResolve) {
+          const allCustomFields = store.state.form.customFields;
+          const resolved = resolveExpression(link.templateExpression, props.context, allCustomFields, formModel);
+          schemaFields.push([fieldName, String(resolved ?? '')]);
+        } else {
+          const fieldValue = formModel[fieldName];
+          const safeValue = fieldValue != null ? String(fieldValue) : '';
+          schemaFields.push([fieldName, safeValue]);
+        }
       }
     }
     inputs.push(Object.fromEntries(schemaFields));
@@ -811,7 +832,7 @@ async function goToPreview() {
       }
     }
 
-    const cleanTemplate = { basePdf: template.basePdf, schemas: cleanSchemas };
+    const cleanTemplate = { basePdf: normalizeBasePdf(template.basePdf), schemas: cleanSchemas };
 
     previewSrc.value = await generate({
       template: cleanTemplate,
@@ -870,7 +891,7 @@ async function sendToPrinter(copies = 1) {
           if (!isValidGs1) field.type = 'datamatrix';
         }
       }
-      const cleanTemplate = { basePdf: template.basePdf, schemas: cleanSchemas };
+      const cleanTemplate = { basePdf: normalizeBasePdf(template.basePdf), schemas: cleanSchemas };
       const pdfBytes = await generate({ template: cleanTemplate, inputs, plugins: pdfmePlugins });
       const bytes = new Uint8Array(pdfBytes);
       let binary = '';
