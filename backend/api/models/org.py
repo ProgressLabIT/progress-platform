@@ -73,6 +73,7 @@ class UserPreferences(BaseModel):
   home_page: HomePageOptions | None = None
   job_selection_layout: JobSelectionLayout | None = JobSelectionLayout.CARD
   work_session_tabs_order: list[WorkSessionTabs] | None = [WorkSessionTabs.PROCEDURE, WorkSessionTabs.DOCS, WorkSessionTabs.BOM, WorkSessionTabs.ISSUES, WorkSessionTabs.NOTES, WorkSessionTabs.MESSAGES, WorkSessionTabs.PROCESS]
+  printer: str | None = None
 
 class UserNew(BaseModel):
   name: str | None = None
