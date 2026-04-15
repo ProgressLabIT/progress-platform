@@ -156,6 +156,9 @@ export default {
     key: 'Key',
     copy_value: 'Copy as new record',
     new_key_prompt: 'Enter a key for the new record',
+    key_required: 'Key is required',
+    key_too_long: 'Max {max} characters',
+    key_invalid: 'Lowercase letters, digits, underscores only. Must start with a letter.',
   },
   events: {
     // Production Events

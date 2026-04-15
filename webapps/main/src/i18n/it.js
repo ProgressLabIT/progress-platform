@@ -161,6 +161,9 @@ export default {
     key: 'Chiave',
     copy_value: 'Copia come nuovo record',
     new_key_prompt: 'Inserisci una chiave per il nuovo record',
+    key_required: 'La chiave è obbligatoria',
+    key_too_long: 'Massimo {max} caratteri',
+    key_invalid: 'Solo lettere minuscole, cifre e underscore. Deve iniziare con una lettera.',
   },
   events: {
     // Eventi di Produzione

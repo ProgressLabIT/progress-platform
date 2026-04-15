@@ -85,6 +85,7 @@
 import { ref, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
+import { useI18n } from 'vue-i18n';
 import { api } from '@/boot/axios.js';
 import JsonEditor from '@/components/JsonEditor.vue';
 import BasePrompt from '@/components/BasePrompt.vue';
@@ -103,6 +104,7 @@ const emit = defineEmits(['reload']);
 
 const router = useRouter();
 const $q = useQuasar();
+const { t } = useI18n();
 
 const isNew = computed(() => !props.record);
 
@@ -136,9 +138,9 @@ watch(
 );
 
 function validateKey(val) {
-  if (!val) return 'Key is required';
-  if (val.length > KEY_MAX_LENGTH) return `Max ${KEY_MAX_LENGTH} characters`;
-  if (!KEY_PATTERN.test(val)) return 'Lowercase letters, digits, underscores only. Must start with a letter.';
+  if (!val) return t('custom_data.key_required');
+  if (val.length > KEY_MAX_LENGTH) return t('custom_data.key_too_long', { max: KEY_MAX_LENGTH });
+  if (!KEY_PATTERN.test(val)) return t('custom_data.key_invalid');
   return true;
 }
 
