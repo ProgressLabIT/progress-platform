@@ -256,13 +256,16 @@ onBeforeUnmount(() => {
   max-width: 60vw;
   display: flex;
   flex-direction: column;
+  height: 100%;
+  min-height: 0;
 }
 
 .json-editor-container {
-  max-height: 600px;
+  flex: 1;
   max-width: 100%;
   overflow: auto;
   position: relative;
+  min-height: 0;
 }
 
 .json-editor-container.has-error {
