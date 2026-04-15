@@ -285,7 +285,10 @@ class Queries:
       RETURN tt
     )
 
-    SORT t.due_by
+    SORT IS_NULL(t.due_by) ? 1 : 0, t.due_by,
+         IS_NULL(t.created) ? 1 : 0, t.created,
+         IS_NULL(t.start_from) ? 1 : 0, t.start_from,
+         IS_NULL(t.closed) ? 1 : 0, t.closed
     LIMIT @offset, @limit || null
     RETURN MERGE(t, { icon: type_data.icon, task_type_name: type_data.name, links })
   """
