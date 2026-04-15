@@ -253,7 +253,8 @@ export default {
   props: {
     field: {
       type: Object,
-      required: true,
+      required: false,
+      default: undefined,
     },
   },
 
@@ -338,6 +339,9 @@ export default {
   watch: {
     field: {
       handler() {
+        if (!this.field) {
+          return;
+        }
         this.initTempFieldData();
         if (this.is_choice) {
           this.loadListValues();
@@ -349,6 +353,9 @@ export default {
   },
 
   mounted() {
+    if (!this.field) {
+      return;
+    }
     this.initTempFieldData();
     if (this.is_choice) {
       this.loadListValues();
@@ -357,6 +364,9 @@ export default {
 
   methods: {
     initTempFieldData() {
+      if (!this.field) {
+        return;
+      }
       Object.keys(this.temp_data).forEach(
         (k) => (this.temp_data[k] = this.field[k]),
       );
