@@ -89,70 +89,52 @@
   </q-splitter>
 </template>
 
-<script>
+<script setup>
+import { ref, computed } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { api as $api } from '@/boot/axios';
 import BaseDialog from '@/components/BaseDialog.vue';
 import FormFieldNew from '@/components/FormFieldNew.vue';
 import LoadingSignal from '@/components/LoadingSignal.vue';
+import { useFormFields } from '@/composables/form.js';
 import multiMatch from '@/lib/MultiFieldSearch.js';
-import form from '@/mixins/form.js';
 
-export default {
-  name: 'FormFieldLibrary',
+const route = useRoute();
+const router = useRouter();
+const { getFieldIcon } = useFormFields();
 
-  components: {
-    BaseDialog,
-    FormFieldNew,
-    LoadingSignal,
-  },
+const data_ready = ref(false);
+const search_text = ref(undefined);
+const field_list = ref([]);
+const show_new_field_form = ref(false);
+const splitter_model = ref(30);
 
-  mixins: [form],
+const selected_field_key = computed(() => route.params.field_key);
 
-  data() {
-    return {
-      data_ready: false,
-      search_text: undefined,
-      field_list: [],
-      show_new_field_form: false,
-      splitter_model: 30,
-    };
-  },
+const selected_field = computed(() =>
+  field_list.value.find((field) => field._key == selected_field_key.value),
+);
 
-  computed: {
-    selected_field_key() {
-      return this.$route.params.field_key;
-    },
+const filtered_fields = computed(() => {
+  const fields_to_search = ['name', 'hint', 'label'];
+  return field_list.value.filter((field) =>
+    multiMatch(search_text.value, field, fields_to_search),
+  );
+});
 
-    selected_field() {
-      return this.field_list.find(
-        (field) => field._key == this.selected_field_key,
-      );
-    },
+function showFieldDetail(field_key) {
+  router.push({
+    name: 'formFieldDetail',
+    params: { field_key },
+  });
+}
 
-    filtered_fields() {
-      const fields_to_search = ['name', 'hint', 'label'];
-      return this.field_list.filter((field) =>
-        multiMatch(this.search_text, field, fields_to_search),
-      );
-    },
-  },
+function getFields() {
+  $api.get('field').then((resp) => {
+    field_list.value = resp.data.sort();
+    data_ready.value = true;
+  });
+}
 
-  created() {
-    this.getFields();
-  },
-
-  methods: {
-    showFieldDetail(field_key) {
-      this.$router.push({
-        name: 'formFieldDetail',
-        params: { field_key },
-      });
-    },
-    getFields() {
-      this.$api.get('field').then((resp) => {
-        this.field_list = resp.data.sort();
-        this.data_ready = true;
-      });
-    },
-  },
-};
+getFields();
 </script>
