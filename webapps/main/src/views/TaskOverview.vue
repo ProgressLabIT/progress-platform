@@ -27,7 +27,7 @@
       card-class="background no-shadow"
       virtual-scroll
       :virtual-scroll-item-size="48"
-      :virtual-scroll-sticky-size-start="48"
+      :virtual-scroll-sticky-size-start="28"
       :rows-per-page-options="[0]"
       :selection="edit_mode ? 'multiple' : 'none'"
       @virtual-scroll="(details) => $emit('onScroll', details)"
@@ -855,9 +855,10 @@ onUnmounted(() => {
   thead tr:first-child th /* bg color is important for th; just specify one */
     background-color: var(--bg-color)
 
-  thead
+  thead tr th
     position: sticky
     z-index: 1
+  thead tr:first-child th
     top: 0
 
 .edit-drawer

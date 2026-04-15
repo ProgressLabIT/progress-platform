@@ -149,6 +149,7 @@
     <BaseDialog
       :show="temp_date !== null"
       :no-backdrop-dismiss="false"
+      no-refocus
       @close="temp_date = null"
     >
       <q-date

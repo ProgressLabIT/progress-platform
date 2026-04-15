@@ -4,6 +4,7 @@
     :model-value="show"
     :maximized="maximized"
     :no-backdrop-dismiss="noBackdropDismiss"
+    :no-refocus="noRefocus"
     no-route-dismiss
     no-shake
     square
@@ -54,6 +55,10 @@ export default {
     getDialogRef: {
       type: Function,
       default: () => {},
+    },
+    noRefocus: {
+      type: Boolean,
+      default: false,
     },
   },
   emits: ['close'],
