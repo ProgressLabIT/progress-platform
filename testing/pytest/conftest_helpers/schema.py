@@ -102,6 +102,7 @@ COLLECTIONS = [
             default_hint=None
         )
     ]),
+    Collection(name='CustomData'),
     Collection(name='CustomListValue', indexes=[
         DBIndex(fields=['field_key'], name='clv-field')
     ]),
