@@ -283,8 +283,9 @@ export default {
   name: 'WorkSessionScreen',
 
   setup() {
-    const { subscribe } = useSSE('production');
-    return { subscribeSSE: subscribe };
+    const { subscribe: subscribeProduction } = useSSE('production');
+    const { subscribe: subscribeIssue } = useSSE('issue');
+    return { subscribeProduction, subscribeIssue };
   },
 
   components: {
@@ -505,8 +506,11 @@ export default {
   },
 
   async mounted() {
-    this.subscribeSSE((event) => {
-      this.handleMessage(event);
+    this.subscribeProduction((event) => {
+      this.handleProductionMessage(event);
+    });
+    this.subscribeIssue((event) => {
+      this.handleIssueMessage(event);
     });
     // Go to first tab according to user preference if path doesn't specify one
     if (this.$route.name === 'workSession') {
@@ -554,10 +558,20 @@ export default {
   },
 
   methods: {
-    handleMessage(message) {
-      let event = JSON.parse(message.data);
+    handleProductionMessage(message) {
+      const event = JSON.parse(message.data);
       if (event.job_key === this.jobKey || event.work_order_key === this.j?.wo_key) {
         this.updateJobData();
+      }
+    },
+
+    handleIssueMessage(message) {
+      const event = JSON.parse(message.data);
+      if (event.work_order_key === this.j?.wo_key) {
+        this.$store.dispatch('getIssues', {
+          work_order_key: this.j.wo_key,
+          with_links: true,
+        });
       }
     },
     async loadJob() {

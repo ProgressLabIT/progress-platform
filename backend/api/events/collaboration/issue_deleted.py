@@ -1,9 +1,10 @@
-from events.collaboration.base_collaboration import BaseCollaboration, BaseIssueModel
+from events.collaboration.base_collaboration import BaseIssueModel
+from events.collaboration.base_issue import BaseIssueEvent
 from utils.file import FileHandler
 from models.form import FileBucket
-from models.event import EventType, EventInfoModel
+from models.event import EventType
 
-class IssueDeletedEvent(BaseCollaboration):
+class IssueDeletedEvent(BaseIssueEvent):
 
   class InfoModel(BaseIssueModel):
     pass

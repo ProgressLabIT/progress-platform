@@ -1,8 +1,9 @@
 from models.collaboration import Issue, IssueWithLinks
 from events.collaboration.base_collaboration import BaseCollaboration, BaseIssueModel
+from events.collaboration.base_issue import BaseIssueEvent
 from models.event import EventType
 
-class IssueCreatedEvent(BaseCollaboration):
+class IssueCreatedEvent(BaseIssueEvent):
 
   class InfoModel(BaseIssueModel):
     pass

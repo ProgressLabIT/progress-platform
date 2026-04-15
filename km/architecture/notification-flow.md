@@ -57,6 +57,7 @@ This is a superset of the old minimal notification dict. It includes all entity 
 | `BaseMessageEvent` | `message` | `message_key` + derived `recipient_id` |
 | `BaseInventoryEvent` | `inventory` | `movement_key`, `product_key` |
 | `BaseSerialEvent` | `serial` | `serial_key`, `product_key` |
+| `BaseIssueEvent` | `issue` | derived `work_order_key` (from `issue_rel` edges or `linked_to`) |
 
 Standalone events that inherit `BaseEvent` directly (e.g. `WorkOrderCreatedEvent`, `QueueUpdatedEvent`, `BatchReleasedEvent`, `JobClosedEvent`) declare their own `_notification_subtopic = "production"`.
 
@@ -69,6 +70,15 @@ Standalone events that inherit `BaseEvent` directly (e.g. `WorkOrderCreatedEvent
 ### Special case: BaseMessageEvent
 
 `BaseMessageEvent` overrides `_build_event_payload()` to add `recipient_id` — a derived field computed from `self.info.recipient` or the message document. This override runs while the transaction is active.
+
+### Special case: BaseIssueEvent
+
+`BaseIssueEvent` overrides both `pre_processing()` and `_build_event_payload()` to attach `work_order_key` to every issue notification:
+
+- **Create**: `work_order_key` is extracted from the `linked_to` array in `issue_data` (the WO link hasn't been persisted yet when `pre_processing()` runs).
+- **Update / Close / Reopen / Delete**: `pre_processing()` queries `issue_rel` edges while the transaction is still active (before `apply()` removes them on delete) and stores the key in `self._issue_wo_key`.
+
+This allows `WorkSessionScreen` (and any other subscriber) to filter issue events by work order without an extra API call.
 
 ### Special case: Inventory/Serial error notifications
 
@@ -97,6 +107,7 @@ task              →  progress.notification.task
 message           →  progress.notification.message
 inventory         →  progress.notification.inventory
 serial            →  progress.notification.serial
+issue             →  progress.notification.issue
 ```
 
 NATS fans the message out to all subscribers on `progress.notification.>`.

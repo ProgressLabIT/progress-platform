@@ -1,8 +1,9 @@
-from events.collaboration.base_collaboration import BaseCollaboration, BaseIssueModel
+from events.collaboration.base_collaboration import BaseIssueModel
+from events.collaboration.base_issue import BaseIssueEvent
 from utils.dt import timestamp
-from models.event import EventType, EventInfoModel
+from models.event import EventType
 
-class IssueClosedEvent(BaseCollaboration):
+class IssueClosedEvent(BaseIssueEvent):
 
   class InfoModel(BaseIssueModel):
     pass

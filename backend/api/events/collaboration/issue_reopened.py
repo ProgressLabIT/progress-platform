@@ -1,7 +1,8 @@
-from events.collaboration.base_collaboration import BaseCollaboration, BaseIssueModel
+from events.collaboration.base_collaboration import BaseIssueModel
+from events.collaboration.base_issue import BaseIssueEvent
 from models.event import EventType
 
-class IssueReopenedEvent(BaseCollaboration):
+class IssueReopenedEvent(BaseIssueEvent):
   class InfoModel(BaseIssueModel):
     pass
 
