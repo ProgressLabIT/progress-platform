@@ -39,6 +39,7 @@ const adminViews = [
   'taskTypeLibrary',
   'formFieldLibrary',
   'counterLibrary',
+  'customDataLibrary',
   'flowLibrary',
 ];
 </script>

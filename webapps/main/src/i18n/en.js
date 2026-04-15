@@ -1099,6 +1099,7 @@ export default {
     defaultOperationParameters: 'default operation parameters',
     formFieldLibrary: 'Form fields',
     counterLibrary: 'Counters',
+    customDataLibrary: 'Custom data',
     serialFieldSettings: 'Serial fields',
     apiTokenSettings: 'API Tokens',
     flowLibrary: 'Data flows',

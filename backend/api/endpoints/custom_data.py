@@ -1,7 +1,6 @@
-import re
 import traceback
 
-from fastapi import APIRouter, HTTPException, Depends, Query
+from fastapi import APIRouter, HTTPException, Depends
 from utils import auth
 from utils.api import APIResponse
 from models.custom_data import CustomData, KEY_PATTERN, KEY_MAX_LENGTH

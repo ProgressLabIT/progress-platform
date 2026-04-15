@@ -176,6 +176,24 @@ const adminRoutes = [
         ],
       },
       {
+        path: 'custom-data',
+        name: 'customDataLibrary',
+        component: () => import('@/views/CustomDataLibrary.vue'),
+        children: [
+          {
+            path: ':data_key',
+            name: 'customDataDetail',
+            component: () => import('@/views/CustomDataDetail.vue'),
+            props: true,
+          },
+          {
+            path: 'new',
+            name: 'customDataNew',
+            component: () => import('@/views/CustomDataDetail.vue'),
+          },
+        ],
+      },
+      {
         path: 'flows',
         name: 'flowLibrary',
         component: () => import ('@/views/FlowLibrary.vue'),
