@@ -217,20 +217,20 @@
       <!-- RELEASED DATE RANGE -->
       <div class="row q-col-gutter-sm q-mb-md">
         <div class="col">
-          <BaseDatePicker v-model="time_released_from" :label="$t('released_min')" />
+          <BaseDatePicker v-model="time_released_from" :label="$t('released_min')" dense />
         </div>
         <div class="col">
-          <BaseDatePicker v-model="time_released_to" :label="$t('released_max')" />
+          <BaseDatePicker v-model="time_released_to" :label="$t('released_max')" dense />
         </div>
       </div>
 
       <!-- OPENED DATE RANGE -->
       <div class="row q-col-gutter-sm q-mb-md">
         <div class="col">
-          <BaseDatePicker v-model="time_created_from" :label="$t('created_min')" />
+          <BaseDatePicker v-model="time_created_from" :label="$t('created_min')" dense />
         </div>
         <div class="col">
-          <BaseDatePicker v-model="time_created_to" :label="$t('created_max')" />
+          <BaseDatePicker v-model="time_created_to" :label="$t('created_max')" dense />
         </div>
       </div>
 

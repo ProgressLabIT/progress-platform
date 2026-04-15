@@ -3,7 +3,7 @@
     :show="props.show"
     :loading="creating"
     :enable-save="isFormValid"
-    :handle-close="() => null"
+    :handle-close="handleCancel"
     @submit="handleCreateTask"
     @cancel="handleCancel"
   >
@@ -12,35 +12,56 @@
     </template>
 
     <template #form>
-      <div class="q-gutter-md">
-        <BaseAutocompleteTaskType
-          :value="newTask.type"
-          key-only
-          load-data
-          mandatory
-          @select="(selection) => newTask.type = selection"
-        />
+      <div class="row q-col-gutter-sm">
+        <div class="col-12">
+          <BaseAutocompleteTaskType
+            :value="newTask.type"
+            key-only
+            load-data
+            mandatory
+            @select="(selection) => newTask.type = selection"
+          />
+        </div>
 
-        <q-input
-          v-model="newTask.title"
-          :label="$capitalize($t('title'))"
-          label-slot
-          filled
-          :rules="[val => !!val || $t('field_required')]"
-        >
-          <template #label>
-            {{ $capitalize($t('title')) }}
-            <span class="text-theme-red"> * </span>
-          </template>
-        </q-input>
+        <div class="col-12">
+          <q-input
+            v-model="newTask.title"
+            :label="$capitalize($t('title'))"
+            label-slot
+            filled
+            hide-bottom-space
+            :rules="[val => !!val || $t('field_required')]"
+          >
+            <template #label>
+              {{ $capitalize($t('title')) }}
+              <span class="text-theme-red"> * </span>
+            </template>
+          </q-input>
+        </div>
 
-        <q-input
-          v-model="newTask.description"
-          :label="$capitalize($t('description'))"
-          autogrow
-          filled
-          rows="3"
-        />
+        <div class="col-12">
+          <q-input
+            v-model="newTask.description"
+            :label="$capitalize($t('description'))"
+            autogrow
+            filled
+            rows="3"
+          />
+        </div>
+
+        <div class="col-6">
+          <BaseDatePicker
+            v-model="newTask.start_from"
+            :label="$capitalize($t('start_from'))"
+          />
+        </div>
+
+        <div class="col-6">
+          <BaseDatePicker
+            v-model="newTask.due_by"
+            :label="$capitalize($t('due_by'))"
+          />
+        </div>
       </div>
     </template>
   </BaseModalForm>
@@ -51,6 +72,7 @@ import { ref, computed, reactive } from 'vue';
 import { useI18n } from 'vue-i18n';
 import BaseAutocompleteTaskType from '@/components/BaseAutocompleteTaskType.vue';
 import BaseModalForm from '@/components/BaseModalForm.vue';
+import BaseDatePicker from '@/components/BaseDatePicker.vue';
 import { useTaskStore } from '@/stores/task.js';
 import { Notify } from 'quasar';
 // Props
@@ -66,6 +88,8 @@ const newTask = reactive({
   type: '',
   title: '',
   description: '',
+  start_from: null,
+  due_by: null,
 });
 
 // Emits
@@ -128,5 +152,7 @@ function resetForm() {
   newTask.type = '';
   newTask.title = '';
   newTask.description = '';
+  newTask.start_from = null;
+  newTask.due_by = null;
 }
 </script>

@@ -2,7 +2,7 @@
   <q-input
     v-model="date"
     filled
-    dense
+    :dense="dense"
     clearable
     debounce="1000"
     mask="date"
@@ -31,6 +31,10 @@ defineProps({
   label: {
     type: String,
     required: true,
+  },
+  dense: {
+    type: Boolean,
+    default: false,
   },
 });
 

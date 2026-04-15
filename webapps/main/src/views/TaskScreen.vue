@@ -56,6 +56,34 @@
                 />
               </div>
 
+              <!-- START FROM -->
+              <div class="col-auto row q-gutter-x-sm items-center">
+                <div class="text-h5 uppercase text-low">{{ $t('start_from') }}</div>
+                <div
+                  class="text-caption text-low"
+                  :class="{ 'pointer hover-underline': canEditDates }"
+                  @click="canEditDates ? showDatePicker('start_from') : null"
+                >
+                  {{ task.start_from ? $shortDateString(task.start_from, $i18n.locale) : '-' }}
+                </div>
+              </div>
+
+              <!-- DUE BY -->
+              <div class="col-auto row q-gutter-x-sm items-center">
+                <div class="text-h5 uppercase text-low">{{ $t('due_by') }}</div>
+                <div
+                  class="text-caption"
+                  :class="[
+                    task.due_by && isLate(task.due_by) ? 'text-theme-red' : 'text-low',
+                    canEditDates ? 'pointer hover-underline' : ''
+                  ]"
+                  @click="canEditDates ? showDatePicker('due_by') : null"
+                >
+                  <q-icon v-if="task.due_by && isLate(task.due_by)" name="mdi-alert-octagon" size="14px" color="theme-red" />
+                  {{ task.due_by ? $shortDateString(task.due_by, $i18n.locale) : '-' }}
+                </div>
+              </div>
+
               <!-- ASSIGNED TO -->
               <div class="col-auto row q-col-gutter-x-md items-center">
                 <div class="text-h5 uppercase text-low">{{ $t('assigned_to') }}</div>
@@ -371,6 +399,21 @@
   </BaseModalScreen>
 
 
+  <!-- DATE PICKER DIALOG -->
+  <BaseDialog
+    :show="temp_date !== null"
+    :no-backdrop-dismiss="false"
+    @close="temp_date = null"
+  >
+    <q-date
+      v-if="temp_date"
+      minimal
+      mask="YYYY-MM-DD"
+      :model-value="temp_date.value"
+      @update:model-value="(val) => updateTaskDate(val)"
+    />
+  </BaseDialog>
+
   <!-- ASSIGNMENT DIALOG -->
   <TaskAssignmentDialog
     :show="showAssignmentDialog"
@@ -421,6 +464,7 @@ import { api as $api } from '@/boot/axios';
 import { useSSE } from '@/composables/useSSE';
 import { capitalize } from '@/boot/filters';
 import BaseConfirmationDialog from '@/components/BaseConfirmationDialog.vue';
+import BaseDialog from '@/components/BaseDialog.vue';
 import BaseModalScreen from '@/components/BaseModalScreen.vue';
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue';
 import FormField from '@/components/FormField.vue';
@@ -475,6 +519,9 @@ const selectedEntityType = ref(null);
 const showRemoveConfirmation = ref(false);
 const linkToRemove = ref(null);
 
+// Date picker state
+const temp_date = ref(null);
+
 // Assignee grouping
 const ownerAssignment = computed(() => {
   const assignments = task.value?.assigned_to || [];
@@ -490,6 +537,14 @@ const otherAssignments = computed(() => {
 const hasAdminAccess = computed(() => {
   return store.getters.hasPermission('admin');
 });
+
+const canEditDates = computed(() => {
+  return ['pending', 'open'].includes(task.value?.status);
+});
+
+function isLate(dateStr) {
+  return dateStr && new Date(dateStr) < new Date();
+}
 
 // Available entity types for linking
 const allowedEntityTypes = computed(() => {
@@ -724,6 +779,38 @@ async function saveAssignments(newAssignments) {
     });
   } finally {
     savingAssignment.value = false;
+  }
+}
+
+// Date picker functions
+function showDatePicker(field) {
+  temp_date.value = {
+    field,
+    value: task.value[field] || null,
+  };
+}
+
+async function updateTaskDate(newDateValue) {
+  const field = temp_date.value.field;
+  temp_date.value = null;
+
+  try {
+    await sendEvent({
+      event_type: 'TASK_UPDATED',
+      event_data: {
+        task_key: props.taskKey,
+        [field]: newDateValue,
+      },
+    });
+    await fetchTaskData();
+  } catch (error) {
+    console.error('Error updating task date:', error);
+    Notify.create({
+      message: $t('errors.save_err'),
+      color: 'theme-red',
+      timeout: 3000,
+      position: 'top',
+    });
   }
 }
 

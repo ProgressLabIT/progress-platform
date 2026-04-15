@@ -195,12 +195,32 @@
                   </q-popup-proxy>
               </template>
 
-              <template v-else-if="['created', 'start_from', 'due_by', 'closed'].includes(column.name)">
-                {{
-                  props.row[column.name] === null
-                    ? '-'
-                    : $shortDateString(props.row[column.name], $i18n.locale)
-                }}
+              <template v-else-if="['created', 'closed'].includes(column.name)">
+                {{ props.row[column.name] === null ? '-' : $shortDateString(props.row[column.name], $i18n.locale) }}
+              </template>
+
+              <template v-else-if="column.name === 'start_from'">
+                <div
+                  class="pointer"
+                  @click.stop="!edit_mode ? showDatePicker({ field: 'start_from', task_data: props.row }) : null"
+                >
+                  {{ props.row.start_from === null ? '-' : $shortDateString(props.row.start_from, $i18n.locale) }}
+                </div>
+              </template>
+
+              <template v-else-if="column.name === 'due_by'">
+                <div
+                  class="pointer"
+                  @click.stop="!edit_mode ? showDatePicker({ field: 'due_by', task_data: props.row }) : null"
+                >
+                  <q-icon
+                    v-if="props.row.due_by && isLate(props.row.due_by)"
+                    color="theme-red"
+                    name="mdi-alert-octagon"
+                    size="14px"
+                  />
+                  {{ props.row.due_by === null ? '-' : $shortDateString(props.row.due_by, $i18n.locale) }}
+                </div>
               </template>
 
               <div v-else-if="column.name === 'assigned_to'" class="row items-center">
@@ -424,6 +444,22 @@
   </div>
 
   <!-- TASK DETAIL -->
+
+  <!-- DATE PICKER DIALOG -->
+  <BaseDialog
+    :show="temp_date !== null"
+    :no-backdrop-dismiss="false"
+    no-refocus
+    @close="temp_date = null"
+  >
+    <q-date
+      v-if="temp_date"
+      minimal
+      mask="YYYY-MM-DD"
+      :model-value="temp_date.value"
+      @update:model-value="(val) => updateTaskDate(val)"
+    />
+  </BaseDialog>
 </div>
 </template>
 
@@ -433,6 +469,7 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter, useRoute } from 'vue-router';
 import { useStore } from 'vuex';
+import BaseDialog from '@/components/BaseDialog.vue';
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue';
 import { sendEvent } from '@/composables/event.js';
 import { useTask } from '@/composables/task.js';
@@ -464,8 +501,6 @@ const pagination = ref({
   rowsPerPage: 0,
   sortBy: 'created',
   descending: false,
-  page: 1,
-  rowsNumber: 1000,
 });
 
 // UI state
@@ -486,6 +521,9 @@ const task_status = ref(null);
 // User selection state
 const user_options = ref([]);
 const all_users = ref([]);
+
+// Date picker state
+const temp_date = ref(null);
 
 // Computed properties
 const task_list = computed(() => taskStore.tasks);
@@ -683,6 +721,43 @@ function updateTaskStatus(taskKey, status) {
   selected_tasks.value.add(taskKey);
   task_status.value = status;
   updateTasks();
+}
+
+// Inline date picker functions
+function showDatePicker({ field, task_data }) {
+  temp_date.value = {
+    field,
+    value: task_data[field] || null,
+    task_key: task_data._key,
+  };
+}
+
+async function updateTaskDate(newDateValue) {
+  const { field, task_key } = temp_date.value;
+  temp_date.value = null;
+
+  try {
+    await sendEvent({
+      event_type: 'TASK_UPDATED',
+      event_data: {
+        task_key,
+        [field]: newDateValue,
+      },
+    });
+    await taskStore.fetchTasks();
+  } catch (error) {
+    console.error('Error updating task date:', error);
+    $q.notify({
+      message: t('errors.save_err'),
+      color: 'theme-red',
+      timeout: 3000,
+      position: 'top',
+    });
+  }
+}
+
+function isLate(dateStr) {
+  return dateStr && new Date(dateStr) < new Date();
 }
 
 // Date validation function
