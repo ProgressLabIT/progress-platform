@@ -16,16 +16,15 @@ Add a `CustomData` ArangoDB collection with full CRUD exposed through the main w
 
 | Field | Type | Required | Notes |
 |-------|------|----------|-------|
-| `_key` | string | yes | Auto-slugified from `name` to snake_case (e.g., `my_flow_config`). Validated: `^[a-z][a-z0-9_]*$` |
-| `name` | string | yes | Human-readable label (e.g., "My Flow Config") |
+| `_key` | string | yes | User-provided identifier. Validated: `^[a-z][a-z0-9_]*$`, max 64 chars. |
 | `value` | any JSON | yes | Scalar, object, or array — any valid JSON |
 | `description` | string | no | Human-readable purpose of this record |
 
-No timestamps, org scoping, or additional metadata.
+No timestamps, no `name` field, no org scoping. The `_key` is the identifier, `description` provides human context.
 
-### Key Derivation
+### Key Validation
 
-`_key` is derived from `name` via slugification (lowercase, spaces/special chars → underscores, strip leading/trailing underscores). Backend validates `_key` matches `^[a-z][a-z0-9_]*$` on all writes — rejects invalid keys even from direct API calls. On create, the slug is generated server-side from `name`. On update, `name` can change but `_key` remains fixed.
+Backend validates `_key` matches `^[a-z][a-z0-9_]*$` with max length 64 on all writes. Rejects with 422 if invalid. Frontend mirrors validation inline (shows error before submit).
 
 ## Backend
 
@@ -37,7 +36,6 @@ New file: `backend/api/models/custom_data.py`
 from backend.api.models.base_models import ArangoDocument
 
 class CustomData(ArangoDocument):
-    name: str
     value: Any  # any valid JSON
     description: str | None = None
 ```
@@ -50,9 +48,9 @@ All endpoints require admin authentication via `Depends(auth.verify_token)` + ad
 
 | Method | Path | Body | Returns | Description |
 |--------|------|------|---------|-------------|
-| GET | `/custom-data` | — | `list[CustomData]` | List all records. Optional `search` query param filters by `_key`, `name`, and `description`. |
+| GET | `/custom-data` | — | `list[CustomData]` | List all records. Optional `search` query param filters by `_key` and `description`. |
 | GET | `/custom-data/{key}` | — | `CustomData` | Single record by `_key`. 404 if not found. |
-| PUT | `/custom-data/{key}` | `{ name, value, description? }` | `CustomData` | Upsert — creates if missing, updates if exists. On create, `_key` is slugified from `name`. On update, `name` can change but `_key` stays fixed. Validates `_key` format. |
+| PUT | `/custom-data/{key}` | `{ value, description? }` | `CustomData` | Upsert — creates if missing, updates if exists. Validates `_key` format (422 if invalid). |
 | DELETE | `/custom-data/{key}` | — | `{ message }` | Delete record. 404 if not found. |
 
 ### Implementation Pattern
@@ -94,13 +92,12 @@ New file: `webapps/main/src/views/CustomDataLibrary.vue`
 
 - **Left panel (list):**
   - Search/filter input at top
-  - List of records showing `name` and truncated `description`
+  - List of records showing `_key` and truncated `description`
   - "Add" button to create new record
   - Click selects record, shows detail on right
 
 - **Right panel (detail):**
-  - `name` field — text input (editable on create and edit)
-  - `_key` — shown as read-only derived slug below the name field (auto-generated from `name` on create, fixed after)
+  - `_key` field — text input on create (with inline validation: `^[a-z][a-z0-9_]*$`, max 64), read-only on edit
   - `description` — textarea
   - `value` — CodeMirror 6 JSON editor with syntax highlighting and validation
   - Save button (creates or updates via PUT)
