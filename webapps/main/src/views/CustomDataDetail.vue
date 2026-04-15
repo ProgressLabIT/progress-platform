@@ -1,10 +1,11 @@
 <template>
   <div class="q-pa-md column full-height">
-    <div class="text-h6 q-mb-md">
+    <div class="text-h6 q-mb-md col-auto">
       {{ isNew ? $t('new') : record_key }}
     </div>
 
     <!-- Key (editable only on create) -->
+    <div class="col-auto">
     <q-input
       v-if="isNew"
       v-model="form.key"
@@ -16,8 +17,10 @@
       :hint="`a-z, 0-9, _ — max ${KEY_MAX_LENGTH} chars`"
       lazy-rules
     />
+    </div>
 
     <!-- Description -->
+    <div class="col-auto">
     <q-input
       v-model="form.description"
       dense
@@ -27,9 +30,10 @@
       type="textarea"
       autogrow
     />
+    </div>
 
     <!-- JSON Value -->
-    <div class="col" style="min-height: 200px">
+    <div class="col">
       <JsonEditor
         v-model="form.value_str"
         :label="`${$t('value')} (JSON)`"
@@ -38,8 +42,18 @@
       />
     </div>
 
+    <BasePrompt
+      :show="show_copy_prompt"
+      :prompt="$t('custom_data.copy_value')"
+      :help-text="$t('custom_data.new_key_prompt')"
+      :initial_value="''"
+      :require-change="false"
+      @close="show_copy_prompt = false"
+      @update="doCopy"
+    />
+
     <!-- Actions -->
-    <div class="row q-mt-md q-gutter-sm">
+    <div class="row q-mt-md q-gutter-sm col-auto">
       <q-btn
         color="theme-blue"
         :label="$t('save')"
@@ -53,7 +67,7 @@
         color="theme-blue"
         :label="$t('custom_data.copy_value')"
         icon="mdi-content-copy"
-        @click="copyAsNew"
+        @click="show_copy_prompt = true"
       />
       <q-space />
       <q-btn
@@ -71,9 +85,9 @@
 import { ref, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
-import { useI18n } from 'vue-i18n';
 import { api } from '@/boot/axios.js';
 import JsonEditor from '@/components/JsonEditor.vue';
+import BasePrompt from '@/components/BasePrompt.vue';
 
 const KEY_PATTERN = /^[a-z][a-z0-9_]*$/;
 const KEY_MAX_LENGTH = 64;
@@ -89,7 +103,6 @@ const emit = defineEmits(['reload']);
 
 const router = useRouter();
 const $q = useQuasar();
-const { t } = useI18n();
 
 const isNew = computed(() => !props.record);
 
@@ -103,6 +116,7 @@ const form = ref({
 
 const json_has_error = ref(false);
 const saving = ref(false);
+const show_copy_prompt = ref(false);
 
 // Populate form when record changes
 watch(
@@ -145,44 +159,35 @@ async function save() {
     };
     await api.put(`custom-data/${key}`, payload);
 
-    $q.notify({ type: 'positive', message: `Saved ${key}` });
+    $q.notify({ message: `Saved ${key}`, color: 'theme-green' });
     emit('reload');
 
     if (isNew.value) {
       router.push({ name: 'customDataDetail', params: { data_key: key } });
     }
   } catch (e) {
-    $q.notify({ type: 'negative', message: e.response?.data?.detail || e.message });
+    $q.notify({ message: e.response?.data?.detail || e.message, color: 'theme-red' });
   } finally {
     saving.value = false;
   }
 }
 
-function copyAsNew() {
-  $q.dialog({
-    title: t('custom_data.copy_value'),
-    message: t('custom_data.new_key_prompt'),
-    prompt: {
-      model: '',
-      type: 'text',
-      isValid: (val) => KEY_PATTERN.test(val) && val.length <= KEY_MAX_LENGTH,
-    },
-    cancel: true,
-    persistent: true,
-  }).onOk(async (newKey) => {
-    try {
-      const payload = {
-        value: JSON.parse(form.value.value_str),
-        description: form.value.description || null,
-      };
-      await api.put(`custom-data/${newKey}`, payload);
-      $q.notify({ type: 'positive', message: `Created ${newKey}` });
-      emit('reload');
-      router.push({ name: 'customDataDetail', params: { data_key: newKey } });
-    } catch (e) {
-      $q.notify({ type: 'negative', message: e.response?.data?.detail || e.message });
-    }
-  });
+async function doCopy(newKey) {
+  show_copy_prompt.value = false;
+  if (!newKey || !KEY_PATTERN.test(newKey) || newKey.length > KEY_MAX_LENGTH) return;
+
+  try {
+    const payload = {
+      value: JSON.parse(form.value.value_str),
+      description: form.value.description || null,
+    };
+    await api.put(`custom-data/${newKey}`, payload);
+    $q.notify({ message: `Created ${newKey}`, color: 'theme-green' });
+    emit('reload');
+    router.push({ name: 'customDataDetail', params: { data_key: newKey } });
+  } catch (e) {
+    $q.notify({ message: e.response?.data?.detail || e.message, color: 'theme-red' });
+  }
 }
 
 function confirmDelete() {
@@ -194,11 +199,11 @@ function confirmDelete() {
   }).onOk(async () => {
     try {
       await api.delete(`custom-data/${props.record._key}`);
-      $q.notify({ type: 'positive', message: 'Deleted' });
+      $q.notify({ message: 'Deleted', color: 'theme-green' });
       emit('reload');
       router.push({ name: 'customDataLibrary' });
     } catch (e) {
-      $q.notify({ type: 'negative', message: e.response?.data?.detail || e.message });
+      $q.notify({ message: e.response?.data?.detail || e.message, color: 'theme-red' });
     }
   });
 }
