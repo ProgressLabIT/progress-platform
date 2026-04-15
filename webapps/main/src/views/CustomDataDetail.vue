@@ -173,8 +173,11 @@ async function save() {
 }
 
 async function doCopy(newKey) {
+  if (!newKey || !KEY_PATTERN.test(newKey) || newKey.length > KEY_MAX_LENGTH) {
+    $q.notify({ message: validateKey(newKey), color: 'theme-red' });
+    return;
+  }
   show_copy_prompt.value = false;
-  if (!newKey || !KEY_PATTERN.test(newKey) || newKey.length > KEY_MAX_LENGTH) return;
 
   try {
     const payload = {
