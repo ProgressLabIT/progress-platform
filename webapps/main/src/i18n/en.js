@@ -152,6 +152,11 @@ export default {
   invalid_json: 'Invalid JSON format',
   format_json: 'format JSON',
   json_syntax_error: 'JSON syntax error',
+  custom_data: {
+    key: 'Key',
+    copy_value: 'Copy as new record',
+    new_key_prompt: 'Enter a key for the new record',
+  },
   events: {
     // Production Events
     ACTIVE_BATCH_CHANGED: 'Active batch changed',

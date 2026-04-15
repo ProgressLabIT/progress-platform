@@ -261,7 +261,7 @@ onBeforeUnmount(() => {
 .json-editor-container {
   max-height: 600px;
   max-width: 100%;
-  overflow: hidden;
+  overflow: auto;
   position: relative;
 }
 

@@ -11,7 +11,7 @@
       dense
       filled
       class="q-mb-md"
-      label="Key"
+      :label="$t('custom_data.key')"
       :rules="[validateKey]"
       :hint="`a-z, 0-9, _ — max ${KEY_MAX_LENGTH} chars`"
       lazy-rules
@@ -32,7 +32,7 @@
     <div class="col" style="min-height: 200px">
       <JsonEditor
         v-model="form.value_str"
-        label="Value (JSON)"
+        :label="`${$t('value')} (JSON)`"
         :rows="15"
         @validation-error="json_has_error = $event"
       />
@@ -46,6 +46,14 @@
         :disable="!canSave"
         :loading="saving"
         @click="save"
+      />
+      <q-btn
+        v-if="!isNew"
+        outline
+        color="theme-blue"
+        :label="$t('custom_data.copy_value')"
+        icon="mdi-content-copy"
+        @click="copyAsNew"
       />
       <q-space />
       <q-btn
@@ -63,6 +71,7 @@
 import { ref, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
+import { useI18n } from 'vue-i18n';
 import { api } from '@/boot/axios.js';
 import JsonEditor from '@/components/JsonEditor.vue';
 
@@ -80,6 +89,7 @@ const emit = defineEmits(['reload']);
 
 const router = useRouter();
 const $q = useQuasar();
+const { t } = useI18n();
 
 const isNew = computed(() => !props.record);
 
@@ -146,6 +156,33 @@ async function save() {
   } finally {
     saving.value = false;
   }
+}
+
+function copyAsNew() {
+  $q.dialog({
+    title: t('custom_data.copy_value'),
+    message: t('custom_data.new_key_prompt'),
+    prompt: {
+      model: '',
+      type: 'text',
+      isValid: (val) => KEY_PATTERN.test(val) && val.length <= KEY_MAX_LENGTH,
+    },
+    cancel: true,
+    persistent: true,
+  }).onOk(async (newKey) => {
+    try {
+      const payload = {
+        value: JSON.parse(form.value.value_str),
+        description: form.value.description || null,
+      };
+      await api.put(`custom-data/${newKey}`, payload);
+      $q.notify({ type: 'positive', message: `Created ${newKey}` });
+      emit('reload');
+      router.push({ name: 'customDataDetail', params: { data_key: newKey } });
+    } catch (e) {
+      $q.notify({ type: 'negative', message: e.response?.data?.detail || e.message });
+    }
+  });
 }
 
 function confirmDelete() {

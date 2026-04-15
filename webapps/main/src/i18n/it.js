@@ -157,6 +157,11 @@ export default {
   invalid_json: 'Formato JSON non valido',
   format_json: 'formatta JSON',
   json_syntax_error: 'errore di sintassi JSON',
+  custom_data: {
+    key: 'Chiave',
+    copy_value: 'Copia come nuovo record',
+    new_key_prompt: 'Inserisci una chiave per il nuovo record',
+  },
   events: {
     // Eventi di Produzione
     ACTIVE_BATCH_CHANGED: 'Lotto attivo modificato',
@@ -1116,6 +1121,7 @@ export default {
     flowLibrary: 'Flussi dati',
     formFieldLibrary: 'Campi moduli',
     counterLibrary: 'Contatori',
+    customDataLibrary: 'Dati personalizzati',
     serialFieldSettings: 'Campi seriali',
     apiTokenSettings: 'API Tokens',
     generalSettings: 'generale',

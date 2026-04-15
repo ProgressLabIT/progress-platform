@@ -18,7 +18,10 @@
           class="row q-mt-md q-px-lg q-py-sm text-h6 text-uppercase weight-bold"
         >
           <div class="col">
-            Key
+            {{ $t('custom_data.key') }}
+          </div>
+          <div class="col">
+            {{ $t('value') }}
           </div>
         </div>
 
@@ -39,7 +42,7 @@
               {{ item._key }}
             </div>
             <div class="col ellipsis text-caption text-grey">
-              {{ item.description }}
+              {{ truncateValue(item.value) }}
             </div>
           </div>
         </q-scroll-area>
@@ -123,6 +126,11 @@ function showDetail(data_key) {
 
 function showNew() {
   router.push({ name: 'customDataNew' });
+}
+
+function truncateValue(value) {
+  const str = JSON.stringify(value);
+  return str.length > 60 ? str.slice(0, 60) + '…' : str;
 }
 
 onMounted(loadItems);
