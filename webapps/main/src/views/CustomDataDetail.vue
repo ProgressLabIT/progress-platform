@@ -42,6 +42,15 @@
       />
     </div>
 
+    <BaseConfirmationDialog
+      :show="show_delete_confirm"
+      confirm_color="theme-red"
+      @close="show_delete_confirm = false"
+      @confirm="doDelete"
+    >
+      {{ $t('delete') }} "{{ record_key }}"?
+    </BaseConfirmationDialog>
+
     <BasePrompt
       :show="show_copy_prompt"
       :prompt="$t('custom_data.copy_value')"
@@ -75,7 +84,7 @@
         flat
         color="negative"
         :label="$t('delete')"
-        @click="confirmDelete"
+        @click="show_delete_confirm = true"
       />
     </div>
   </div>
@@ -89,6 +98,7 @@ import { useI18n } from 'vue-i18n';
 import { api } from '@/boot/axios.js';
 import JsonEditor from '@/components/JsonEditor.vue';
 import BasePrompt from '@/components/BasePrompt.vue';
+import BaseConfirmationDialog from '@/components/BaseConfirmationDialog.vue';
 
 const KEY_PATTERN = /^[a-z][a-z0-9_]*$/;
 const KEY_MAX_LENGTH = 64;
@@ -119,6 +129,7 @@ const form = ref({
 const json_has_error = ref(false);
 const saving = ref(false);
 const show_copy_prompt = ref(false);
+const show_delete_confirm = ref(false);
 
 // Populate form when record changes
 watch(
@@ -195,21 +206,15 @@ async function doCopy(newKey) {
   }
 }
 
-function confirmDelete() {
-  $q.dialog({
-    title: 'Delete',
-    message: `Delete "${props.record._key}"?`,
-    cancel: true,
-    persistent: true,
-  }).onOk(async () => {
-    try {
-      await api.delete(`custom-data/${props.record._key}`);
-      $q.notify({ message: 'Deleted', color: 'theme-green' });
-      emit('reload');
-      router.push({ name: 'customDataLibrary' });
-    } catch (e) {
-      $q.notify({ message: e.response?.data?.detail || e.message, color: 'theme-red' });
-    }
-  });
+async function doDelete() {
+  show_delete_confirm.value = false;
+  try {
+    await api.delete(`custom-data/${props.record._key}`);
+    $q.notify({ message: 'Deleted', color: 'theme-green' });
+    emit('reload');
+    router.push({ name: 'customDataLibrary' });
+  } catch (e) {
+    $q.notify({ message: e.response?.data?.detail || e.message, color: 'theme-red' });
+  }
 }
 </script>
