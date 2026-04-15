@@ -18,3 +18,4 @@ from .notification import router as notification
 from .counter import router as counter
 from .inventory import router as inventory
 from .counting import router as counting
+from .custom_data import router as custom_data
