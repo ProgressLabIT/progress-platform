@@ -41,10 +41,22 @@ export async function generatePdf({ template, inputs }) {
     }
   }
 
+  // pdfme v5 requires at least 1 input — build defaults from schema content values
+  let safeInputs = inputs && inputs.length > 0 ? inputs : null;
+  if (!safeInputs) {
+    const defaultInput = {};
+    for (const page of cleanSchemas) {
+      for (const field of page) {
+        if (field.name) defaultInput[field.name] = field.content ?? '';
+      }
+    }
+    safeInputs = [defaultInput];
+  }
+
   const cleanTemplate = { basePdf: template.basePdf, schemas: cleanSchemas };
   return generate({
     template: cleanTemplate,
-    inputs: inputs || [],
+    inputs: safeInputs,
     plugins: pdfmePlugins,
   });
 }
