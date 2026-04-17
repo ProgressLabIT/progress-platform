@@ -1,217 +1,217 @@
 # Technology Stack
 
-**Analysis Date:** 2026-03-12
+**Analysis Date:** 2026-04-15
 
 ## Languages
 
 **Primary:**
-- **Python 3.11** - Backend API and workflow orchestration
-- **JavaScript/Node.js 20.19.0** - Web applications (Quasar-based SPA)
-- **Vue.js 3** - Frontend framework for reactive UIs
+- Python 3.11 - Backend API (`backend/api/`), workflow engine (`backend/workflow/`), print service (`backend/print-service/`)
+- JavaScript (ES Modules) - Main webapp (`webapps/main/`), warehouse mobile app (`webapps/warehouse/`)
 
 **Secondary:**
-- **YAML** - Docker Compose and deployment configuration
+- Vue 3 SFC (`.vue` files) - All frontend components
+- AQL (ArangoDB Query Language) - Database queries embedded in Python utils and endpoints
+- YAML - Docker Compose orchestration (`deploy/compose/`)
+- SCSS - Styling (`webapps/main/src/css/app.scss`)
 
 ## Runtime
 
-**Environment:**
-- **Python 3.11-slim** - Backend container base image from `backend/api/Dockerfile`
-- **Node.js 20.19.0** - Web application runtime specified in `.nvmrc` files at `webapps/main/.nvmrc` and `webapps/warehouse/.nvmrc`
+**Backend:**
+- Python 3.11-slim (Docker base image) - `backend/api/Dockerfile`
+- Gunicorn + Uvicorn (production) - `CMD ["gunicorn", "-k", "uvicorn.workers.UvicornWorker", ...]`
+- Uvicorn standalone (development) - via debugpy in `deploy/compose/dev.yaml`
+
+**Frontend:**
+- Node.js ^20.19.0 || ^22 - specified in `engines` of both `package.json` files
+- Vite 5.4.0 - dev server and build tool via `@quasar/app-vite`
 
 **Package Managers:**
-- **pip** - Python dependency management with `requirements.txt`
-- **Yarn** - Node.js package management with `yarn.lock` at project root
-- **npm** - Node.js package manager (minimum version 10.0.0)
+- pip - Python dependencies via `requirements.txt` (no lockfile)
+- Yarn >= 1.22.0 - JS dependencies with `yarn.lock` at project root
+- npm >= 10.0.0 - alternative JS package manager
 
 ## Frameworks
 
-**Backend:**
-- **FastAPI 0.x** - Modern async REST API framework at `backend/api/main.py`
-- **Starlette** - ASGI framework (dependency of FastAPI)
-- **Uvicorn** - ASGI server for running FastAPI applications
+**Core:**
+- FastAPI 0.x - REST API framework (`backend/api/main.py`)
+- Starlette >= 0.13 - ASGI underpinning (middleware, SSE)
+- Quasar 2.16.0 - Vue 3 UI framework for both webapps
+- Vue 3.4.18 - Reactive frontend framework
+- Prefect 3.x - Workflow orchestration engine (`backend/workflow/`)
 
-**Frontend:**
-- **Quasar Framework 2.16.0** - Vue 3-based UI framework with SSR/SPA/PWA support at `webapps/main/` and `webapps/warehouse/`
-  - Web application at `webapps/main/` - Main MES/production management interface
-  - Mobile application at `webapps/warehouse/` - Mobile warehouse management app with Capacitor integration
-- **Pinia 2.1.7** - State management (replacement for Vuex)
-- **Vue Router 4.0.0** - Client-side routing
-- **Vue I18n 9.0.0** - Internationalization support
+**State Management:**
+- Pinia 2.1.7 - Preferred store (newer) (`webapps/main/src/stores/`)
+- Vuex 4.x - Legacy store (still in deps, avoid for new code) (`webapps/main/src/store/`)
 
-**Workflow:**
-- **Prefect 3.x** - Workflow orchestration engine in `backend/workflow/`
-  - Server image: `prefecthq/prefect:3-latest` at `deploy/compose/workflow.yaml`
-  - PostgreSQL 15.2 backend for workflow state
+**Routing:**
+- Vue Router 4.0.0 - Client-side routing (history mode)
+- FastAPI router - Server-side route registration in `backend/api/main.py`
 
-**PDF/Document Generation:**
-- **WeasyPrint 66.x** - HTML to PDF conversion at `backend/api/requirements.txt`
-- **ReportLab 4.x** - PDF creation library for generated content
-- **PyPDF 4.x** - PDF manipulation and merging
-- **PDFme 5.5.0** - Client-side PDF template library in both web and warehouse apps
+**Build/Dev:**
+- Vite 5.4.0 - Frontend bundler and dev server
+- esbuild 0.21.0 - JS bundler (used by Vite internally)
+- `@quasar/app-vite` 2.0.0 - Quasar CLI with Vite integration
+- ESLint 8.57.0 - JS/Vue linting
+- Prettier 3.1.1 (main) / 2.5.1 (warehouse) - Code formatting
+
+**Testing:**
+- Vitest 4.1.0 - Component testing (`webapps/main/package.json`)
+- `@vue/test-utils` 2.4.6 - Vue component test utilities
+- happy-dom 17.0.0 - DOM environment for tests
+- pytest >= 8.0 - Python testing (print-service)
+
+**Mobile:**
+- Capacitor 6.0.0 - Native bridge for warehouse Android app (`webapps/warehouse/`)
 
 ## Key Dependencies
 
 ### Backend API (`backend/api/requirements.txt`)
 
 **Database:**
-- `python-arango==8.*` - ArangoDB multi-model database client at `backend/api/utils/db.py`
+- `python-arango` 8.x - ArangoDB client (`backend/api/utils/db.py`)
 
-**Web Framework:**
-- `fastapi==0.*`
-- `starlette>=0.13`
-- `uvicorn>=0.11`
-- `uvloop>=0.14` - Performance optimization
-- `h11==0.*`
+**Messaging:**
+- `nats-py` (latest) - NATS message broker client (`backend/api/utils/nats_client.py`)
+
+**Auth & Security:**
+- `bcrypt` 4.3.x - Password hashing
+- `passlib` 1.7.2 - Password hashing context (bcrypt scheme)
+- `PyJWT` 2.0.x - JWT token encode/decode
+- `python-jose` - JOSE implementation (JWT verification)
+- `cryptography` 41.0.x - Cryptographic operations
+
+**HTTP/ASGI:**
+- `uvicorn` >= 0.11 - ASGI server
+- `uvloop` >= 0.14 - High-performance event loop
+- `gunicorn` >= 20.0 - Process manager (4 workers in production via `deploy/compose/stack.yaml`)
 - `httptools` - C-accelerated HTTP parsing
+- `h11` 0.x - HTTP/1.1 protocol implementation
+- `httpx` 0.x - Async HTTP client
 
-**Authentication & Security:**
-- `bcrypt==4.3.*` - Password hashing
-- `passlib==1.7.2` - Password schemes
-- `PyJWT==2.0.*` - JWT token generation and validation
-- `python-jose` - JWT/JOSE implementation
-- `cryptography==41.0.*` - Cryptographic operations
+**Data Validation:**
+- `pydantic` 2.x - Request/response validation, model definitions
+- `pydantic-settings` 2.x - Configuration from env vars (`backend/api/utils/config.py`)
 
-**Message Queue & Events:**
-- `confluent_kafka` - Apache Kafka producer/consumer client at `backend/api/utils/kafka/`
-
-**Real-time Communication:**
-- `websockets` - WebSocket protocol support
-
-**PDF Generation:**
-- `weasyprint==66.*`
-- `reportlab==4.*`
-- `pypdf==4.*`
-
-**Data Processing:**
-- `openpyxl==3.*` - Excel import/export
-- `pydantic==2.*` - Data validation and settings management
-- `pydantic-settings==2.*` - Configuration management at `backend/api/utils/config.py`
+**Document Generation:**
+- `weasyprint` 66.x - HTML-to-PDF conversion (requires system libs: pango, cairo, fontconfig per `backend/api/Dockerfile`)
+- `reportlab` 4.x - Programmatic PDF creation
+- `pypdf` 4.x - PDF merging/manipulation
+- `openpyxl` 3.x - Excel import/export
 
 **Utilities:**
-- `httpx==0.*` - HTTP client for async requests
-- `python-multipart==0.0.*` - Multipart form data parsing
-- `python-dateutil==2.8.*` - Date/time utilities
-- `click==7.1.*` - CLI framework
-- `six==1.15.0` - Python 2/3 compatibility
-- `chardet==3.0.*` - Character encoding detection
-
-**Server:**
-- `gunicorn>=20.0` - WSGI HTTP Server
+- `python-dateutil` 2.8.x - Date/time parsing
+- `python-multipart` 0.0.x - Multipart form data
+- `click` 7.1.x - CLI framework
+- `chardet` 3.0.x - Character encoding detection
+- `six` 1.15.0 - Python 2/3 compatibility (legacy dep)
 
 ### Workflow Engine (`backend/workflow/requirements.txt`)
 
-- `prefect==3.*` - Workflow orchestration framework
-- `python-arango==8.*` - Database access for workflow state
-- `httpx` - HTTP client for async operations
+- `prefect` 3.x - Workflow orchestration
+- `python-arango` 8.x - Database access for workflow state
+- `httpx` - Async HTTP client
 
-### Frontend Web App (`webapps/main/package.json`)
+### Print Service (`backend/print-service/requirements.txt`)
 
-**Core UI:**
-- `vue@3.4.18` - Progressive JavaScript framework
-- `quasar@2.16.0` - Vue 3 UI component framework
-- `vue-router@4.0.0` - Client-side routing
-- `pinia@2.1.7` - State management
+- `nats-py` >= 2.0, < 3.0 - NATS messaging
+- `pydantic` >= 2.0, < 3.0 - Data validation
+- `pydantic-settings` >= 2.0, < 3.0 - Configuration
+- `pytest` >= 8.0 - Testing
+- `pytest-asyncio` >= 0.23 - Async test support
 
-**HTTP & Real-time:**
-- `axios@1.7.0` - HTTP client library
-- `socket.io-client@4.7.5` - WebSocket client for real-time communication
-- `vue-sse@2.5.2` - Server-Sent Events support
+### Main Webapp (`webapps/main/package.json`)
 
-**PDF & Document:**
-- `@pdfme/ui@5.5.0` - PDF template editor UI
-- `@pdfme/generator@5.5.0` - PDF generation
-- `@pdfme/schemas@5.5.0` - PDF template schemas
-- `@pdfme/common@5.5.0` - Common utilities
-- `vue-pdf-embed@1.1.6` - PDF viewer component
+**UI Components:**
+- `quasar` ^2.16.0 - Component library (dark mode default, MDI v7 icons)
+- `@quasar/extras` ^1.16.8 - Icon packs
+- `sortablejs` ^1.15.0 - Drag-and-drop list reordering
 
-**Code Editing:**
-- `codemirror@6.0.1` - Advanced code editor
-- `@codemirror/*` - Syntax highlighting, language support, linting
+**PDF:**
+- `@pdfme/ui` ^5.5.0, `@pdfme/generator`, `@pdfme/schemas`, `@pdfme/common` - PDF template editor and generator
+- `vue-pdf-embed` 1.1.6 - PDF viewer
+
+**Code Editor:**
+- `codemirror` ^6.0.1 with `@codemirror/lang-json`, `@codemirror/language`, `@codemirror/lint`, `@codemirror/state`, `@codemirror/view` - JSON editor
+
+**Communication:**
+- `axios` ^1.7.0 - HTTP client
+- `socket.io-client` ^4.7.5 - WebSocket client (legacy dep, SSE now preferred)
+- `vue-sse` ^2.5.2 - Server-Sent Events
 
 **Utilities:**
-- `luxon@3.0.4` - DateTime manipulation
-- `xlsx@0.18.5` - Excel file handling
-- `vue-i18n@9.0.0` - Internationalization
-- `vue-cookies@1.8.4` - Cookie management
-- `sortablejs@1.15.0` - Drag-and-drop lists
-- `video.js@8.17.4` - HTML5 video player
-- `file-saver@2.0.5` - Save files client-side
-- `jwt-decode@3.1.2` - JWT token parsing
-- `@vueuse/core@11.1.0` - Vue 3 composition function utilities
+- `luxon` ^3.0.4 - DateTime manipulation
+- `xlsx` ^0.18.5 - Excel file handling
+- `file-saver` ^2.0.5 - Client-side file saving
+- `jwt-decode` ^3.1.2 - JWT token parsing (client-side)
+- `@vueuse/core` ^11.1.0 - Vue 3 composition utilities
+- `vue-i18n` ^9.0.0 - Internationalization
+- `vue-cookies` ^1.8.4 - Cookie management
+- `video.js` ^8.17.4 - Video player
+- `prismjs` ^1.30.0 - Syntax highlighting
+- `nodemon` ^3.1.0 - Dev file watcher (misplaced in deps, should be devDeps)
 
-**Build & Dev:**
-- `@quasar/app-vite@2.0.0` - Vite-based Quasar CLI
-- `vite@5.4.0` - Frontend build tool
-- `esbuild@0.21.0` - JavaScript bundler
+### Warehouse Webapp (`webapps/warehouse/package.json`)
 
-**Code Quality:**
-- `eslint@8.57.0` - JavaScript linter
-- `prettier@3.1.1` - Code formatter
-- `postcss@8.4.14` - CSS transformations
+**Mobile-specific:**
+- `@capacitor/core` ^6.0.0, `@capacitor/app`, `@capacitor/cli`, `@capacitor/splash-screen` - Native mobile bridge
+- `@zxing/browser` ^0.1.5, `@zxing/library` ^0.21.3 - Barcode/QR scanning
+- `browserprint-es` ^0.0.5 - Direct printer control (Zebra)
 
-### Warehouse Mobile App (`webapps/warehouse/package.json`)
-
-Extends web app with:
-
-**Mobile/Native:**
-- `@capacitor/core@6.0.0` - Native bridge for mobile features
-- `@capacitor/cli@6.0.0` - Capacitor CLI
-- `@capacitor/app@6.0.0` - App lifecycle management
-- `@capacitor/splash-screen@6.0.0` - Splash screen control
-
-**Hardware:**
-- `@zxing/browser@0.1.5` - Barcode/QR code reading from camera
-- `@zxing/library@0.21.3` - ZXing library for barcode decoding
-- `browserprint-es@0.0.5` - Direct printer control
-
-(Shares other dependencies with main web app)
+Shares core deps with main webapp (vue, quasar, pinia, vuex, axios, pdfme, luxon, vue-i18n, vue-cookies, jwt-decode).
 
 ## Configuration
 
-**Environment Variables:**
-- Backend configuration via `PROGRESS_*` prefixed environment variables at `backend/api/utils/config.py`
-- Key settings: `PROGRESS_ARANGO_URL`, `PROGRESS_MEDIA_PATH`, `PROGRESS_API_ROOT_PATH`, `PROGRESS_DB_NAME`
-- Docker secrets for sensitive values: `progress_api_db_pwd`, `progress_admin_pwd`, `progress_jwt_secret`
-- Frontend configuration via `window.API_CONFIG` object injected from `deploy/config/appConfig.js`
+**Backend Configuration (`backend/api/utils/config.py`):**
+- Pydantic Settings with `PROGRESS_` env prefix
+- Docker secrets from `/run/secrets/` directory
+- `.env` file support (optional)
+- Key settings: `arango_url`, `api_root_path`, `media_path`, `db_name`, `webapp_url`, `nats_url`, `jwt_secret`, `cors_allowed_origins`, `api_db_username`, `api_db_pwd`
+
+**Frontend Configuration:**
+- `window.API_CONFIG` object injected via `deploy/config/appConfig.js` (mounted as Docker volume)
+- Quasar config at `webapps/main/quasar.config.js`
+- Path aliases: `@` -> `./src`, `views` -> `./src/views`
+- Boot files loaded in order: store, registerRouter, pinia, i18n, axios, filters, form, theme
 
 **Build Configuration:**
-- **Frontend:** Quasar config at `webapps/main/quasar.config.js`
-- **Backend:** Python module loading, no explicit build configuration
-- **ESLint:** `.eslintrc.js` at `webapps/main/.eslintrc.js`
-- **Prettier:** `.prettierrc.json` at `webapps/main/.prettierrc.json` and `webapps/warehouse/.prettierrc`
+- Browser targets: es2019, edge88, firefox78, chrome87, safari13.1
+- Node target: node20
+- Vue Router mode: history
+- Dark mode enabled by default
 
-## Platform Requirements
+## Infrastructure
 
-**Development:**
-- Docker and Docker Compose (as per readme.md)
-- Docker volumes for: `media`, `db_data`, `db_backup`, `logs`
-- Python 3.11 (backend)
-- Node.js 20.19.0+ (webapps)
-- Yarn package manager
-
-**Production:**
-- Docker and Docker Compose orchestration
-- Kubernetes-ready deployment via Traefik reverse proxy at `deploy/compose/base.yaml`
-- External volumes for persistent data
-- GitLab CI/CD pipeline at `.gitlab-ci.yml` for Docker image builds
-- GitLab registry for image storage
-
-## Build & Deployment
-
-**Container Images:**
-- `python:3.11-slim` - Backend API
-- `arangodb:3.11` - Database (Intel and ARM64 variants available)
-- `apache/kafka:latest` - Message broker
-- `traefik:v2.11` - Reverse proxy
+**Container Images (Production):**
+- `python:3.11-slim` - Backend API (`backend/api/Dockerfile`)
+- `arangodb:3.11` - Graph database
+- `nats:2-alpine` (dev) / `nats:latest` (prod) - Message broker with JetStream enabled
+- `traefik:v2.11` - Reverse proxy and load balancer
 - `prefecthq/prefect:3-latest` - Workflow server
-- `postgres:15.2-alpine` - Workflow database
-- Custom images built via GitLab CI at `registry.gitlab.com/progresslab/progress-platform/`
+- `postgres:15.2-alpine` - Workflow database (Prefect backend)
+- `quay.io/jupyter/base-notebook` - Jupyter notebooks (optional)
+- `python:3.11-slim` - Reporting / Streamlit (optional)
+- nginx - Frontend SPA serving (implied by app/warehouse deployment)
 
-**Build Process:**
-- GitLab CI with Docker-in-Docker for building container images
-- Version-based tagging with semantic versioning
-- Push to GitLab registry on version tags matching `v*.*.*` pattern
+**Docker Volumes (all external):**
+- `media` - File attachments and uploads
+- `db_data` - ArangoDB data
+- `db_backup` - ArangoDB backups
+- `workflow_db` - PostgreSQL data for Prefect
+- `workflow_config` - Prefect configuration
+- `flows` - Workflow flow definitions
+- `reports` - Streamlit reporting app
+- `notebooks` - Jupyter notebooks
+- `cmounts` - Customer-specific mount points
+- `letsencrypt` - TLS certificates
+
+**CI/CD:**
+- GitLab CI/CD (`.gitlab-ci.yml`)
+- Docker-in-Docker (docker:24.0.5-dind) for image builds
+- GitLab Container Registry at `registry.gitlab.com/progresslab/progress-platform/`
+- Version tagging: `v*.*.*` pattern triggers builds (supports `a`, `b`, `rc` pre-release suffixes)
+- Built images: `api`, `app`, `warehouse`, `wf-sys-worker`, `print-service`
+- Print service also packaged as zip artifact to GitLab generic packages
 
 ---
 
-*Stack analysis: 2026-03-12*
+*Stack analysis: 2026-04-15*

@@ -1,6 +1,6 @@
 # External Integrations
 
-**Analysis Date:** 2026-03-12
+**Analysis Date:** 2026-04-15
 
 ## APIs & External Services
 
@@ -8,207 +8,229 @@
 - Service: Prefect 3.x Workflow Orchestration
 - Purpose: Schedule, deploy, and monitor automated workflows
 - SDK/Client: `prefect==3.*` in `backend/workflow/requirements.txt`
-- Endpoint: Configured via environment variable `PREFECT_API_URL`
-- Frontend integration: `webapps/main/src/composables/usePrefectAPI.js` for monitoring deployments and flow runs
-- Authentication: Bearer token via Prefect server configuration
+- Endpoint: Configured via `PREFECT_API_URL` env var (default `http://wf-server:4200/workflow/api`)
+- Frontend access: Proxied through Traefik at `/wf-api` path (rewritten to `/workflow/api`)
+- UI: Prefect dashboard served at `/workflow/` path
+- Database: PostgreSQL 15.2 at `postgresql+asyncpg://postgres:postgres@workflow-db:5432/prefect`
 
 **Backend API (Internal):**
 - Service: FastAPI REST API at `backend/api/main.py`
 - Purpose: Central service for all business logic, data operations, and integrations
-- Endpoints: Multiple routers for inventory, production, form, quality, traceability, etc.
+- Routers registered in `backend/api/main.py` (lines 59-79):
+  - `endpoints.admin` - Administration
+  - `endpoints.auth` - Security (OAuth2 password grant)
+  - `endpoints.bom` - Bill of Materials (prefix `/product`)
+  - `endpoints.config` - Administration config
+  - `endpoints.file` - Attachments
+  - `endpoints.form` - Quality forms
+  - `endpoints.serial` - Serial number management
+  - `endpoints.media` - Media attachments
+  - `endpoints.org` - Organization
+  - `endpoints.print` - Print/label operations
+  - `endpoints.process` - Process definitions
+  - `endpoints.product` - Product management (prefix `/product`)
+  - `endpoints.production` - Production operations
+  - `endpoints.tag` - Tagging
+  - `endpoints.collaboration` - Collaboration
+  - `endpoints.traceability` - Traceability
+  - `endpoints.counter` - Counter generation
+  - `endpoints.notification` - SSE notification streaming
+  - `endpoints.inventory` - Warehouse inventory
+  - `endpoints.counting` - Warehouse counting
 - Access: Axios HTTP client from frontends at `webapps/main/src/boot/axios.js`
-- Authentication: JWT Bearer tokens
+- Health check: `GET /hello` (unauthenticated)
 
 ## Data Storage
 
-**Databases:**
-- **ArangoDB 3.11** - Multi-model database (document, graph, search)
-  - Connection: `python-arango==8.*` client at `backend/api/utils/db.py`
-  - Configuration: `PROGRESS_ARANGO_URL` environment variable (default: `http://localhost:8529`)
-  - Database name: `PROGRESS_TEST` (dev/test), `PROGRESS_PROD` (production) - configured via `PROGRESS_DB_NAME`
-  - Authentication: User/password via `progress_api_db_username` and `progress_api_db_pwd` (Docker secrets)
-  - Port: 8529 (internal), exposed for direct access during development
-  - Web UI: Accessible at `/_db` endpoint through Traefik proxy
-  - Metrics: Prometheus metrics exposed at `/_db/{database}/_admin/metrics/v2`
+**Primary Database - ArangoDB 3.11:**
+- Type: Multi-model (document + graph + search)
+- Client: `python-arango==8.*` at `backend/api/utils/db.py`
+- Connection: `ArangoClient(hosts=conf.arango_url, serializer=encoder)`
+- Auth: `db = client.db(conf.db_name, username=conf.api_db_username, password=conf.api_db_pwd)`
+- Config env vars: `PROGRESS_ARANGO_URL` (default `http://localhost:8529`), `PROGRESS_DB_NAME` (default `PROGRESS_TEST`)
+- Production DB name: `PROGRESS_PROD` (set in `deploy/compose/dev.yaml` and `deploy/compose/stack.yaml`)
+- Dev mode: `ARANGO_NO_AUTH=1` (no auth in dev compose)
+- Production auth: `ARANGO_ROOT_PASSWORD_FILE=/run/secrets/progress_db_root_pwd`
+- Web UI: Exposed through Traefik at `/_db` path
+- Volumes: `db_data` (data), `db_backup` (backups)
+- Custom serializer in `backend/api/utils/db.py`: strips null `_id`/`_key` fields, uses `jsonable_encoder`
 
-**Workflow State Database:**
-- **PostgreSQL 15.2-alpine** - Workflow engine backend
-  - Service name: `workflow-db` in `deploy/compose/workflow.yaml`
-  - Connection: `postgresql+asyncpg://postgres:postgres@workflow-db:5432/prefect`
-  - Credentials: Default postgres/postgres (deployment-specific)
-  - Purpose: Stores Prefect flow runs, deployments, and execution state
+**Workflow Database - PostgreSQL 15.2-alpine:**
+- Purpose: Prefect workflow engine state storage
+- Service: `workflow-db` in `deploy/compose/workflow.yaml`
+- Connection: `postgresql+asyncpg://postgres:postgres@workflow-db:5432/prefect`
+- Volume: `workflow_db` for persistent data
 
 **File Storage:**
-- **Local filesystem** - Bind-mounted volumes
-  - Media path: `/media` volume mounted at `PROGRESS_MEDIA_PATH` environment variable
-  - Backup path: `/db_backup` volume for ArangoDB backups
-  - Log path: `/logs` volume for application logs
+- Local filesystem via Docker volume `media` mounted at `PROGRESS_MEDIA_PATH` (default `/media`)
+- Upload endpoint: `backend/api/endpoints/media.py`
+- Frontend access: Files served directly by FastAPI and also mounted into app/warehouse nginx containers
+- Backup volume: `db_backup` for ArangoDB backups
 
 **Caching:**
-- No explicit caching layer configured (local memory state in Kafka consumer managers)
+- None - no Redis or external caching layer
+
+## Message Broker - NATS
+
+**Service:**
+- Image: `nats:2-alpine` (dev) / `nats:latest` (base)
+- JetStream enabled via `-js` flag
+- Ports: 4222 (client), 8222 (monitoring)
+- Hostname: `broker`
+- Config env var: `PROGRESS_NATS_URL` (default `nats://broker:4222`)
+
+**Backend Client (`backend/api/utils/nats_client.py`):**
+- Module-level singleton `NatsClient` with auto-reconnect (`max_reconnect_attempts=-1`, `reconnect_time_wait=2`)
+- Connected at startup in `backend/api/main.py` line 45
+- Supports both async (`publish()`) and sync-from-async (`publish_sync()`) publishing
+- Request-reply pattern via `request()` method
+- Graceful shutdown: `drain()` with 5-second timeout, fallback to `close()`
+
+**Topic Structure:**
+- `progress.notification.inventory` - Inventory change notifications
+- `progress.notification.serial` - Serial number notifications
+- `progress.notification.task` - Task notifications
+- `progress.notification.production` - Production notifications
+- `progress.notification.message` - Chat/messaging notifications
+- `progress.notification.>` - Wildcard subscription for all notifications (used by API server)
+
+**Event Flow (NATS -> SSE):**
+1. Backend event/manager publishes to NATS subject via `nats_client.publish_sync()` or `nats_client.publish()`
+2. API server's wildcard subscription (`progress.notification.>`) receives message
+3. `ServerEventManager.enqueue()` dispatches to per-topic async queues
+4. SSE endpoint streams events to connected frontend clients via `push_events()` generator
+5. Supports exact-topic and wildcard fan-out (`{prefix}:*` pattern) for client subscriptions
+
+**Print Service (`backend/print-service/main.py`):**
+- Separate NATS client connecting to broker
+- Subscribes to print-related subjects
+- Uses NATS request-reply for print job communication
 
 ## Authentication & Identity
 
-**Auth Provider:**
-- **Custom JWT-based** - Built-in implementation
-  - Implementation: `backend/api/utils/auth.py` with FastAPI OAuth2PasswordBearer
-  - Token generation: PyJWT with `PyJWT==2.0.*`
-  - Password hashing: `bcrypt==4.3.*` via passlib
-  - Token secret: `progress_jwt_secret` stored as Docker secret
-  - Bearer scheme: HTTP Authorization header with `Bearer {token}` format
-  - Scopes: Defined at `backend/api/models/auth.py`
-  - Token validation: Custom `verify_token()` dependency at `backend/api/utils/auth.py`
-  - User database: Stored in ArangoDB, managed at `backend/api/models/auth.py`
+**Auth Provider: Custom JWT-based**
+- Implementation: `backend/api/utils/auth.py`
+- Algorithm: HS256
+- Token URL: `/api/auth` (OAuth2 password grant)
+- Secret: `progress_jwt_secret` Docker secret, loaded via `get_config().jwt_secret`
+
+**Token Lifecycle:**
+- Generation: `issue_token()` creates JWT with `token_key`, `consumer_key`, `consumer_type`, `context`, `scope`, `issued_at`, `expires_at`
+- Storage: Token records stored in ArangoDB `Token` collection
+- Verification: `verify_token()` FastAPI dependency checks JWT signature, DB record existence, signature match, and revocation status
+- Revocation: `revoke_token()` sets `revoked=True` in DB
+- Sessions: `UserSession` collection tracks login/logout with `close_session()` transaction
+
+**Token Contexts:**
+- `TokenContext.USER_SESSION` - Regular user authentication
+- `TokenContext.API` - Service tokens (cannot use user endpoints)
+
+**Scopes:**
+- `admin` - System settings and user management
+- `library` - Product management
+- `production` - Production plan access
+- `operator` - Operator panel and declarations
+- `print_service` - Print service authentication (verified via `verify_print_service_token()`)
+
+**ACL System:**
+- Permission-based access control via `configure_permissions()` / `Permission` dependency
+- ACL tuples: `(Allow/Deny, principal, permissions)`
+- Built-in principals: `Everyone`, `Authenticated`
+- Wildcard: `_AllPermissions` class matches any permission check
 
 **Frontend Integration:**
-- JWT tokens stored in browser state (Vuex store)
-- Axios interceptor adds token to all API requests at `webapps/main/src/boot/axios.js`
-- 401 responses trigger logout (except whoami/session endpoints)
+- JWT stored in Vuex store state
+- Axios request interceptor adds `Authorization: Bearer {token}` header (`webapps/main/src/boot/axios.js`)
+- 401 responses trigger automatic logout (except `whoami` and `session` endpoints)
+- Client-side decode via `jwt-decode` ^3.1.2
 
-## Message Queue & Event System
+## Real-time Communication
 
-**Event Broker:**
-- **Apache Kafka (KRaft mode)** - Distributed event streaming
-  - Image: `apache/kafka:latest` at `deploy/compose/base.yaml`
-  - Port: 9092 (host), 19092 (internal)
-  - JMX Port: 9101 for monitoring
-  - Configuration: Single-node KRaft cluster (node ID 1)
-  - Topics: Auto-created including `notifications` topic at startup in `backend/api/main.py`
-  - Consumer group: `backend` with ID `backend-service-consumer`
-  - Producer client: ID `backend-service-producer`
+**Server-Sent Events (SSE) - Primary:**
+- Backend: `ServerEventManager` singleton at `backend/api/managers/server_event_manager.py`
+- Pattern: Per-topic async queues, 14-second keepalive timeout with SSE comments
+- Frontend: `vue-sse` ^2.5.2 for SSE consumption
+- Endpoint: `endpoints.notification` router
 
-**Backend Integration:**
-- Producer: `backend/api/utils/kafka/kafka_producer.py` - Singleton instance initialized at startup
-- Consumer: `backend/api/utils/kafka/kafka_consumer.py` with consumer manager at `backend/api/managers/kafka_consumer_manager.py`
-- Admin: `backend/api/utils/kafka/kafka_admin.py` - Topic management via REST API at `backend/api/endpoints/admin.py`
-- Endpoints: `PUT/DELETE /kafka/topic/{topic}`, `GET /kafka/topics` for Kafka administration
-
-**Real-time Features:**
-- **Kafka Consumers:**
-  - Notifications consumer: `backend/api/utils/notification_kafka_consumer.py` - Subscribes to notifications topic
-  - Chat consumer: `backend/api/utils/chat_kafka_consumer.py` - Subscribes to chat messages
-- **WebSocket Manager:** `backend/api/managers/websocket_manager.py` - Maintains active WebSocket connections
-- **Notification Middleware:** `backend/api/middlewares/notification_middleware.py` - Processes and broadcasts messages
-- **Events:** Server-sent messages queued via `ServerEventManager` at `backend/api/managers/server_event_manager.py`
-
-**Frontend Real-time:**
-- Socket.IO client at `socket.io-client@4.7.5` in both web and warehouse apps
-- Server-Sent Events support via `vue-sse@2.5.2`
-- Notification display via Quasar Notify component
+**Socket.IO - Legacy:**
+- `socket.io-client` ^4.7.5 still in frontend dependencies
+- No Socket.IO server detected in backend - SSE has replaced WebSocket for notifications
 
 ## Monitoring & Observability
 
 **Error Tracking:**
-- Not configured - no Sentry/similar service integration detected
+- None - no Sentry or similar service integration
 
 **Logs:**
-- **Docker JSON File Driver:** Configured at `deploy/compose/dev.yaml` for backend API
-  - Max file size: 1k, max files: 3 (limited log retention)
-- **Vector Log Aggregator:** Docker log collector at `deploy/config/vector.toml`
-  - Source: Docker Swarm logs
-  - Sink: File output with date-based rotation (`/out/vector-%Y-%m-%d.log`)
-  - Alternative: Grafana Cloud Loki integration available (commented out)
-- **Application Logging:** Standard Python logging to stdout/stderr, captured by Docker
+- Docker JSON file driver (dev: max 1k size, 3 files)
+- Vector log aggregator available at `deploy/config/vector.toml`
+- Python `logging` module for application logs
+- Gunicorn access logs to stdout (`--access-logfile -` in production)
 
 **Metrics:**
-- **Prometheus:** Metrics scraping configuration at `deploy/config/prometheus.yml`
-  - ArangoDB metrics: Scraped from `/_db/PROGRESS_PROD/_admin/metrics/v2` every 5 seconds
-  - Query port: 8529
-  - Interval: 15s default, 5s for database
+- Prometheus config at `deploy/config/prometheus.yml` scraping ArangoDB metrics
+- Traefik dashboard at port 8080 (dev) for routing metrics
 
-**Dashboards:**
-- Grafana dashboards available at `deploy/dashboards/` directory
-- Grafana Cloud integration configured (commented out in vector.toml)
+## Reverse Proxy - Traefik v2.11
+
+**Routing Rules (Docker labels):**
+- `/api` -> `api:8000` (strip prefix)
+- `/` -> `app:80` (main webapp, lowest priority)
+- `/wh` -> `warehouse:80` (strip prefix)
+- `/workflow` -> `wf-server:4200` (Prefect UI)
+- `/wf-api` -> `wf-server:4200/workflow/api` (API bypass for CORS)
+- `/_db` -> `db:8529` (ArangoDB web UI)
+- `/reports` -> `reporting:8501` (Streamlit, iframe-only)
+- `/notebooks` -> `notebooks:8888` (Jupyter)
+
+**TLS (`deploy/compose/tls.yaml`):**
+- Let's Encrypt automatic certificates (HTTP challenge)
+- Custom certificate support via file provider
+- HTTP-to-HTTPS redirect
+- Per-service TLS configuration via router labels
 
 ## CI/CD & Deployment
 
 **Hosting:**
-- **Docker Compose** - Local development and single-node production
-- **Kubernetes-ready** - Traefik ingress controller for routing
-- **GitLab** - VCS and CI/CD platform
+- Docker Swarm (production) - indicated by `swarmMode` in stack.yaml Traefik config
+- Docker Compose (development) - `deploy/compose/dev.yaml`
 
-**CI Pipeline:**
-- **GitLab CI** at `.gitlab-ci.yml`
-- **Docker-in-Docker:** Build environment uses `docker:24.0.5-dind`
-- **Build Stages:** Separate jobs for webapp, warehouse, API, and workflow services
-- **Registry:** `registry.gitlab.com/progresslab/progress-platform/`
-- **Versioning:** Semantic versioning from git tags (e.g., `v0.9.8` -> `0.9-latest` and `0.9.8` tags)
-- **Artifacts:** Docker images pushed on tag matching `v[0-9]+.[0-9]+.(a|b|rc)?[0-9]+` pattern
-
-**Deployment:**
-- **Traefik v2.11** - Reverse proxy and load balancer
-  - Routing rules via Docker labels
-  - SSL/TLS termination at port 443
-  - HTTP at port 80
-  - Web UI at port 8080 (development only)
-- **Compose files:**
-  - `deploy/compose/base.yaml` - Core services (Traefik, API, Database, Kafka)
-  - `deploy/compose/dev.yaml` - Development overrides
-  - `deploy/compose/dev.debug.yaml` - Debug mode with remote debugging
-  - `deploy/compose/stack.yaml` - Production stack
-  - `deploy/compose/workflow.yaml` - Workflow services
-  - `deploy/compose/warehouse.yaml` - Warehouse app
-  - `deploy/compose/reporting.yaml` - Reporting services
-  - `deploy/compose/notebooks.yaml` - Jupyter notebook environment
+**CI Pipeline (`.gitlab-ci.yml`):**
+- GitLab CI with Docker-in-Docker (docker:24.0.5-dind)
+- Triggers on version tags matching `v[0-9]+.[0-9]+.(a|b|rc)?[0-9]+`
+- Stages: `.pre` (version extraction), `build` (Docker images), `package` (artifacts)
+- Built services: `app`, `warehouse`, `api`, `wf-sys-worker`, `print-service`
+- Tagging: `{MAJOR.MINOR}-latest` and exact version tags
+- Registry: `registry.gitlab.com/progresslab/progress-platform/`
+- Print service additionally packaged as zip to GitLab generic packages
 
 ## Environment Configuration
 
-**Required environment variables:**
-- `PROGRESS_ARANGO_URL` - ArangoDB connection string
-- `PROGRESS_MEDIA_PATH` - Path to media files volume
-- `PROGRESS_API_ROOT_PATH` - API prefix path (default: `/api`)
-- `PROGRESS_DB_NAME` - ArangoDB database name
-- `PROGRESS_WEBAPP_URL` - Frontend URL for CORS
-- `PROGRESS_API_DB_USERNAME` - Database user
-- `PROGRESS_API_DB_PWD` - Database password (Docker secret)
-- `PROGRESS_ADMIN_PWD` - Admin user password (Docker secret)
-- `PROGRESS_JWT_SECRET` - JWT signing secret (Docker secret)
-- `PREFECT_API_URL` - Prefect server endpoint
-- `KAFKA_BOOTSTRAP_SERVER` - Kafka broker connection
-- `KAFKA_GROUP_ID` - Consumer group (default: `backend`)
+**Required env vars (backend):**
+- `PROGRESS_ARANGO_URL` - ArangoDB connection (default: `http://localhost:8529`)
+- `PROGRESS_DB_NAME` - Database name (default: `PROGRESS_TEST`)
+- `PROGRESS_MEDIA_PATH` - Media storage path (default: `/media`)
+- `PROGRESS_API_ROOT_PATH` - API prefix (default: `/api`)
+- `PROGRESS_NATS_URL` - NATS broker URL (default: `nats://broker:4222`)
 
-**Optional configurations:**
-- `PROGRESS_CORS_ALLOWED_ORIGINS` - CORS origin whitelist
-- `PROGRESS_KAFKA_SESSION_TO_MS` - Consumer session timeout
-- `PREFECT_UI_SERVE_BASE` - Workflow UI base path
-- Traefik environment: `SUBDOMAIN`, `DOMAIN` for URL construction
+**Docker secrets (production):**
+- `progress_api_db_pwd` - Database password
+- `progress_admin_pwd` - Admin user password
+- `progress_jwt_secret` - JWT signing secret
+- `progress_db_root_pwd` - ArangoDB root password
 
-**Secrets location:**
-- Docker secrets directory: `/run/secrets/`
-- Environment file support: `.env` file parsing via pydantic-settings
-- Configuration class: `backend/api/utils/config.py` with BaseSettings
+**Deployment env vars:**
+- `VERSION` - Image tag for deployment
+- `HOST` - Hostname for Traefik routing rules
+- `PROTOCOL` - `http` or `https` (default: `https`)
+- `PREFECT_API_URL` - Workflow server endpoint
+- `TLS_EMAIL` - Let's Encrypt registration email
 
-## Webhooks & Callbacks
-
-**Incoming:**
-- Admin endpoints: `backend/api/endpoints/admin.py` - Kafka topic management
-- Notification webhooks: Implicit via Kafka topic subscriptions
-
-**Outgoing:**
-- Prefect API calls: Frontend composable triggers workflow runs via Prefect API
-- WebSocket broadcasts: Backend sends real-time updates to connected clients
-- Kafka producer: Backend publishes events to Kafka topics for consumer subscriptions
-
-**Event Flow:**
-1. Backend processes request or event
-2. If notification needed, produces to Kafka `notifications` topic
-3. NotificationsKafkaConsumer receives message
-4. WebsocketManager broadcasts to connected clients via WebSocket
-5. Frontend receives update and refreshes UI state
-
-## File Management
-
-**File Upload/Download:**
-- Media endpoint: `backend/api/endpoints/media.py`
-- Storage: Bind-mounted `/media` volume
-- MIME type support: Video, image, document formats
-- Attachment management: `backend/api/endpoints/file.py` for file operations
-
-**PDF Generation:**
-- Server-side: WeasyPrint/ReportLab in `backend/api/utils/dhr.py`
-- Client-side: PDFme templates in both web applications
-- Stream response: PDF content streamed to client via HTTP
+**Frontend configuration:**
+- `window.API_CONFIG` injected at runtime via `/config.js` (mounted from `deploy/config/appConfig.js`)
+- Properties: `baseURL` (API host), `basePath` (API prefix, normally `/api`)
+- Fallback: localhost detection in `webapps/main/src/boot/axios.js`
 
 ---
 
-*Integration audit: 2026-03-12*
+*Integration audit: 2026-04-15*
