@@ -1,88 +1,88 @@
 <template>
   <LoadingSignal v-if="!data_ready" />
 
-  <div v-else class="row full-height">
-    <div class="full-height column col-3">
-      <q-input
-        v-model="search_text"
-        dense
-        filled
-        class="q-px-md q-pt-md"
-        :placeholder="$capitalize($t('search'))"
-      >
-        <template #append>
-          <q-icon name="mdi-magnify" />
-        </template>
-      </q-input>
+  <q-splitter v-else v-model="splitter_model" class="absolute-full">
+    <template #before>
+      <div class="full-height column">
+        <q-input
+          v-model="search_text"
+          dense
+          filled
+          class="q-px-md q-pt-md"
+          :placeholder="$capitalize($t('search'))"
+        >
+          <template #append>
+            <q-icon name="mdi-magnify" />
+          </template>
+        </q-input>
 
-      <div
-        class="row q-mt-md q-px-lg q-py-sm text-h6 text-uppercase weight-bold"
-      >
-        <div class="col">
-          {{ $t('name') }}
-        </div>
-        <div class="col-3">
-          {{ $t('next_tick') }}
-        </div>
-      </div>
-
-      <q-separator />
-
-      <div class="scroll col">
         <div
-          v-for="(counter, index) in filtered_counters"
-          :key="counter._key"
-          class="row pointer q-px-lg q-py-xs medium full-width"
-          :class="{
-            'alternate-row': index % 2 === 0,
-            'bg-blue-backdrop': counter._key === selected_counter_key,
-          }"
-          style="white-space: nowrap"
-          @click="showCounterDetail(counter._key)"
+          class="row q-mt-md q-px-lg q-py-sm text-h6 text-uppercase weight-bold"
         >
-          <div class="col">
-            {{ $capitalize(counter.name) }}
+          <div class="col ellipsis">
+            {{ $t('name') }}
           </div>
-          <div class="col-3">
-            {{ $capitalize(counter.next_tick) }}
+          <div class="col-3 ellipsis">
+            {{ $t('next_tick') }}
           </div>
         </div>
+
+        <q-separator />
+
+        <q-scroll-area class="col">
+          <div
+            v-for="(counter, index) in filtered_counters"
+            :key="counter._key"
+            class="row pointer q-px-lg q-py-xs medium overflow-hidden"
+            :class="{
+              'alternate-row': index % 2 === 0,
+              'bg-blue-backdrop': counter._key === selected_counter_key,
+            }"
+            @click="showCounterDetail(counter._key)"
+          >
+            <div class="col ellipsis">
+              {{ $capitalize(counter.name) }}
+            </div>
+            <div class="col-3 ellipsis">
+              {{ $capitalize(counter.next_tick) }}
+            </div>
+          </div>
+        </q-scroll-area>
+
+        <q-separator />
+
+        <div class="row flex-center smaller q-py-xs">
+          {{ filtered_counters.length }} {{ $t('of') }} {{ counter_list.length }}
+        </div>
+
+        <div class="q-pa-md q-mt-auto">
+          <q-btn
+            class="full-width q-mt-auto"
+            color="theme-blue"
+            :label="$t('new')"
+            @click="show_new_counter_form = true"
+          >
+          </q-btn>
+        </div>
       </div>
+    </template>
 
-      <q-separator />
-
-      <div class="row flex-center smaller q-py-xs">
-        {{ filtered_counters.length }} {{ $t('of') }} {{ counter_list.length }}
+    <template #after>
+      <!-- COUNTER DATA -->
+      <div class="col full-height">
+        <router-view :counter="selected_counter" @reload="getCounters" />
       </div>
+    </template>
+  </q-splitter>
 
-      <div class="q-pa-md q-mt-auto">
-        <q-btn
-          class="full-width q-mt-auto"
-          color="theme-blue"
-          :label="$t('new')"
-          @click="show_new_counter_form = true"
-        >
-        </q-btn>
-      </div>
-    </div>
-
-    <BaseDialog
-      :show="show_new_counter_form"
-      :no-backdrop-dismiss="false"
-      @close="show_new_counter_form = false"
-    >
-      <CounterNew @close="show_new_counter_form = false" @created="getCounters">
-      </CounterNew>
-    </BaseDialog>
-
-    <q-separator vertical />
-
-    <!-- COUNTER DATA -->
-    <div v-if="data_ready" class="col full-height">
-      <router-view :counter="selected_counter" @reload="getCounters">
-      </router-view>
-    </div>
-  </div>
+  <BaseDialog
+    :show="show_new_counter_form"
+    :no-backdrop-dismiss="false"
+    @close="show_new_counter_form = false"
+  >
+    <CounterNew @close="show_new_counter_form = false" @created="getCounters">
+    </CounterNew>
+  </BaseDialog>
 </template>
 
 <script>
@@ -106,6 +106,7 @@ export default {
       search_text: undefined,
       counter_list: [],
       show_new_counter_form: false,
+      splitter_model: 30,
     };
   },
 

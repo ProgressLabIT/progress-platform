@@ -1,89 +1,90 @@
 <template>
   <LoadingSignal v-if="loading" />
 
-  <div v-else class="row full-height">
-    <div class="full-height column col-3">
-      <q-input
-        v-model="search_text"
-        dense
-        filled
-        class="q-px-md q-pt-md"
-        :placeholder="$capitalize($t('search'))"
-      >
-        <template #append>
-          <q-icon name="mdi-magnify" />
-        </template>
-      </q-input>
+  <q-splitter v-else v-model="splitter_model" class="absolute-full">
+    <template #before>
+      <div class="full-height column">
+        <q-input
+          v-model="search_text"
+          dense
+          filled
+          class="q-px-md q-pt-md"
+          :placeholder="$capitalize($t('search'))"
+        >
+          <template #append>
+            <q-icon name="mdi-magnify" />
+          </template>
+        </q-input>
 
-      <div
-        class="row q-mt-md q-px-lg q-py-sm text-h6 text-uppercase weight-bold"
-      >
-        <div class="col-4">
-          {{ $t('name') }}
-        </div>
-        <div class="col">
-          {{ $t('description') }}
-        </div>
-        <div class="col-2 text-right">
-          {{ $t('active') }}
-        </div>
-      </div>
-
-      <q-separator />
-
-      <!-- TASK TYPE LIST -->
-      <div class="scroll col">
         <div
-          v-for="(task_type, index) in filtered_task_types"
-          :key="index"
-          class="row pointer q-px-lg q-py-xs medium full-width"
-          :class="{
-            'alternate-row': index % 2 === 0,
-            'bg-blue-backdrop': task_type._key === selected_task_type_key,
-          }"
-          style="white-space: nowrap"
-          @click="showTaskTypeDetail(task_type._key)"
+          class="row q-mt-md q-px-lg q-py-sm text-h6 text-uppercase weight-bold"
         >
-          <div class="col-4">
-            {{ $capitalize(task_type.name || '') }}
+          <div class="col-4 ellipsis">
+            {{ $t('name') }}
           </div>
-          <div class="col-6 ellipsis">
-            {{ task_type.description || '-' }}
+          <div class="col ellipsis">
+            {{ $t('description') }}
           </div>
-          <div class="col-2 text-right">
-            <q-icon :name="task_type.active ? 'mdi-check' : 'mdi-close'" />
+          <div class="col-2 text-right ellipsis">
+            {{ $t('active') }}
           </div>
         </div>
+
+        <q-separator />
+
+        <!-- TASK TYPE LIST -->
+        <q-scroll-area class="col">
+          <div
+            v-for="(task_type, index) in filtered_task_types"
+            :key="index"
+            class="row pointer q-px-lg q-py-xs medium overflow-hidden"
+            :class="{
+              'alternate-row': index % 2 === 0,
+              'bg-blue-backdrop': task_type._key === selected_task_type_key,
+            }"
+            @click="showTaskTypeDetail(task_type._key)"
+          >
+            <div class="col-4 ellipsis">
+              {{ $capitalize(task_type.name || '') }}
+            </div>
+            <div class="col-6 ellipsis">
+              {{ task_type.description || '-' }}
+            </div>
+            <div class="col-2 text-right">
+              <q-icon :name="task_type.active ? 'mdi-check' : 'mdi-close'" />
+            </div>
+          </div>
+        </q-scroll-area>
+
+        <q-separator />
+
+        <!-- TASK TYPE LIST COUNT -->
+        <div class="row flex-center smaller q-py-xs">
+          {{ filtered_task_types.length }} {{ $t('of') }}
+          {{ task_type_list.length }}
+        </div>
+
+        <div class="q-pa-md q-mt-auto">
+          <q-btn
+            class="full-width q-mt-auto"
+            color="theme-blue"
+            :label="$t('new')"
+            @click="showNewDialog = true"
+          >
+          </q-btn>
+        </div>
       </div>
+    </template>
 
-      <q-separator />
-
-      <!-- TASK TYPE LIST COUNT -->
-      <div class="row flex-center smaller q-py-xs">
-        {{ filtered_task_types.length }} {{ $t('of') }}
-        {{ task_type_list.length }}
+    <template #after>
+      <!-- TASK TYPE DATA -->
+      <div class="col full-height">
+        <router-view v-slot="{ Component }">
+          <component :is="Component" :task-type="selected_task_type" />
+        </router-view>
       </div>
-
-      <div class="q-pa-md q-mt-auto">
-        <q-btn
-          class="full-width q-mt-auto"
-          color="theme-blue"
-          :label="$t('new')"
-          @click="showNewDialog = true"
-        >
-        </q-btn>
-      </div>
-    </div>
-
-    <q-separator vertical />
-
-    <!-- TASK TYPE DATA -->
-    <div v-if="!loading" class="col full-height">
-      <router-view v-slot="{ Component }">
-        <component :is="Component" :task-type="selected_task_type" />
-      </router-view>
-    </div>
-  </div>
+    </template>
+  </q-splitter>
 
   <!-- NEW TASK TYPE DIALOG -->
   <TaskTypeNew
@@ -108,6 +109,7 @@ const taskTypeStore = useTaskTypeStore()
 const loading = ref(true)
 const search_text = ref('')
 const showNewDialog = ref(false)
+const splitter_model = ref(30)
 
 const task_type_list = computed(() => {
   const task_types = [...taskTypeStore.taskTypes]

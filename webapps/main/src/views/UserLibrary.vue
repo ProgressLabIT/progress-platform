@@ -1,9 +1,9 @@
 <template>
-  <div>
-    <LoadingSignal v-if="!vuex_ready" />
+  <LoadingSignal v-if="!vuex_ready" />
 
-    <div class="row full-height">
-      <div class="col-3 full-height column">
+  <q-splitter v-else v-model="splitter_model" class="absolute-full">
+    <template #before>
+      <div class="full-height column">
         <q-input
           v-model="search_text"
           dense
@@ -41,10 +41,10 @@
           class="row q-mt-md q-px-lg q-py-sm text-h6 text-uppercase weight-bold"
         >
           <div class="col-1"></div>
-          <div class="col-5">
+          <div class="col-5 ellipsis">
             {{ $t('name') }}
           </div>
-          <div class="col-5">
+          <div class="col-5 ellipsis">
             {{ $t('user.surname') }}
           </div>
         </div>
@@ -52,29 +52,28 @@
         <q-separator />
 
         <!-- USER LIST -->
-        <div class="scroll col">
+        <q-scroll-area class="col">
           <div
             v-for="(user, index) in filtered_users"
             :key="index"
-            class="row pointer q-px-lg q-py-xs medium"
+            class="row pointer q-px-lg q-py-xs medium overflow-hidden"
             :class="{
               'alternate-row': index % 2 === 0,
               'bg-blue-backdrop': user._key === selected_user_key,
             }"
-            style="white-space: nowrap"
             @click="showUser(user)"
           >
             <div class="col-1">
               <q-icon :name="getActiveIcon(user.active)" />
             </div>
-            <div class="col-5">
+            <div class="col-5 ellipsis">
               {{ user.name }}
             </div>
-            <div class="col-5">
+            <div class="col-5 ellipsis">
               {{ user.surname }}
             </div>
           </div>
-        </div>
+        </q-scroll-area>
 
         <q-separator />
 
@@ -93,11 +92,11 @@
           </q-btn>
         </div>
       </div>
+    </template>
 
-      <q-separator vertical />
-
+    <template #after>
       <!-- USER DATA -->
-      <div class="col">
+      <div class="col full-height">
         <router-view v-slot="{ Component, route }">
           <component
             :is="Component"
@@ -111,8 +110,8 @@
           />
         </router-view>
       </div>
-    </div>
-  </div>
+    </template>
+  </q-splitter>
 </template>
 
 <script>
@@ -140,6 +139,7 @@ export default {
         { name: 'disabled', value: true },
       ],
       filter_panel: undefined,
+      splitter_model: 30,
     };
   },
 

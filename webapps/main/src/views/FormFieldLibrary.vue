@@ -1,7 +1,7 @@
 <template>
-  <q-splitter v-model="splitter_model">
+  <q-splitter v-model="splitter_model" class="absolute-full">
     <template #before>
-    <div class="full-height column col-3">
+    <div class="full-height column">
       <q-input
         v-model="search_text"
         dense
@@ -32,12 +32,11 @@
         <div
           v-for="(field, index) in filtered_fields"
           :key="field._key"
-          class="row pointer q-px-lg q-py-xs medium full-width"
+          class="row pointer q-px-lg q-py-xs medium overflow-hidden"
           :class="{
             'alternate-row': index % 2 === 0,
             'bg-blue-backdrop': field._key == selected_field_key,
           }"
-          style="white-space: nowrap"
           @click="showFieldDetail(field._key)"
         >
           <div class="col-2">
