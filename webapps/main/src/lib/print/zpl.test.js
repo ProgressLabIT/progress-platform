@@ -125,7 +125,15 @@ describe('Text field', () => {
       alignment: 'center',
     })]);
     const result = generateZpl(template, [{ field1: 'Hello' }], { dpi: 203 });
-    expect(result).toContain('^FO80,160^A0N,34,34^FB400,1,0,C,0^FDHello^FS');
+    expect(result).toContain('^FO80,160^A0N,34,34^FB400,9999,0,C,0^FDHello^FS');
+  });
+
+  it('uses ^FB max_lines=9999 so long text wraps below the box (never truncates)', () => {
+    // Field height is irrelevant; max_lines is always 9999 so overflow bleeds
+    // downward instead of being silently dropped.
+    const template = makeTemplate([makeField({ fontSize: 12, width: 50, height: 5 })]);
+    const result = generateZpl(template, [{ field1: 'x' }], { dpi: 203 });
+    expect(result).toMatch(/\^FB\d+,9999,0,L,0/);
   });
 
   it('alignment left uses L in ^FB', () => {
