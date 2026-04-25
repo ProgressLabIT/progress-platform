@@ -364,3 +364,7 @@ Do not make direct repo edits outside a GSD workflow unless the user explicitly 
 - **Frustrations:** Follow instructions precisely and verify that implementations match the stated requirements before presenting them. When the developer reports that something is 'not solved' or behavior is wrong, re-read the original requirement carefully before attempting a fix. Low frustration count suggests good rapport -- maintain it by being precise.
 - **Learning:** Treat this developer as a knowledgeable peer. When they bring external research or their own analysis, engage with the substance of their argument rather than restating basics. Provide targeted insights they might have missed rather than broad overviews. When they ask 'what do you think?', give a genuine critical assessment.
 <!-- GSD:profile-end -->
+
+
+# Behavioral instructions
+- Do not add Claude as co-author of commits
