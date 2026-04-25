@@ -4,7 +4,7 @@
     :class="job.active ? 'bg-blue-backdrop' : 'surface1'"
   >
     <div class="row q-col-gutter-xl q-pb-sm">
-      <div class="col col-md-6">
+      <div class="col col-xl-8">
         <div class="row q-col-gutter-md">
           <div class="col-12 col-sm-5">
             <div class="overline">
@@ -28,10 +28,10 @@
         <div class="q-my-lg"></div>
 
         <div class="overline">
-          {{ $t('phase.short') }} - {{ $t('product.label', 1) }}
+          {{ $t('product.label', 1) }} - {{ $t('phase.short') }}
         </div>
-        <div class="text-h4 display highlight text-uppercase">
-          {{ job.phase_alias }} - {{ job.product_code }}
+        <div class="text-h4 display text-uppercase">
+          <span class="highlight">{{ job.product_code }}</span> - {{ job.phase_alias }}
         </div>
         <div class="smaller text-low ellipsis-2-lines q-mt-xs">
           {{ job.product_description }}
@@ -77,7 +77,6 @@
 </template>
 
 <script setup>
-import { useStore } from 'vuex';
 import BaseProgressBar from '@/components/BaseProgressBar.vue';
 import { sendEvent } from '@/composables/event.js';
 
@@ -87,9 +86,6 @@ const props = defineProps({
     required: true,
   },
 });
-
-const store = useStore();
-const user_key = store.state.session.user._key;
 
 async function toggleJob() {
   const event_type = props.job.active
@@ -102,8 +98,7 @@ async function toggleJob() {
     event_type,
     event_data: {
       job_key: props.job._key,
-    }
+    },
   });
-  await store.dispatch('loadJobAssignments', user_key);
 }
 </script>

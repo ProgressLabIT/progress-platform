@@ -97,11 +97,11 @@ async def get_api_token(token_description: str, token_expiration: datetime, user
     raise credentials_exception
 
 
-@router.delete("/api-token/{token}",
+@router.delete("/api-token/{token_key}",
     dependencies=[Depends(auth.verify_token)])
-async def revoke_token(token: str):
+async def revoke_token(token_key: str):
     try:
-      auth.revoke_token(token)
+      auth.revoke_token(token_key)
       return APIResponse(message="token deleted correctly")
     except:
       raise HTTPException(status_code=500, detail="Cannot delete token")

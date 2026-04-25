@@ -442,7 +442,7 @@ export default {
             if (current_batch_was_last ||
               (!this.job.next_batch_available && !this.job.active_batch_qt)
             ) {
-              this.$router.push({ name: 'userJobs' });
+              this.$router.push({ name: 'userHub', query: { tab: 'jobs' } });
               return;
             } else {
               if (this.traceability_enabled && !this.job.first_phase) {
@@ -531,7 +531,7 @@ export default {
           if (current_batch_was_last ||
             (!this.job.next_batch_available && !this.job.active_batch_qt)
             ) {
-            this.$router.push({ name: 'userJobs' });
+            this.$router.push({ name: 'userHub', query: { tab: 'jobs' } });
             return;
           }
 

@@ -179,34 +179,8 @@ const session = {
 
     userHomepage: (state) => {
       const userDefaultPage = state.user.preferences.home_page;
-      if (userDefaultPage) {
-        return userDefaultPage;
-      }
-
-
-      const scopes = state.scope.split(' ');
-      switch (true) {
-        case scopes.includes('operator'):
-          return 'operatorRoot';
-        case scopes.includes('production'):
-          return 'productionRoot';
-        case scopes.includes('library'):
-          return 'libraryRoot';
-        case scopes.includes('admin'):
-          return 'adminPanel';
-        case scopes.includes('quality'):
-          return 'qualityRoot';
-        case scopes.includes('traceability'):
-          return 'traceabilityRoot';
-        case scopes.includes('warehouse'):
-          return 'warehouseRoot';
-        case scopes.includes('reporting'):
-          return 'reportRoot';
-        case scopes.includes('task'):
-          return 'taskRoot';
-        default:
-          return null
-      }
+      if (userDefaultPage) return userDefaultPage;
+      return 'userHub';
     },
   },
 };

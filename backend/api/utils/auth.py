@@ -39,6 +39,12 @@ ALGORITHM = "HS256"
 
 bearer_token = OAuth2PasswordBearer(tokenUrl="/api/auth", scopes=scopes_description)
 
+# Optional bearer — returns None when header is absent instead of raising.
+# Used by endpoints that accept both a ticket (query) and a header token.
+_bearer_token_optional = OAuth2PasswordBearer(
+    tokenUrl="/api/auth", scopes=scopes_description, auto_error=False
+)
+
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 debugging_info = dict(
@@ -286,10 +292,60 @@ def _verify_token_base(token_str: str) -> TokenData:
 
 
 def verify_token(token_str: str = Depends(bearer_token)):
+  """Verify JWT from Authorization header. Raises 401 if absent or invalid."""
   token_data = _verify_token_base(token_str)
   if token_data.context == TokenContext.API:
     raise credentials_exception  # Service tokens cannot use user endpoints
+  if token_data.context == TokenContext.SSE_TICKET:
+    raise credentials_exception  # SSE tickets cannot be used on normal endpoints
   return token_data
+
+
+def verify_token_optional(
+  header_token: str | None = Depends(_bearer_token_optional),
+) -> "TokenData | None":
+  """Verify JWT from Authorization header; return None when header is absent."""
+  if not header_token:
+    return None
+  token_data = _verify_token_base(header_token)
+  if token_data.context in (TokenContext.API, TokenContext.SSE_TICKET):
+    return None
+  return token_data
+
+
+# SSE ticket TTL — short enough that a leaked ticket in access logs is
+# harmless before anyone could act on it; long enough for native EventSource
+# built-in reconnect backoff to succeed without needing a new ticket.
+SSE_TICKET_TTL_SECONDS = 90
+
+
+def issue_sse_ticket(consumer_key: str, topic: str) -> str:
+  """Mint a short-lived, topic-scoped, stateless SSE ticket (signed JWT)."""
+  now = datetime.utcnow()
+  claims = {
+    "sub": consumer_key,
+    "topic": topic,
+    "ctx": TokenContext.SSE_TICKET.value,
+    "iat": now,
+    "exp": now + timedelta(seconds=SSE_TICKET_TTL_SECONDS),
+  }
+  return jwt.encode(claims, get_config().jwt_secret, algorithm=ALGORITHM)
+
+
+def verify_sse_ticket(ticket: str, path_topic: str) -> str:
+  """Validate an SSE ticket. Returns consumer_key; raises 401 on any failure."""
+  try:
+    payload = jwt.decode(ticket, get_config().jwt_secret, algorithms=[ALGORITHM])
+  except Exception:
+    raise credentials_exception
+  if payload.get("ctx") != TokenContext.SSE_TICKET.value:
+    raise credentials_exception
+  if payload.get("topic") != path_topic:
+    raise credentials_exception
+  sub = payload.get("sub")
+  if not sub:
+    raise credentials_exception
+  return sub
 
 
 def verify_print_service_token(token_str: str = Depends(bearer_token)):

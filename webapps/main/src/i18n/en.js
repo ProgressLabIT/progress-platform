@@ -656,6 +656,34 @@ export default {
     },
   },
   phase_delete_has_components: 'Phase has components, can\'t be deleted',
+  notifications: {
+    section_label: 'Notifications',
+    empty: {
+      heading: 'No notifications yet',
+      body: "You'll see task assignments here when they arrive.",
+    },
+    error: {
+      connection: 'Could not connect to notification service.',
+    },
+    TASK_UPDATED: {
+      title: 'Assigned to task {task}',
+    },
+  },
+  user_hub: {
+    tab_assignments: 'assignments',
+    tab_preferences: 'preferences',
+    sub_jobs: 'jobs',
+    sub_tasks: 'tasks',
+    refresh_aria: 'Refresh assignments',
+    layout_toggle_aria: 'Switch between card and list layout',
+    jobs_truncated_note: 'First {count} shown. Use filters to narrow the search.',
+    preferences_section_label: 'PREFERENCES',
+    jobs_empty_title: 'No jobs assigned to you',
+    jobs_empty_caption: 'When a supervisor assigns a job to you, it will appear here.',
+    jobs_no_match: 'No jobs match the current filters.',
+    tasks_empty_title: 'No tasks',
+    tasks_empty_caption: 'You have no open tasks right now.',
+  },
   preferences: {
     theme: {
       light: 'Light',
@@ -1127,7 +1155,7 @@ export default {
     traceabilityRoot: 'Traceability',
     reportRoot: 'Reports',
     userLibrary: 'users',
-    userJobs: 'job selection',
+    operatorRoot: 'job selection',
     workOrderArchive: 'Archive',
     workOrderList: 'work orders',
     warehouseRoot: 'Warehouse',
@@ -1143,6 +1171,12 @@ export default {
     taskRoot: 'Tasks',
     taskOverview: 'Tasks',
     taskTypeLibrary: 'Task types',
+    userHub: 'home',
+  },
+  userHub: {
+    stub: {
+      placeholder: 'This page is coming soon.',
+    },
   },
   host: 'host',
   port: 'port',

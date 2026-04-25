@@ -16,16 +16,17 @@
       :width="400"
     >
       <div class="column fit q-pa-lg">
-        <q-tabs class="col-auto" vertical switch-indicator>
+        <q-tabs vertical switch-indicator inline-label>
           <q-route-tab
             v-for="tab in tab_routes"
-            :key="tab"
-            :to="{ name: tab }"
+            :key="tab.name"
+            :to="{ name: tab.name }"
+            :icon="tab.icon"
             active-class="text-theme-blue"
             indicator-color="theme-blue"
             content-class="display"
           >
-            {{ $t(`views.${tab}`) }}
+            <span class="q-ml-sm">{{ $t(`views.${tab.name}`) }}</span>
           </q-route-tab>
         </q-tabs>
 
@@ -49,6 +50,13 @@
       </div>
     </q-drawer>
 
+    <QuickPanel />
+
+    <!-- Renderless SSE → Pinia bridge (Plan 02-03). Conditional on an
+         authenticated session so login/logout transitions don't open a
+         subscription with an undefined user_key. -->
+    <AppNotificationBridge v-if="user_key" />
+
     <router-view />
 
     <AppFooter v-if="$q.screen.height > 400" />
@@ -64,8 +72,10 @@ import { computed } from 'vue';
 import { useStore } from 'vuex';
 import AppBar from '@/components/AppBar.vue';
 import AppFooter from '@/components/AppFooter.vue';
-import { useDrawer } from '@/composables/drawer';
+import AppNotificationBridge from '@/components/AppNotificationBridge.vue';
+import QuickPanel from '@/components/QuickPanel.vue';
 import TaskBar from '@/components/TaskBar.vue';
+import { useDrawer } from '@/composables/drawer';
 import { useTaskStore } from '@/stores/task.js';
 // import SessionLock from '@/views/SessionLock'
 
@@ -75,25 +85,25 @@ const { drawerModel } = useDrawer();
 const taskStore = useTaskStore();
 
 const tab_routes = [
-  'adminPanel',
-  'libraryRoot',
-  'productionRoot',
-  'userJobs',
-  'qualityRoot',
-  'traceabilityRoot',
-  'taskRoot',
-  'warehouseRoot',
-  'reportRoot',
+  { name: 'userHub', icon: 'mdi-home' },
+  { name: 'libraryRoot', icon: 'mdi-bookshelf' },
+  { name: 'productionRoot', icon: 'mdi-factory' },
+  { name: 'qualityRoot', icon: 'mdi-check-decagram' },
+  { name: 'traceabilityRoot', icon: 'mdi-tag-search-outline' },
+  { name: 'taskRoot', icon: 'mdi-clipboard-check-outline' },
+  { name: 'warehouseRoot', icon: 'mdi-warehouse' },
+  { name: 'reportRoot', icon: 'mdi-chart-bar' },
+  { name: 'adminPanel', icon: 'mdi-cog' },
 ];
 
 // locale_index: null,
 // locale_list: this.$root.$i18n.availableLocales,
 
-// These computed properties are kept for future use when session lock functionality is enabled
-// eslint-disable-next-line no-unused-vars
-const user_key = computed(() => {
-  return store.state.session.user._key;
-});
+// user_key drives the AppNotificationBridge v-if. Use optional chaining so
+// logout transitions (when session.user is cleared) don't throw before the
+// layout is itself torn down — matches the nullable shape produced by
+// CLOSE_USER_SESSION in store/session.js.
+const user_key = computed(() => store.state.session.user?._key ?? null);
 
 // eslint-disable-next-line no-unused-vars
 const session_locked = computed(() => {

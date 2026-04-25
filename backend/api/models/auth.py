@@ -21,6 +21,15 @@ class TokenContext(str, Enum):
   USER_SESSION = "session"
   PASSWORD_RESET = 'pwd_reset'
   API = "api"
+  SSE_TICKET = "sse_ticket"  # short-lived, topic-scoped, stateless
+
+
+class SseTicketClaims(BaseModel):
+  sub: str          # consumer_key
+  topic: str
+  ctx: str = TokenContext.SSE_TICKET.value
+  iat: datetime
+  exp: datetime
 
 
 class TokenRecord(ArangoDocument):

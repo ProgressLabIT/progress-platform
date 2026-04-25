@@ -80,6 +80,20 @@ class TaskUpdatedEvent(BaseTaskEvent):
   # ------------------------------------------------------------
 
   def apply(self):
+    # Compute assignee delta BEFORE the Task.update() replaces assigned_to.
+    # Pitfall P4: reading Task.assigned_to *after* the update would return
+    # the new list and yield zero new assignees. SP-3/D-03: owner and
+    # participant are treated identically — the delta is role-agnostic.
+    self._new_assignees: list[str] = []
+    if self.info.assigned_to is not None:
+      prior = self.tx.collection('Task').get(self.info.task_key) or {}
+      prior_assignments = prior.get('assigned_to') or []
+      prior_keys = {
+        a.get('user_key') for a in prior_assignments if a.get('user_key')
+      }
+      new_keys = {a.user_key for a in self.info.assigned_to}
+      self._new_assignees = sorted(new_keys - prior_keys)
+
     # Exclude null values unless explicitly set and convert to dictionary
     updates = dict(_key=self.info.task_key)
 
@@ -107,3 +121,40 @@ class TaskUpdatedEvent(BaseTaskEvent):
         message=f"Task {self.info.task_key} updated successfully",
         detail=updated_task
       )
+
+  # ------------------------------------------------------------
+  # Notification payload — NOTIF-01 fan-out
+  # ------------------------------------------------------------
+
+  def _build_event_payload(self):
+    """Emit the base `task` payload PLUS one `user:<key>` payload per
+    newly-added assignee. Existing consumers of useSSE('task') (e.g.
+    TaskScreen.vue) continue to receive the broad payload — Pitfall P6.
+    """
+    base = super()._build_event_payload()
+    if base is None:
+      return None
+
+    payloads = [base]
+
+    new_assignees = getattr(self, '_new_assignees', None) or []
+    if not new_assignees:
+      return payloads
+
+    # Minimal projection (D-07 / A3): small over-the-wire footprint, and
+    # event-derived so the frontend composes the visible text via i18n.
+    projection_base = {
+      'notification': base['notification'],
+      'task_key': self.info.task_key,
+      'task_code': self.response['detail']['code'],
+      'assigned_by': self.info.user_key,
+      'timestamp': base.get('timestamp'),
+    }
+
+    for user_key in new_assignees:
+      p = dict(projection_base)
+      p['subtopic'] = f"user:{user_key}"
+      p['recipient_key'] = user_key
+      payloads.append(p)
+
+    return payloads

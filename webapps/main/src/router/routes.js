@@ -27,6 +27,12 @@ const routes = [
           ...task,
           ...warehouse,
           ...report,
+          {
+            path: 'user',
+            name: 'userHub',
+            component: () => import('views/UserHubPage.vue'),
+            meta: { screen_title: true, keepAlive: true },
+          },
         ],
       },
     ],

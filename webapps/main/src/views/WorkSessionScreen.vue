@@ -196,7 +196,7 @@
                   class="fit"
                   @click="
                     () => {
-                      exit_destination = { name: 'userJobs' };
+                      exit_destination = { name: 'userHub' };
                       if (j.active) {
                         show_exit_alert = true;
                       } else {
@@ -319,7 +319,7 @@ export default {
     return {
       vuex_ready: false,
       show_exit_alert: false,
-      exit_destination: { name: 'userJobs' },
+      exit_destination: { name: 'userHub' },
       show_issue_form: false,
       alert_timeout: 4000,
       can_leave: false,
@@ -580,8 +580,14 @@ export default {
         const data = this.$store.state.traceability;
         const job_data = data.working_job_data;
 
-        // If job is closed, redirect to
+        // If the job is closed (or otherwise not workable), let the
+        // dedicated JOB CLOSED / NO INPUT template branch render (template
+        // lines 12-31 — h3 message + spinner) before the alert_timeout
+        // bounces the user back to /user. That branch is gated on
+        // `vuex_ready`, so it has to be flipped here too — otherwise the
+        // first `v-if="!vuex_ready"` wins and only the bare spinner shows.
         if (!this.can_work) {
+          this.vuex_ready = true;
           setTimeout(this.exitJob, this.alert_timeout);
         } else {
           this.vuex_ready = true;

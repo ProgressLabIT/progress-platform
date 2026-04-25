@@ -4,28 +4,7 @@ const operatorRoutes = [
     name: 'operatorRoot',
     meta: { scope: 'operator' },
     component: () => import('@/components/BaseEmptyParentRoute.vue'),
-    redirect: { name: 'userJobsSelected', query: { job: 'first' } },
-    children: [
-      {
-        path: 'select-job',
-        name: 'userJobs',
-        redirect: { name: 'userJobsSelected', query: { job: 'first' } },
-        component: () => import('@/views/UserJobs.vue'),
-        meta: { screen_title: true },
-        children: [
-          {
-            path: 'confirm',
-            name: 'userJobsSelected',
-            component: () => import('@/views/UserJobsSelected.vue'),
-          },
-          {
-            path: 'all',
-            name: 'userJobsAll',
-            component: () => import('@/views/UserJobsAll.vue'),
-          },
-        ],
-      },
-    ],
+    redirect: { name: 'userHub', query: { tab: 'jobs' } },
   },
   {
     path: 'job/:jobKey',

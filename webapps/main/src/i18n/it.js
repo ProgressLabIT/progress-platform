@@ -670,6 +670,34 @@ export default {
       instruction: 'istruzioni',
     },
   },
+  notifications: {
+    section_label: 'Notifiche',
+    empty: {
+      heading: 'Nessuna notifica',
+      body: 'Qui compariranno le assegnazioni ai task.',
+    },
+    error: {
+      connection: 'Impossibile connettersi al servizio di notifiche.',
+    },
+    TASK_UPDATED: {
+      title: 'Assegnato al task {task}',
+    },
+  },
+  user_hub: {
+    tab_assignments: 'assegnazioni',
+    tab_preferences: 'preferenze',
+    sub_jobs: 'lavori',
+    sub_tasks: 'attività',
+    refresh_aria: 'Aggiorna assegnazioni',
+    layout_toggle_aria: 'Cambia tra visualizzazione a schede e elenco',
+    jobs_truncated_note: 'Mostrati i primi {count}. Usa i filtri per restringere la ricerca.',
+    preferences_section_label: 'PREFERENZE',
+    jobs_empty_title: 'Nessun lavoro assegnato',
+    jobs_empty_caption: 'Quando un supervisore ti assegnerà un lavoro, comparirà qui.',
+    jobs_no_match: 'Nessun lavoro corrisponde ai filtri attivi.',
+    tasks_empty_title: 'Nessuna attività',
+    tasks_empty_caption: 'Non hai attività aperte al momento.',
+  },
   preferences: {
     theme: {
       light: 'Leggero',
@@ -1146,7 +1174,7 @@ export default {
     traceabilityRoot: 'Tracciabilità',
     reportRoot: 'Rapporti',
     userLibrary: 'utenti',
-    userJobs: 'selezione lavoro',
+    operatorRoot: 'selezione lavoro',
     workOrderArchive: 'Archivio',
     workOrderList: 'ordini di produzione',
     warehouseRoot: 'Magazzino',
@@ -1159,6 +1187,12 @@ export default {
     inventory: 'Giacenze',
     labelPrintTemplates: 'Stampe etichette',
     printersLibrary: 'Stampanti',
+    userHub: 'La mia pagina',
+  },
+  userHub: {
+    stub: {
+      placeholder: 'Questa pagina arriverà presto.',
+    },
   },
   host: 'indirizzo',
   port: 'porta',

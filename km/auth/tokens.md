@@ -6,8 +6,9 @@ Tokens in the Progress Platform are JWT access tokens backed by server-side reco
 
 - **Session tokens**: Issued at login (`POST /api/auth`). Tied to a `UserSession`, fixed lifetime (e.g. 24 h). **Only one active session per user** — see below.
 - **API tokens**: Manually created in Settings → API Token Library (`GET /api-token`). Long-lived, user-chosen expiration and description, no session binding. Used for scripts and integrations.
+- **SSE tickets**: Short-lived (90 s), topic-scoped, stateless JWTs used exclusively to authenticate SSE stream subscriptions. See below.
 
-Both use the same mechanism: JWT signed with HS256 + a `Token` document (key, signature, revoked, context, etc.).
+Session and API tokens use the same mechanism: JWT signed with HS256 + a `Token` document (key, signature, revoked, context, etc.). SSE tickets are stateless — no `Token` DB record is written.
 
 ## Token lifecycle
 
@@ -53,9 +54,33 @@ Implementation: `backend/api/endpoints/auth.py` (lines 57–65), before issuing 
 | `USER_SESSION_TIMEOUT_MINUTES` | 15 | Session timeout (e.g. UI) |
 | API token expiration | User-chosen date | From API Token Library form |
 
+## SSE tickets
+
+Browser `EventSource` cannot set request headers, so a short-lived ticket is used instead of passing the long-lived JWT as a URL parameter.
+
+**Flow:**
+1. Client calls `POST /api/notification/ticket` with `Authorization: Bearer <session JWT>` and body `{"topic": "<topic>"}`.
+2. Backend validates the session JWT, enforces user-topic owner match for `user:<key>` topics, and returns `{"ticket": "<short JWT>", "expires_in": 90}`.
+3. Client opens `new EventSource("/api/notification/<topic>?ticket=<short JWT>")`.
+4. Backend validates the ticket: checks signature, `ctx=sse_ticket`, and `topic` claim matches the path. If valid, the stream opens; otherwise 401.
+
+**Ticket properties:**
+- `ctx = sse_ticket` — rejected by `verify_token` so cannot authenticate any other endpoint.
+- `topic` claim — must match the path parameter; a ticket for `task` cannot open `production`.
+- `sub` claim — bound to the issuing user's `consumer_key`.
+- 90 s TTL — within this window native `EventSource` reconnect reuses the same URL/ticket automatically. When the ticket expires and the browser's reconnect fails (CLOSED state), `useSSE` fetches a fresh ticket and reopens.
+- Stateless — no `Token` DB write; signature-only validation via `jwt_secret`.
+
+**Security properties vs. long-lived JWT in URL:**
+- Leaked ticket (access logs, Referer, history) expires in ≤90 s.
+- Usable only on the specific topic it was issued for.
+- Cannot be replayed against any API endpoint other than the SSE stream.
+
+**Implementation:** `backend/api/endpoints/notification.py` (`mint_ticket`, `_verify_stream_access`), `backend/api/utils/auth.py` (`issue_sse_ticket`, `verify_sse_ticket`, `SSE_TICKET_TTL_SECONDS`), `webapps/main/src/composables/useSSE.js`.
+
 ## Related
 
-- **Endpoints**: `backend/api/endpoints/auth.py` (login, session, whoami), `backend/api/endpoints/org.py` (api-token, user/api-tokens).
-- **Utils**: `backend/api/utils/auth.py` (`issue_token`, `verify_token`, `revoke_token`, `close_session`).
-- **Models**: `backend/api/models/auth.py` (`TokenData`, `TokenRecord`, `TokenContext`, `ConsumerType`).
-- **UI**: `webapps/main/src/components/settings/APITokenLibrary.vue`, `webapps/main/src/views/settings/APITokenSettings.vue`.
+- **Endpoints**: `backend/api/endpoints/auth.py` (login, session, whoami), `backend/api/endpoints/org.py` (api-token, user/api-tokens), `backend/api/endpoints/notification.py` (SSE ticket issuance, SSE stream).
+- **Utils**: `backend/api/utils/auth.py` (`issue_token`, `verify_token`, `revoke_token`, `close_session`, `issue_sse_ticket`, `verify_sse_ticket`).
+- **Models**: `backend/api/models/auth.py` (`TokenData`, `TokenRecord`, `TokenContext`, `SseTicketClaims`, `ConsumerType`).
+- **UI**: `webapps/main/src/components/settings/APITokenLibrary.vue`, `webapps/main/src/views/settings/APITokenSettings.vue`, `webapps/main/src/composables/useSSE.js`.

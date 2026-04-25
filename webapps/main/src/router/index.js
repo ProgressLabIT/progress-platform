@@ -20,6 +20,13 @@ import { store } from '@/boot/store.js';
  * with the Router instance.
  */
 
+export function resolveLoginRedirect(query, userHomepage) {
+  if (query && query.redirect_to) {
+    return { path: query.redirect_to };
+  }
+  return { name: userHomepage };
+}
+
 export default route(function (/* { store } */) {
   const createHistory = process.env.SERVER
     ? createMemoryHistory
@@ -88,10 +95,7 @@ export default route(function (/* { store } */) {
       login_route &&
       (store?.getters?.isLoggedIn || (await store?.dispatch?.('recognizeMe')))
     ) {
-      let nextPage = to.query.redirect_to
-        ? to.query.redirect_to
-        : store?.getters?.userHomepage;
-      next({ name: nextPage });
+      next(resolveLoginRedirect(to.query, store?.getters?.userHomepage));
     } else if (
       !login_route &&
       !store?.getters?.isLoggedIn &&

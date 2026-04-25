@@ -36,6 +36,8 @@ class BaseProductionEvent(BaseEvent, BaseBatchEvent, BaseJobEvent, BaseSerialEve
       'is_in_position',
       'Position',
       'movement',
+      'Issue',
+      'issue_rel',
     ]
 
   def update_job_last_online(self):
@@ -106,7 +108,27 @@ class BaseProductionEvent(BaseEvent, BaseBatchEvent, BaseJobEvent, BaseSerialEve
       if wo:
         payload['wo_data'] = wo
     if getattr(self.info, 'job_key', None):
-      job = self.tx.collection('Job').get(self.info.job_key)
+      # Mirror GET_ASSIGNMENT_LIST: merge computed issues + wo.due_by so SSE
+      # targeted updates carry the same fields the initial list load does.
+      # Without this, the raw Job doc's persisted `issues_open: null` /
+      # `issues_total: null` overwrite the cached computed values when the
+      # client merges the payload into the job cache.
+      cursor = self.tx.aql.execute(
+        """
+        LET job_data = DOCUMENT(Job, @job_key)
+        FILTER job_data != null
+        LET wo_data = DOCUMENT(WorkOrder, job_data.wo_key)
+        LET issues = (FOR v IN 1..1 INBOUND wo_data._id issue_rel RETURN v)
+        LET issues_open = LENGTH(issues[* FILTER CURRENT.open])
+        RETURN MERGE(job_data, {
+          issues_open,
+          issues_total: LENGTH(issues),
+          due_by: wo_data.due_by
+        })
+        """,
+        bind_vars={'job_key': self.info.job_key},
+      )
+      job = next(cursor, None)
       if job:
         payload['job_data'] = job
     return payload

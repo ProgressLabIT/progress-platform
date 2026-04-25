@@ -3,6 +3,38 @@ import { api } from '@/boot/axios';
 
 const connections = new Map();
 
+async function mintAndOpen(topic, entry) {
+  let data;
+  try {
+    ({ data } = await api.post('/notification/ticket', { topic }));
+  } catch (e) {
+    console.error(`[useSSE] ticket fetch failed for "${topic}":`, e);
+    return;
+  }
+  if (entry.closed) return;
+
+  const base = api.defaults.baseURL + '/notification/' + topic;
+  const url = base + '?ticket=' + encodeURIComponent(data.ticket);
+  const source = new EventSource(url, { withCredentials: false });
+
+  source.addEventListener(topic, (event) => {
+    for (const cb of entry.listeners) {
+      try { cb(event); } catch (e) { console.error(`[useSSE] ${topic} listener error:`, e); }
+    }
+  });
+
+  source.onerror = () => {
+    // If the browser has given up on reconnecting (CLOSED state), the ticket
+    // may have expired. Fetch a fresh ticket and reopen the connection.
+    if (source.readyState === EventSource.CLOSED && !entry.closed) {
+      entry.source = null;
+      mintAndOpen(topic, entry).catch(() => {});
+    }
+  };
+
+  entry.source = source;
+}
+
 function getOrCreate(topic) {
   let entry = connections.get(topic);
   if (entry) {
@@ -10,20 +42,9 @@ function getOrCreate(topic) {
     return entry;
   }
 
-  const url = api.defaults.baseURL + '/notification/' + topic;
-  const source = new EventSource(url, { withCredentials: false });
-  const listeners = new Set();
-
-  source.addEventListener(topic, (event) => {
-    for (const cb of listeners) {
-      try { cb(event); } catch (e) { console.error(`[useSSE] ${topic} listener error:`, e); }
-    }
-  });
-
-  source.onerror = () => {};
-
-  entry = { source, listeners, refCount: 1 };
+  entry = { source: null, listeners: new Set(), refCount: 1, closed: false };
   connections.set(topic, entry);
+  mintAndOpen(topic, entry).catch(() => {});
   return entry;
 }
 
@@ -32,7 +53,8 @@ function release(topic) {
   if (!entry) return;
   entry.refCount--;
   if (entry.refCount <= 0) {
-    entry.source.close();
+    entry.closed = true;
+    if (entry.source) entry.source.close();
     entry.listeners.clear();
     connections.delete(topic);
   }
@@ -41,6 +63,8 @@ function release(topic) {
 /**
  * Composable for shared SSE subscriptions.
  * Maintains one EventSource per topic (ref-counted across components).
+ * Auth is handled via a short-lived ticket (POST /notification/ticket)
+ * rather than passing the long-lived JWT in the URL.
  * Auto-cleans up when the component unmounts.
  *
  * @param {string} topic - The notification topic (e.g. 'production')

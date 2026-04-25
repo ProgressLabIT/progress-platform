@@ -168,10 +168,14 @@ class BaseEvent(ABC):
   # ================================
   # NATS EVENT PUBLISHING
   # ================================
-  def _build_event_payload(self) -> dict | None:
+  def _build_event_payload(self) -> dict | list[dict] | None:
     """
     Build the NATS notification payload for this event.
     Returns None if this event class does not publish notifications.
+    Returns a single dict for the common case (one payload per event).
+    Returns a list[dict] when an event fans out multiple payloads — e.g.
+    TaskUpdatedEvent emits a base `task` payload plus one per newly-added
+    assignee (`user:<key>`) for the notification-center fan-out.
     Subclasses can override to enrich the payload with derived fields
     (e.g. recipient_id for messages) while the transaction is still active.
     """
@@ -180,7 +184,7 @@ class BaseEvent(ABC):
       return None
     payload = self.info.model_dump(exclude_extra=True, by_alias=False)
     payload['subtopic'] = subtopic
-    payload['notification'] = str(self.info.event_type)
+    payload['notification'] = self.info.event_type.value
     return payload
 
   @staticmethod
@@ -189,7 +193,15 @@ class BaseEvent(ABC):
     for payload in getattr(tx, '_pending_events', []):
       try:
         subtopic = payload['subtopic']
-        subject = subtopic_to_subject(subtopic)
+        # User-scoped subtopics (e.g. "user:abc") use colons, which are
+        # NOT valid NATS subject separators. subtopic_to_subject() would
+        # produce "progress.notification.user:abc" via its unsafe fallback.
+        # Build the dotted subject explicitly for user-scoped payloads.
+        if subtopic.startswith('user:'):
+          user_key = subtopic.split(':', 1)[1]
+          subject = f"progress.notification.user.{user_key}"
+        else:
+          subject = subtopic_to_subject(subtopic)
         publish_sync(subject, json.dumps(payload, default=str))
       except Exception:
         logger.exception("Failed to publish event to NATS")
@@ -254,7 +266,10 @@ class BaseEvent(ABC):
       # Collect NATS payload (built while tx is active so derived fields can read DB)
       payload = self._build_event_payload()
       if payload:
-        self.tx._pending_events.append(payload)
+        if isinstance(payload, list):
+          self.tx._pending_events.extend(payload)
+        else:
+          self.tx._pending_events.append(payload)
 
       # Commit transaction only if this event owns it
       if self._owns_transaction:
