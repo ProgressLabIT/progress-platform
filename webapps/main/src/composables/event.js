@@ -66,13 +66,18 @@ export function sendEventsBulk(events, eventTimestamp = null) {
     // Extract event_type from first event (all events must be same type)
     const event_type = events[0].event_type;
 
-    // Extract shared data (user, session, timestamp, event_type)
+    const taskStore = useTaskStore();
+    const activeTask = taskStore.getActiveTask;
     const shared_data = {
       event_type,
       user_key: store.state.session.user._key,
       user_session_key: store.state.session.session_key,
       timestamp: eventTimestamp || timestamp(),
     };
+    if (activeTask) {
+      shared_data.context_type = 'task';
+      shared_data.context_key = activeTask._key;
+    }
 
     // Remove event_type from individual events since it's now in shared_data
     const eventsWithoutType = events.map(e => {

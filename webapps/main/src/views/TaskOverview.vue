@@ -471,7 +471,8 @@ import { useRouter, useRoute } from 'vue-router';
 import { useStore } from 'vuex';
 import BaseDialog from '@/components/BaseDialog.vue';
 import BaseUserAvatar from '@/components/BaseUserAvatar.vue';
-import { sendEvent } from '@/composables/event.js';
+import { sendEvent, sendEventsBulk } from '@/composables/event.js';
+import { timestamp } from '@/lib/TimeHandling.js';
 import { useTask } from '@/composables/task.js';
 import multiMatch from '@/lib/MultiFieldSearch.js';
 import { useTaskStore } from '@/stores/task.js';
@@ -651,10 +652,11 @@ async function updateTasks() {
 
   saving.value = true;
   try {
-    const updatePromises = Array.from(selected_tasks.value).map(taskKey => {
-      let chain = Promise.resolve();
+    const taskKeys = Array.from(selected_tasks.value);
+    const fieldEvents = [];
+    const statusEvents = [];
 
-      // Non-status updates via TASK_UPDATED
+    for (const taskKey of taskKeys) {
       const updateData = { task_key: taskKey };
       if (task_start_from.value) {
         updateData.start_from = task_start_from.value;
@@ -673,26 +675,29 @@ async function updateTasks() {
       }
       const hasFieldUpdates = Object.keys(updateData).length > 1; // beyond task_key
       if (hasFieldUpdates) {
-        chain = chain.then(() => sendEvent({ event_type: 'TASK_UPDATED', event_data: updateData }));
+        fieldEvents.push({ event_type: 'TASK_UPDATED', ...updateData });
       }
 
-      // Status updates via dedicated events
       if (task_status.value) {
         if (task_status.value === 'completed') {
-          chain = chain.then(() => sendEvent({ event_type: 'TASK_COMPLETED', event_data: { task_key: taskKey } }));
+          statusEvents.push({ event_type: 'TASK_COMPLETED', task_key: taskKey });
         } else if (task_status.value === 'canceled') {
-          chain = chain.then(() => sendEvent({ event_type: 'TASK_CANCELED', event_data: { task_key: taskKey } }));
+          statusEvents.push({ event_type: 'TASK_CANCELED', task_key: taskKey });
         } else if (task_status.value === 'open') {
-          chain = chain.then(() => sendEvent({ event_type: 'TASK_REOPENED', event_data: { task_key: taskKey } }));
+          statusEvents.push({ event_type: 'TASK_REOPENED', task_key: taskKey });
         } else if (task_status.value === 'pending') {
-          chain = chain.then(() => sendEvent({ event_type: 'TASK_SUSPENDED', event_data: { task_key: taskKey } }));
+          statusEvents.push({ event_type: 'TASK_SUSPENDED', task_key: taskKey });
         }
       }
+    }
 
-      return chain;
-    });
-
-    await Promise.all(updatePromises);
+    const ts = timestamp();
+    if (fieldEvents.length) {
+      await sendEventsBulk(fieldEvents, ts);
+    }
+    if (statusEvents.length) {
+      await sendEventsBulk(statusEvents, ts);
+    }
 
     $q.notify({
       message: t('tasks_updated_successfully'),

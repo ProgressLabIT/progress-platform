@@ -26,23 +26,31 @@ context_map = {
 }
 
 
+def _validate_event_context(context_type: str | None, context_key: str | None) -> None:
+  """Same rules as single POST /event: optional UI context must reference an existing document."""
+  if context_type is None:
+    return
+  if context_type not in context_map:
+    raise HTTPException(status_code=422, detail=f'Invalid context type: {context_type}')
+  if context_key is None:
+    raise HTTPException(status_code=422, detail='Context key is required')
+  context_collection = context_map[context_type]
+  if not db.collection(context_collection).has(context_key):
+    raise HTTPException(
+      status_code=422,
+      detail=f'Context {context_type} with key {context_key} not found',
+    )
+
+
 @router.post('/event',
     dependencies=[Depends(auth.verify_token)])
 async def record_event(event_data: EventInfoModel):
   # Event data validation will happen at the event class level
   try:
+    _validate_event_context(event_data.context_type, event_data.context_key)
+
     event_class = get_event_class(event_data.event_type)
     event = event_class(info=event_data.model_dump())
-
-    # Validate event context
-    if event.info.context_type is not None:
-      if event.info.context_type not in context_map:
-        raise HTTPException(status_code=422, detail=f'Invalid context type: {event.info.context_type}')
-      if event.info.context_key is None:
-        raise HTTPException(status_code=422, detail='Context key is required')
-      context_collection = context_map[event.info.context_type]
-      if not db.collection(context_collection).has(event.info.context_key):
-        raise HTTPException(status_code=422, detail=f'Context {event.info.context_type} with key {event.info.context_key} not found')
 
     event.save()
     return APIResponse(detail=event.response)
@@ -101,10 +109,21 @@ async def record_events_bulk(request: BulkEventRequest):
     if not request.events:
       raise HTTPException(status_code=422, detail="No events provided")
 
+    _validate_event_context(request.shared_data.context_type, request.shared_data.context_key)
+
+    # When bulk carries UI context on shared_data, it applies to all events; do not let rows override
+    if request.shared_data.context_type is not None:
+      event_rows = [
+        {k: v for k, v in row.items() if k not in ('context_type', 'context_key')}
+        for row in request.events
+      ]
+    else:
+      event_rows = request.events
+
     # Process all events in one transaction using spawn_multiple
     BaseEvent.spawn_multiple(
       shared_data=request.shared_data,
-      event_data=request.events
+      event_data=event_rows
     )
 
     return APIResponse(
