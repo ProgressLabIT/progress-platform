@@ -78,7 +78,9 @@
             icon="mdi-information"
             :disable="isProcessing"
           />
+          <!-- TODO: re-enable when counting assignments are completed -->
           <q-tab
+            v-if="ASSIGNMENTS_TAB_ENABLED"
             :name="2"
             :label="$t('warehouse.counting.assignments')"
             icon="mdi-account-multiple"
@@ -112,7 +114,8 @@
             />
           </q-tab-panel>
           <!-- TAB 2: ASSIGNMENTS -->
-          <q-tab-panel :name="2" class="q-px-none">
+          <!-- TODO: re-enable when counting assignments are completed -->
+          <q-tab-panel v-if="ASSIGNMENTS_TAB_ENABLED" :name="2" class="q-px-none">
             <CountSessionAssignmentsTab
               v-model:assignments="assignments"
               :session-type="sessionData.type"
@@ -137,8 +140,9 @@
       <q-card-section class="col-auto">
         <div class="row items-center q-gutter-x-sm justify-between">
           <div class="col-auto">
+            <!-- TODO: re-enable when counting assignments are completed -->
             <q-checkbox
-              v-if="step === 2"
+              v-if="ASSIGNMENTS_TAB_ENABLED && step === 2"
               v-model="disableAssignedItems"
               :label="$t('warehouse.counting.disable_assigned_items')"
               :disable="isProcessing"
@@ -156,14 +160,14 @@
               :label="$t('back')"
               color="theme-grey"
               :disable="isProcessing"
-              @click="step--"
+              @click="goBack"
             />
             <q-btn
               v-if="step < maxStep"
               :label="$t('next')"
               color="primary"
               :disable="isProcessing"
-              @click="step++"
+              @click="goNext"
             />
             <q-btn
               v-if="step !== 3 && sessionStatus !== 'applied'"
@@ -285,8 +289,30 @@ const showRecordsTab = computed(() => {
   return isEditMode.value && sessionData.value.status && sessionData.value.status !== 'planned';
 });
 
+// TODO: re-enable when counting assignments are completed
+const ASSIGNMENTS_TAB_ENABLED = false;
+
 // Max step depends on whether records tab is visible
-const maxStep = computed(() => showRecordsTab.value ? 3 : 2);
+const maxStep = computed(() => {
+  if (showRecordsTab.value) return 3;
+  return ASSIGNMENTS_TAB_ENABLED ? 2 : 1;
+});
+
+// Skip step 2 (assignments) while ASSIGNMENTS_TAB_ENABLED is false
+function goNext() {
+  if (step.value === 1 && !ASSIGNMENTS_TAB_ENABLED && showRecordsTab.value) {
+    step.value = 3;
+  } else {
+    step.value++;
+  }
+}
+function goBack() {
+  if (step.value === 3 && !ASSIGNMENTS_TAB_ENABLED) {
+    step.value = 1;
+  } else {
+    step.value--;
+  }
+}
 
 const sessionStatus = computed(() => {
   return sessionData.value.status || 'new';
