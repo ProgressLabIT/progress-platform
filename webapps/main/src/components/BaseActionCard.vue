@@ -1,5 +1,5 @@
 <template>
-  <q-card class="surface2 q-pa-md" style="min-width: 400px">
+  <q-card class="surface2 q-pa-md" style="min-width: 400px; max-height: 80vh;">
     <slot name="title">
       <q-card-section v-if="title">
         <div class="text-h3 display highlight">

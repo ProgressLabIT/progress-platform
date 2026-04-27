@@ -11,7 +11,7 @@
       autogrow
       :label="$t('name')"
       filled
-      class="q-mt-md"
+      class="q-mb-md"
     />
 
     <TemplateSelect
@@ -34,6 +34,7 @@
     <q-select
       v-model="new_counter.frequency"
       filled
+      hide-bottom-space
       :rules="[(value) => !!value || $t('field_required_alert')]"
       :options="[$t('none'), $t('year'), $t('month'), $t('week'), $t('day')]"
       :label="$t('reset_frequency')"

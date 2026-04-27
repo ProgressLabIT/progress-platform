@@ -347,16 +347,51 @@ export default {
     },
 
     deleteCounter() {
-      this.$api.delete(`counter/${this.counter._key}`).then(() => {
-        this.$q.notify({
-          message: this.$t('counter_delete_success'),
-          color: 'theme-green',
-          timeout: 1500,
-          position: 'top',
+      this.$api
+        .delete(`counter/${this.counter._key}`)
+        .then(() => {
+          this.$q.notify({
+            message: this.$t('counter_delete_success'),
+            color: 'theme-green',
+            timeout: 1500,
+            position: 'top',
+          });
+          this.$emit('reload');
+          this.$router.push({ name: 'counterLibrary' });
+        })
+        .catch((err) => {
+          const detail = err?.response?.data?.detail;
+          if (detail?.code === 'counter_in_use_as_system_counter') {
+            const slots = (detail.slots || [])
+              .map((s) => this.$t(`system_counters_${s}`))
+              .join(', ');
+            this.$q.notify({
+              message: this.$t('counter_in_use_error', { slots }),
+              color: 'theme-red',
+              timeout: 4000,
+              position: 'top',
+            });
+            this.show_delete = false;
+            return;
+          }
+          if (detail?.code === 'counter_in_use_by_products') {
+            const sample = (detail.sample || [])
+              .map((p) => p.code || p.name || p._key)
+              .join(', ');
+            this.$q.notify({
+              message: this.$t('counter_in_use_by_products_error', {
+                total: detail.total,
+                sample,
+              }),
+              color: 'theme-red',
+              timeout: 5000,
+              position: 'top',
+            });
+            this.show_delete = false;
+            return;
+          }
+          throw err;
         });
-        this.$emit('reload');
-        this.$router.push({ name: 'counterLibrary' });
-      });
     },
   },
 };

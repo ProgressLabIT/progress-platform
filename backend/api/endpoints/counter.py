@@ -56,6 +56,41 @@ def replace_field_metadata(counter_key: str, counter_data: Counter):
     dependencies=[Depends(auth.verify_token)])
 def delete_field(counter_key: str):
   """Delete custom counter"""
+  system_counters = db.collection('Config').get('system_counters') or {}
+  assigned_slots = [
+    slot for slot, key in system_counters.items()
+    if slot not in ('_key', '_id', '_rev') and key == counter_key
+  ]
+  if assigned_slots:
+    raise HTTPException(
+      status_code=409,
+      detail={
+        'code': 'counter_in_use_as_system_counter',
+        'slots': assigned_slots,
+      },
+    )
+
+  product_usage = next(db.aql.execute(
+    """
+    LET refs = (
+      FOR p IN Product
+        FILTER p.counter_key == @counter_key
+        RETURN { _key: p._key, code: p.code, name: p.name }
+    )
+    RETURN { total: LENGTH(refs), sample: SLICE(refs, 0, 5) }
+    """,
+    bind_vars={'counter_key': counter_key},
+  ))
+  if product_usage['total'] > 0:
+    raise HTTPException(
+      status_code=409,
+      detail={
+        'code': 'counter_in_use_by_products',
+        'total': product_usage['total'],
+        'sample': product_usage['sample'],
+      },
+    )
+
   try:
     db.collection('Counter').delete(counter_key, return_old=True)['old']
     return APIResponse(message = "Counter successfully deleted")

@@ -1096,6 +1096,10 @@ export default {
 
   counter_delete: 'Elimina contatore',
   counter_delete_success: 'Contatore eliminato',
+  counter_in_use_error:
+    'Questo contatore è attualmente assegnato come contatore di sistema ({slots}). Riassegna i contatori di sistema prima di eliminarlo.',
+  counter_in_use_by_products_error:
+    'Questo contatore è assegnato a {total} prodotto/i (es. {sample}). Riassegna o rimuovi il contatore da quei prodotti prima di eliminarlo.',
   counter_delete_text:
     'Il contatore verrà eliminato, ma i seriali già registrati non verranno cancellati.',
   printer_delete: 'Rimuovi stampante',

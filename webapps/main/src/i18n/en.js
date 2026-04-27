@@ -1070,6 +1070,10 @@ export default {
     'Template tokens are insufficient for the selected reset frequency. The template must uniquely identify each reset cycle: year for yearly reset; year + month for monthly; year + week for weekly; year + day-of-year for daily.',
   counter_delete: 'Delete counter',
   counter_delete_success: 'Counter deleted',
+  counter_in_use_error:
+    'This counter is currently assigned as a system counter ({slots}). Reassign the system counters before deleting it.',
+  counter_in_use_by_products_error:
+    'This counter is assigned to {total} product(s) (e.g. {sample}). Reassign or remove the counter from those products before deleting it.',
   counter_delete_text:
     'The counter will be deleted, but serials already recorded will not be deleted.',
   printer_delete: 'Remove printer',

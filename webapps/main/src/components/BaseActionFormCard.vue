@@ -7,7 +7,7 @@
     <q-form
       :id="uniqueFormId"
       :greedy="greedy"
-      class="column no-wrap scroll"
+      class="column no-wrap"
       @submit="emit('submit')"
       @validation-error="emit('validation-error', $event)"
     >
