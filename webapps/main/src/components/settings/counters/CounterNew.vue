@@ -14,7 +14,13 @@
       class="q-mt-md"
     />
 
-    <TemplateSelect v-model="template_model" />
+    <TemplateSelect
+      v-model="template_model"
+      :error="!template_check.valid"
+      :error-message="
+        !template_check.valid ? $t(template_check.reason) : ''
+      "
+    />
 
     <!--<q-input
       v-model="new_counter.frequency"
@@ -56,6 +62,30 @@
         </q-icon>
       </template>
     </q-input>
+
+    <div class="row q-mt-lg items-center">
+      <div class="col-auto text-grey-7 q-mr-md">
+        {{ $t('counter_preview') }}:
+      </div>
+      <div class="col">
+        <code class="text-h6">{{ preview || '—' }}</code>
+      </div>
+    </div>
+
+    <template #actions="{ uniqueFormId }">
+      <q-btn
+        type="submit"
+        :form="uniqueFormId"
+        color="theme-blue"
+        :label="$t('save')"
+        :disable="!template_check.valid"
+      />
+      <q-btn
+        color="theme-grey"
+        :label="$t('cancel')"
+        @click="$emit('close')"
+      />
+    </template>
   </BaseActionFormCard>
 </template>
 
@@ -64,6 +94,10 @@ import { date } from 'quasar';
 import { ref } from 'vue';
 import BaseActionFormCard from '@/components/BaseActionFormCard.vue';
 import TemplateSelect from '@/components/settings/counters/TemplateSelect.vue';
+import {
+  renderCounterTemplate,
+  validateCounterTemplate,
+} from '@/lib/counterValidation';
 import { calculateNextResetDate } from '@/lib/dateUtils';
 
 export default {
@@ -77,7 +111,7 @@ export default {
   emits: ['close', 'created'],
 
   setup() {
-    const template_model = ref(null);
+    const template_model = ref([]);
 
     return {
       template_model,
@@ -93,6 +127,19 @@ export default {
         reset_date: null,
       },
     };
+  },
+
+  computed: {
+    template_check() {
+      return validateCounterTemplate(
+        this.template_model,
+        this.getFrequency(this.new_counter.frequency),
+      );
+    },
+
+    preview() {
+      return renderCounterTemplate(this.template_model, 1);
+    },
   },
 
   methods: {
@@ -120,9 +167,20 @@ export default {
     },
 
     addCounter() {
+      const frequency = this.getFrequency(this.new_counter.frequency);
+      const check = validateCounterTemplate(this.template_model, frequency);
+      if (!check.valid) {
+        this.$q.notify({
+          message: this.$t(check.reason),
+          color: 'theme-red',
+          timeout: 2500,
+          position: 'top',
+        });
+        return;
+      }
       const data = {
         name: this.new_counter.name,
-        frequency: this.getFrequency(this.new_counter.frequency),
+        frequency,
         template: this.template_model,
         reset_date: date.formatDate(
           this.new_counter.reset_date,

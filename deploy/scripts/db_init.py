@@ -210,7 +210,7 @@ collections = [
     dict(
       _key = 'system_counters',
       work_orders = 'default',
-      warehouse_missions = 'default',
+      movement_lists = 'default',
       counting_sessions = 'default',
       positions = 'default',
       tasks = 'default'

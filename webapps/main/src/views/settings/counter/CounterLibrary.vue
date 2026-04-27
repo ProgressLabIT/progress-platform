@@ -55,12 +55,21 @@
           {{ filtered_counters.length }} {{ $t('of') }} {{ counter_list.length }}
         </div>
 
-        <div class="q-pa-md q-mt-auto">
+        <div class="q-pa-md q-mt-auto column q-gutter-sm">
           <q-btn
-            class="full-width q-mt-auto"
+            class="full-width"
             color="theme-blue"
             :label="$t('new')"
             @click="show_new_counter_form = true"
+          >
+          </q-btn>
+          <q-btn
+            class="full-width"
+            outline
+            color="theme-blue"
+            icon="mdi-cog"
+            :label="$t('system_counters_button')"
+            @click="show_system_counters_form = true"
           >
           </q-btn>
         </div>
@@ -69,7 +78,8 @@
 
     <template #after>
       <!-- COUNTER DATA -->
-      <div class="col full-height">
+      <div class="col full-height q-pa-lg">
+        <CounterHelp class="q-mb-md col-auto" />
         <router-view :counter="selected_counter" @reload="getCounters" />
       </div>
     </template>
@@ -83,12 +93,25 @@
     <CounterNew @close="show_new_counter_form = false" @created="getCounters">
     </CounterNew>
   </BaseDialog>
+
+  <BaseDialog
+    :show="show_system_counters_form"
+    :no-backdrop-dismiss="false"
+    @close="show_system_counters_form = false"
+  >
+    <CounterSystemConfig
+      :counter-list="counter_list"
+      @close="show_system_counters_form = false"
+    />
+  </BaseDialog>
 </template>
 
 <script>
 import BaseDialog from '@/components/BaseDialog.vue';
 import LoadingSignal from '@/components/LoadingSignal.vue';
 import CounterNew from '@/components/settings/counters/CounterNew.vue';
+import CounterSystemConfig from '@/components/settings/counters/CounterSystemConfig.vue';
+import CounterHelp from '@/components/settings/counters/CounterHelp.vue';
 import multiMatch from '@/lib/MultiFieldSearch.js';
 
 export default {
@@ -97,6 +120,8 @@ export default {
   components: {
     BaseDialog,
     CounterNew,
+    CounterSystemConfig,
+    CounterHelp,
     LoadingSignal,
   },
 
@@ -106,6 +131,7 @@ export default {
       search_text: undefined,
       counter_list: [],
       show_new_counter_form: false,
+      show_system_counters_form: false,
       splitter_model: 30,
     };
   },

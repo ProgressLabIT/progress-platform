@@ -1,6 +1,7 @@
 <template>
-  <div class="q-pa-lg column full-height">
-    <q-form class="full-height column" @submit="save">
+  <div class="column full-height">
+
+    <q-form class="column col" @submit="save">
       <div class="row justify-between items-start">
         <div class="col-10 row q-col-gutter-md">
           <!-- Counter name -->
@@ -9,6 +10,7 @@
               v-model="temp_data.name"
               :rules="[(value) => !!value || $t('field_required_alert')]"
               filled
+              hide-bottom-space
               :disable="!editMode"
               :label="$t('name')"
               stack-label
@@ -21,6 +23,7 @@
               v-model="temp_data.next_tick"
               filled
               :label="$t('next_tick')"
+              hide-bottom-space
               :disable="!editMode"
               stack-label
             />
@@ -52,7 +55,7 @@
               :rules="[(value) => !!value || $t('field_required_alert')]"
               :options="[$t('none'), $t('year'), $t('month'), $t('week'), $t('day')]"
               :label="$t('reset_frequency')"
-              class="q-mt-md"
+              hide-bottom-space
               :disable="!editMode"
               @update:model-value="(selection) => refreshResetDate(selection)"
             />
@@ -66,6 +69,7 @@
               mask="date"
               :label="$t('reset_date')"
               disable
+              hide-bottom-space
             >
               <template #append>
                 <q-icon name="mdi-calendar" class="cursor-pointer">
@@ -92,7 +96,14 @@
 
           <!-- Template -->
           <div class="col-8">
-            <TemplateSelect v-model="template_model" :disable="!editMode" />
+            <TemplateSelect
+              v-model="template_model"
+              :disable="!editMode"
+              :error="!template_check.valid"
+              :error-message="
+                !template_check.valid ? $t(template_check.reason) : ''
+              "
+            />
           </div>
         </div>
 
@@ -121,6 +132,7 @@
                 size="12px"
                 color="theme-blue"
                 :loading="saving"
+                :disable="!template_check.valid"
                 :label="$t('save')"
               />
 
@@ -132,6 +144,16 @@
               />
             </div>
           </template>
+        </div>
+      </div>
+
+      <!-- Preview -->
+      <div class="row q-mt-lg items-center">
+        <div class="col-auto text-low q-mr-md">
+          {{ $t('counter_preview') }}:
+        </div>
+        <div class="col">
+          <code class="text-h6">{{ preview || '—' }}</code>
         </div>
       </div>
     </q-form>
@@ -156,7 +178,12 @@ import { ref } from 'vue';
 import BaseActionCard from '@/components/BaseActionCard.vue';
 import BaseDialog from '@/components/BaseDialog.vue';
 import BaseTooltipIcon from '@/components/BaseTooltipIcon.vue';
+import CounterHelp from '@/components/settings/counters/CounterHelp.vue';
 import TemplateSelect from '@/components/settings/counters/TemplateSelect.vue';
+import {
+  renderCounterTemplate,
+  validateCounterTemplate,
+} from '@/lib/counterValidation';
 import { calculateNextResetDate } from '@/lib/dateUtils';
 
 export default {
@@ -166,6 +193,7 @@ export default {
     BaseActionCard,
     BaseDialog,
     BaseTooltipIcon,
+    CounterHelp,
     TemplateSelect,
   },
 
@@ -204,6 +232,20 @@ export default {
   computed: {
     search_disabled() {
       return this.editMode;
+    },
+
+    template_check() {
+      return validateCounterTemplate(
+        this.template_model,
+        this.getFrequency(this.temp_data.frequency),
+      );
+    },
+
+    preview() {
+      return renderCounterTemplate(
+        this.template_model,
+        this.temp_data.next_tick || 1,
+      );
     },
   },
 
@@ -260,15 +302,26 @@ export default {
     },
 
     save() {
+      const frequency = this.getFrequency(this.temp_data.frequency);
+      const check = validateCounterTemplate(this.template_model, frequency);
+      if (!check.valid) {
+        this.$q.notify({
+          message: this.$t(check.reason),
+          color: 'theme-red',
+          timeout: 2500,
+          position: 'top',
+        });
+        return;
+      }
       this.saving = true;
       const data = {
         name: this.temp_data.name,
-        frequency: this.getFrequency(this.temp_data.frequency),
+        frequency,
         template: this.template_model,
         next_tick: this.temp_data.next_tick,
         reset_date: date.formatDate(
           calculateNextResetDate({
-            reset_period: this.getFrequency(this.temp_data.frequency),
+            reset_period: frequency,
           }).resetDate,
           'YYYY-MM-DDTHH:mm:ss.SSSZ',
         ),
