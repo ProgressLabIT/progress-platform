@@ -108,8 +108,8 @@ export default {
   date_format: 'YYYY-MM-DD',
   deactivate: 'deactivate',
   dismiss: 'dismiss',
-  dismiss_task: 'Dismiss Task',
-  dismiss_task_confirmation: 'Are you sure you want to dismiss this task? You will no longer see it in your active tasks.',
+  dismiss_task: 'Deactivate Task',
+  dismiss_task_confirmation: 'Are you sure you want to deactivate this task?',
   declaration_question: {
     qt: 'How many pieces have you completed?',
     step: 'Which steps have you completed?',

@@ -106,6 +106,30 @@ export const useTaskStore = defineStore('task', {
       }
     },
 
+    async suspendTask(taskKey) {
+      try {
+        const response = await sendEvent({ event_type: 'TASK_SUSPENDED', event_data: { task_key: taskKey } })
+        return response.data
+      } catch (error) {
+        console.error('Error suspending task:', error)
+        throw error
+      }
+    },
+
+    async suspendTaskWithConfirmation(taskKey, t) {
+      return new Promise((resolve) => {
+        Dialog.create({
+          title: t('task_suspend'),
+          message: t('task_suspend_confirmation'),
+        }).onOk(async () => {
+          await this.suspendTask(taskKey)
+          resolve(true)
+        }).onCancel(() => {
+          resolve(false)
+        })
+      })
+    },
+
     async completeTaskWithConfirmation(taskKey, t) {
       return new Promise((resolve) => {
         Dialog.create({
@@ -140,7 +164,7 @@ export const useTaskStore = defineStore('task', {
           message: t('dismiss_task_confirmation'),
           color: 'theme-orange',
           ok: {
-            label: t('dismiss'),
+            label: t('deactivate'),
             color: 'theme-orange'
           },
           cancel: {

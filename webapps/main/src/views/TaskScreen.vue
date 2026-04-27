@@ -143,9 +143,9 @@
                   size="10px"
                   class="highlight text-uppercase"
                   />
+
                 <!-- CLOSE/REOPEN BUTTON -->
                 <q-btn
-                  v-if="task.status !== 'pending'"
                   :icon="task.status === 'open' ? 'mdi-check' : 'mdi-restore'"
                   size="10px"
                   flat
@@ -155,6 +155,20 @@
                 >
                   <q-tooltip anchor="center right" self="center left" :delay="200">
                     {{ task.status === 'open' ? $t('complete_task') : $t('reopen_task') }}
+                  </q-tooltip>
+                </q-btn>
+
+                <!-- SUSPEND BUTTON -->
+                <q-btn
+                  v-if="task.status === 'open'"
+                  icon="mdi-clock-outline"
+                  size="10px"
+                  flat
+                  round
+                  @click="suspendTask"
+                >
+                  <q-tooltip anchor="center right" self="center left" :delay="200">
+                    {{ $t('task_suspend') }}
                   </q-tooltip>
                 </q-btn>
 
@@ -1144,6 +1158,11 @@ async function toggleTaskStatus() {
   } finally {
     togglingStatus.value = false;
   }
+}
+
+async function suspendTask() {
+  await taskStore.suspendTaskWithConfirmation(props.taskKey, $t);
+  await fetchTaskData();
 }
 
 async function cancelTask() {
