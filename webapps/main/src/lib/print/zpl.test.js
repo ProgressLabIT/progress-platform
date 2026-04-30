@@ -125,15 +125,21 @@ describe('Text field', () => {
       alignment: 'center',
     })]);
     const result = generateZpl(template, [{ field1: 'Hello' }], { dpi: 203 });
-    expect(result).toContain('^FO80,160^A0N,34,34^FB400,9999,0,C,0^FDHello^FS');
+    expect(result).toContain('^FO80,160^A0N,34,34^FB400,99,0,C,0^FDHello^FS');
   });
 
-  it('uses ^FB max_lines=9999 so long text wraps below the box (never truncates)', () => {
-    // Field height is irrelevant; max_lines is always 9999 so overflow bleeds
-    // downward instead of being silently dropped.
+  it('uses default ^FB max_lines=99 so long text wraps without exceeding non-Zebra emulator limits', () => {
+    // Brady i6100 and similar emulators silently drop fields when ^FB max_lines
+    // is "too high"; 99 is a pragmatic default between wrap headroom and printer quirks.
     const template = makeTemplate([makeField({ fontSize: 12, width: 50, height: 5 })]);
     const result = generateZpl(template, [{ field1: 'x' }], { dpi: 203 });
-    expect(result).toMatch(/\^FB\d+,9999,0,L,0/);
+    expect(result).toMatch(/\^FB\d+,99,0,L,0/);
+  });
+
+  it('honours explicit fbMaxLines option (overrides default)', () => {
+    const template = makeTemplate([makeField({ fontSize: 12, width: 50 })]);
+    const result = generateZpl(template, [{ field1: 'x' }], { dpi: 203, fbMaxLines: 1 });
+    expect(result).toMatch(/\^FB\d+,1,0,L,0/);
   });
 
   it('alignment left uses L in ^FB', () => {

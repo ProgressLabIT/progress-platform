@@ -52,12 +52,13 @@ const DEFAULT_DPI = 203;
 /**
  * Default `^FB` max-lines parameter. ZPL spec accepts 1–9999 but several
  * non-Zebra ZPL emulators (e.g. Brady i6100) silently drop the field when
- * this value is "too high". Override at runtime via:
- *   localStorage.setItem('zpl_fb_max_lines', '9')
+ * this value is "too high". 99 is a pragmatic default with more wrap headroom
+ * than single-digit limits. Override at runtime via:
+ *   localStorage.setItem('zpl_fb_max_lines', '20')
  * then refresh the SPA. Used to bisect the printer's accepted range without
  * a redeploy.
  */
-const DEFAULT_FB_MAX_LINES = 9999;
+const DEFAULT_FB_MAX_LINES = 99;
 
 /** pdfme alignment → ZPL ^FB justification character */
 const ALIGN_MAP = { left: 'L', center: 'C', right: 'R' };
@@ -313,7 +314,7 @@ function renderPage(fields, inputValues, dpi, quantity, offsetXDots, offsetYDots
  * @param {number}  [options.offsetX=0] - Horizontal calibration offset in mm (positive = shift right)
  * @param {number}  [options.offsetY=0] - Vertical calibration offset in mm (positive = shift down)
  * @param {number}  [options.fbMaxLines] - Override ^FB max-lines (1–9999). Falls back to
- *                                         localStorage `zpl_fb_max_lines`, then 9999.
+ *                                         localStorage `zpl_fb_max_lines`, then DEFAULT_FB_MAX_LINES.
  * @returns {string} ZPL string, one ^XA...^XZ block per template page, joined with newlines
  */
 export function generateZpl(template, inputs, { dpi = DEFAULT_DPI, quantity = 1, offsetX = 0, offsetY = 0, fbMaxLines } = {}) {

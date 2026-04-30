@@ -100,10 +100,9 @@ function renderText(field, value, dpi) {
   const fontH = ptToDots(field.fontSize ?? 10, dpi);
   const fieldW = Math.max(1, mmToDots(field.width ?? 50, dpi));
   const align = ALIGN_MAP[field.alignment] ?? 'L';
-  // ^FB max_lines set to ZPL's maximum (9999) so overflow text wraps below
-  // the designer box rather than being silently truncated. Keeping the field
-  // box large enough to contain wrapped lines is a template-design concern.
-  return `^FO${x},${y}^A0N,${fontH},${fontH}^FB${fieldW},9999,0,${align},0^FD${value}^FS`;
+  // ^FB max_lines: use 99 (not ZPL max 9999) — non-Zebra emulators (e.g. Brady i6100)
+  // silently drop fields when this value is too high. See webapps/main zpl.js for full pattern.
+  return `^FO${x},${y}^A0N,${fontH},${fontH}^FB${fieldW},99,0,${align},0^FD${value}^FS`;
 }
 
 /**
