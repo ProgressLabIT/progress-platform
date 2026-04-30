@@ -31,11 +31,15 @@ const api = axios.create({
 
 export default boot(({ app }) => {
   api.interceptors.request.use((config) => {
-    // axios 1.x: use config.headers instead of config.headers.common
-    config.headers = {
-      ...config.headers,
-      Authorization: `Bearer ${store.getters.getToken}`,
-    };
+    // Only attach Authorization when a token is present. Sending `Bearer `
+    // (empty) produces a malformed JWT and triggers noisy 401 logs on the API.
+    const token = store?.getters?.getToken;
+    if (token) {
+      config.headers = {
+        ...config.headers,
+        Authorization: `Bearer ${token}`,
+      };
+    }
     return config;
   });
   api.interceptors.response.use(

@@ -58,6 +58,23 @@ credentials_exception = HTTPException(
   headers={"WWW-Authenticate": "Bearer"},
 )
 
+# Hybrid auth-error model: pre-auth failures (malformed token, bad signature,
+# missing record) fall back to the generic credentials_exception above so
+# probers can't enumerate state. Lifecycle failures below are returned with
+# a machine-readable `code` because reaching them requires having held a
+# real token, so the leak is limited to the caller's own session state.
+token_expired_exception = HTTPException(
+  status_code=status.HTTP_401_UNAUTHORIZED,
+  detail={"code": "token_expired", "message": "Session expired."},
+  headers={"WWW-Authenticate": "Bearer"},
+)
+
+token_revoked_exception = HTTPException(
+  status_code=status.HTTP_401_UNAUTHORIZED,
+  detail={"code": "token_revoked", "message": "Session has been ended."},
+  headers={"WWW-Authenticate": "Bearer"},
+)
+
 Allow = "Allow"  # acl "allow" action
 Deny = "Deny"  # acl "deny" action
 
@@ -249,44 +266,54 @@ def verify_password(plain_password, hashed_password):
 
 def _verify_token_base(token_str: str) -> TokenData:
   """Verify JWT signature, DB record, and revocation. Raises credentials_exception on any failure."""
+  # Short-circuit empty/whitespace tokens. OAuth2PasswordBearer happily
+  # passes through an empty `param` when the header is `Bearer `, which used
+  # to reach jwt.decode and emit a noisy "Not enough segments" stack trace
+  # on every request from a logged-out client.
+  if not token_str or not token_str.strip():
+    raise credentials_exception
+
   try:
-    try:
-      token_json = jwt.decode(token_str, get_config().jwt_secret, algorithms=[ALGORITHM])
+    token_json = jwt.decode(token_str, get_config().jwt_secret, algorithms=[ALGORITHM])
 
-    except jwt.ExpiredSignatureError:
-      print('Token expired')
-      raise TokenExpiredError
+  except jwt.ExpiredSignatureError:
+    print('Token expired')
+    raise token_expired_exception
 
-    except jwt.InvalidSignatureError:
-      print('TokenSignatureVerificationError')
-      raise TokenSignatureVerificationError
+  except jwt.InvalidSignatureError:
+    print('TokenSignatureVerificationError')
+    raise credentials_exception
 
-    except:
-      raise Exception(traceback.format_exc())
+  except jwt.InvalidTokenError as e:
+    # Covers DecodeError ("Not enough segments"), malformed payloads, etc.
+    # Expected when clients send junk; log the reason without a stack dump.
+    print(f'InvalidToken: {type(e).__name__}: {e}')
+    raise credentials_exception
 
-    try:
-      token_data = TokenData(**token_json)
-    except:
-      raise Exception(traceback.format_exc())
-
-    try:
-      token_record = TokenRecord( **db.collection('Token').get(token_data.token_key) )
-    except:
-      print('TokenNotFoundError')
-      raise TokenNotFoundError
-
-    if not token_str.split('.')[-1] == token_record.signature:
-      print('TokenSignatureMismatchError')
-      raise TokenSignatureMismatchError
-
-    if token_record.revoked:
-      print('TokenRevokedError')
-      raise TokenRevokedError
-
-  except Exception as e:
-    print(e)
+  except Exception:
+    # Truly unexpected (e.g. config/secret missing). Keep the stack trace.
     traceback.print_exc()
     raise credentials_exception
+
+  try:
+    token_data = TokenData(**token_json)
+  except Exception:
+    print('TokenPayloadError')
+    raise credentials_exception
+
+  try:
+    token_record = TokenRecord(**db.collection('Token').get(token_data.token_key))
+  except Exception:
+    print('TokenNotFoundError')
+    raise credentials_exception
+
+  if token_str.split('.')[-1] != token_record.signature:
+    print('TokenSignatureMismatchError')
+    raise credentials_exception
+
+  if token_record.revoked:
+    print('TokenRevokedError')
+    raise token_revoked_exception
 
   return token_data
 
