@@ -49,11 +49,47 @@ function schemasToV5(schemas) {
 
 const DEFAULT_DPI = 203;
 
+/**
+ * Default `^FB` max-lines parameter. ZPL spec accepts 1–9999 but several
+ * non-Zebra ZPL emulators (e.g. Brady i6100) silently drop the field when
+ * this value is "too high". Override at runtime via:
+ *   localStorage.setItem('zpl_fb_max_lines', '9')
+ * then refresh the SPA. Used to bisect the printer's accepted range without
+ * a redeploy.
+ */
+const DEFAULT_FB_MAX_LINES = 9999;
+
 /** pdfme alignment → ZPL ^FB justification character */
 const ALIGN_MAP = { left: 'L', center: 'C', right: 'R' };
 
 /** Regex to detect image field types (case-insensitive) */
 const IMAGE_TYPE_RE = /image/i;
+
+/**
+ * Resolve `^FB` max-lines value. Precedence:
+ *   1. Explicit `fbMaxLines` arg (used by tests)
+ *   2. `localStorage.zpl_fb_max_lines` (runtime override in browsers)
+ *   3. DEFAULT_FB_MAX_LINES
+ * @param {number} [explicit]
+ * @returns {number}
+ */
+function resolveFbMaxLines(explicit) {
+  if (Number.isFinite(explicit) && explicit >= 1 && explicit <= 9999) {
+    return Math.floor(explicit);
+  }
+  try {
+    if (typeof localStorage !== 'undefined') {
+      const stored = localStorage.getItem('zpl_fb_max_lines');
+      if (stored != null) {
+        const n = parseInt(stored, 10);
+        if (Number.isFinite(n) && n >= 1 && n <= 9999) return n;
+      }
+    }
+  } catch {
+    // localStorage may throw in private mode / SSR — fall through to default
+  }
+  return DEFAULT_FB_MAX_LINES;
+}
 
 // ---------------------------------------------------------------------------
 // Coordinate helpers
@@ -92,18 +128,16 @@ function ptToDots(pt, dpi) {
  * @param {object} field
  * @param {string} value
  * @param {number} dpi
+ * @param {number} fbMaxLines  - ^FB max-lines parameter (1–9999)
  * @returns {string}
  */
-function renderText(field, value, dpi) {
+function renderText(field, value, dpi, fbMaxLines) {
   const x = mmToDots(field.position.x, dpi);
   const y = mmToDots(field.position.y, dpi);
   const fontH = ptToDots(field.fontSize ?? 10, dpi);
   const fieldW = Math.max(1, mmToDots(field.width ?? 50, dpi));
   const align = ALIGN_MAP[field.alignment] ?? 'L';
-  // ^FB max_lines set to ZPL's maximum (9999) so overflow text wraps below
-  // the designer box rather than being silently truncated. Keeping the field
-  // box large enough to contain wrapped lines is a template-design concern.
-  return `^FO${x},${y}^A0N,${fontH},${fontH}^FB${fieldW},9999,0,${align},0^FD${value}^FS`;
+  return `^FO${x},${y}^A0N,${fontH},${fontH}^FB${fieldW},${fbMaxLines},0,${align},0^FD${value}^FS`;
 }
 
 /**
@@ -214,16 +248,17 @@ function renderImage(field, value, dpi) {
  * @param {object} field
  * @param {string} value
  * @param {number} dpi
+ * @param {number} fbMaxLines
  * @returns {string}
  */
-function renderField(field, value, dpi) {
+function renderField(field, value, dpi, fbMaxLines) {
   if (IMAGE_TYPE_RE.test(field.type)) {
     return renderImage(field, value, dpi);
   }
   switch (field.type) {
     case 'text':
     case 'template_string':
-      return renderText(field, value, dpi);
+      return renderText(field, value, dpi, fbMaxLines);
     case 'qrcode':
       return renderQr(field, value, dpi);
     case 'code128':
@@ -253,11 +288,12 @@ function renderField(field, value, dpi) {
  * @param {number}   quantity
  * @param {number}   offsetXDots - horizontal offset in dots (^LS)
  * @param {number}   offsetYDots - vertical offset in dots (^LT)
+ * @param {number}   fbMaxLines  - ^FB max-lines parameter
  * @returns {string}
  */
-function renderPage(fields, inputValues, dpi, quantity, offsetXDots, offsetYDots) {
+function renderPage(fields, inputValues, dpi, quantity, offsetXDots, offsetYDots, fbMaxLines) {
   const fieldLines = fields
-    .map(f => renderField(f, inputValues[f.name] ?? '', dpi))
+    .map(f => renderField(f, inputValues[f.name] ?? '', dpi, fbMaxLines))
     .filter(Boolean);
   return `^XA\n^LH0,0\n^LT${offsetYDots}\n^LS${offsetXDots}\n${fieldLines.join('\n')}\n^PQ${quantity}\n^XZ`;
 }
@@ -276,13 +312,16 @@ function renderPage(fields, inputValues, dpi, quantity, offsetXDots, offsetYDots
  * @param {number}  [options.quantity=1] - ^PQ print quantity per label
  * @param {number}  [options.offsetX=0] - Horizontal calibration offset in mm (positive = shift right)
  * @param {number}  [options.offsetY=0] - Vertical calibration offset in mm (positive = shift down)
+ * @param {number}  [options.fbMaxLines] - Override ^FB max-lines (1–9999). Falls back to
+ *                                         localStorage `zpl_fb_max_lines`, then 9999.
  * @returns {string} ZPL string, one ^XA...^XZ block per template page, joined with newlines
  */
-export function generateZpl(template, inputs, { dpi = DEFAULT_DPI, quantity = 1, offsetX = 0, offsetY = 0 } = {}) {
+export function generateZpl(template, inputs, { dpi = DEFAULT_DPI, quantity = 1, offsetX = 0, offsetY = 0, fbMaxLines } = {}) {
   const offsetXDots = mmToDots(offsetX, dpi);
   const offsetYDots = mmToDots(offsetY, dpi);
+  const resolvedFbMaxLines = resolveFbMaxLines(fbMaxLines);
   const pages = schemasToV5(template.schemas);
   return pages
-    .map((fields, pageIndex) => renderPage(fields, inputs?.[pageIndex] ?? {}, dpi, quantity, offsetXDots, offsetYDots))
+    .map((fields, pageIndex) => renderPage(fields, inputs?.[pageIndex] ?? {}, dpi, quantity, offsetXDots, offsetYDots, resolvedFbMaxLines))
     .join('\n');
 }
