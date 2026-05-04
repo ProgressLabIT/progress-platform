@@ -1,12 +1,22 @@
 # lychee.toml
-# Phase 1 — declarative supplement to .github/workflows/lychee.yml CLI args.
-# CLI args remain authoritative for --include-fragments / --root-dir / --base
-# (CP-10 enforcement); this file captures excludes + retry tuning in code-review-able form.
+# Declarative config consumed by .github/workflows/lychee.yml.
+# Lychee scans docs/**/*.md (source markdown) for external URL liveness.
+# Internal /progress-platform/* paths are VitePress build artifacts, validated
+# at build time; lychee can't resolve them filesystem-side without running into
+# --root-dir / --base interaction bugs, so they're excluded here.
 
 # Exclude localhost variants so README dev-stack samples don't fail CI.
+# Also exclude self-referential progresslabit.github.io paths — VitePress validates
+# its own internal links at build time; lychee gets confused by the auto-generated
+# absolute-path chunks/assets in dist/ HTML.
 exclude = [
   "^https?://(?:localhost|127\\.0\\.0\\.1|progress\\.localhost)",
+  "^https?://progresslabit\\.github\\.io/",
 ]
+
+# Accept 403 from sites that bot-block lychee's UA (gitlab.com is the prime offender —
+# the repo URL works fine in a browser but returns 403 to scripted user-agents).
+accept = ["200..=299", "403"]
 
 # Tolerate private-network references (RFC 1918 etc.) without failing CI.
 exclude_all_private = true

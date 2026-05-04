@@ -23,32 +23,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
-      - name: Setup Node
-        uses: actions/setup-node@v6
-        with:
-          node-version: 20.19.0
-          cache: npm
-          cache-dependency-path: docs/package-lock.json
-
-      - name: Install
-        working-directory: docs
-        run: npm ci
-
-      - name: Build with VitePress
-        working-directory: docs
-        run: npm run docs:build
-
-      - name: lychee link check (anchor-aware)
+      - name: lychee link check (source markdown — external URLs only)
         uses: lycheeverse/lychee-action@v2
         with:
-          # Pitfall 1.4: --include-fragments enables hash-anchor validation
-          # CP-10: --root-dir + --base resolve internal /progress-platform/* against dist/
+          # Scope to source markdown only. VitePress validates internal links
+          # at build time; lychee here catches external/dead URLs in prose.
+          # Self-referential /progress-platform/... paths are excluded via
+          # lychee.toml since they're VitePress build-output artifacts, not
+          # author-written links.
           args: >-
             --no-progress
             --include-fragments
-            --root-dir "${{ github.workspace }}/docs/.vitepress/dist"
-            --base "https://progresslabit.github.io/progress-platform/"
             --config "${{ github.workspace }}/lychee.toml"
-            "docs/.vitepress/dist/**/*.html"
+            "docs/**/*.md"
           fail: true
           jobSummary: true
