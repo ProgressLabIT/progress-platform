@@ -12,6 +12,11 @@
 exclude = [
   "^https?://(?:localhost|127\\.0\\.0\\.1|progress\\.localhost)",
   "^https?://progresslabit\\.github\\.io/",
+  # Root-relative VitePress URL-contract paths — VitePress's own build validates
+  # these (it fails on dead internal links). Lychee can't reliably resolve
+  # `/api/` → `docs/api/index.md` because directory-to-index inference depends on
+  # serving conventions, not filesystem lookup.
+  "^/(?:|api|events|cli|users|admins)(?:/|$)",
 ]
 
 # Accept 403 from sites that bot-block lychee's UA (gitlab.com is the prime offender —
