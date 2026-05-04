@@ -34,6 +34,8 @@ jobs:
           args: >-
             --no-progress
             --include-fragments
+            --root-dir "${{ github.workspace }}/docs"
+            --exclude-path docs/node_modules
             --config "${{ github.workspace }}/lychee.toml"
             "docs/**/*.md"
           fail: true
