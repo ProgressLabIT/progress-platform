@@ -366,5 +366,31 @@ Do not make direct repo edits outside a GSD workflow unless the user explicitly 
 <!-- GSD:profile-end -->
 
 
-# Behavioral instructions
+## GSD → DEV Integration
+
+When integrating workstream commits from `GSD` (where workstream commits land) into `DEV` (project mainline / mirror source for GitHub Pages):
+
+**Always squash related changes into ONE commit on DEV.**
+
+- Do NOT cherry-pick GSD's atomic commits one-by-one — DEV's history is for ship-grained units, not WIP atoms.
+- Aggregate by phase / feature / fix scope, not by individual file edits.
+- Squash command pattern:
+  ```
+  git checkout DEV
+  git checkout GSD -- <paths>            # or: git diff DEV...GSD -- <paths> | git apply
+  git commit -m "<type>(<scope>): <one-line>"
+  ```
+  Or via reset-soft after a range cherry-pick:
+  ```
+  git cherry-pick -x <oldest>..<newest>  # if range is contiguous
+  git reset --soft <pre-pick-tip>
+  git commit -m "..."
+  ```
+- Commit message: short title + bullet body documenting what shipped. Reference "Squashed from N atomic commits on GSD" in the body if N > 5.
+- Atomic GSD commits remain visible on the GSD branch for forensics; DEV stays clean.
+
+**Why:** DEV drives the GitLab → GitHub mirror. GitHub viewers (and Dependabot, GitHub Releases auto-changelogs, anyone reading `git log DEV`) see one commit per phase, not 30 micro-commits. Atomic commits live on GSD where they belong (review, bisect, undo).
+
+**Behavioral instructions**
+
 - Do not add Claude as co-author of commits
