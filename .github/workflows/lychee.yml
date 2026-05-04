@@ -1,0 +1,54 @@
+# .github/workflows/lychee.yml
+name: lychee dead-link check
+
+on:
+  pull_request:
+    paths:
+      - 'docs/**'
+      - '.github/workflows/lychee.yml'
+      - 'lychee.toml'
+  push:
+    branches: [DEV]
+    paths:
+      - 'docs/**'
+      - 'lychee.toml'
+
+jobs:
+  linkChecker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10   # L-01: bound runaway link checks
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 20.19.0
+          cache: npm
+          cache-dependency-path: docs/package-lock.json
+
+      - name: Install
+        working-directory: docs
+        run: npm ci
+
+      - name: Build with VitePress
+        working-directory: docs
+        run: npm run docs:build
+
+      - name: lychee link check (anchor-aware)
+        uses: lycheeverse/lychee-action@v2
+        with:
+          # Pitfall 1.4: --include-fragments enables hash-anchor validation
+          # CP-10: --root-dir + --base resolve internal /progress-platform/* against dist/
+          args: >-
+            --no-progress
+            --include-fragments
+            --root-dir "${{ github.workspace }}/docs/.vitepress/dist"
+            --base "https://progresslabit.github.io/progress-platform/"
+            --config "${{ github.workspace }}/lychee.toml"
+            "docs/.vitepress/dist/**/*.html"
+          fail: true
+          jobSummary: true

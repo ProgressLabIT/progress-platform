@@ -1,0 +1,45 @@
+# .github/dependabot.yml
+# Supply-chain hardening per plan 01-03 threat model T-01-03-04.
+# Dependabot PRs land on the GitHub mirror; per CONTRIBUTING.md / D-15 the
+# maintainer applies the upgrade on GitLab DEV and the mirror picks it up.
+version: 2
+updates:
+  # Docs site npm dependencies
+  - package-ecosystem: "npm"
+    directory: "/docs"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "docs"
+    # M-02: vitepress + plugin-mermaid + openapi peer-couple on the VitePress
+    # major; group them so the three pinned packages bump as one PR.
+    groups:
+      vitepress:
+        patterns:
+          - "vitepress"
+          - "vitepress-*"
+          - "@mermaid-js/*"
+          - "mermaid"
+
+  # GitHub Actions in our workflows
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "ci"
+
+  # GitLab CI (informational; canonical CI is on GitLab — Dependabot
+  # surfaces advisories but a maintainer applies on the GitLab side).
+  - package-ecosystem: "gitlab-ci"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 3
+    labels:
+      - "dependencies"
+      - "ci"

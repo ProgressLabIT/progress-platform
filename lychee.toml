@@ -1,0 +1,20 @@
+# lychee.toml
+# Phase 1 — declarative supplement to .github/workflows/lychee.yml CLI args.
+# CLI args remain authoritative for --include-fragments / --root-dir / --base
+# (CP-10 enforcement); this file captures excludes + retry tuning in code-review-able form.
+
+# Exclude localhost variants so README dev-stack samples don't fail CI.
+exclude = [
+  "^https?://(?:localhost|127\\.0\\.0\\.1|progress\\.localhost)",
+]
+
+# Tolerate private-network references (RFC 1918 etc.) without failing CI.
+exclude_all_private = true
+
+# Cache to reduce upstream load on rerun.
+cache = true
+max_cache_age = "2d"
+
+# Retry tuning per init context — soak transient 5xx/rate-limits without false-failing.
+max_retries = 2
+retry_wait_time = 2

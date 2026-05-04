@@ -1,0 +1,22 @@
+{
+  "name": "@progresslab/progress-platform-docs",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "license": "Apache-2.0",
+  "engines": {
+    "node": "20.19.0"
+  },
+  "scripts": {
+    "docs:dev": "vitepress dev .",
+    "docs:build": "vitepress build .",
+    "docs:preview": "vitepress preview ."
+  },
+  "devDependencies": {
+    "vitepress": "1.6.4",
+    "vitepress-plugin-mermaid": "2.0.17",
+    "vitepress-openapi": "0.1.20",
+    "mermaid": "^11.14.0",
+    "@mermaid-js/layout-elk": "^0.2.1"
+  }
+}

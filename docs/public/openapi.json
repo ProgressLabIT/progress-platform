@@ -1,0 +1,9 @@
+{
+  "openapi": "3.0.4",
+  "info": {
+    "title": "Progress Platform API",
+    "version": "0.0.0-placeholder",
+    "description": "Placeholder — populated in Phase 2 from `scripts/export_openapi.py`."
+  },
+  "paths": {}
+}
