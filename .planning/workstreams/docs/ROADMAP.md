@@ -85,7 +85,17 @@ The four phases below are the smallest cut that gets us there. Phase 1 is the sc
 4. The top ~10 critical events (selection coordinated with the Sparkplug demo workstream and the production critical-path: `JobStartedEvent`, `StepCompletedEvent`, `BatchCompletedEvent`, `JobClosedEvent`, `MovementCompletedEvent`, `CountSessionAppliedEvent`, `SerialCreatedEvent`, `IssueCreatedEvent`, plus 2 more selected jointly) each have a hand-crafted Mermaid `sequenceDiagram` rendering in production with: a `rect` highlighting the ArangoDB transaction boundary (`pre_processing` + `apply` + `store_event`), a `Note` marking `commit_transaction`, post-commit arrows for NATS publish and fan-out children. Diagrams with >20 nodes use `defaultRenderer: elk`; `BatchCompletedEvent`-class fan-outs are decomposed into multiple diagrams on the same page.
 5. Cross-tab navigation works both directions: from any API endpoint page, "Emits:" links jump to the corresponding event page; from any event page, "Triggered by:" links jump back to the endpoint(s) that create the event; `tags_metadata` in `backend/api/main.py` provides `externalDocs` deep links into `/events/<domain>/`; events reference cross-links to NATS subjects from Sparkplug demo ADR-0002 where applicable.
 
-**Plans**: TBD
+**Plans**: 9 plans across 5 waves
+
+- [ ] `02-01-PLAN.md` — CONVENTIONS.md §2 prompt scaffold + endpoint/event template files (D-11; plan-step-1 forcing function for all later sweeps)
+- [ ] `02-02-PLAN.md` — `scripts/export_openapi.py` + `scripts/extract_events.py` + `.vacuum.yaml` + deploy-docs.yml CI wiring (API-05, API-08, EVT-01)
+- [ ] `02-03-PLAN.md` — Production endpoint sweep + main.py tags_metadata (API-01..04, webinar-critical domain)
+- [ ] `02-04-PLAN.md` — Warehouse + Serial + Traceability endpoint sweep (API-01..03)
+- [ ] `02-05-PLAN.md` — Process + Product + Quality endpoint sweep (API-01..03)
+- [ ] `02-06-PLAN.md` — Security + Admin + Org + Misc endpoint sweep (API-01..03)
+- [ ] `02-07-PLAN.md` — vitepress-openapi page rendering + /api/ sidebar wiring + cross-links (API-06, API-07)
+- [ ] `02-08-PLAN.md` — Events index + EVT-04 individual pages for all concrete events + /events/ sidebar (EVT-01, EVT-04, EVT-06)
+- [ ] `02-09-PLAN.md` — Top-10 hand-crafted Mermaid sequence diagrams + fan-out decomposition page (EVT-02, EVT-03, EVT-05, EVT-06)
 
 **UI hint**: no
 
@@ -113,7 +123,13 @@ The four phases below are the smallest cut that gets us there. Phase 1 is the sc
 3. A visitor opening `/admins/deployment/` sees the Docker Compose stack overview (volumes, secrets, Traefik), `/admins/configuration/` lists every `PROGRESS_*` env var from `backend/api/utils/config.py` with type, default, and description (auto-extracted from the Pydantic settings model), `/admins/integrations/` covers NATS subject taxonomy + Sparkplug bridge HTTP read API + OpenAPI consumer notes (codegen pointers cross-linking into the API reference), `/admins/operations/` covers health checks, log locations, and `progress tap` as a diagnostic command.
 4. A non-author human-curation pass has reviewed every page in `/cli/`, `/users/`, `/admins/` (curation gate per Pitfall 5.4); pages that didn't survive curation are explicitly marked "Coming soon" rather than shipped as un-reviewed AI prose. The same drafting prompt template (per Pitfall 5.3, encoded in CONVENTIONS.md) was used across all three sections.
 
-**Plans**: TBD
+**Plans**: 5 plans across 2 waves
+
+- [ ] `03-01-PLAN.md` — scripts/extract_config.py + CLI-04 test harness scaffold + CONVENTIONS.md §7/§8 (CLI-04, ADM-02) [Wave 1, has checkpoint]
+- [ ] `03-02-PLAN.md` — CLI reference pages /cli/init/, /cli/restore/, /cli/tap/ (CLI-01, CLI-02, CLI-03, CLI-04) [Wave 2]
+- [ ] `03-03-PLAN.md` — L2 user walkthroughs main app modules: overview, production, inventory, counting, user-hub, coverage (USER-01, USER-02, USER-03, USER-04, USER-05, USER-07) [Wave 2]
+- [ ] `03-04-PLAN.md` — Warehouse SPA walkthrough (USER-06) [Wave 2]
+- [ ] `03-05-PLAN.md` — Admin/integrator docs: deployment, configuration shell, integration, operations + /admins/ sidebar (ADM-01, ADM-03, ADM-04) [Wave 2]
 
 **UI hint**: no
 
@@ -141,7 +157,10 @@ The four phases below are the smallest cut that gets us there. Phase 1 is the sc
 3. A fresh-VM rehearsal on May 14 confirms the README "5-minute" `progress init` quickstart works end-to-end against the public mirror — same script the Sparkplug demo S5 session is rehearsing for the webinar; the asciinema/SVG recording is committed and embedded in the README.
 4. By the time the webinar opens 10:00 May 15, the docs site has been smoke-tested by a non-author against this checklist: dark-mode toggle works on Mermaid diagrams without flashbang; `vitepress-openapi` operations render with examples on the three "highlight" endpoints picked for the demo; the `/events/<top-10>` pages render their sequence diagrams without console errors; local search returns hits for "create work order", "Sparkplug", "progress init"; mobile-Safari rendering is acceptable on a phone.
 
-**Plans**: TBD
+**Plans**: 2 plans across 2 waves
+
+- [ ] `04-01-PLAN.md` — LAUNCH-CHECKLIST.md (MIR-08, SITE-11) [Wave 1]
+- [ ] `04-02-PLAN.md` — README re-lock-ready structure + asciinema recording slot + CI cast existence check (MIR-08, SITE-11) [Wave 2]
 
 **UI hint**: no
 
@@ -186,9 +205,9 @@ See [`REQUIREMENTS.md`](REQUIREMENTS.md) `## v2 Requirements` and `## Out of Sco
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Scaffold & Public Foundation | 3 / 3 | Plan files complete; live-deploy verification pending maintainer mirror push | — (live verify pending) |
-| 2. Code-Grounded Reference | 0 / TBD | Not started | — |
+| 2. Code-Grounded Reference | 0 / 9 | Plan files complete; ready for execution | — |
 | 3. Human-Facing Content | 0 / TBD | Not started | — |
-| 4. Launch Readiness | 0 / TBD | Not started | — |
+| 4. Launch Readiness | 1 / 2 | Plan 04-01 complete (LAUNCH-CHECKLIST.md staged); 04-02 next | — |
 
 ---
 

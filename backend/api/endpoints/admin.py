@@ -41,9 +41,29 @@ def clean_dir(path):
  if os.path.isdir(path):
       shutil.rmtree(path)
 
-@router.delete('/reset/prod',
-    dependencies=[Depends(auth.verify_token)])
+@router.delete(
+  '/reset/prod',
+  response_model=APIResponse,
+  responses={
+    500: {"description": "Transaction or filesystem error during truncation"},
+  },
+  dependencies=[Depends(auth.verify_token)],
+)
 async def reset_production_and_traceability_data():
+  """Truncate all production and traceability collections.
+
+  Deletes every document from the traceability collections (Batch, Job,
+  WorkOrder, Event, Serial, Issue, etc.) within a single ArangoDB transaction,
+  then re-inserts a clean site Queue document and removes media sub-directories
+  (`serial`, `traceability`, `issue`) from the `/media` volume.
+
+  **WARNING:** This operation is irreversible. Use only in development or
+  controlled staging environments.
+
+  **Emits:** *(direct transaction — no event class)*
+
+  **Required scope:** `admin:operation:reset-prod`
+  """
   # TODO: Delete also all files linked to StepExecutionData
 
   try:
@@ -80,9 +100,25 @@ async def get_work_order_jobs(work_order_key):
   return [j['_key'] for j in cursor]
 
 
-@router.delete('/reset/inventory',
-    dependencies=[Depends(auth.verify_token)])
+@router.delete(
+  '/reset/inventory',
+  response_model=APIResponse,
+  responses={
+    500: {"description": "Database error while truncating inventory collections"},
+  },
+  dependencies=[Depends(auth.verify_token)],
+)
 async def reset_warehouse_data():
+  """Truncate inventory movement data.
+
+  Deletes all records from `movement` and `MovementList` collections, then
+  removes all `is_in_position` edges whose `_from` vertex is a `Product`
+  document. Position-definition documents (locations, bins) are preserved.
+
+  **Emits:** *(direct transaction — no event class)*
+
+  **Required scope:** `admin:operation:reset-inventory`
+  """
   try:
     for c in ['movement', 'MovementList']:
       db.collection(c).truncate()
@@ -101,9 +137,28 @@ async def reset_warehouse_data():
     )
 
 
-@router.delete('/force-delete-work-order/{work_order_key}',
-    dependencies=[Depends(auth.verify_token)])
+@router.delete(
+  '/force-delete-work-order/{work_order_key}',
+  response_model=APIResponse,
+  responses={
+    404: {"description": "WorkOrder with the given key does not exist"},
+    500: {"description": "Transaction error during cascade deletion"},
+  },
+  dependencies=[Depends(auth.verify_token)],
+)
 async def force_delete_work_order_data(work_order_key: str):
+  """Permanently delete a work order and all related traceability data.
+
+  Cascades through Job, Batch, StepExecutionData, WorkSession, Event,
+  batch_serial, contains, wip and issue_rel records linked to the given
+  work order key. Removes the work order from the site Queue. This is a
+  hard delete — no audit trail is preserved. Use only when a work order
+  was created in error.
+
+  **Emits:** *(direct transaction — no event class)*
+
+  **Required scope:** `admin:operation:force-delete-work-order`
+  """
 
   # Check if the work order actually exists
   if not db.collection('WorkOrder').has(work_order_key):
@@ -188,7 +243,6 @@ async def force_delete_work_order_data(work_order_key: str):
   except Exception:
     tx.abort_transaction()
     raise HTTPException(status_code=500, detail=traceback.format_exc())
-
 
 
 

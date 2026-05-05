@@ -6,6 +6,15 @@ on:
     branches: [DEV]
     paths:
       - 'docs/**'
+      - 'backend/api/endpoints/**'
+      - 'backend/api/events/**'
+      - 'backend/api/models/**'
+      - 'backend/api/main.py'
+      - 'backend/api/utils/config.py'
+      - 'cli/**'
+      - 'scripts/**'
+      - 'tests/cli/**'
+      - '.vacuum.yaml'
       - '.github/workflows/deploy-docs.yml'
   workflow_dispatch:
 
@@ -32,6 +41,42 @@ jobs:
         with:
           fetch-depth: 0   # CP-9: VitePress lastUpdated needs full git history
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install backend dependencies
+        run: pip install -r backend/api/requirements.txt
+        working-directory: ${{ github.workspace }}
+
+      - name: Export OpenAPI schema (build-time introspection — no live app)
+        run: python scripts/export_openapi.py
+        working-directory: ${{ github.workspace }}
+
+      - name: Extract event metadata (AST parse — no backend imports)
+        run: python scripts/extract_events.py
+        working-directory: ${{ github.workspace }}
+
+      - name: Extract config metadata (AST parse — no backend imports)
+        run: python scripts/extract_config.py
+        working-directory: ${{ github.workspace }}
+
+      - name: Check install.cast recording exists (warn if absent — recording produced at May 14 rehearsal)
+        run: |
+          if [ ! -s docs/public/recordings/install.cast ]; then
+            echo "::warning file=docs/public/recordings/install.cast::install.cast is absent or empty. Run LAUNCH-CHECKLIST.md §3 (cloud-VM rehearsal) to capture and commit the recording before May 15."
+          fi
+        working-directory: ${{ github.workspace }}
+
+      - name: Install pytest + typer for CLI drift gate
+        run: pip install pytest typer
+        working-directory: ${{ github.workspace }}
+
+      - name: Validate CLI --help against doc snapshots (CLI-04 drift gate)
+        run: pytest tests/cli/ -x
+        working-directory: ${{ github.workspace }}
+
       - name: Setup Node
         uses: actions/setup-node@v6
         with:
@@ -55,6 +100,17 @@ jobs:
 
       - name: Build with VitePress
         run: npm run docs:build
+
+      - name: Install vacuum (descriptions-only OpenAPI lint gate — D-04)
+        run: |
+          VACUUM_VERSION=$(curl -s https://api.github.com/repos/daveshanley/vacuum/releases/latest | grep '"tag_name"' | cut -d'"' -f4)
+          curl -fsSL "https://github.com/daveshanley/vacuum/releases/download/${VACUUM_VERSION}/vacuum_Linux_x86_64.tar.gz" | tar xz
+          sudo mv vacuum /usr/local/bin/vacuum
+        working-directory: ${{ github.workspace }}
+
+      - name: Lint OpenAPI schema (vacuum)
+        run: vacuum lint docs/public/openapi.json --ruleset .vacuum.yaml --fail-severity error
+        working-directory: ${{ github.workspace }}
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

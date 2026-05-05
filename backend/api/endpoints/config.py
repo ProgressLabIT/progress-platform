@@ -12,8 +12,24 @@ from utils import auth
 
 router = APIRouter()
 
-@router.get('/config')
+@router.get(
+  '/config',
+  response_model=APIResponse,
+  responses={
+    500: {"description": "Database error while reading Config collection"},
+  },
+)
 def get_config():
+  """Return all platform configuration values.
+
+  Reads every document from the `Config` collection and flattens them into
+  a single JSON object keyed by `_key`. Simple scalar values (str, int, bool)
+  are unwrapped from their `value` wrapper field; dict values are returned as-is.
+
+  **Emits:** *(direct transaction — no event class)*
+
+  **Required scope:** *(public — no auth)*
+  """
   try:
     configurations = db.collection('Config').all()
     result = dict()
@@ -29,9 +45,27 @@ def get_config():
   except:
     raise HTTPError(500, "Failed to retrieve config")
 
-@router.patch('/config',
-    dependencies=[Depends(auth.verify_token)])
+@router.patch(
+  '/config',
+  response_model=APIResponse,
+  responses={
+    500: {"description": "Transaction error while upserting Config documents"},
+  },
+  dependencies=[Depends(auth.verify_token)],
+)
 def update_config(config: dict):
+  """Upsert one or more platform configuration entries.
+
+  Accepts a flat JSON object where each key maps to a config entry `_key`.
+  Missing keys with known defaults are reset to their default values.
+  Passing `null` for an unknown key is a no-op. If `allow_independent_reordering_of_job_queues`
+  is set to `false`, all operator queues with `independent=true` are
+  synchronously reverted and job queues are reordered.
+
+  **Emits:** *(direct transaction — no event class)*
+
+  **Required scope:** `admin:config:write`
+  """
 
   default_values = {
     'default_production_position': 'IN',
@@ -94,9 +128,26 @@ def update_config(config: dict):
     tx.abort_transaction()
     raise HTTPError(500, "Failed to update config")
 
-@router.put('/config/{key}/file',
-    dependencies=[Depends(auth.verify_token)])
+@router.put(
+  '/config/{key}/file',
+  response_model=APIResponse,
+  responses={
+    500: {"description": "Filesystem or database error while replacing the config file"},
+  },
+  dependencies=[Depends(auth.verify_token)],
+)
 def update_config_file(key: str, file: UploadFile | None = None):
+  """Upload or remove a file-backed configuration entry.
+
+  Stores the uploaded file at `{media_root}/config/{key}/{filename}` and
+  updates the `Config` document's `value` field with the resulting path.
+  If `file` is omitted, the existing file is deleted and `value` is set to
+  `null`. Replaces any previously stored file for the same key.
+
+  **Emits:** *(direct transaction — no event class)*
+
+  **Required scope:** `admin:config:write`
+  """
   try:
     config = db.collection('Config').get(key)
     if not config:

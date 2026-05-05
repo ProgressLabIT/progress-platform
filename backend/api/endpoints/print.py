@@ -19,12 +19,33 @@ router = APIRouter()
 
 
 # Fetch Print Templates
-@router.get('/print-template', dependencies=[Depends(auth.verify_token)])
+@router.get('/print-template',
+    response_model=list,
+    responses={500: {"description": "Database query error"}},
+    dependencies=[Depends(auth.verify_token)])
 async def find_print_templates(
   context: TemplateAssignmentContext | None = None,
   context_key: str | None = None,
 ):
-  """Fetch a specific template with full specs or a list of template without basePdf"""
+  """List print templates, optionally scoped to a specific entity context.
+
+  When called without parameters, returns all `PrintTemplate` documents with
+  their name, description, and `entities` count (number of `can_use_print_template`
+  edges pointing to each template), sorted by name.
+
+  When `context='template'`, returns the matching template by `context_key`.
+
+  When `context` is any other entity type (`product`, `phase`, `step`,
+  `issue_type`, `task_type`, `position`), returns only templates assigned to
+  the entity identified by `context_key` via `can_use_print_template` edges.
+
+  Note: full template `basePdf` and `schemas` data are not included in list
+  responses — use `GET /print-template/{template_key}` for full details.
+
+  **Emits:** *(direct query — no event class)*
+
+  **Required scope:** `quality:print-template:read`
+  """
   if context is None:
     cursor = db.aql.execute(
       """
@@ -88,16 +109,43 @@ async def find_print_templates(
 
 
 @router.get('/print-template/{template_key}',
+    response_model=dict,
+    responses={
+      404: {"description": "Print template not found"},
+      500: {"description": "Template preprocessing error"},
+    },
     dependencies=[Depends(auth.verify_token)])
 async def get_print_template_details(template_key: str):
+  """Retrieve full details for a single print template, including basePdf and schemas.
+
+  Returns the `PrintTemplate` document preprocessed for client use
+  (e.g. base64 encoding of embedded PDF data). Use this endpoint when the
+  template editor or print renderer needs the complete template definition.
+
+  **Emits:** *(direct query — no event class)*
+
+  **Required scope:** `quality:print-template:read`
+  """
   template = db.collection('PrintTemplate').get(template_key)
   return preprocess_template(template)
 
 
 # Create PrintTemplate
 @router.post('/print-template',
+    response_model=APIResponse,
+    responses={500: {"description": "Database insert error"}},
     dependencies=[Depends(auth.verify_token)])
 async def create_print_template(template_data: PrintTemplateRecord):
+  """Create a new print template.
+
+  Inserts a `PrintTemplate` document containing the pdfme template definition
+  (basePdf, schemas, sampledata). Returns the new template's `_key` in the
+  response detail.
+
+  **Emits:** *(direct transaction — no event class)*
+
+  **Required scope:** `quality:print-template:create`
+  """
   try:
     resp = db.collection('PrintTemplate').insert(template_data)
     return APIResponse(
@@ -120,8 +168,19 @@ async def create_print_template(template_data: PrintTemplateRecord):
 
 # Update Print Template
 @router.put('/print-template',
+    response_model=APIResponse,
+    responses={500: {"description": "Database update error"}},
     dependencies=[Depends(auth.verify_token)])
 async def update_print_template(template_data: PrintTemplateRecord):
+  """Replace a print template's definition.
+
+  Performs a full document update of the `PrintTemplate` identified by
+  `template_data._key`. All fields are replaced with the supplied values.
+
+  **Emits:** *(direct transaction — no event class)*
+
+  **Required scope:** `quality:print-template:create`
+  """
   try:
     update = template_data.dict(by_alias=True)
     resp = db.collection('PrintTemplate').update(update)
@@ -145,9 +204,19 @@ async def update_print_template(template_data: PrintTemplateRecord):
 
 # Delete Print Template
 @router.delete('/print-template/{template_key}',
+    response_model=APIResponse,
+    responses={500: {"description": "Database delete or edge cleanup error"}},
     dependencies=[Depends(auth.verify_token)])
 async def delete_print_template(template_key: str):
-  """Delete template and linked"""
+  """Delete a print template and all its entity assignment edges.
+
+  Removes the `PrintTemplate` document and all `can_use_print_template` edges
+  that reference it, within a single transaction.
+
+  **Emits:** *(direct transaction — no event class)*
+
+  **Required scope:** `quality:print-template:create`
+  """
   try:
     tx = db.begin_transaction(write=['PrintTemplate', 'can_use_print_template'])
 
@@ -163,8 +232,23 @@ async def delete_print_template(template_key: str):
 
 
 @router.post('/update-template-assignments',
+    response_model=APIResponse,
+    responses={500: {"description": "Transaction error updating assignment edges"}},
     dependencies=[Depends(auth.verify_token)])
 async def update_template_assignments(updates: list[TemplateAssignmentUpdate]):
+  """Batch add or remove print template assignments to/from entities.
+
+  Applies a list of `TemplateAssignmentUpdate` operations atomically:
+  - `type='add'`: inserts a `can_use_print_template` edge from the entity to the template.
+  - `type='remove'`: deletes the matching edge.
+
+  Used by the template assignment UI to wire templates to products, phases,
+  steps, issue types, task types, or positions in a single round-trip.
+
+  **Emits:** *(direct transaction — no event class)*
+
+  **Required scope:** `quality:print-template:create`
+  """
 
   try:
     tx = db.begin_transaction(write=['can_use_print_template'])
@@ -198,36 +282,57 @@ async def update_template_assignments(updates: list[TemplateAssignmentUpdate]):
 
 # Print Job Endpoint — NATS Request/Reply
 
-@router.post('/print-job', dependencies=[Depends(auth.verify_token)])
+@router.post('/print-job',
+    response_model=dict,
+    responses={
+      200: {"description": "Print job result — check 'ok' field; may be false if the print service is unavailable or timed out"},
+    },
+    dependencies=[Depends(auth.verify_token)])
 async def create_print_job(job: PrintJobRequest):
-    subject = f"progress.print.jobs.{job.printer_key}"
+  """Dispatch a print job to a printer via NATS request/reply.
 
-    payload = job.model_dump()
-    payload["format"] = job.format.value
+  Publishes a print job payload to `progress.print.jobs.{printer_key}` and
+  waits for a response from the print service worker. The timeout scales with
+  `job.copies` to accommodate multi-copy jobs.
 
-    base_timeout = job.timeout_seconds or 5
-    nats_timeout = (base_timeout * max(job.copies, 1)) + 5
+  Returns a result dict with `ok: true` on success. On failure, `ok` is false
+  and `error` contains one of: `no_service`, `timeout`, or `internal`.
 
-    logger.info(f"NATS request to {subject} (timeout={nats_timeout}s)")
-    try:
-        response_data = await nats_request(subject, json.dumps(payload), timeout=nats_timeout)
-        result = json.loads(response_data)
-        logger.info(f"Print job result on {subject}: ok={result.get('ok')}")
-    except NoRespondersError:
-        logger.warning(f"No print service listening on {subject}")
-        result = {"ok": False, "error": "no_service", "detail": "Print service is not running"}
-    except TimeoutError:
-        result = {"ok": False, "error": "timeout", "detail": "Print service did not respond"}
-    except Exception as e:
-        logger.error(f"Print job NATS error: {e}")
-        result = {"ok": False, "error": "internal", "detail": str(e)}
+  On successful print, publishes a `PRINT_JOB_COMPLETED` notification on the
+  `production` NATS subject.
 
-    if result.get("ok"):
-        notification = {
-            "subtopic": "production",
-            "notification": "PRINT_JOB_COMPLETED",
-        }
-        subject = subtopic_to_subject("production")
-        publish_sync(subject, json.dumps(notification))
+  **Emits:** *(NATS publish — `progress.print.jobs.{printer_key}`)*
 
-    return result
+  **Required scope:** `quality:print-template:read`
+  """
+  subject = f"progress.print.jobs.{job.printer_key}"
+
+  payload = job.model_dump()
+  payload["format"] = job.format.value
+
+  base_timeout = job.timeout_seconds or 5
+  nats_timeout = (base_timeout * max(job.copies, 1)) + 5
+
+  logger.info(f"NATS request to {subject} (timeout={nats_timeout}s)")
+  try:
+      response_data = await nats_request(subject, json.dumps(payload), timeout=nats_timeout)
+      result = json.loads(response_data)
+      logger.info(f"Print job result on {subject}: ok={result.get('ok')}")
+  except NoRespondersError:
+      logger.warning(f"No print service listening on {subject}")
+      result = {"ok": False, "error": "no_service", "detail": "Print service is not running"}
+  except TimeoutError:
+      result = {"ok": False, "error": "timeout", "detail": "Print service did not respond"}
+  except Exception as e:
+      logger.error(f"Print job NATS error: {e}")
+      result = {"ok": False, "error": "internal", "detail": str(e)}
+
+  if result.get("ok"):
+      notification = {
+          "subtopic": "production",
+          "notification": "PRINT_JOB_COMPLETED",
+      }
+      subject = subtopic_to_subject("production")
+      publish_sync(subject, json.dumps(notification))
+
+  return result

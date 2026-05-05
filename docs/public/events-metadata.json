@@ -1,0 +1,1589 @@
+[
+  {
+    "class_name": "ExtraUpdateRequestedEvent",
+    "file": "backend/api/events/admin/extra_update_requested.py",
+    "domain": "admin",
+    "event_type": "EXTRA_UPDATE_REQUESTED",
+    "tx_collections": [
+      "Job",
+      "WorkOrder"
+    ],
+    "info_model_fields": [
+      {
+        "name": "entity_type",
+        "type": "Literal['job', 'work_order']"
+      },
+      {
+        "name": "entity_key",
+        "type": "str"
+      },
+      {
+        "name": "extra_data",
+        "type": "Any"
+      },
+      {
+        "name": "job_key",
+        "type": "str | None"
+      },
+      {
+        "name": "work_order_key",
+        "type": "str | None"
+      }
+    ],
+    "notification_subtopic": null
+  },
+  {
+    "class_name": "IssueClosedEvent",
+    "file": "backend/api/events/collaboration/issue_closed.py",
+    "domain": "collaboration",
+    "event_type": "ISSUE_CLOSED",
+    "tx_collections": null,
+    "info_model_fields": [],
+    "notification_subtopic": null
+  },
+  {
+    "class_name": "IssueCreatedEvent",
+    "file": "backend/api/events/collaboration/issue_created.py",
+    "domain": "collaboration",
+    "event_type": "ISSUE_CREATED",
+    "tx_collections": null,
+    "info_model_fields": [],
+    "notification_subtopic": null
+  },
+  {
+    "class_name": "IssueDeletedEvent",
+    "file": "backend/api/events/collaboration/issue_deleted.py",
+    "domain": "collaboration",
+    "event_type": "ISSUE_DELETED",
+    "tx_collections": null,
+    "info_model_fields": [],
+    "notification_subtopic": null
+  },
+  {
+    "class_name": "IssueReopenedEvent",
+    "file": "backend/api/events/collaboration/issue_reopened.py",
+    "domain": "collaboration",
+    "event_type": "ISSUE_REOPENED",
+    "tx_collections": null,
+    "info_model_fields": [],
+    "notification_subtopic": null
+  },
+  {
+    "class_name": "IssueUpdatedEvent",
+    "file": "backend/api/events/collaboration/issue_updated.py",
+    "domain": "collaboration",
+    "event_type": "ISSUE_UPDATED",
+    "tx_collections": null,
+    "info_model_fields": [],
+    "notification_subtopic": null
+  },
+  {
+    "class_name": "MessageDeletedEvent",
+    "file": "backend/api/events/collaboration/message_deleted.py",
+    "domain": "collaboration",
+    "event_type": "MESSAGE_DELETED",
+    "tx_collections": null,
+    "info_model_fields": [
+      {
+        "name": "message_key",
+        "type": "str"
+      }
+    ],
+    "notification_subtopic": null
+  },
+  {
+    "class_name": "MessagePostedEvent",
+    "file": "backend/api/events/collaboration/message_posted.py",
+    "domain": "collaboration",
+    "event_type": "MESSAGE_POSTED",
+    "tx_collections": null,
+    "info_model_fields": [
+      {
+        "name": "sender",
+        "type": "str"
+      },
+      {
+        "name": "recipient",
+        "type": "str"
+      },
+      {
+        "name": "content",
+        "type": "str"
+      },
+      {
+        "name": "message_key",
+        "type": "str | None"
+      }
+    ],
+    "notification_subtopic": null
+  },
+  {
+    "class_name": "MessageUpdatedEvent",
+    "file": "backend/api/events/collaboration/message_updated.py",
+    "domain": "collaboration",
+    "event_type": "MESSAGE_UPDATED",
+    "tx_collections": null,
+    "info_model_fields": [
+      {
+        "name": "message_key",
+        "type": "str"
+      },
+      {
+        "name": "content",
+        "type": "str"
+      }
+    ],
+    "notification_subtopic": null
+  },
+  {
+    "class_name": "TaskCanceledEvent",
+    "file": "backend/api/events/collaboration/task_canceled.py",
+    "domain": "collaboration",
+    "event_type": "TASK_CANCELED",
+    "tx_collections": [
+      "Task"
+    ],
+    "info_model_fields": [
+      {
+        "name": "task_key",
+        "type": "str"
+      },
+      {
+        "name": "reason",
+        "type": "str | None"
+      }
+    ],
+    "notification_subtopic": null
+  },
+  {
+    "class_name": "TaskCompletedEvent",
+    "file": "backend/api/events/collaboration/task_completed.py",
+    "domain": "collaboration",
+    "event_type": "TASK_COMPLETED",
+    "tx_collections": [
+      "Task"
+    ],
+    "info_model_fields": [
+      {
+        "name": "task_key",
+        "type": "str"
+      },
+      {
+        "name": "closed",
+        "type": "datetime | None"
+      },
+      {
+        "name": "closed_by",
+        "type": "str | None"
+      }
+    ],
+    "notification_subtopic": null
+  },
+  {
+    "class_name": "TaskCreatedEvent",
+    "file": "backend/api/events/collaboration/task_created.py",
+    "domain": "collaboration",
+    "event_type": "TASK_CREATED",
+    "tx_collections": [
+      "Task",
+      "Counter"
+    ],
+    "info_model_fields": [
+      {
+        "name": "task_key",
+        "type": "str | None"
+      },
+      {
+        "name": "task_type_key",
+        "type": "str"
+      },
+      {
+        "name": "code",
+        "type": "str | None"
+      },
+      {
+        "name": "title",
+        "type": "str | None"
+      },
+      {
+        "name": "description",
+        "type": "str | None"
+      },
+      {
+        "name": "assigned_to",
+        "type": "list[TaskAssignment] | None"
+      },
+      {
+        "name": "start_from",
+        "type": "date | None"
+      },
+      {
+        "name": "due_by",
+        "type": "date | None"
+      },
+      {
+        "name": "created",
+        "type": "datetime | None"
+      },
+      {
+        "name": "created_by",
+        "type": "str | None"
+      },
+      {
+        "name": "extra",
+        "type": "Any | None"
+      }
+    ],
+    "notification_subtopic": null
+  },
+  {
+    "class_name": "TaskLinkedEvent",
+    "file": "backend/api/events/collaboration/task_linked.py",
+    "domain": "collaboration",
+    "event_type": "TASK_LINKED",
+    "tx_collections": [
+      "task_rel"
+    ],
+    "info_model_fields": [
+      {
+        "name": "task_key",
+        "type": "str"
+      },
+      {
+        "name": "link_type",
+        "type": "Literal['issue', 'work_order', 'product', 'serial', 'task']"
+      },
+      {
+        "name": "link_key",
+        "type": "str"
+      }
+    ],
+    "notification_subtopic": null
+  },
+  {
+    "class_name": "TaskReopenedEvent",
+    "file": "backend/api/events/collaboration/task_reopened.py",
+    "domain": "collaboration",
+    "event_type": "TASK_REOPENED",
+    "tx_collections": [
+      "Task"
+    ],
+    "info_model_fields": [
+      {
+        "name": "task_key",
+        "type": "str"
+      }
+    ],
+    "notification_subtopic": null
+  },
+  {
+    "class_name": "TaskSuspendedEvent",
+    "file": "backend/api/events/collaboration/task_suspended.py",
+    "domain": "collaboration",
+    "event_type": "TASK_SUSPENDED",
+    "tx_collections": [
+      "Task"
+    ],
+    "info_model_fields": [
+      {
+        "name": "task_key",
+        "type": "str"
+      }
+    ],
+    "notification_subtopic": null
+  },
+  {
+    "class_name": "TaskUnlinkedEvent",
+    "file": "backend/api/events/collaboration/task_unlinked.py",
+    "domain": "collaboration",
+    "event_type": "TASK_UNLINKED",
+    "tx_collections": [
+      "task_rel"
+    ],
+    "info_model_fields": [
+      {
+        "name": "task_key",
+        "type": "str"
+      },
+      {
+        "name": "link_type",
+        "type": "str"
+      },
+      {
+        "name": "link_key",
+        "type": "str"
+      }
+    ],
+    "notification_subtopic": null
+  },
+  {
+    "class_name": "TaskUpdatedEvent",
+    "file": "backend/api/events/collaboration/task_updated.py",
+    "domain": "collaboration",
+    "event_type": "TASK_UPDATED",
+    "tx_collections": [
+      "Task"
+    ],
+    "info_model_fields": [
+      {
+        "name": "task_key",
+        "type": "str"
+      },
+      {
+        "name": "title",
+        "type": "str | None"
+      },
+      {
+        "name": "description",
+        "type": "str | None"
+      },
+      {
+        "name": "assigned_to",
+        "type": "list[TaskAssignment] | None"
+      },
+      {
+        "name": "start_from",
+        "type": "date | None"
+      },
+      {
+        "name": "due_by",
+        "type": "date | None"
+      },
+      {
+        "name": "form_fields",
+        "type": "list[TaskFieldUpdate] | None"
+      }
+    ],
+    "notification_subtopic": null
+  },
+  {
+    "class_name": "AssignmentCompletedEvent",
+    "file": "backend/api/events/inventory/assignment_completed.py",
+    "domain": "inventory",
+    "event_type": "ASSIGNMENT_COMPLETED",
+    "tx_collections": [],
+    "info_model_fields": [
+      {
+        "name": "assignment_key",
+        "type": "str"
+      }
+    ],
+    "notification_subtopic": null
+  },
+  {
+    "class_name": "AssignmentStartedEvent",
+    "file": "backend/api/events/inventory/assignment_started.py",
+    "domain": "inventory",
+    "event_type": "ASSIGNMENT_STARTED",
+    "tx_collections": [],
+    "info_model_fields": [
+      {
+        "name": "assignment_key",
+        "type": "str"
+      }
+    ],
+    "notification_subtopic": null
+  },
+  {
+    "class_name": "CountAppliedEvent",
+    "file": "backend/api/events/inventory/count_applied.py",
+    "domain": "inventory",
+    "event_type": "COUNT_APPLIED",
+    "tx_collections": [
+      "inventory_count_record",
+      "Product",
+      "MovementList",
+      "movement",
+      "Serial",
+      "is_in_position"
+    ],
+    "info_model_fields": [
+      {
+        "name": "count_record_key",
+        "type": "str"
+      },
+      {
+        "name": "movement_list_key",
+        "type": "str"
+      },
+      {
+        "name": "inventory_count_session_key",
+        "type": "str"
+      }
+    ],
+    "notification_subtopic": null
+  },
+  {
+    "class_name": "CountCanceledEvent",
+    "file": "backend/api/events/inventory/count_canceled.py",
+    "domain": "inventory",
+    "event_type": "COUNT_CANCELED",
+    "tx_collections": [
+      "is_in_position",
+      "inventory_count_record"
+    ],
+    "info_model_fields": [
+      {
+        "name": "count_key",
+        "type": "str"
+      },
+      {
+        "name": "inventory_keys",
+        "type": "list[str] | None"
+      }
+    ],
+    "notification_subtopic": null
+  },
+  {
+    "class_name": "CountCompletedEvent",
+    "file": "backend/api/events/inventory/count_completed.py",
+    "domain": "inventory",
+    "event_type": "COUNT_COMPLETED",
+    "tx_collections": [
+      "inventory_count_record",
+      "is_in_position",
+      "inventory_count_position_complete"
+    ],
+    "info_model_fields": [
+      {
+        "name": "count_key",
+        "type": "str"
+      },
+      {
+        "name": "count_qt",
+        "type": "float"
+      },
+      {
+        "name": "count_serial_keys",
+        "type": "list[str] | None"
+      },
+      {
+        "name": "notes",
+        "type": "str | None"
+      }
+    ],
+    "notification_subtopic": null
+  },
+  {
+    "class_name": "CountDiscardedEvent",
+    "file": "backend/api/events/inventory/count_discarded.py",
+    "domain": "inventory",
+    "event_type": "COUNT_DISCARDED",
+    "tx_collections": [
+      "inventory_count_record"
+    ],
+    "info_model_fields": [
+      {
+        "name": "count_key",
+        "type": "str"
+      }
+    ],
+    "notification_subtopic": null
+  },
+  {
+    "class_name": "CountImportedEvent",
+    "file": "backend/api/events/inventory/count_imported.py",
+    "domain": "inventory",
+    "event_type": "COUNT_IMPORTED",
+    "tx_collections": [
+      "inventory_count_record",
+      "Product",
+      "Position",
+      "Serial",
+      "is_in_position",
+      "InventoryCountSession"
+    ],
+    "info_model_fields": [
+      {
+        "name": "count_session_key",
+        "type": "str"
+      },
+      {
+        "name": "import_mode",
+        "type": "str"
+      },
+      {
+        "name": "import_file_key",
+        "type": "str"
+      },
+      {
+        "name": "import_filename",
+        "type": "str"
+      },
+      {
+        "name": "rows_total",
+        "type": "int"
+      },
+      {
+        "name": "rows_added",
+        "type": "int"
+      },
+      {
+        "name": "rows_updated",
+        "type": "int"
+      },
+      {
+        "name": "rows_discarded",
+        "type": "int"
+      },
+      {
+        "name": "ignored_columns",
+        "type": "list[str]"
+      }
+    ],
+    "notification_subtopic": null
+  },
+  {
+    "class_name": "CountSessionAppliedEvent",
+    "file": "backend/api/events/inventory/count_session_applied.py",
+    "domain": "inventory",
+    "event_type": "COUNT_SESSION_APPLIED",
+    "tx_collections": [
+      "InventoryCountSession",
+      "inventory_count_record",
+      "MovementList",
+      "movement",
+      "is_in_position"
+    ],
+    "info_model_fields": [
+      {
+        "name": "session_key",
+        "type": "str"
+      }
+    ],
+    "notification_subtopic": null
+  },
+  {
+    "class_name": "CountSessionCompletedEvent",
+    "file": "backend/api/events/inventory/count_session_completed.py",
+    "domain": "inventory",
+    "event_type": "COUNT_SESSION_COMPLETED",
+    "tx_collections": [
+      "InventoryCountSession",
+      "inventory_count_record"
+    ],
+    "info_model_fields": [
+      {
+        "name": "session_key",
+        "type": "str"
+      }
+    ],
+    "notification_subtopic": null
+  },
+  {
+    "class_name": "CountSessionConfirmedEvent",
+    "file": "backend/api/events/inventory/count_session_confirmed.py",
+    "domain": "inventory",
+    "event_type": "COUNT_SESSION_CONFIRMED",
+    "tx_collections": [
+      "InventoryCountSession",
+      "inventory_count_record",
+      "Counter",
+      "Config",
+      "MovementList",
+      "is_in_position"
+    ],
+    "info_model_fields": [
+      {
+        "name": "session_key",
+        "type": "str"
+      }
+    ],
+    "notification_subtopic": null
+  },
+  {
+    "class_name": "CountSessionResumedEvent",
+    "file": "backend/api/events/inventory/count_session_resumed.py",
+    "domain": "inventory",
+    "event_type": "COUNT_SESSION_RESUMED",
+    "tx_collections": [
+      "InventoryCountSession"
+    ],
+    "info_model_fields": [
+      {
+        "name": "session_key",
+        "type": "str"
+      }
+    ],
+    "notification_subtopic": null
+  },
+  {
+    "class_name": "CountSessionStartedEvent",
+    "file": "backend/api/events/inventory/count_session_started.py",
+    "domain": "inventory",
+    "event_type": "COUNT_SESSION_STARTED",
+    "tx_collections": [
+      "InventoryCountSession"
+    ],
+    "info_model_fields": [
+      {
+        "name": "count_session_key",
+        "type": "str"
+      }
+    ],
+    "notification_subtopic": null
+  },
+  {
+    "class_name": "CountStartedEvent",
+    "file": "backend/api/events/inventory/count_started.py",
+    "domain": "inventory",
+    "event_type": "COUNT_STARTED",
+    "tx_collections": [
+      "is_in_position",
+      "inventory_count_record",
+      "Product",
+      "InventoryCountSession"
+    ],
+    "info_model_fields": [
+      {
+        "name": "count_key",
+        "type": "str"
+      },
+      {
+        "name": "inventory_count_session_key",
+        "type": "str"
+      },
+      {
+        "name": "assignment_key",
+        "type": "str | None"
+      },
+      {
+        "name": "inventory_keys",
+        "type": "list[str] | None"
+      },
+      {
+        "name": "product_key",
+        "type": "str | None"
+      },
+      {
+        "name": "position_key",
+        "type": "str | None"
+      }
+    ],
+    "notification_subtopic": null
+  },
+  {
+    "class_name": "InventoryChangedEvent",
+    "file": "backend/api/events/inventory/inventory_changed.py",
+    "domain": "inventory",
+    "event_type": "INVENTORY_CHANGED",
+    "tx_collections": null,
+    "info_model_fields": [
+      {
+        "name": "position_key",
+        "type": "str"
+      },
+      {
+        "name": "product_key",
+        "type": "str"
+      },
+      {
+        "name": "serial_key",
+        "type": "str | None"
+      },
+      {
+        "name": "quantity_change",
+        "type": "float"
+      }
+    ],
+    "notification_subtopic": null
+  },
+  {
+    "class_name": "MovementCompletedEvent",
+    "file": "backend/api/events/inventory/movement_completed.py",
+    "domain": "inventory",
+    "event_type": "MOVEMENT_COMPLETED",
+    "tx_collections": null,
+    "info_model_fields": [
+      {
+        "name": "movement_key",
+        "type": "str | None"
+      },
+      {
+        "name": "movement_type",
+        "type": "InventoryMovementType"
+      },
+      {
+        "name": "product_key",
+        "type": "str | None"
+      },
+      {
+        "name": "qt_planned",
+        "type": "float"
+      },
+      {
+        "name": "qt_confirmed",
+        "type": "float"
+      },
+      {
+        "name": "serial_key",
+        "type": "str | None"
+      },
+      {
+        "name": "serial_code",
+        "type": "str | None"
+      },
+      {
+        "name": "position_from",
+        "type": "str | None"
+      },
+      {
+        "name": "position_to",
+        "type": "str | None"
+      },
+      {
+        "name": "movement_list_key",
+        "type": "str | None"
+      },
+      {
+        "name": "movement_list_item",
+        "type": "float | None"
+      },
+      {
+        "name": "references",
+        "type": "InventoryMovementReferences | None"
+      },
+      {
+        "name": "reason",
+        "type": "str | None"
+      },
+      {
+        "name": "extra",
+        "type": "Any"
+      }
+    ],
+    "notification_subtopic": null
+  },
+  {
+    "class_name": "MovementPlannedEvent",
+    "file": "backend/api/events/inventory/movement_planned.py",
+    "domain": "inventory",
+    "event_type": "MOVEMENT_PLANNED",
+    "tx_collections": [
+      "movement",
+      "Serial"
+    ],
+    "info_model_fields": [
+      {
+        "name": "new_movement_key",
+        "type": "str | None"
+      }
+    ],
+    "notification_subtopic": null
+  },
+  {
+    "class_name": "MovementReversedEvent",
+    "file": "backend/api/events/inventory/movement_reversed.py",
+    "domain": "inventory",
+    "event_type": "MOVEMENT_REVERSED",
+    "tx_collections": null,
+    "info_model_fields": [
+      {
+        "name": "original_movement_key",
+        "type": "str"
+      },
+      {
+        "name": "inverse_movement_key",
+        "type": "str | None"
+      },
+      {
+        "name": "quantity_to_revert",
+        "type": "float | None"
+      },
+      {
+        "name": "reason",
+        "type": "str | None"
+      }
+    ],
+    "notification_subtopic": null
+  },
+  {
+    "class_name": "MovementUpdatedEvent",
+    "file": "backend/api/events/inventory/movement_updated.py",
+    "domain": "inventory",
+    "event_type": "MOVEMENT_UPDATED",
+    "tx_collections": [
+      "movement",
+      "is_in_position",
+      "Serial"
+    ],
+    "info_model_fields": [
+      {
+        "name": "movement_key",
+        "type": "str"
+      },
+      {
+        "name": "qt_confirmed",
+        "type": "float"
+      },
+      {
+        "name": "qt_planned",
+        "type": "float"
+      },
+      {
+        "name": "split_into",
+        "type": "list[MovementSplitData] | None"
+      },
+      {
+        "name": "position_from",
+        "type": "str | None"
+      },
+      {
+        "name": "position_to",
+        "type": "str | None"
+      }
+    ],
+    "notification_subtopic": null
+  },
+  {
+    "class_name": "PositionConfirmedEmptyEvent",
+    "file": "backend/api/events/inventory/position_confirmed_empty.py",
+    "domain": "inventory",
+    "event_type": "POSITION_CONFIRMED_EMPTY",
+    "tx_collections": [
+      "inventory_count_position_complete"
+    ],
+    "info_model_fields": [
+      {
+        "name": "session_key",
+        "type": "str"
+      },
+      {
+        "name": "position_key",
+        "type": "str"
+      },
+      {
+        "name": "notes",
+        "type": "str | None"
+      }
+    ],
+    "notification_subtopic": null
+  },
+  {
+    "class_name": "WarehouseListClosed",
+    "file": "backend/api/events/inventory/warehouse_list_closed.py",
+    "domain": "inventory",
+    "event_type": "WAREHOUSE_LIST_CLOSED",
+    "tx_collections": [
+      "MovementList",
+      "movement"
+    ],
+    "info_model_fields": [
+      {
+        "name": "movement_list_key",
+        "type": "str"
+      }
+    ],
+    "notification_subtopic": null
+  },
+  {
+    "class_name": "ActiveBatchChangedEvent",
+    "file": "backend/api/events/production/active_batch_changed.py",
+    "domain": "production",
+    "event_type": "ACTIVE_BATCH_CHANGED",
+    "tx_collections": null,
+    "info_model_fields": [
+      {
+        "name": "job_key",
+        "type": "str"
+      },
+      {
+        "name": "new_active_batch_qt",
+        "type": "int"
+      },
+      {
+        "name": "batch_serials",
+        "type": "list[str] | None"
+      }
+    ],
+    "notification_subtopic": null
+  },
+  {
+    "class_name": "BatchCompletedEvent",
+    "file": "backend/api/events/production/batch_completed.py",
+    "domain": "production",
+    "event_type": "BATCH_COMPLETED",
+    "tx_collections": null,
+    "info_model_fields": [
+      {
+        "name": "active_batch_key",
+        "type": "str"
+      },
+      {
+        "name": "completed_batch_qt",
+        "type": "float"
+      },
+      {
+        "name": "step_data",
+        "type": "list[ExecutionDataUpdate] | None"
+      },
+      {
+        "name": "batch_serial_keys",
+        "type": "list[str] | None"
+      },
+      {
+        "name": "job_key",
+        "type": "str | None"
+      },
+      {
+        "name": "work_order_key",
+        "type": "str | None"
+      }
+    ],
+    "notification_subtopic": null
+  },
+  {
+    "class_name": "BatchCreatedEvent",
+    "file": "backend/api/events/production/batch_created.py",
+    "domain": "production",
+    "event_type": "BATCH_CREATED",
+    "tx_collections": null,
+    "info_model_fields": [
+      {
+        "name": "job_key",
+        "type": "str"
+      },
+      {
+        "name": "phase_key",
+        "type": "str"
+      },
+      {
+        "name": "work_order_key",
+        "type": "str"
+      },
+      {
+        "name": "product_key",
+        "type": "str"
+      },
+      {
+        "name": "new_batch_serials",
+        "type": "list[str] | None"
+      }
+    ],
+    "notification_subtopic": null
+  },
+  {
+    "class_name": "BatchReleasedEvent",
+    "file": "backend/api/events/production/batch_released.py",
+    "domain": "production",
+    "event_type": "BATCH_RELEASED",
+    "tx_collections": [],
+    "info_model_fields": [
+      {
+        "name": "batch_key",
+        "type": "str"
+      },
+      {
+        "name": "product_key",
+        "type": "str"
+      },
+      {
+        "name": "work_order_key",
+        "type": "str"
+      },
+      {
+        "name": "qt_released",
+        "type": "float"
+      },
+      {
+        "name": "serial_keys",
+        "type": "list[str] | None"
+      }
+    ],
+    "notification_subtopic": "production"
+  },
+  {
+    "class_name": "JobBackOnlineEvent",
+    "file": "backend/api/events/production/job_back_online.py",
+    "domain": "production",
+    "event_type": "JOB_BACK_ONLINE",
+    "tx_collections": null,
+    "info_model_fields": [
+      {
+        "name": "job_key",
+        "type": "str"
+      },
+      {
+        "name": "work_order_key",
+        "type": "str | None"
+      },
+      {
+        "name": "phase_key",
+        "type": "str | None"
+      }
+    ],
+    "notification_subtopic": null
+  },
+  {
+    "class_name": "JobPauseForcedEvent",
+    "file": "backend/api/events/production/job_pause_forced.py",
+    "domain": "production",
+    "event_type": "JOB_PAUSE_FORCED",
+    "tx_collections": null,
+    "info_model_fields": [
+      {
+        "name": "job_key",
+        "type": "str"
+      },
+      {
+        "name": "work_order_key",
+        "type": "str | None"
+      },
+      {
+        "name": "phase_key",
+        "type": "str | None"
+      }
+    ],
+    "notification_subtopic": null
+  },
+  {
+    "class_name": "JobPausedEvent",
+    "file": "backend/api/events/production/job_paused.py",
+    "domain": "production",
+    "event_type": "JOB_PAUSED",
+    "tx_collections": null,
+    "info_model_fields": [
+      {
+        "name": "job_key",
+        "type": "str"
+      },
+      {
+        "name": "work_order_key",
+        "type": "str | None"
+      },
+      {
+        "name": "phase_key",
+        "type": "str | None"
+      }
+    ],
+    "notification_subtopic": null
+  },
+  {
+    "class_name": "JobPausedOfflineEvent",
+    "file": "backend/api/events/production/job_paused_offline.py",
+    "domain": "production",
+    "event_type": "JOB_PAUSED_OFFLINE",
+    "tx_collections": null,
+    "info_model_fields": [
+      {
+        "name": "job_key",
+        "type": "str"
+      },
+      {
+        "name": "work_session_end",
+        "type": "datetime | None"
+      },
+      {
+        "name": "work_order_key",
+        "type": "str | None"
+      },
+      {
+        "name": "phase_key",
+        "type": "str | None"
+      }
+    ],
+    "notification_subtopic": "production"
+  },
+  {
+    "class_name": "JobResumedEvent",
+    "file": "backend/api/events/production/job_resumed.py",
+    "domain": "production",
+    "event_type": "JOB_RESUMED",
+    "tx_collections": null,
+    "info_model_fields": [
+      {
+        "name": "job_key",
+        "type": "str"
+      },
+      {
+        "name": "batch_serials",
+        "type": "list[str] | None"
+      },
+      {
+        "name": "work_order_key",
+        "type": "str | None"
+      },
+      {
+        "name": "phase_key",
+        "type": "str | None"
+      }
+    ],
+    "notification_subtopic": null
+  },
+  {
+    "class_name": "JobStartedEvent",
+    "file": "backend/api/events/production/job_started.py",
+    "domain": "production",
+    "event_type": "JOB_STARTED",
+    "tx_collections": null,
+    "info_model_fields": [
+      {
+        "name": "job_key",
+        "type": "str"
+      },
+      {
+        "name": "batch_serials",
+        "type": "list[str] | None"
+      },
+      {
+        "name": "work_order_key",
+        "type": "str | None"
+      },
+      {
+        "name": "phase_key",
+        "type": "str | None"
+      }
+    ],
+    "notification_subtopic": null
+  },
+  {
+    "class_name": "QueueUpdatedEvent",
+    "file": "backend/api/events/production/queue_updated.py",
+    "domain": "production",
+    "event_type": "QUEUE_UPDATED",
+    "tx_collections": [],
+    "info_model_fields": [
+      {
+        "name": "queue_key",
+        "type": "str"
+      }
+    ],
+    "notification_subtopic": "production"
+  },
+  {
+    "class_name": "StepCompletedEvent",
+    "file": "backend/api/events/production/step_completed.py",
+    "domain": "production",
+    "event_type": "STEP_COMPLETED",
+    "tx_collections": null,
+    "info_model_fields": [
+      {
+        "name": "batch_key",
+        "type": "str"
+      },
+      {
+        "name": "step_key",
+        "type": "str"
+      },
+      {
+        "name": "job_key",
+        "type": "str | None"
+      },
+      {
+        "name": "work_order_key",
+        "type": "str | None"
+      },
+      {
+        "name": "form_data",
+        "type": "list[FormFieldValue] | None"
+      },
+      {
+        "name": "batch_serials",
+        "type": "list[str] | None"
+      }
+    ],
+    "notification_subtopic": null
+  },
+  {
+    "class_name": "StepEditedEvent",
+    "file": "backend/api/events/production/step_edited.py",
+    "domain": "production",
+    "event_type": "STEP_EDITED",
+    "tx_collections": null,
+    "info_model_fields": [
+      {
+        "name": "execution_record_key",
+        "type": "str"
+      },
+      {
+        "name": "form_data",
+        "type": "list[FormFieldValue]"
+      },
+      {
+        "name": "job_key",
+        "type": "str | None"
+      },
+      {
+        "name": "batch_key",
+        "type": "str | None"
+      },
+      {
+        "name": "work_session_key",
+        "type": "str | None"
+      }
+    ],
+    "notification_subtopic": null
+  },
+  {
+    "class_name": "WorkOrderStartedEvent",
+    "file": "backend/api/events/production/work_order_events.py",
+    "domain": "production",
+    "event_type": "WORK_ORDER_STARTED",
+    "tx_collections": [],
+    "info_model_fields": [
+      {
+        "name": "work_order_key",
+        "type": "str"
+      }
+    ],
+    "notification_subtopic": "production"
+  },
+  {
+    "class_name": "SerialCreatedEvent",
+    "file": "backend/api/events/serial/serial_created.py",
+    "domain": "serial",
+    "event_type": "SERIAL_CREATED",
+    "tx_collections": null,
+    "info_model_fields": [
+      {
+        "name": "data",
+        "type": "list[SerialFormFieldValue] | None"
+      },
+      {
+        "name": "code",
+        "type": "ProcessedSerialCode | None"
+      },
+      {
+        "name": "wo_key",
+        "type": "str | None"
+      },
+      {
+        "name": "product_key",
+        "type": "str | None"
+      },
+      {
+        "name": "counter_key",
+        "type": "str | None"
+      },
+      {
+        "name": "released",
+        "type": "datetime | None"
+      }
+    ],
+    "notification_subtopic": null
+  },
+  {
+    "class_name": "SerialDeletedEvent",
+    "file": "backend/api/events/serial/serial_deleted.py",
+    "domain": "serial",
+    "event_type": "SERIAL_DELETED",
+    "tx_collections": null,
+    "info_model_fields": [
+      {
+        "name": "soft",
+        "type": "bool"
+      },
+      {
+        "name": "delete_children",
+        "type": "bool | None"
+      }
+    ],
+    "notification_subtopic": null
+  },
+  {
+    "class_name": "SerialLinkedEvent",
+    "file": "backend/api/events/serial/serial_linked.py",
+    "domain": "serial",
+    "event_type": "SERIAL_LINKED",
+    "tx_collections": [
+      "contains",
+      "is_in_position",
+      "movement",
+      "Serial",
+      "is_in_position",
+      "movement"
+    ],
+    "info_model_fields": [
+      {
+        "name": "child_serial_key",
+        "type": "str"
+      },
+      {
+        "name": "parent_serial_key",
+        "type": "str | None"
+      },
+      {
+        "name": "wo_key",
+        "type": "str | None"
+      },
+      {
+        "name": "component_key",
+        "type": "str | None"
+      },
+      {
+        "name": "batch_key",
+        "type": "str | None"
+      },
+      {
+        "name": "phase_key",
+        "type": "str | None"
+      },
+      {
+        "name": "job_key",
+        "type": "str | None"
+      },
+      {
+        "name": "process_inventory",
+        "type": "bool | None"
+      },
+      {
+        "name": "replace_existing",
+        "type": "bool | None"
+      }
+    ],
+    "notification_subtopic": null
+  },
+  {
+    "class_name": "SerialReleasedEvent",
+    "file": "backend/api/events/serial/serial_released.py",
+    "domain": "serial",
+    "event_type": "SERIAL_RELEASED",
+    "tx_collections": null,
+    "info_model_fields": [
+      {
+        "name": "released",
+        "type": "datetime | None"
+      }
+    ],
+    "notification_subtopic": null
+  },
+  {
+    "class_name": "SerialUnlinkedEvent",
+    "file": "backend/api/events/serial/serial_unlinked.py",
+    "domain": "serial",
+    "event_type": "SERIAL_UNLINKED",
+    "tx_collections": [
+      "contains",
+      "is_in_position",
+      "movement",
+      "Serial"
+    ],
+    "info_model_fields": [
+      {
+        "name": "child_serial_key",
+        "type": "str"
+      },
+      {
+        "name": "parent_serial_key",
+        "type": "str | None"
+      },
+      {
+        "name": "batch_key",
+        "type": "str | None"
+      },
+      {
+        "name": "reason",
+        "type": "str | None"
+      },
+      {
+        "name": "process_inventory",
+        "type": "bool | None"
+      }
+    ],
+    "notification_subtopic": null
+  },
+  {
+    "class_name": "SerialUpdatedEvent",
+    "file": "backend/api/events/serial/serial_updated.py",
+    "domain": "serial",
+    "event_type": "SERIAL_UPDATED",
+    "tx_collections": null,
+    "info_model_fields": [
+      {
+        "name": "serial_key",
+        "type": "str"
+      },
+      {
+        "name": "serial_code",
+        "type": "ProcessedSerialCode | None"
+      },
+      {
+        "name": "serial_data",
+        "type": "list[SerialFormFieldValue] | None"
+      },
+      {
+        "name": "remove_data_from_phases",
+        "type": "list[str] | None"
+      },
+      {
+        "name": "unrelease",
+        "type": "bool | None"
+      }
+    ],
+    "notification_subtopic": null
+  },
+  {
+    "class_name": "WIPBookedEvent",
+    "file": "backend/api/events/wip/wip_booked.py",
+    "domain": "wip",
+    "event_type": "WIP_BOOKED",
+    "tx_collections": null,
+    "info_model_fields": [
+      {
+        "name": "job_key",
+        "type": "str"
+      },
+      {
+        "name": "phase_key",
+        "type": "str"
+      },
+      {
+        "name": "work_order_key",
+        "type": "str"
+      },
+      {
+        "name": "quantity",
+        "type": "int"
+      },
+      {
+        "name": "batch_key",
+        "type": "str"
+      },
+      {
+        "name": "batch_serials",
+        "type": "list[str] | None"
+      }
+    ],
+    "notification_subtopic": null
+  },
+  {
+    "class_name": "WIPDeclaredEvent",
+    "file": "backend/api/events/wip/wip_declared.py",
+    "domain": "wip",
+    "event_type": "WIP_DECLARED",
+    "tx_collections": null,
+    "info_model_fields": [
+      {
+        "name": "job_key",
+        "type": "str"
+      },
+      {
+        "name": "quantity",
+        "type": "int"
+      },
+      {
+        "name": "serial_keys",
+        "type": "list[str] | None"
+      }
+    ],
+    "notification_subtopic": null
+  },
+  {
+    "class_name": "WIPRemovedEvent",
+    "file": "backend/api/events/wip/wip_removed.py",
+    "domain": "wip",
+    "event_type": "WIP_REMOVED",
+    "tx_collections": null,
+    "info_model_fields": [
+      {
+        "name": "job_key",
+        "type": "str"
+      },
+      {
+        "name": "quantity",
+        "type": "int"
+      }
+    ],
+    "notification_subtopic": null
+  },
+  {
+    "class_name": "WIPUnbookedEvent",
+    "file": "backend/api/events/wip/wip_unbooked.py",
+    "domain": "wip",
+    "event_type": "WIP_UNBOOKED",
+    "tx_collections": null,
+    "info_model_fields": [
+      {
+        "name": "job_key",
+        "type": "str"
+      },
+      {
+        "name": "quantity",
+        "type": "int"
+      }
+    ],
+    "notification_subtopic": null
+  },
+  {
+    "class_name": "WorkSessionCanceledEvent",
+    "file": "backend/api/events/work_session/work_session_canceled.py",
+    "domain": "work_session",
+    "event_type": "WORK_SESSION_CANCELED",
+    "tx_collections": null,
+    "info_model_fields": [
+      {
+        "name": "work_session_key",
+        "type": "str"
+      }
+    ],
+    "notification_subtopic": null
+  },
+  {
+    "class_name": "WorkSessionClosedEvent",
+    "file": "backend/api/events/work_session/work_session_closed.py",
+    "domain": "work_session",
+    "event_type": "WORK_SESSION_CLOSED",
+    "tx_collections": [
+      "WorkSession"
+    ],
+    "info_model_fields": [
+      {
+        "name": "work_session_key",
+        "type": "str"
+      },
+      {
+        "name": "work_session_end",
+        "type": "datetime"
+      }
+    ],
+    "notification_subtopic": null
+  },
+  {
+    "class_name": "WorkSessionCreatedEvent",
+    "file": "backend/api/events/work_session/work_session_created.py",
+    "domain": "work_session",
+    "event_type": "WORK_SESSION_CREATED",
+    "tx_collections": [
+      "WorkSession"
+    ],
+    "info_model_fields": [
+      {
+        "name": "user_key",
+        "type": "str"
+      },
+      {
+        "name": "user_session_key",
+        "type": "str | None"
+      },
+      {
+        "name": "job_key",
+        "type": "str"
+      },
+      {
+        "name": "batch_key",
+        "type": "str"
+      },
+      {
+        "name": "work_order_key",
+        "type": "str"
+      },
+      {
+        "name": "phase_key",
+        "type": "str"
+      },
+      {
+        "name": "product_key",
+        "type": "str"
+      },
+      {
+        "name": "work_session_end",
+        "type": "datetime | None"
+      },
+      {
+        "name": "forced",
+        "type": "bool | None"
+      }
+    ],
+    "notification_subtopic": null
+  }
+]

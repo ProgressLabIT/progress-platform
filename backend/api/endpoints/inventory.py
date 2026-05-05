@@ -20,8 +20,19 @@ router = APIRouter()
 # ===============================================
 
 @router.get('/position',
+    response_model=list[Position],
+    responses={500: {"description": "Database error"}},
     dependencies=[Depends(auth.verify_token)])
 async def get_positions(params: Annotated[PositionSearchParams, Query()]):
+  """Search inventory positions.
+
+  Returns all positions matching the given search filters. Positions are nodes
+  in the warehouse location graph (stored in the `Position` collection); results
+  exclude logically deleted positions unless `search` matches their code.
+
+  **Emits:** *(direct query — no event class)*
+  **Required scope:** `inventory:position:read`
+  """
   try:
     bind_vars = dict(**params.model_dump())
     results = db.aql.execute(Queries.SEARCH_POSITIONS, bind_vars=bind_vars)
@@ -36,8 +47,21 @@ async def get_positions(params: Annotated[PositionSearchParams, Query()]):
 
 
 @router.get('/position/{position_key}',
+    response_model=dict,
+    responses={
+      404: {"description": "Position not found"},
+      500: {"description": "Database error"},
+    },
     dependencies=[Depends(auth.verify_token)])
 async def get_position_details(position_key: str, search: str | None = None):
+  """Fetch detailed data for a single position.
+
+  Returns the position document plus its current inventory contents. Raises 404
+  if no position with `position_key` exists in the `Position` collection.
+
+  **Emits:** *(direct query — no event class)*
+  **Required scope:** `inventory:position:read`
+  """
   try:
     bind_vars = dict(position_key=position_key, search=search)
     result = next(db.aql.execute(Queries.GET_POSITION_DETAILS, bind_vars=bind_vars), None)
@@ -62,10 +86,21 @@ async def get_position_details(position_key: str, search: str | None = None):
 
 
 @router.get('/position-hierarchy',
+  response_model=list,
+  responses={500: {"description": "Database error"}},
   dependencies=[Depends(auth.verify_token)])
 def get_position_hierarchy(
   position_key: str | None = None,
 ):
+  """Return the full position tree rooted at a given position.
+
+  Traverses the `is_in_position` edge collection recursively (up to 15 levels)
+  and assembles a nested hierarchy of positions sorted alphabetically by code at
+  each level. Pass `position_key=IN` to retrieve the entire warehouse tree.
+
+  **Emits:** *(direct query — no event class)*
+  **Required scope:** `inventory:position:read`
+  """
   try:
     bind_vars = dict(
       position_id = f'Position/{position_key}'
@@ -144,8 +179,19 @@ def search_children(position_key, children):
   return found
 
 @router.post('/position',
+    response_model=APIResponse,
+    responses={500: {"description": "Database error"}},
     dependencies=[Depends(auth.verify_token)])
 async def create_position(new_position: PositionNew):
+  """Create a new warehouse position.
+
+  Inserts a new `Position` document and links it to its parent via the
+  `is_in_position` edge collection within a single ArangoDB transaction.
+  Auto-generates a positional code from the system counter if `code` is omitted.
+
+  **Emits:** *(direct transaction — no event class)*
+  **Required scope:** `inventory:position:create`
+  """
 
   tx = db.begin_transaction(write=['Position', 'Counter', 'is_in_position'], read=['Config', 'Position'])
 
@@ -176,8 +222,20 @@ async def create_position(new_position: PositionNew):
 
 
 @router.patch('/position/{positions_key}',
+    response_model=APIResponse,
+    responses={500: {"description": "Database error"}},
     dependencies=[Depends(auth.verify_token)])
 async def update_position(position_key: str, updated_fields: dict, parent_position_key: str | None = None):
+  """Update a position's attributes or reparent it in the hierarchy.
+
+  Applies a partial update to the `Position` document identified by
+  `position_key`. If `parent_position_key` is provided, the existing
+  `is_in_position` edge is updated to point to the new parent, moving the
+  position within the warehouse hierarchy.
+
+  **Emits:** *(direct transaction — no event class)*
+  **Required scope:** `inventory:position:update`
+  """
 
   tx = db.begin_transaction(write=['Position', 'is_in_position'], read=['Config', 'Position'])
 
@@ -213,8 +271,22 @@ async def update_position(position_key: str, updated_fields: dict, parent_positi
 
 
 @router.delete('/position/{position_key}',
+    response_model=APIResponse,
+    responses={
+      400: {"description": "Cannot delete default position or position with existing contents"},
+      500: {"description": "Database error"},
+    },
     dependencies=[Depends(auth.verify_token)])
 async def delete_position(position_key):
+  """Soft-delete a warehouse position.
+
+  Marks the position as `deleted=True` in the `Position` collection and removes
+  its `is_in_position` edge. Refuses deletion of the reserved `IN` root position
+  and any position that still has children or inventory contents.
+
+  **Emits:** *(direct transaction — no event class)*
+  **Required scope:** `inventory:position:delete`
+  """
   if position_key == 'IN':
     raise HTTPException(status_code=400, detail='Cannot delete default position')
 
@@ -243,8 +315,20 @@ async def delete_position(position_key):
 # ===============================================
 
 @router.get('/movement',
+    response_model=list[InventoryMovementSearchResults],
+    responses={500: {"description": "Database error"}},
     dependencies=[Depends(auth.verify_token)])
 def search_inventory_journal(params: Annotated[InventoryMovementSearchParameters, Query()]):
+  """Search the inventory movement journal.
+
+  Queries the `movement` edge collection using the supplied filters (type,
+  status, date range, product, serial, position, movement list). Returns
+  enriched results including position codes, product codes, and movement list
+  codes resolved from related collections.
+
+  **Emits:** *(direct query — no event class)*
+  **Required scope:** `inventory:movement:read`
+  """
   try:
 
     bind_vars = dict(**params.model_dump())
@@ -258,6 +342,8 @@ def search_inventory_journal(params: Annotated[InventoryMovementSearchParameters
     )
 
 @router.get('/movement/latest-positions',
+    response_model=list[Position],
+    responses={500: {"description": "Database error"}},
     dependencies=[Depends(auth.verify_token)])
 def get_recent_movement_positions(
   user_key: str | None = None,
@@ -265,6 +351,16 @@ def get_recent_movement_positions(
   movement_type: Annotated[InventoryMovementType | None, Query()] = None,
   limit: int | None = 10
 ):
+  """Return recently used movement positions for a user.
+
+  Retrieves the most recently used source (`from`) or destination (`to`)
+  positions from the `movement` collection, optionally scoped to a specific
+  user and movement type. Useful for quick-access position suggestions in the
+  warehouse UI.
+
+  **Emits:** *(direct query — no event class)*
+  **Required scope:** `inventory:movement:read`
+  """
   try:
     bind_vars = dict(limit=limit, movement_type=movement_type, position_type=position_type, user_key=user_key)
     results = db.aql.execute(Queries.GET_RECENT_POSITIONS, bind_vars=bind_vars)
@@ -277,12 +373,23 @@ def get_recent_movement_positions(
     )
 
 @router.get('/movement/latest-products',
+    response_model=list[ProductBaseData],
+    responses={500: {"description": "Database error"}},
     dependencies=[Depends(auth.verify_token)])
 def get_recent_movement_products(
   user_key: Annotated[str | None, Query()] = None,
   type: Annotated[InventoryMovementType | None, Query()] = None,
   limit: int | None = 10
 ):
+  """Return recently moved products for a user.
+
+  Queries the `movement` collection for the most recently moved products,
+  optionally filtered by user and movement type. Used to pre-populate product
+  selectors in the warehouse receiving and transfer UIs.
+
+  **Emits:** *(direct query — no event class)*
+  **Required scope:** `inventory:movement:read`
+  """
   try:
     bind_vars = dict(limit=limit, type=type, user_key=user_key)
     results = db.aql.execute(Queries.GET_RECENT_MOVEMENT_PRODUCTS, bind_vars=bind_vars)
@@ -313,6 +420,8 @@ def get_recent_movement_products(
 # ===============================================
 
 @router.get('/movement-list',
+    response_model=list[MovementListWithCounts],
+    responses={500: {"description": "Database error"}},
     dependencies=[Depends(auth.verify_token)])
 async def search_movement_lists(
   search: str | None = None, # searches the list code
@@ -327,7 +436,16 @@ async def search_movement_lists(
   limit: int = 100,
   offset: int = 0
 ):
-  """Retrieves movement lists"""
+  """Search movement lists (warehouse transfer orders).
+
+  Queries the `MovementList` collection with optional filters for status, type,
+  date range, and product inclusion. Each result includes aggregated counts of
+  movements per status. `open_only=true` restricts results to lists that still
+  have planned or started movements.
+
+  **Emits:** *(direct query — no event class)*
+  **Required scope:** `inventory:movement-list:read`
+  """
   try:
     bind_vars = dict(
       search=search,
@@ -353,9 +471,22 @@ async def search_movement_lists(
 
 
 @router.post('/movement-list',
+    response_model=APIResponse,
+    responses={
+      400: {"description": "Validation error in movement list data"},
+      500: {"description": "Database error"},
+    },
     dependencies=[Depends(auth.verify_token)])
 def create_movement_list(new_movement_list: dict):
-  """Must include data about all the related movements"""
+  """Create a movement list with its associated movements.
+
+  Dispatches a `WarehouseListCreatedEvent` which atomically inserts the
+  `MovementList` document and all its child `movement` edges. The payload must
+  contain movement data for all movements to include in the list.
+
+  **Emits:** `WarehouseListCreatedEvent`
+  **Required scope:** `inventory:movement-list:create`
+  """
   try:
     event = WarehouseListCreatedEvent(
       info=EventInfoModel(
@@ -386,8 +517,20 @@ def create_movement_list(new_movement_list: dict):
 # ===============================================
 
 @router.get('/inventory',
+    response_model=list[InventorySearchResult],
+    responses={500: {"description": "Database error"}},
     dependencies=[Depends(auth.verify_token)])
 async def get_inventory(params: Annotated[InventoryGraphSearchParams, Query()]):
+  """Search current inventory across the position graph.
+
+  Traverses the `is_in_position` graph starting from `root_position_key` (or
+  the entire warehouse if omitted) and returns all `Inventory` edge records
+  matching the product, serial, and position filters. Includes resolved product
+  and position codes in each result.
+
+  **Emits:** *(direct query — no event class)*
+  **Required scope:** `inventory:inventory:read`
+  """
   try:
     bind_vars = dict(**params.model_dump())
     cursor = db.aql.execute(Queries.SEARCH_INVENTORY_GRAPH, bind_vars=bind_vars)
@@ -396,6 +539,5 @@ async def get_inventory(params: Annotated[InventoryGraphSearchParams, Query()]):
 
   except Exception:
     raise HTTPException(status_code=500, detail=traceback.format_exc())
-
 
 

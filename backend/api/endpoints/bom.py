@@ -21,8 +21,20 @@ from utils import auth
 router = APIRouter()
 
 @router.get("/{product_key}/bom",
+    response_model=list,
+    responses={500: {"description": "Database query error fetching BoM"}},
     dependencies=[Depends(auth.verify_token)])
 async def get_product_bom(product_key: str):
+  """Retrieve the Bill of Materials for a product.
+
+  Returns an ordered list of `BomLineRead` objects for `product_key`, each
+  including component code, description, quantity, phase assignment, and
+  consumption options.
+
+  **Emits:** *(direct query — no event class)*
+
+  **Required scope:** `product:bom:read`
+  """
   try:
     bom = get_bom_from_db(db, product_key)
     return bom
@@ -44,12 +56,34 @@ async def get_product_bom(product_key: str):
 
 
 @router.put('/{product_key_or_code}/bom',
+    response_model=APIResponse,
+    responses={
+      401: {"description": "Product not found by key"},
+      403: {"description": "BoM update would create a circular component dependency"},
+      422: {"description": "Product has no production process — BoM cannot be assigned"},
+      500: {"description": "Transaction error during BoM replace"},
+    },
     dependencies=[Depends(auth.verify_token)])
 async def update_bom(
   product_key_or_code: str,
   new_bom: List[BomLineWriteIn],
   by_code: bool = False
   ):
+  """Replace the Bill of Materials for a product.
+
+  Performs a full replace: the existing BoM is deleted and `new_bom` is
+  inserted atomically within a single transaction. Pass `by_code=true` to
+  resolve `product_key_or_code` as a product code rather than an ArangoDB key.
+
+  - Lines without an explicit `phase_key` are assigned to the product's last
+    phase.
+  - After insert, a loop-detection query runs; if circular dependencies are
+    found the transaction is aborted and HTTP 403 is returned with the loop data.
+
+  **Emits:** *(direct transaction — no event class)*
+
+  **Required scope:** `product:bom:update`
+  """
 
   # Allow external tools to use item codes instead of db _keys
   if by_code:
@@ -136,7 +170,3 @@ async def update_bom(
       status_code = status_code,
       detail = response
     )
-
-
-
-

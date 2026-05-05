@@ -32,12 +32,28 @@ router = APIRouter()
 # COUNTING SESSIONS
 # ========================================================
 
-@router.post('/inventory/count-session')
+@router.post('/inventory/count-session',
+    response_model=APIResponse,
+    responses={
+      400: {"description": "Missing assignment targets or validation error"},
+      500: {"description": "Database error"},
+    })
 def create_counting_session(
   count_session: InventoryCountSession,
   assignments: list[InventoryCountAssignmentNew],
   token: TokenData = Depends(auth.verify_token)
 ):
+  """Create a new inventory counting session with assignments.
+
+  Inserts an `InventoryCountSession` document and all its
+  `InventoryCountAssignment` records in a single transaction. Auto-generates a
+  session code from the system counter if `code` is omitted. Each assignment
+  must reference at least one target (position or product key depending on the
+  session type).
+
+  **Emits:** *(direct transaction — no event class)*
+  **Required scope:** `inventory:count:create`
+  """
   try:
     tx = db.begin_transaction(write=['InventoryCountSession', 'InventoryCountAssignment', 'Config', 'Counter'])
 
@@ -84,8 +100,20 @@ def create_counting_session(
 # ========================================================
 
 
-@router.get('/inventory/count-session', dependencies=[Depends(auth.verify_token)])
+@router.get('/inventory/count-session',
+    response_model=list[InventoryCountSession],
+    responses={500: {"description": "Database error"}},
+    dependencies=[Depends(auth.verify_token)])
 def search_counting_sessions(params: Annotated[InventoryCountSessionSearchParams, Query()]):
+  """Search counting sessions.
+
+  Queries the `InventoryCountSession` collection with optional filters for
+  status, type, and free-text search on session code. Returns sessions sorted
+  by creation date descending up to `limit`.
+
+  **Emits:** *(direct query — no event class)*
+  **Required scope:** `inventory:count:read`
+  """
   try:
     bind_vars = dict(**params.model_dump())
     cursor = db.aql.execute(Queries.SEARCH_INVENTORY_COUNT_SESSIONS, bind_vars=bind_vars)
@@ -96,8 +124,23 @@ def search_counting_sessions(params: Annotated[InventoryCountSessionSearchParams
 
 # ========================================================
 
-@router.get('/inventory/count-session/{session_key}', dependencies=[Depends(auth.verify_token)])
+@router.get('/inventory/count-session/{session_key}',
+    response_model=dict,
+    responses={
+      404: {"description": "Counting session not found"},
+      500: {"description": "Database error"},
+    },
+    dependencies=[Depends(auth.verify_token)])
 def get_counting_session(session_key: str):
+  """Fetch full details for a single counting session.
+
+  Returns the `InventoryCountSession` document enriched with assignment details
+  and progress statistics. Raises 404 when `session_key` does not match any
+  session in the database.
+
+  **Emits:** *(direct query — no event class)*
+  **Required scope:** `inventory:count:read`
+  """
   try:
     session_data = db.aql.execute(
       Queries.GET_COUNT_SESSION_DETAILS,
@@ -113,8 +156,20 @@ def get_counting_session(session_key: str):
 
 # ========================================================
 
-@router.get('/inventory/count-session/{session_key}/processed-records', dependencies=[Depends(auth.verify_token)])
+@router.get('/inventory/count-session/{session_key}/processed-records',
+    response_model=int,
+    responses={500: {"description": "Database error"}},
+    dependencies=[Depends(auth.verify_token)])
 def get_counting_session_processed_records(session_key: str):
+  """Count processed count records for a session.
+
+  Returns the number of `inventory_count_record` documents associated with
+  `session_key` that have `processed=true`. Used to track application progress
+  during `CountSessionAppliedEvent` processing.
+
+  **Emits:** *(direct query — no event class)*
+  **Required scope:** `inventory:count:read`
+  """
   try:
     query = """
       FOR r IN inventory_count_record
@@ -129,11 +184,28 @@ def get_counting_session_processed_records(session_key: str):
 # ========================================================
 
 
-@router.put('/inventory/count-session/{session_key}', dependencies=[Depends(auth.verify_token)])
+@router.put('/inventory/count-session/{session_key}',
+    response_model=APIResponse,
+    responses={
+      404: {"description": "Counting session not found"},
+      422: {"description": "Cannot update restricted fields after session has been started"},
+      500: {"description": "Database error"},
+    },
+    dependencies=[Depends(auth.verify_token)])
 def update_counting_session(
   session_key: str,
   session_update: InventoryCountSessionUpdate,
 ):
+  """Update a counting session's metadata.
+
+  Applies the provided partial update to the `InventoryCountSession` document.
+  Fields such as `code`, `type`, `blind_quantities`, `blind_serials`, and
+  `scheduled_start` may only be changed while the session is in `planned`
+  status; attempts to update them after start return 422.
+
+  **Emits:** *(direct transaction — no event class)*
+  **Required scope:** `inventory:count:update`
+  """
   try:
     # Fetch existing session
     session = InventoryCountSession(**db.collection('InventoryCountSession').get(session_key))
@@ -160,8 +232,24 @@ def update_counting_session(
 # ========================================================
 
 
-@router.delete('/inventory/count-session', dependencies=[Depends(auth.verify_token)])
+@router.delete('/inventory/count-session',
+    response_model=APIResponse,
+    responses={
+      404: {"description": "Counting session not found"},
+      422: {"description": "Session cannot be deleted because it has been started or completed"},
+      500: {"description": "Database error"},
+    },
+    dependencies=[Depends(auth.verify_token)])
 def delete_counting_session(counting_session_key: str):
+  """Delete a planned counting session.
+
+  Removes the `InventoryCountSession` document and all associated
+  `InventoryCountAssignment` records within a single transaction. Only sessions
+  in `planned` status may be deleted; started or completed sessions return 422.
+
+  **Emits:** *(direct transaction — no event class)*
+  **Required scope:** `inventory:count:delete`
+  """
   try:
     session = db.collection('InventoryCountSession').get(counting_session_key)
     if not session:
@@ -183,8 +271,20 @@ def delete_counting_session(counting_session_key: str):
 # COUNTING ASSIGNMENTS
 # ========================================================
 
-@router.get('/inventory/count-assignment', dependencies=[Depends(auth.verify_token)])
+@router.get('/inventory/count-assignment',
+    response_model=list[InventoryCountAssignment],
+    responses={500: {"description": "Database error"}},
+    dependencies=[Depends(auth.verify_token)])
 def get_counting_assignment(params: Annotated[InventoryCountAssignmentSearchParams, Query()]):
+  """Search counting assignments.
+
+  Queries `InventoryCountAssignment` records with filters for session key,
+  assignment type, product, position, assigned user, and status. Supports
+  sorting by `product` or `position` key.
+
+  **Emits:** *(direct query — no event class)*
+  **Required scope:** `inventory:count:read`
+  """
   try:
     bind_vars = dict(**params.model_dump())
     cursor = db.aql.execute(Queries.SEARCH_INVENTORY_COUNT_ASSIGNMENTS, bind_vars=bind_vars)
@@ -196,11 +296,29 @@ def get_counting_assignment(params: Annotated[InventoryCountAssignmentSearchPara
 # ========================================================
 
 
-@router.post('/inventory/count-assignment', dependencies=[Depends(auth.verify_token)])
+@router.post('/inventory/count-assignment',
+    response_model=APIResponse,
+    responses={
+      400: {"description": "No assignments provided"},
+      404: {"description": "Counting session not found"},
+      422: {"description": "Session is completed, applied, or canceled"},
+      500: {"description": "Database error"},
+    },
+    dependencies=[Depends(auth.verify_token)])
 def create_counting_assignments(
   assignments: list[InventoryCountAssignment],
   token: TokenData = Depends(auth.verify_token)
 ):
+  """Add counting assignments to an existing session.
+
+  Inserts one or more `InventoryCountAssignment` records into the given session.
+  All referenced sessions must exist and must not be in `completed`, `applied`,
+  or `canceled` status. Sets `created_by` from the authenticated token and
+  defaults `include_children` to `False` if not supplied.
+
+  **Emits:** *(direct transaction — no event class)*
+  **Required scope:** `inventory:count:create`
+  """
   try:
     if not assignments:
       raise HTTPException(status_code=400, detail="At least one assignment is required")
@@ -241,8 +359,24 @@ def create_counting_assignments(
 # ========================================================
 
 
-@router.delete('/inventory/count-assignment', dependencies=[Depends(auth.verify_token)])
+@router.delete('/inventory/count-assignment',
+    response_model=APIResponse,
+    responses={
+      400: {"description": "Some assignments cannot be canceled (already started or completed)"},
+      500: {"description": "Database error"},
+    },
+    dependencies=[Depends(auth.verify_token)])
 def delete_counting_assignments(assignment_keys: list[str] = Body(..., embed=True)):
+  """Cancel a set of counting assignments.
+
+  Executes the `CANCEL_INVENTORY_COUNT_ASSIGNMENTS` AQL query within a
+  transaction. If any assignment in `assignment_keys` cannot be canceled
+  (because it has been started or completed), the entire operation is aborted
+  and 400 is returned.
+
+  **Emits:** *(direct transaction — no event class)*
+  **Required scope:** `inventory:count:delete`
+  """
   try:
     tx = db.begin_transaction(write=['InventoryCountAssignment'])
     removed = list(tx.aql.execute(Queries.CANCEL_INVENTORY_COUNT_ASSIGNMENTS, bind_vars=dict(assignment_keys=assignment_keys)))
@@ -263,8 +397,21 @@ def delete_counting_assignments(assignment_keys: list[str] = Body(..., embed=Tru
 # COUNTING RECORDS
 # ========================================================
 
-@router.get('/inventory/count-record', dependencies=[Depends(auth.verify_token)])
+@router.get('/inventory/count-record',
+    response_model=list,
+    responses={500: {"description": "Database error"}},
+    dependencies=[Depends(auth.verify_token)])
 def get_counting_record(params: Annotated[InventoryCountRecordSearchParams, Query()]):
+  """Search inventory count records.
+
+  Queries `inventory_count_record` documents with filters for session, user,
+  assignment, product, and position keys, plus status inclusion flags. Returns
+  the raw cursor results including `system_qt`, `counted_qt`, and `delta`
+  for each record.
+
+  **Emits:** *(direct query — no event class)*
+  **Required scope:** `inventory:count:read`
+  """
   try:
     bind_vars = dict(**params.model_dump())
     cursor = db.aql.execute(Queries.SEARCH_INVENTORY_COUNT_RECORDS, bind_vars=bind_vars)
@@ -275,12 +422,22 @@ def get_counting_record(params: Annotated[InventoryCountRecordSearchParams, Quer
 
 
 
-@router.get('/inventory/count-position-status')
+@router.get('/inventory/count-position-status',
+    response_model=dict[str, str],
+    responses={500: {"description": "Database error"}})
 async def get_count_position_status(
   session_key: str,
   parent_key: str
 ) -> dict[str, str]:
-  """Get counting completion status for positions in a session, given a parent position key."""
+  """Get counting completion status for positions in a session, given a parent position key.
+
+  Returns a mapping of `{position_key: status}` for all direct child positions
+  of `parent_key` that have an `inventory_count_position_complete` edge in the
+  given session. Positions not yet counted are absent from the result.
+
+  **Emits:** *(direct query — no event class)*
+  **Required scope:** `inventory:count:read`
+  """
 
   parent_id = f"Position/{parent_key}"
   session_id = f"InventoryCountSession/{session_key}"
@@ -310,9 +467,19 @@ async def get_count_position_status(
   return results
 
 
-@router.get('/inventory/count-session/{session_key}/completed-positions')
+@router.get('/inventory/count-session/{session_key}/completed-positions',
+    response_model=list[str],
+    responses={500: {"description": "Database error"}})
 async def get_session_completed_positions(session_key: str) -> list[str]:
-  """Get all position keys that have been marked as fully counted for a session."""
+  """Get all position keys fully counted in a session.
+
+  Queries the `inventory_count_position_complete` edge collection for all
+  records whose `_from` matches the given session, returning the `_key` of each
+  target position. Used by the warehouse UI to render per-position tick marks.
+
+  **Emits:** *(direct query — no event class)*
+  **Required scope:** `inventory:count:read`
+  """
 
   session_id = f"InventoryCountSession/{session_key}"
 
@@ -334,7 +501,15 @@ async def get_session_completed_positions(session_key: str) -> list[str]:
 # COUNT RECORD IMPORT
 # ========================================================
 
-@router.post('/inventory/count-record/import')
+@router.post('/inventory/count-record/import',
+    response_model=None,
+    responses={
+      400: {"description": "Invalid import_mode, missing file/file_key, file parse error, or validation errors"},
+      403: {"description": "File validated for a different session"},
+      404: {"description": "Counting session or import file not found"},
+      422: {"description": "Session not in completed status or file not validated"},
+      500: {"description": "Database error"},
+    })
 async def import_count_records(
   count_session_key: str = Form(...),
   import_mode: str = Form(...),
@@ -354,6 +529,9 @@ async def import_count_records(
   - If errors: annotated Excel file with error details
   - If dry_run=True and valid: file_key + summary for subsequent import
   - If dry_run=False and valid: import result from event
+
+  **Emits:** `CountImportedEvent` (execute mode only)
+  **Required scope:** `inventory:count:apply`
   """
   try:
     # Validate import mode

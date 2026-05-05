@@ -35,10 +35,29 @@ USER_SESSION_TIMEOUT_MINUTES = 15
 # ----------------------------------------------------------------------
 
 
-@router.post("/auth")
+@router.post(
+  "/auth",
+  response_model=AuthAPIResponse,
+  responses={
+    401: {"description": "Invalid credentials — username/password mismatch or user disabled"},
+    500: {"description": "Unexpected server error during credential verification"},
+  },
+)
 async def authenticate_user(
   form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
 ):
+  """Authenticate a user and issue a bearer token.
+
+  Validates the supplied username and password against the `User` collection.
+  If the user has `reset_password=True`, returns a short-lived password-reset
+  token (`action=reset_password`) instead of a full session token. Otherwise
+  issues a 24-hour session token (`action=start_session`) and closes any
+  previously active sessions for the same user.
+
+  **Emits:** *(direct transaction — no event class)*
+
+  **Required scope:** *(public — no auth)*
+  """
 
   try:
     user = auth.verify_user(username=form_data.username, password=form_data.password, db=db)
@@ -124,12 +143,29 @@ async def authenticate_user(
 
 # ----------------------------------------------------------------------
 
-@router.post('/user/{user_key}/verify')
+@router.post(
+  '/user/{user_key}/verify',
+  response_model=APIResponse,
+  responses={
+    401: {"description": "Password does not match the stored hash for the given user"},
+    500: {"description": "Unexpected error during password verification"},
+  },
+)
 async def verify_user_password(
   user_key: str,
   password: str = Body(..., embed=True),
   token: TokenData = Depends(auth.verify_token)
 ):
+  """Verify a user's current password.
+
+  Checks the supplied plain-text password against the bcrypt hash stored for
+  `user_key`. Returns 200 on success; raises 401 on mismatch. Used by the
+  frontend before allowing sensitive operations that require re-confirmation.
+
+  **Emits:** *(direct transaction — no event class)*
+
+  **Required scope:** `auth:user:verify`
+  """
   try:
     auth.verify_user(user_key=user_key, password=password)
   except:
@@ -144,10 +180,27 @@ async def verify_user_password(
 
 # ----------------------------------------------------------------------
 
-@router.get('/whoami')
+@router.get(
+  '/whoami',
+  response_model=APIResponse,
+  responses={
+    401: {"description": "JWT is missing, expired, or otherwise invalid"},
+  },
+)
 async def get_current_user(
   token: TokenData = Depends(auth.verify_token)
 ):
+  """Return the user key extracted from the current session token.
+
+  Decodes the bearer token from the `Authorization` header and returns the
+  `consumer_key` (ArangoDB `_key` of the `User` document). Useful for
+  frontend bootstrapping to confirm the session is still valid and to
+  retrieve the caller's identity.
+
+  **Emits:** *(direct transaction — no event class)*
+
+  **Required scope:** `auth:session:whoami`
+  """
   credentials_exception = HTTPException(
         status_code=401,
         detail="Could not validate credentials",
@@ -166,11 +219,30 @@ async def get_current_user(
 
 # ----------------------------------------------------------------------
 
-@router.post("/session")
+@router.post(
+  "/session",
+  response_model=APIResponse,
+  responses={
+    401: {"description": "Token consumer key or context does not match expected values; token is revoked"},
+    500: {"description": "Transaction error while creating UserSession or updating User record"},
+  },
+)
 async def start_user_session(
   user_key: str = Body(..., embed=True),
   token: TokenData = Depends(auth.verify_token)
 ):
+  """Open a new user session after token issuance.
+
+  Called immediately after `POST /auth` with the same bearer token. Validates
+  that `user_key` matches the token's `consumer_key` and that the token context
+  is `USER_SESSION`. Creates a `UserSession` document and updates `User.last_login`
+  within a single ArangoDB transaction. Returns session metadata including name,
+  scope, and preferences for frontend initialisation.
+
+  **Emits:** *(direct transaction — no event class)*
+
+  **Required scope:** `auth:session:start`
+  """
 
   # Check all token data matches the use for session creation
   if not (
@@ -253,12 +325,31 @@ async def start_user_session(
 
 # ----------------------------------------------------------------------
 
-@router.delete("/session/{session_key}")
+@router.delete(
+  "/session/{session_key}",
+  response_model=APIResponse,
+  responses={
+    401: {"description": "Token does not own the session and caller lacks admin/production scope for force-close"},
+    500: {"description": "Database error while invalidating the session token"},
+  },
+)
 async def close_user_session(
   session_key: str,
   force: bool | None = False,
   token_str: str = Depends(auth.bearer_token)
 ):
+  """Close an active user session and revoke its token.
+
+  Looks up the `UserSession` by `session_key`, validates that the caller owns
+  it (token signature match), and calls `auth.close_session`. With `?force=true`
+  an admin or production-scoped user can close another user's session. The bearer
+  token is decoded with `verify_expiration=False` so expired tokens can still
+  trigger a logout.
+
+  **Emits:** *(direct transaction — no event class)*
+
+  **Required scope:** `auth:session:close`
+  """
 
   token_json = jwt.decode(token_str, get_config().jwt_secret, algorithms=[auth.ALGORITHM], verify_expiration=False)
   token = TokenData(**token_json)

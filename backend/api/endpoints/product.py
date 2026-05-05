@@ -26,8 +26,24 @@ product_db = db.collection('Product')
 # =================================================
 #  GET / : GET PRODUCT LIST
 # =================================================
-@router.get("", dependencies=[Depends(auth.verify_token)])
+@router.get("",
+    response_model=list,
+    responses={500: {"description": "Database query error"}},
+    dependencies=[Depends(auth.verify_token)])
 async def get_product_list(params: Annotated[ProductSearchParams, Query()]):
+  """List products with optional filtering and search.
+
+  Accepts `ProductSearchParams` as query parameters. When `details=false`
+  (default), returns lightweight `ProductBaseData` objects; when `details=true`,
+  returns full `ProductDetails` including cost, process phases, and metadata.
+
+  Supports full-text search, tag inclusion/exclusion filters, traceability
+  filtering, and pagination via `limit`/`offset`.
+
+  **Emits:** *(direct query — no event class)*
+
+  **Required scope:** `product:catalogue:read`
+  """
   print(params.model_dump())
   product_list =  db.aql.execute(
     Queries.GET_PRODUCT_LIST,
@@ -46,6 +62,11 @@ async def get_product_list(params: Annotated[ProductSearchParams, Query()]):
 #  POST / : CREATE PRODUCT
 # =================================================
 @router.post("", status_code=201,
+    response_model=APIResponse,
+    responses={
+      400: {"description": "Invalid form data or duplicate product code"},
+      500: {"description": "Database write or image save error"},
+    },
     dependencies=[Depends(auth.verify_token)])
 async def create_product(
   code: str = Form(...),
@@ -56,6 +77,16 @@ async def create_product(
   counter_key: str = Form(''),
   manage_inventory: bool = Form(False)
 ):
+  """Create a new product in the catalogue.
+
+  Accepts multipart form data. Validates that no active product already exists
+  with the same `code`. If an image is provided it is written to the product
+  media folder as `image.jpg` inside a transaction.
+
+  **Emits:** *(direct transaction — no event class)*
+
+  **Required scope:** `product:catalogue:create`
+  """
   # Map form data
   try:
 
@@ -149,6 +180,12 @@ async def create_product(
 #  POST /PRODUCT_KEY/COPY : COPY PRODUCT
 # =================================================
 @router.post("/copy", status_code=201,
+    response_model=APIResponse,
+    responses={
+      404: {"description": "Original product not found"},
+      409: {"description": "A product with the new code already exists"},
+      500: {"description": "Database or file-copy error"},
+    },
     dependencies=[Depends(auth.verify_token)])
 async def copy_product(
   original_product: str = Body(), # Can be product key or code (key default)
@@ -156,6 +193,19 @@ async def copy_product(
   new_description: str = Body(None),
   by_code: bool = Body(default=False)
   ):
+  """Create a new product as a deep copy of an existing one.
+
+  Duplicates the product record, its full production process (phases + steps),
+  media folder, print-template assignments, and tag connections under `new_code`.
+  Pass `by_code=true` to look up the original product by `code` instead of
+  `_key`. Returns HTTP 409 if a product with `new_code` already exists.
+
+  All mutations run inside a single ArangoDB transaction.
+
+  **Emits:** *(direct transaction — no event class)*
+
+  **Required scope:** `product:catalogue:create`
+  """
 
   # 0.1 Check no product exists with same code
   if db.collection('Product').find(dict(code=new_code, trash=False)).count():
@@ -298,8 +348,20 @@ async def copy_product(
 #  DELETE /PRODUCT_KEY : DELETE PRODUCT
 # =================================================
 @router.delete("/{product_key}",
+    response_model=APIResponse,
+    responses={500: {"description": "Database update error"}},
     dependencies=[Depends(auth.verify_token)])
 async def delete_product(product_key):
+  """Soft-delete a product by moving it to the trash.
+
+  Sets `trash=true` on the product document rather than removing it, preserving
+  historical production data. The product will no longer appear in active
+  product lists.
+
+  **Emits:** *(direct transaction — no event class)*
+
+  **Required scope:** `product:catalogue:delete`
+  """
   product_to_trash = product_db.get(product_key)
 
   # TODO: Verify if there's any workorder or active item related
@@ -330,11 +392,22 @@ async def delete_product(product_key):
 #  PATCH /PRODUCT_KEY : UPDATE PRODUCT (SPECIFC PROPERTIES)
 # =================================================
 @router.patch("/{product_key}",
+    response_model=APIResponse,
+    responses={500: {"description": "Database update error"}},
     dependencies=[Depends(auth.verify_token)])
 async def udpate_product(
   product_key: str | None = None,
   updated_fields: dict = dict()
 ):
+  """Partially update specific fields of a product document.
+
+  Merges `updated_fields` into the product document, stamping the `updated`
+  timestamp. Only the supplied keys are changed; other fields are unaffected.
+
+  **Emits:** *(direct transaction — no event class)*
+
+  **Required scope:** `product:catalogue:update`
+  """
 
   product_to_update = product_db.get(product_key)
   try:
@@ -369,11 +442,23 @@ async def udpate_product(
 #  PUT /PRODUCT_KEY : REPLACE PRODUCT
 # =================================================
 @router.put("/{product_key}",
+    response_model=dict,
+    responses={500: {"description": "Database replace error"}},
     dependencies=[Depends(auth.verify_token)])
 async def replace_product(
   product_key: str,
   new_product_data: ProductDetails,
 ):
+  """Fully replace a product document.
+
+  Performs a full document replace (not a merge) — all fields in the document
+  will reflect `new_product_data`. The `_key` in the payload must match
+  `product_key`.
+
+  **Emits:** *(direct transaction — no event class)*
+
+  **Required scope:** `product:catalogue:update`
+  """
 
   # new_product_data.key = product_key
   # can comment the above out, since the key is already included in the data
@@ -387,11 +472,22 @@ async def replace_product(
 #  POST /PRODUCT_KEY/DOCS : SAVE DOC
 # =================================================
 @router.post("/{product_key}/doc",
+    response_model=str,
+    responses={400: {"description": "File write error"}},
     dependencies=[Depends(auth.verify_token)])
 async def save_doc(
   product_key: str,
   new_doc: UploadFile =  File(...)
 ):
+  """Upload a document file and attach it to a product.
+
+  Saves the uploaded file to the product's `doc` subfolder. Returns the stored
+  filename on success.
+
+  **Emits:** *(direct file write — no event class)*
+
+  **Required scope:** `product:catalogue:update`
+  """
 
   doc = FileHandler.product_media(
     object_key=product_key,
@@ -420,11 +516,22 @@ async def save_doc(
 #  DELETE (DOCS)
 # =================================================
 @router.delete("/{product_key}/doc/{doc_name}",
+    response_model=None,
+    responses={500: {"description": "File deletion error"}},
     dependencies=[Depends(auth.verify_token)])
 async def delete_doc(
   product_key: str,
   doc_name: str
 ):
+  """Delete a document file from a product's doc folder.
+
+  Removes the file `doc_name` from the product's document storage.
+  Returns no body on success.
+
+  **Emits:** *(direct file delete — no event class)*
+
+  **Required scope:** `product:catalogue:update`
+  """
 
   doc = FileHandler.product_media(
     object_key=product_key,
@@ -439,11 +546,22 @@ async def delete_doc(
 #  PUT (IMAGE)
 # =================================================
 @router.put("/{product_key}/image",
+    response_model=APIResponse,
+    responses={500: {"description": "Image write or database update error"}},
     dependencies=[Depends(auth.verify_token)])
 async def replace_product_image(
   product_key: str,
   new_image: UploadFile = File(...)
 ):
+  """Replace the product's primary image.
+
+  Writes the uploaded file to the product media folder as `image.jpg` and sets
+  `image=true` in the product document. Any previous image file is overwritten.
+
+  **Emits:** *(direct file write — no event class)*
+
+  **Required scope:** `product:catalogue:update`
+  """
   # extension = new_image.filename.split('.')[-1]
   img = FileHandler.product_media(object_key=product_key, file=new_image)
   filename = 'image.jpg'
@@ -461,8 +579,19 @@ async def replace_product_image(
 #  DELETE (IMAGE)
 # =================================================
 @router.delete("/{product_key}/image",
+    response_model=None,
+    responses={500: {"description": "Image deletion or database update error"}},
     dependencies=[Depends(auth.verify_token)])
 async def replace_product_image(product_key: str):
+  """Delete the product's primary image.
+
+  Removes `image.jpg` from the product media folder and sets `image=false` in
+  the product document. Returns no body on success.
+
+  **Emits:** *(direct file delete — no event class)*
+
+  **Required scope:** `product:catalogue:update`
+  """
   # extension = new_image.filename.split('.')[-1]
   img = FileHandler.product_media(object_key=product_key)
   img.delete_file('image.jpg')
@@ -477,8 +606,22 @@ async def replace_product_image(product_key: str):
 #  GET /PRODUCT_KEY : GET PRODUCT DATA
 # =================================================
 @router.get("/{product_key}", response_model=ProductFull,
+    responses={
+      404: {"description": "Product not found"},
+      500: {"description": "Database fetch or validation error"},
+    },
     dependencies=[Depends(auth.verify_token)])
 async def get_product_data(product_key: str):
+  """Retrieve full product details including docs and counter.
+
+  Returns a `ProductFull` object for `product_key`, enriched with:
+  - `docs`: list of document files in the product doc folder.
+  - `counter`: the associated `Counter` document if `counter_key` is set.
+
+  **Emits:** *(direct query — no event class)*
+
+  **Required scope:** `product:catalogue:read`
+  """
   try:
     product = ProductFull(**product_db.get(product_key))
     product.docs = get_product_docs(product_key)
@@ -505,8 +648,20 @@ async def get_product_data(product_key: str):
 #  PRODUCT STATS
 # =================================================
 @router.get('/{product_key}/stats',
+    response_model=dict,
+    responses={500: {"description": "KPI query error"}},
     dependencies=[Depends(auth.verify_token)])
 async def get_product_stats(product_key: str):
+  """Retrieve KPI statistics for a product.
+
+  Runs the `GET_PRODUCT_STATS` query and returns aggregated metrics such as
+  throughput time, yield rate, and production counts within the product's
+  configured KPI window.
+
+  **Emits:** *(direct query — no event class)*
+
+  **Required scope:** `product:catalogue:read`
+  """
   try:
     stats = db.aql.execute(ProductStatQueries.GET_PRODUCT_STATS, bind_vars=dict(product_key=product_key)).next()
     return stats
@@ -523,5 +678,3 @@ async def get_product_stats(product_key: str):
       status_code=status_code,
       detail=response
     )
-
-

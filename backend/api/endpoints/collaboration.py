@@ -23,14 +23,30 @@ messages = db.collection('Message')
 # ISSUE TYPES
 # ---------------------------------------------
 
-@router.get('/issue-type',
-    dependencies=[Depends(auth.verify_token)])
+@router.get(
+  '/issue-type',
+  response_model=list[IssueTypeFull],
+  responses={
+    500: {"description": "Database error while fetching issue types"},
+  },
+  dependencies=[Depends(auth.verify_token)],
+)
 async def get_issue_type(
   key: str | None = None,
   code: str | None = None,
   critical: bool | None = None,
   active_only: bool = True
   ):
+  """List issue types, optionally filtered by key, code, or criticality.
+
+  Executes `Queries.FETCH_ISSUE_TYPES` against ArangoDB with the provided
+  filter parameters. Returns all active types by default; pass `active_only=false`
+  to include archived types. Each result includes associated print templates.
+
+  **Emits:** *(direct transaction — no event class)*
+
+  **Required scope:** `collaboration:issue-type:read`
+  """
   # use query parameters to filter specific type
   match = dict(
     key = key,
@@ -44,9 +60,26 @@ async def get_issue_type(
 
 # ----------------------------------------------------------------------
 
-@router.post('/issue-type' , status_code=201,
-    dependencies=[Depends(auth.verify_token)])
+@router.post(
+  '/issue-type',
+  status_code=201,
+  response_model=APIResponse,
+  responses={
+    409: {"description": "An issue type with the same code already exists"},
+    500: {"description": "Database error during insertion"},
+  },
+  dependencies=[Depends(auth.verify_token)],
+)
 async def create_issue_type(data: IssueType):
+  """Create a new issue type.
+
+  Inserts an `IssueType` document into the `IssueType` collection. Rejects
+  the request with 409 if a document with the same `code` already exists.
+
+  **Emits:** *(direct transaction — no event class)*
+
+  **Required scope:** `collaboration:issue-type:write`
+  """
 
   # Check if code already exists
   if issue_types.find({ 'code': data.code }).count():
@@ -74,9 +107,24 @@ async def create_issue_type(data: IssueType):
 
 # ----------------------------------------------------------------------
 
-@router.patch('/issue-type/{issue_type_key}',
-    dependencies=[Depends(auth.verify_token)])
+@router.patch(
+  '/issue-type/{issue_type_key}',
+  response_model=APIResponse,
+  responses={
+    500: {"description": "Database error during partial update"},
+  },
+  dependencies=[Depends(auth.verify_token)],
+)
 async def update_issue_type(issue_type_key: str, data: IssueTypeUpdate):
+  """Partially update an existing issue type.
+
+  Applies the supplied fields to the `IssueType` document identified by
+  `issue_type_key`. Unset fields are left unchanged (`keep_none=False`).
+
+  **Emits:** *(direct transaction — no event class)*
+
+  **Required scope:** `collaboration:issue-type:write`
+  """
 
   if not hasattr(data, 'key'):
     data.key = issue_type_key
@@ -99,9 +147,25 @@ async def update_issue_type(issue_type_key: str, data: IssueTypeUpdate):
 
 # ----------------------------------------------------------------------
 
-@router.delete('/issue-type/{issue_type_key}',
-    dependencies=[Depends(auth.verify_token)])
+@router.delete(
+  '/issue-type/{issue_type_key}',
+  response_model=APIResponse,
+  responses={
+    500: {"description": "Database error during deletion"},
+  },
+  dependencies=[Depends(auth.verify_token)],
+)
 async def delete_issue_type(issue_type_key: str):
+  """Delete an issue type by key.
+
+  Permanently removes the `IssueType` document with the given key from
+  the collection. Existing `Issue` documents that reference this type
+  are not automatically updated.
+
+  **Emits:** *(direct transaction — no event class)*
+
+  **Required scope:** `collaboration:issue-type:write`
+  """
   try:
     issue_types.delete(issue_type_key)
   except Exception:
@@ -118,8 +182,14 @@ async def delete_issue_type(issue_type_key: str):
 # ISSUES
 # ---------------------------------------------
 
-@router.get('/issue',
-    dependencies=[Depends(auth.verify_token)])
+@router.get(
+  '/issue',
+  response_model=list[dict],
+  responses={
+    500: {"description": "AQL error while searching issues"},
+  },
+  dependencies=[Depends(auth.verify_token)],
+)
 async def search_issues(
   issue_key: list[str] | None = Query(default=None),
   issue_key_search: str | None = None,
@@ -151,6 +221,18 @@ async def search_issues(
   sort_by: str | None = 'created',
   sorting_order: str | None = 'desc',
   ):
+  """Search and filter issues with multi-dimensional query parameters.
+
+  Executes `Queries.FIND_ISSUES` with all supplied filters. Filters are
+  ANDed together; omitted parameters default to `null` and are ignored by
+  the AQL query. `advanced_filters` accepts a base64-encoded JSON object
+  (latin-1 encoding, matching the browser `btoa` API). Results are sorted
+  by `sort_by` (default `created`) in `sorting_order` (default `desc`).
+
+  **Emits:** *(direct transaction — no event class)*
+
+  **Required scope:** `collaboration:issue:read`
+  """
   # use query parameters to filter specific type
   bind_vars = dict(
     issue_key = issue_key,
@@ -201,9 +283,25 @@ async def search_issues(
 # MESSAGES
 # ---------------------------------------------
 
-@router.get('/message',
-    dependencies=[Depends(auth.verify_token)])
+@router.get(
+  '/message',
+  response_model=list[Message],
+  responses={
+    500: {"description": "Database error while fetching messages"},
+  },
+  dependencies=[Depends(auth.verify_token)],
+)
 async def get_messages(recipient_id: str):
+  """Retrieve messages for a given recipient, sorted by creation time.
+
+  Queries the `message` edge collection filtering by `_to == recipient_id`.
+  The recipient is typically an `Issue` or `User` document ID
+  (e.g. `Issue/abc123`). Results are sorted ascending by `created` timestamp.
+
+  **Emits:** *(direct transaction — no event class)*
+
+  **Required scope:** `collaboration:message:read`
+  """
   try:
     cursor = db.collection('message').find(dict(_to=recipient_id))
     messages = [Message(**m) for m in cursor]
@@ -222,8 +320,26 @@ async def get_messages(recipient_id: str):
 # TASKS
 # ---------------------------------------------
 
-@router.get('/task', dependencies=[Depends(auth.verify_token)])
+@router.get(
+  '/task',
+  response_model=list[TaskSearchResult],
+  responses={
+    500: {"description": "AQL error while searching tasks"},
+  },
+  dependencies=[Depends(auth.verify_token)],
+)
 async def search_tasks(params: Annotated[TaskSearchParameters, Query()]):
+  """Search tasks using multi-dimensional filter parameters.
+
+  Executes `Queries.FIND_TASKS` with the bound `TaskSearchParameters`. Supports
+  filtering by status flags, date ranges, assignees, and linked entities
+  (issue, work order, product, serial). `advanced_filters` accepts a
+  base64-encoded JSON object. Default limit is 200 rows.
+
+  **Emits:** *(direct transaction — no event class)*
+
+  **Required scope:** `collaboration:task:read`
+  """
   try:
     results = db.aql.execute(Queries.FIND_TASKS, bind_vars=params.model_dump())
     return [TaskSearchResult(**t) for t in results]
@@ -235,10 +351,24 @@ async def search_tasks(params: Annotated[TaskSearchParameters, Query()]):
 
 
 
-@router.get('/task/{task_key}', dependencies=[Depends(auth.verify_token)])
+@router.get(
+  '/task/{task_key}',
+  response_model=dict,
+  responses={
+    500: {"description": "AQL error while fetching task data"},
+  },
+  dependencies=[Depends(auth.verify_token)],
+)
 async def get_task_data(task_key: str):
-  """
-  Returns the task data with links to the issue, work order, product, etc.
+  """Return full task data with linked entity references.
+
+  Executes `Queries.GET_TASK_DATA` to fetch the `Task` document identified
+  by `task_key` together with its graph links to issues, work orders, products,
+  serials, and other tasks. Returns the raw AQL result dict.
+
+  **Emits:** *(direct transaction — no event class)*
+
+  **Required scope:** `collaboration:task:read`
   """
   try:
     task = db.aql.execute(Queries.GET_TASK_DATA, bind_vars=dict(task_key=task_key)).next()
@@ -250,66 +380,133 @@ async def get_task_data(task_key: str):
     )
 
 
-@router.get('/task-type', dependencies=[Depends(auth.verify_token)])
+@router.get(
+  '/task-type',
+  response_model=list[TaskTypeFull],
+  responses={
+    500: {"description": "Database error while fetching task types"},
+  },
+  dependencies=[Depends(auth.verify_token)],
+)
 async def get_task_types(
     active_only: bool = True,
     name: str | None = None
 ):
-    """Get task types, optionally filtered by active status and name"""
-    try:
-        match = dict(
-            active_only=active_only,
-            name=name
-        )
+  """List task types, optionally filtered by active status and name.
 
-        cursor = db.aql.execute(Queries.FETCH_TASK_TYPES, bind_vars=match)
-        return [TaskTypeFull(**t) for t in cursor]
-    except Exception:
-        raise HTTPException(
-            status_code=500,
-            detail=traceback.format_exc()
-        )
+  Returns `TaskTypeFull` records (includes associated print templates).
+  Pass `active_only=false` to include archived task types. `name` is a
+  substring match against the type name field.
 
-@router.post('/task-type', status_code=201, dependencies=[Depends(auth.verify_token)])
+  **Emits:** *(direct transaction — no event class)*
+
+  **Required scope:** `collaboration:task-type:read`
+  """
+  try:
+    match = dict(
+        active_only=active_only,
+        name=name
+    )
+
+    cursor = db.aql.execute(Queries.FETCH_TASK_TYPES, bind_vars=match)
+    return [TaskTypeFull(**t) for t in cursor]
+  except Exception:
+    raise HTTPException(
+        status_code=500,
+        detail=traceback.format_exc()
+    )
+
+@router.post(
+  '/task-type',
+  status_code=201,
+  response_model=TaskType,
+  responses={
+    500: {"description": "Database error during task type insertion"},
+  },
+  dependencies=[Depends(auth.verify_token)],
+)
 async def create_task_type(task_type: TaskType):
-    """Create a new task type"""
-    try:
-        new_task_type = db.collection('TaskType').insert(
-            task_type.model_dump(by_alias=True),
-            return_new=True
-        )['new']
-        return TaskType(**new_task_type)
-    except Exception:
-        raise HTTPException(
-            status_code=500,
-            detail=traceback.format_exc()
-        )
+  """Create a new task type.
 
-@router.put('/task-type/{type_key}', dependencies=[Depends(auth.verify_token)])
+  Inserts a `TaskType` document into the `TaskType` collection. The
+  `link_settings` field defaults to all entity types disabled; override
+  explicitly to enable issue/work-order/product/serial/task linking for
+  tasks of this type.
+
+  **Emits:** *(direct transaction — no event class)*
+
+  **Required scope:** `collaboration:task-type:write`
+  """
+  try:
+      new_task_type = db.collection('TaskType').insert(
+          task_type.model_dump(by_alias=True),
+          return_new=True
+      )['new']
+      return TaskType(**new_task_type)
+  except Exception:
+      raise HTTPException(
+          status_code=500,
+          detail=traceback.format_exc()
+      )
+
+@router.put(
+  '/task-type/{type_key}',
+  response_model=APIResponse,
+  responses={
+    500: {"description": "Database error during task type replacement"},
+  },
+  dependencies=[Depends(auth.verify_token)],
+)
 async def update_task_type(type_key: str, task_type: TaskType):
-    """Update an existing task type"""
-    try:
-        task_type.key = type_key
-        updated_task_type = db.collection('TaskType').update(
-            # Use exclude_unset to avoid updating fields that are not provided
-            task_type.model_dump(by_alias=True, exclude_unset=True),
-            return_new=True,
-        )['new']
-        return APIResponse(message="Task type updated successfully", detail=updated_task_type)
-    except Exception:
-        raise HTTPException(
-            status_code=500,
-            detail=traceback.format_exc()
-        )
+  """Replace an existing task type document.
 
-@router.delete('/task-type/{type_key}', dependencies=[Depends(auth.verify_token)])
+  Performs a full replacement of the `TaskType` document identified by
+  `type_key`. Only fields present in the request body are written
+  (`exclude_unset=True`), so omitted optional fields retain their current
+  database values.
+
+  **Emits:** *(direct transaction — no event class)*
+
+  **Required scope:** `collaboration:task-type:write`
+  """
+  try:
+      task_type.key = type_key
+      updated_task_type = db.collection('TaskType').update(
+          # Use exclude_unset to avoid updating fields that are not provided
+          task_type.model_dump(by_alias=True, exclude_unset=True),
+          return_new=True,
+      )['new']
+      return APIResponse(message="Task type updated successfully", detail=updated_task_type)
+  except Exception:
+      raise HTTPException(
+          status_code=500,
+          detail=traceback.format_exc()
+      )
+
+@router.delete(
+  '/task-type/{type_key}',
+  response_model=APIResponse,
+  responses={
+    500: {"description": "Database error during task type deletion"},
+  },
+  dependencies=[Depends(auth.verify_token)],
+)
 async def delete_task_type(type_key: str):
-    """Delete a task type"""
-    try:
-        db.collection('TaskType').delete(type_key)
-        return APIResponse(message="Task type deleted successfully")
-    except Exception:
-        raise HTTPException(
-            status_code=500,
-            detail=traceback.format_exc()
-        )
+  """Delete a task type by key.
+
+  Permanently removes the `TaskType` document. Existing `Task` documents
+  that reference this type via `task_type_key` are not automatically
+  updated or removed.
+
+  **Emits:** *(direct transaction — no event class)*
+
+  **Required scope:** `collaboration:task-type:write`
+  """
+  try:
+      db.collection('TaskType').delete(type_key)
+      return APIResponse(message="Task type deleted successfully")
+  except Exception:
+      raise HTTPException(
+          status_code=500,
+          detail=traceback.format_exc()
+      )

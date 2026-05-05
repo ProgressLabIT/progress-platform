@@ -13,9 +13,25 @@ context_map = {
 }
 
 
-@router.get('/tag', response_model=APIResponse[list[Tag]],
-    dependencies=[Depends(auth.verify_token)])
+@router.get(
+  '/tag',
+  response_model=APIResponse[list[Tag]],
+  responses={
+    500: {"description": "Database error while fetching tags"},
+  },
+  dependencies=[Depends(auth.verify_token)],
+)
 def get_tags(context: TagAssignmentContext | None = None, context_key: str | None = None):
+  """List tags, optionally scoped to a specific entity.
+
+  Returns all tags from the `Tag` collection when no `context` is supplied.
+  When `context` and `context_key` are both provided, returns only tags
+  connected to the specified entity via `has_tag` edges.
+
+  **Emits:** *(direct transaction — no event class)*
+
+  **Required scope:** `config:tag:read`
+  """
   try:
     if not context:
       cursor = db.collection('Tag').all()
@@ -41,9 +57,24 @@ def get_tags(context: TagAssignmentContext | None = None, context_key: str | Non
     raise HTTPError(500, 'There was a problem retrieving the tags')
 
 
-@router.post('/tag', response_model=APIResponse[Tag],
-    dependencies=[Depends(auth.verify_token)])
+@router.post(
+  '/tag',
+  response_model=APIResponse[Tag],
+  responses={
+    500: {"description": "Database error during tag insertion"},
+  },
+  dependencies=[Depends(auth.verify_token)],
+)
 def create_tag(tag: Tag):
+  """Create a new tag.
+
+  Inserts a `Tag` document into the `Tag` collection. Tags can subsequently
+  be connected to entities (e.g. products) via `POST /tag/update-connections`.
+
+  **Emits:** *(direct transaction — no event class)*
+
+  **Required scope:** `config:tag:write`
+  """
   try:
     tag = db.collection('Tag').insert(tag, return_new=True)['new']
 
@@ -56,9 +87,26 @@ def create_tag(tag: Tag):
     raise HTTPError(500, 'There was a problem creating the tag')
 
 
-@router.post('/tag/update-connections', response_model=APIResponse[None],
-    dependencies=[Depends(auth.verify_token)])
+@router.post(
+  '/tag/update-connections',
+  response_model=APIResponse[None],
+  responses={
+    500: {"description": "Transaction error while applying tag connection changes"},
+  },
+  dependencies=[Depends(auth.verify_token)],
+)
 def connect_tags(connection_updates: list[TagConnectionUpdate]):
+  """Add or remove tag connections for one or more entities.
+
+  Accepts a list of `TagConnectionUpdate` objects each specifying a `type`
+  (`add` or `remove`), a `tag_key`, a `context` (e.g. `product`), and a
+  `context_key`. All changes are applied within a single ArangoDB transaction
+  against the `has_tag` edge collection.
+
+  **Emits:** *(direct transaction — no event class)*
+
+  **Required scope:** `config:tag:write`
+  """
   try:
     tx = db.begin_transaction(write=['has_tag'])
 

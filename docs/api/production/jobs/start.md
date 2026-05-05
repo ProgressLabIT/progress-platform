@@ -1,12 +1,22 @@
 ---
-title: POST /api/production/jobs/start
-description: POST /api/production/jobs/start reference — Progress Platform.
+title: POST /jobs/start
+operationId: start_job_post
+description: Start a job and open a new batch — Progress Platform API Reference
 ---
 
-# POST /api/production/jobs/start
+# POST /jobs/start
 
-> 🚧 Coming soon — populated in Phase 2.
+<OAOperation operationId="start_job_post" />
 
-This page is a Phase 1 scaffold; the URL is locked. Content lands when Phase 2 of the docs workstream completes.
+> **Schema note:** This operation page was scaffolded in Phase 1. The `operationId`
+> will be confirmed against the exported `openapi.json` once CI runs
+> `scripts/export_openapi.py`. If the rendered operation above is empty, the
+> operationId requires adjustment to match FastAPI's generated value.
 
-Related: [Events](/events/) · [API](/api/) · [Home](/)
+## Events Emitted
+
+*This endpoint emits no domain events.*
+
+## Related
+
+[← API Overview](/api/) · [← Production](/api/production/) · [Events Reference](/events/)

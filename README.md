@@ -10,23 +10,26 @@
 
 > ⚠️ **This is a read-only mirror.** Canonical: [GitLab](https://gitlab.com/progresslab/progress-platform). See [CONTRIBUTING.md](CONTRIBUTING.md).
 
-<!-- Phase 4 deliverable: replace with asciinema/SVG of `progress init` (D-11) -->
-![Demo placeholder — captured during May 14 fresh-VM rehearsal](https://via.placeholder.com/800x300?text=Demo+GIF+coming+soon)
+<!-- Recording slot: replace the image below with an asciinema player or SVG after May 14 rehearsal.
+     Cast file committed to docs/public/recordings/install.cast (D-07/D-11).
+     Example embed: [![asciicast](https://asciinema.org/a/<ID>.svg)](https://asciinema.org/a/<ID>)
+     Or local VitePress player via vite-plugin-asciinema (if wired in docs/).
+     Until the cast is recorded, this image slot is intentionally left as a placeholder. -->
+![Install demo — recorded May 14, 2026](docs/public/recordings/install-preview.png)
 
 ## Try it in 5 minutes
 
-> **Note:** the `progress` CLI is part of the Sparkplug demo bundle, in active development.
-> Daily-locked surface as of 2026-04-29 (placeholder — coordinated with sparkplug-demo workstream;
-> Phase 4 launch-prep does the final lock against the May 14 fresh-VM rehearsal):
+> Requires Docker and Docker Compose v2. Tested on Ubuntu 24.04 and macOS 14.
 
+<!-- GSD:5min-lock-start — re-lock this block from May 14 fresh-VM rehearsal (LAUNCH-CHECKLIST.md §4) -->
 ```bash
-# placeholder — coordinated with sparkplug-demo workstream
 curl -fsSL https://progresslabit.github.io/progress-platform/install.sh | sh
 progress init
 progress restore --demo sparkplug
 progress tap
 # open http://progress.localhost
 ```
+<!-- GSD:5min-lock-end -->
 
 ## Documentation
 

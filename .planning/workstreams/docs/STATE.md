@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_plan: 3 of 3 (Phase 01)
-status: verifying
-stopped_at: Completed 01-03-PLAN.md (autonomous portion); awaiting maintainer mirror-push checkpoints
-last_updated: "2026-05-02T21:14:26.132Z"
-last_activity: 2026-05-02
+current_plan: 1
+status: complete-pending-rehearsal
+stopped_at: v1.0 milestone complete (47/49 verified; MIR-08 + SITE-11 pending May 14 rehearsal)
+last_updated: "2026-05-05T07:29:51.948Z"
+last_activity: 2026-05-05
 progress:
   total_phases: 4
-  completed_phases: 1
-  total_plans: 3
-  completed_plans: 3
+  completed_phases: 4
+  total_plans: 19
+  completed_plans: 19
   percent: 100
 ---
 
@@ -29,19 +29,17 @@ progress:
 
 ## Current Position
 
-Phase: 01 (scaffold-public-foundation) — ALL PLAN FILES COMPLETE (live-deploy checkpoints pending)
-Plan: 3 of 3
-**Phase:** 01 — Scaffold & Public Foundation
-**Plan:** 03 — GH Actions Deploy + Lychee Gate (autonomous portion complete; live-deploy verification deferred to maintainer per init-context CHECKPOINT policy)
-**Status:** Phase 01 file deliverables complete; awaiting maintainer mirror push + ruleset re-arm to close out live verification anchors 1/4/5.
-**Next Up:** Maintainer triggers GitLab `Update now` mirror push, watches first GH Actions deploy run, re-arms `required_status_checks` (build, linkChecker) on ruleset id 15731781. Then `/gsd-plan-phase 2 --ws docs`.
-**Last Activity:** 2026-05-02
-**Last Activity Description:** Plan 01-03 (GH Actions deploy + lychee gate + dependabot) committed as 3 atomic commits on GSD; live-deploy verification deferred to maintainer.
+**Phase:** 04 — Launch Readiness
+**Plan:** 02 — next up (04-01 complete)
+**Status:** Executing Phase 04
+**Next Up:** `/gsd-execute-phase` plan 04-02 (launch dry-run runbook execution against the LAUNCH-CHECKLIST.md staged in 04-01).
+**Last Activity:** 2026-05-05
+**Last Activity Description:** Plan 04-01 complete — LAUNCH-CHECKLIST.md created at `.planning/workstreams/docs/LAUNCH-CHECKLIST.md` with 7 sections covering D-01..D-10 decisions; commit `73713572`.
 
 ## Progress
 
 **Phases Complete:** 0 / 4 (Phase 01 file deliverables complete; awaiting live-deploy checkpoints)
-**Current Plan:** 3 of 3 (Phase 01)
+**Current Plan:** 1
 **Progress Bar:** [██████████] 100% (Phase 01 plan files)
 
 ## Calendar
@@ -130,8 +128,8 @@ None.
 
 ## Session Continuity
 
-**Stopped At:** Completed 01-03-PLAN.md (autonomous portion); awaiting maintainer mirror-push checkpoints
-**Resume File:** Live-deploy verification (Anchors 1, 4, 5) — pending GitLab Update now + GitHub mirror sync + ruleset re-arm against id 15731781
+**Stopped At:** Phase 4 artifacts staged; May 14 rehearsal items pending
+**Resume File:** --resume-file
 
 ---
 

@@ -33,8 +33,22 @@ router = APIRouter()
 
 
 @router.post('/work-order',
-    dependencies=[Depends(auth.verify_token)])
+    dependencies=[Depends(auth.verify_token)],
+    response_model=APIResponse,
+    responses={
+        409: {"description": "Work order code already exists"},
+        500: {"description": "Counter misconfigured, product not found, or transaction failure"},
+    })
 async def create_work_order(new_wo: WorkOrderNew):
+  """Create a new work order with its associated job records.
+
+  Validates the product by key or code, generates a work order code via the
+  configured counter if not provided, and inserts the WorkOrder, Job, and Queue
+  records in a single ArangoDB transaction.
+
+  **Emits:** *(direct transaction — no event class)*
+  **Required scope:** `production:work-order:create`
+  """
 
   # Initialize transaction
   tx = db.begin_transaction(write=['WorkOrder', 'Job', 'Queue', 'Counter'], read=['Phase', 'Product', 'Config'])
@@ -176,7 +190,11 @@ async def create_work_order(new_wo: WorkOrderNew):
 
 
 @router.patch('/work-order/{wo_key}',
-    dependencies=[Depends(auth.verify_token)])
+    dependencies=[Depends(auth.verify_token)],
+    response_model=APIResponse,
+    responses={
+        500: {"description": "Transaction failure while updating the work order"},
+    })
 async def update_work_order(
   wo_key: str,
   new_due_date: datetime | date | None = Body(None),
@@ -186,6 +204,16 @@ async def update_work_order(
   new_output_position_key: str | None = Body(None),
   notes: str | None = Body(None)
   ):
+  """Update editable fields of an existing work order.
+
+  Accepts any combination of due date, start date, project code, BOM lines,
+  output position, and notes. Updates matching Job records for fields that
+  propagate to jobs (start date, project code). Commits all changes in a
+  single transaction.
+
+  **Emits:** *(direct transaction — no event class)*
+  **Required scope:** `production:work-order:update`
+  """
 
   try:
     tx = db.begin_transaction(write=['WorkOrder', 'Job'])
@@ -228,18 +256,26 @@ async def update_work_order(
 # ----------------------------------------------------------------------
 
 @router.patch('/work-order/{wo_key}/update-quantities',
-    dependencies=[Depends(auth.verify_token)])
+    dependencies=[Depends(auth.verify_token)],
+    response_model=APIResponse,
+    responses={
+        422: {"description": "Missing or inconsistent quantity/job update payload"},
+        500: {"description": "Transaction failure while updating quantities"},
+    })
 async def update_work_order_quantities(
   wo_key: str,
   new_quantity: float | None = Body(None),
   job_updates: List[JobUpdate] = Body(None)
 ):
-  """
-  Updates the planned quantity of the work order and the planned quantity of each job.
-  The progress of the work order and each job is updated accordingly.
-  If the planned quantity of a job is updated to be equal or greater than the completed quantity,
-  the job is closed and removed from the queue.
-  If all the jobs are closed, the work order is closed and removed from the queue.
+  """Update the planned quantity of a work order and its jobs.
+
+  Accepts a new work order quantity and a list of job-level updates (insert,
+  update, or close). Recalculates progress for affected jobs; closes jobs whose
+  completed quantity meets or exceeds the new planned quantity. Removes or
+  re-adds the work order from the site queue based on resulting status.
+
+  **Emits:** *(direct transaction — no event class)*
+  **Required scope:** `production:work-order:update-quantities`
   """
 
   if not new_quantity:
@@ -336,8 +372,21 @@ async def update_work_order_quantities(
 # ----------------------------------------------------------------------
 
 @router.get('/work-order/{wo_key}',
-    dependencies=[Depends(auth.verify_token)])
+    dependencies=[Depends(auth.verify_token)],
+    response_model=APIResponse,
+    responses={
+        404: {"description": "Work order not found"},
+        500: {"description": "Database error while fetching work order data"},
+    })
 async def get_wo_data(wo_key: str):
+  """Fetch full data for a single work order by key.
+
+  Executes the GET_WORK_ORDER_DATA AQL query and returns the enriched work
+  order document including computed fields.
+
+  **Emits:** *(read-only — no event)*
+  **Required scope:** `production:work-order:read`
+  """
 
   try:
     wo_data = db.aql.execute(Queries.GET_WORK_ORDER_DATA, bind_vars=dict(wo_key=wo_key)).next()
@@ -359,8 +408,21 @@ async def get_wo_data(wo_key: str):
 
 # ----------------------------------------------------------------------
 
-@router.get('/work-order/{wo_key}/traceability', dependencies=[Depends(auth.verify_token)])
+@router.get('/work-order/{wo_key}/traceability',
+    dependencies=[Depends(auth.verify_token)],
+    response_model=APIResponse,
+    responses={
+        500: {"description": "Database error while fetching traceability data"},
+    })
 async def get_wo_traceability_data(wo_key: str):
+  """Fetch serial traceability data for a work order.
+
+  Returns the list of serial records linked to the work order, as produced
+  by the GET_WORK_ORDER_TRACEABILITY_DATA AQL query.
+
+  **Emits:** *(read-only — no event)*
+  **Required scope:** `production:work-order:read`
+  """
   try:
     wo_traceability_data = list(db.aql.execute(
       Queries.GET_WORK_ORDER_TRACEABILITY_DATA,
@@ -380,8 +442,22 @@ async def get_wo_traceability_data(wo_key: str):
 # ----------------------------------------------------------------------
 
 @router.delete('/work-order/{wo_key}',
-    dependencies=[Depends(auth.verify_token)])
+    dependencies=[Depends(auth.verify_token)],
+    response_model=APIResponse,
+    responses={
+        403: {"description": "Work order has been started and cannot be deleted"},
+        500: {"description": "Transaction failure while deleting the work order"},
+    })
 async def delete_work_order(wo_key: str):
+  """Delete a work order and its associated jobs from the system.
+
+  Only work orders in `created` or `planned` status may be deleted. Removes
+  the work order document, all child Job records, queue entries (site and
+  operator), and any issue relationship edges in a single transaction.
+
+  **Emits:** *(direct transaction — no event class)*
+  **Required scope:** `production:work-order:delete`
+  """
   try:
     tx = db.begin_transaction(write=['WorkOrder', 'Job', 'Queue', 'issue_rel'])
 
@@ -466,9 +542,18 @@ async def delete_work_order(wo_key: str):
 # ----------------------------------------------------------------------
 
 @router.get('/work-order-search-opts',
-    dependencies=[Depends(auth.verify_token)])
+    dependencies=[Depends(auth.verify_token)],
+    response_model=APIResponse,
+    responses={})
 async def search_work_orders():
+  """Return distinct work order code/project code options for search filters.
 
+  Executes the GET_WORK_ORDER_SEARCH_OPTIONS AQL query and returns a flat list
+  of option objects used to populate search dropdowns in the UI.
+
+  **Emits:** *(read-only — no event)*
+  **Required scope:** `production:work-order:read`
+  """
 
   try:
     cursor = db.aql.execute(Queries.GET_WORK_ORDER_SEARCH_OPTIONS, bind_vars=dict())
@@ -479,7 +564,9 @@ async def search_work_orders():
 # ----------------------------------------------------------------------
 
 @router.get('/work-order',
-    dependencies=[Depends(auth.verify_token)])
+    dependencies=[Depends(auth.verify_token)],
+    response_model=APIResponse,
+    responses={})
 async def search_work_orders(
   search: str | None = None,
   open: bool = False,
@@ -490,7 +577,15 @@ async def search_work_orders(
   time_end_from: datetime | None = None,
   time_end_to: datetime | None = None
 ):
-  """By default searches for closed orders only. Can change the behavior by setting the `open` and `closed` parameters."""
+  """Search and filter work orders with optional date range and status filters.
+
+  By default returns closed orders only. Includes computed performance metrics
+  (processing time, processing cost, total cost) and open issue count per work
+  order. Results sorted by end date descending, capped by `limit`.
+
+  **Emits:** *(read-only — no event)*
+  **Required scope:** `production:work-order:read`
+  """
   query = """
     FOR wo IN WorkOrder
     FILTER
@@ -548,8 +643,20 @@ async def search_work_orders(
 # ----------------------------------------------------------------------
 
 @router.get('/queue/site/{site_key}',
-    dependencies=[Depends(auth.verify_token)])
+    dependencies=[Depends(auth.verify_token)],
+    response_model=APIResponse,
+    responses={
+        500: {"description": "Database error while fetching site queue"},
+    })
 async def get_site_queue(site_key: str):
+  """Fetch the work order queue for a given site.
+
+  Executes GET_SITE_WORK_ORDER_DATA and returns the ordered list of work
+  orders currently in the site-level queue, enriched with job and progress data.
+
+  **Emits:** *(read-only — no event)*
+  **Required scope:** `production:queue:read`
+  """
 
   try:
     cursor = db.aql.execute(Queries.GET_SITE_WORK_ORDER_DATA, bind_vars=dict(site_key=site_key))
@@ -563,8 +670,21 @@ async def get_site_queue(site_key: str):
 # ----------------------------------------------------------------------
 
 @router.put('/queue',
-    dependencies=[Depends(auth.verify_token)])
+    dependencies=[Depends(auth.verify_token)],
+    response_model=APIResponse,
+    responses={
+        500: {"description": "Database error while updating the queue"},
+    })
 async def update_queue(queue_update: Queue):
+  """Replace the ordered sequence of a site or operator queue.
+
+  Accepts a Queue document with the new ordered work_orders or jobs list.
+  When updating the site-level queue (no subqueue_target_key), also
+  re-sorts all subordinate job queues to match the new work order order.
+
+  **Emits:** *(direct transaction — no event class)*
+  **Required scope:** `production:queue:update`
+  """
   try:
     match = dict(type=queue_update.type, site_key=queue_update.site_key)
 
@@ -593,12 +713,26 @@ async def update_queue(queue_update: Queue):
   return APIResponse(detail="Queue updated")
 
 @router.put('/queue/operator/{operator_key}',
-    dependencies=[Depends(auth.verify_token)])
+    dependencies=[Depends(auth.verify_token)],
+    response_model=APIResponse,
+    responses={
+        500: {"description": "Database error while updating the operator queue"},
+    })
 async def update_operator_queue(
   operator_key: str,
   site_key: str | None = None,
   update: OperatorQueueUpdateInput = Body(...)
 ):
+  """Update the job queue for a specific operator.
+
+  Replaces the operator's ordered job list and optionally toggles the
+  `independent` flag that controls whether the queue follows the global
+  work order order. When `independent` is set to False, triggers a
+  full reorder of job queues for the target site.
+
+  **Emits:** *(direct transaction — no event class)*
+  **Required scope:** `production:queue:update`
+  """
   try:
     updated_queue = db.aql.execute(
       """
@@ -630,12 +764,23 @@ async def update_operator_queue(
 
 
 @router.get('/job',
-    dependencies=[Depends(auth.verify_token)])
+    dependencies=[Depends(auth.verify_token)],
+    response_model=APIResponse,
+    responses={})
 async def get_job_list(
   job_key: List[str] = Query(None),
   work_order_key: List[str] = Query(None),
   phase_key: List[str] = Query(None)
   ):
+  """Return a filtered list of jobs with their assigned operator details.
+
+  Filters by any combination of job key(s), work order key(s), and phase
+  key(s). Each result is merged with the resolved User document for the
+  assignee. Returns an empty list if no jobs match.
+
+  **Emits:** *(read-only — no event)*
+  **Required scope:** `production:job:read`
+  """
 
   query = """
     // parameters are passed as lists
@@ -663,8 +808,21 @@ async def get_job_list(
 
 
 @router.get('/job-assignment',
-    dependencies=[Depends(auth.verify_token)])
+    dependencies=[Depends(auth.verify_token)],
+    response_model=APIResponse,
+    responses={
+        500: {"description": "Database error while fetching assignment list"},
+    })
 async def get_assignment_list(user_key: str | None = None):
+  """Fetch the current job assignment state grouped by operator.
+
+  Returns operators with their assigned jobs and the list of unassigned
+  jobs, as produced by the GET_ASSIGNMENT_LIST AQL query. Optionally
+  filtered by a specific user key.
+
+  **Emits:** *(read-only — no event)*
+  **Required scope:** `production:job:read`
+  """
 
   try:
     result = db.aql.execute(Queries.GET_ASSIGNMENT_LIST, bind_vars=dict(user_key=user_key)).next()
@@ -683,8 +841,20 @@ async def get_assignment_list(user_key: str | None = None):
 
 
 @router.get('/job/{job_key}',
-    dependencies=[Depends(auth.verify_token)])
+    dependencies=[Depends(auth.verify_token)],
+    response_model=APIResponse,
+    responses={
+        500: {"description": "Database error while fetching job data"},
+    })
 async def get_job_data(job_key: str):
+  """Fetch full working data for a single job by key.
+
+  Executes GET_WORKING_JOB_DATA which returns the job document enriched
+  with step execution progress, active batch info, and operator details.
+
+  **Emits:** *(read-only — no event)*
+  **Required scope:** `production:job:read`
+  """
 
   bind_vars = dict(job_key = job_key)
 
@@ -713,8 +883,20 @@ async def get_job_data(job_key: str):
 
 
 @router.get('/work-session',
-    dependencies=[Depends(auth.verify_token)])
+    dependencies=[Depends(auth.verify_token)],
+    response_model=APIResponse,
+    responses={
+        500: {"description": "Database error while fetching active work session"},
+    })
 async def get_active_work_session_for_job(job_key: str):
+  """Fetch the currently active work session for a job.
+
+  Executes GET_ACTIVE_WORK_SESSION_FOR_JOB and returns the most recent
+  unclosed WorkSession record for the given job key.
+
+  **Emits:** *(read-only — no event)*
+  **Required scope:** `production:work-session:read`
+  """
 
   bind_vars = dict(job_key = job_key)
 
@@ -744,8 +926,22 @@ async def get_active_work_session_for_job(job_key: str):
 
 
 @router.post('/job/update',
-    dependencies=[Depends(auth.verify_token)])
+    dependencies=[Depends(auth.verify_token)],
+    response_model=APIResponse,
+    responses={
+        500: {"description": "Transaction failure while applying job updates"},
+    })
 async def update_jobs(job_updates:List[JobUpdate]):
+  """Apply a batch of job insert, update, or close operations.
+
+  Accepts a list of JobUpdate items each specifying an action (insert,
+  update, close) and a data dict. For each affected work order, recalculates
+  progress and adjusts queue membership (adds back or removes) based on the
+  resulting status. All mutations run in a single ArangoDB transaction.
+
+  **Emits:** *(direct transaction — no event class)*
+  **Required scope:** `production:job:update`
+  """
 
   tx = db.begin_transaction(write=['Job', 'Queue', 'WorkOrder', 'Event', 'event_source'])
   job_db = tx.collection('Job')
@@ -850,8 +1046,20 @@ async def update_jobs(job_updates:List[JobUpdate]):
       tx.abort_transaction()
 
 @router.get("/job/{job_key}/time",
-    dependencies=[Depends(auth.verify_token)])
+    dependencies=[Depends(auth.verify_token)],
+    response_model=APIResponse,
+    responses={
+        500: {"description": "Database error while fetching elapsed time"},
+    })
 async def get_job_elapsed_time(job_key):
+  """Fetch elapsed and estimated time metrics for a job.
+
+  Executes GET_JOB_ELAPSED_TIME and returns timing data including elapsed
+  time, estimated remaining time, and on-time status for the given job.
+
+  **Emits:** *(read-only — no event)*
+  **Required scope:** `production:job:read`
+  """
   try:
     bind_vars = dict(job_key = job_key)
     progress_data = db.aql.execute(Queries.GET_JOB_ELAPSED_TIME, bind_vars=bind_vars).next()

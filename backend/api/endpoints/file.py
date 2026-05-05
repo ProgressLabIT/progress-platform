@@ -100,7 +100,14 @@ def verify_target_data(
   return FileTargetData(bucket=bucket, object_key=object_key, subfolder=subfolder)
 
 
-@router.post('/files')
+@router.post(
+  '/files',
+  response_model=None,
+  responses={
+    404: {"description": "The target entity (Issue, Product, WorkOrder, etc.) does not exist, or the referenced subfolder/field is invalid"},
+    500: {"description": "Filesystem error while writing one of the uploaded files"},
+  },
+)
 async def upload_files(
   contents: list[UploadFile],
   bucket: FileBucket = Form(...),
@@ -108,6 +115,19 @@ async def upload_files(
   subfolder: str = Form(None),
   reset_folder: bool = Form(False),
 ):
+  """Upload one or more files and attach them to an entity.
+
+  Validates the target entity and subfolder path via `verify_target_data`,
+  then writes each uploaded file to the configured file storage under
+  `{bucket}/{object_key}/{subfolder}/`. When `reset_folder=true`, the
+  target subfolder is cleared before writing. No auth dependency is declared
+  on the decorator — access is controlled by the caller's session token
+  checked upstream by middleware.
+
+  **Emits:** *(direct transaction — no event class)*
+
+  **Required scope:** `attachment:file:upload`
+  """
 
   target = verify_target_data(bucket, object_key, subfolder)
 
@@ -133,13 +153,30 @@ async def upload_files(
       )
 
 
-@router.delete('/files')
+@router.delete(
+  '/files',
+  response_model=None,
+  responses={
+    404: {"description": "The target entity does not exist, or a named file does not exist in the specified bucket/folder"},
+    500: {"description": "Filesystem error during deletion"},
+  },
+)
 async def delete_files(
   filenames: list[str],
   bucket: FileBucket = Body(...),
   object_key: str = Body(...),
   subfolder: str = Body(None),
 ):
+  """Delete one or more named files from an entity's file bucket.
+
+  Validates the target entity via `verify_target_data`, then deletes each
+  filename from `{bucket}/{object_key}/{subfolder}/`. Returns 404 for the
+  first missing file encountered.
+
+  **Emits:** *(direct transaction — no event class)*
+
+  **Required scope:** `attachment:file:delete`
+  """
 
   target = verify_target_data(bucket, object_key, subfolder)
 

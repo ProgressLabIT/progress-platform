@@ -24,8 +24,23 @@ router = APIRouter()
 
 # TODO: optimize queries
 @router.get('/operation',
+    response_model=list,
+    responses={500: {"description": "Database or enrichment error"}},
     dependencies=[Depends(auth.verify_token)])
 async def get_operation_list():
+  """List all operation templates with enriched media and print-template data.
+
+  Returns every `Operation` document from the database, enriched with:
+  - Media files attached to each default phase step.
+  - Print template records resolved for each step.
+  - A `used_for` list of product codes that reference this operation.
+
+  Results are sorted alphabetically by operation name.
+
+  **Emits:** *(direct transaction — no event class)*
+
+  **Required scope:** `process:template:read`
+  """
   def enrich_with_media(op_data):
     operation_media_cursor = db.aql.execute(
       """
@@ -82,8 +97,20 @@ async def get_operation_list():
 
 
 @router.post('/operation',
+    response_model=APIResponse,
+    responses={500: {"description": "Could not persist operation to database"}},
     dependencies=[Depends(auth.verify_token)])
 async def create_operation(new_op_data: Operation):
+  """Create a new operation template.
+
+  Inserts an `Operation` document into the database, pre-populating its
+  `default_phase_parameters` from the `default_operation_parameters` system
+  config if one exists.
+
+  **Emits:** *(direct transaction — no event class)*
+
+  **Required scope:** `process:template:create`
+  """
   try:
     config = db.collection('Config').get('default_operation_parameters')
     if config:
@@ -109,8 +136,27 @@ async def create_operation(new_op_data: Operation):
 
 
 @router.patch('/operation/{operation_key}',
+    response_model=APIResponse,
+    responses={
+      404: {"description": "Operation not found"},
+      500: {"description": "Database update or media management error"},
+    },
     dependencies=[Depends(auth.verify_token)])
 async def update_operation(operation_key: str, operation_update: dict):
+  """Partially update an operation template, reconciling step media connections.
+
+  Diffs the incoming `default_phase_steps[].media` lists against the existing
+  ones and updates `media_connection` edges accordingly:
+  - New media keys are inserted as edges from the operation to each `Media` doc.
+  - Removed media keys are disconnected; orphaned `Media` documents (no remaining
+    connections) are deleted from disk and the database.
+
+  All mutations run inside a single ArangoDB transaction.
+
+  **Emits:** *(direct transaction — no event class)*
+
+  **Required scope:** `process:template:update`
+  """
   try:
     operation_data = db.collection('Operation').get(operation_key)
   except:
@@ -223,8 +269,23 @@ async def update_operation(operation_key: str, operation_update: dict):
 
 
 @router.delete('/operation/{op_key}',
+    response_model=APIResponse,
+    responses={
+      403: {"description": "Operation is in use by one or more products"},
+      500: {"description": "Database error during product-usage check"},
+    },
     dependencies=[Depends(auth.verify_token)])
 async def delete_operation(op_key: str):
+  """Delete an operation template if it is not referenced by any product.
+
+  Checks whether any product currently uses this operation before deletion.
+  Returns HTTP 403 with the list of product codes if the operation is in use,
+  preventing orphaned product process definitions.
+
+  **Emits:** *(direct transaction — no event class)*
+
+  **Required scope:** `process:template:update`
+  """
 
   try:
     is_used_for_products = [p.code for p in get_products_using_operation(op_key)]
@@ -259,11 +320,31 @@ async def delete_operation(op_key: str):
 
 # TODO: Instead of copying it to all phases, selectively copy it to phases using a list of connected products
 @router.post('/operation/{operation_key}/copy',
+    response_model=APIResponse,
+    responses={
+      404: {"description": "Operation not found"},
+      500: {"description": "Transaction error copying steps or media to phases"},
+    },
     dependencies=[Depends(auth.verify_token)])
 async def copy_operation_to_phases(
   operation_key: str,
   target_product_keys: Annotated[list[str], Body(embed=True)]
 ):
+  """Copy an operation's default steps to all matching phases across target products.
+
+  Finds every `Phase` whose `operation_key` matches `operation_key` and whose
+  `product_key` is in `target_product_keys`, then replaces that phase's step
+  sequence with fresh copies of the operation's `default_phase_steps`:
+  - Step records are duplicated with new UUIDs for `form_fields`.
+  - Media files are physically copied to the new step's media folder.
+  - `can_use_print_template` edges are re-created for each new step.
+
+  All mutations run inside a single ArangoDB transaction.
+
+  **Emits:** *(direct transaction — no event class)*
+
+  **Required scope:** `process:template:update`
+  """
   operation_data = db.collection('Operation').get(operation_key)
   if not operation_data:
     raise HTTPError(404, "Could not find Operation in the DB")
@@ -364,11 +445,28 @@ async def copy_operation_to_phases(
 
 
 @router.post('/product/{product_key}/process/copy',
+    response_model=APIResponse,
+    responses={
+      400: {"description": "Source product is included in the target list"},
+      500: {"description": "Transaction error during process copy"},
+    },
     dependencies=[Depends(auth.verify_token)])
 async def copy_process_to_products(
   product_key: str,
   target_product_keys: Annotated[list[str], Body(embed=True)],
 ):
+  """Copy the full production process of a product to one or more target products.
+
+  Reads the complete process (phases + steps) of `product_key` and replicates
+  it onto each product in `target_product_keys`, replacing their existing
+  process. The source product must not appear in the target list.
+
+  All mutations run inside a single ArangoDB transaction.
+
+  **Emits:** *(direct transaction — no event class)*
+
+  **Required scope:** `process:template:update`
+  """
   try:
     if product_key in target_product_keys:
       raise HTTPError(400, "The source product cannot be in the list of target products")
@@ -406,11 +504,28 @@ async def copy_process_to_products(
 # ===========================================================================
 
 @router.post('/product/{product_key}/counter/copy',
+    response_model=APIResponse,
+    responses={
+      400: {"description": "Source product is included in the target list"},
+      500: {"description": "Transaction error during counter copy"},
+    },
     dependencies=[Depends(auth.verify_token)])
 async def copy_process_to_products(
   product_key: str,
   target_product_keys: Annotated[list[str], Body(embed=True)],
 ):
+  """Copy the serial counter configuration from one product to target products.
+
+  Reads the `counter_key` of `product_key` and writes it onto each product in
+  `target_product_keys`, making them share the same counter sequence. The source
+  product must not appear in the target list.
+
+  All mutations run inside a single ArangoDB transaction.
+
+  **Emits:** *(direct transaction — no event class)*
+
+  **Required scope:** `process:template:update`
+  """
   try:
     if product_key in target_product_keys:
       raise HTTPError(400, "The source product cannot be in the list of target products")
@@ -438,8 +553,19 @@ async def copy_process_to_products(
 
 
 @router.get("/step/{step_key}/media",
+    response_model=list,
+    responses={500: {"description": "Media search error"}},
     dependencies=[Depends(auth.verify_token)])
 async def get_step_media(step_key: str):
+  """List all media files attached to a process step.
+
+  Returns the media records associated with `step_key` by scanning the step
+  media folder on disk.
+
+  **Emits:** *(direct query — no event class)*
+
+  **Required scope:** `process:template:read`
+  """
   return search_step_media(step_key)
 
 
@@ -447,8 +573,20 @@ async def get_step_media(step_key: str):
 
 
 @router.get("/product/{product_key}/process",
+    response_model=list,
+    responses={500: {"description": "Database fetch or validation error"}},
     dependencies=[Depends(auth.verify_token)])
 async def get_production_process(product_key):
+  """Retrieve the full production process definition for a product.
+
+  Returns an ordered list of `PhaseData` objects (phases with their embedded
+  steps) that constitute the production process for `product_key`. Used by the
+  process editor and order creation flows.
+
+  **Emits:** *(direct query — no event class)*
+
+  **Required scope:** `process:template:read`
+  """
 
   try:
     process_data = db.aql.execute(
@@ -493,8 +631,20 @@ async def get_production_process(product_key):
 # ===========================================================================
 
 @router.get("/phase",
+    response_model=list,
+    responses={404: {"description": "One or more phase keys not found"}},
     dependencies=[Depends(auth.verify_token)])
 async def get_phase_data(phase_key: List[str] = Query(...)):
+  """Fetch raw phase records by key list.
+
+  Accepts a repeated `phase_key` query parameter and returns the corresponding
+  `PhaseRecord` documents from the database. Used by the UI when it needs
+  lightweight phase metadata without the full process tree.
+
+  **Emits:** *(direct query — no event class)*
+
+  **Required scope:** `process:template:read`
+  """
   try:
     phase_db_data = db.collection('Phase').get_many(phase_key)
   except DocumentGetError:
@@ -512,9 +662,29 @@ async def get_phase_data(phase_key: List[str] = Query(...)):
   "/product/{product_key}/process",
   response_model = List[PhaseData],
   response_model_exclude = {'step_sequence'},
+  responses={
+    409: {"description": "A phase being removed still has BoM components attached"},
+    500: {"description": "Transaction error during process update"},
+  },
     dependencies=[Depends(auth.verify_token)]
 )
 async def update_process(product_key, process: List[PhaseData]):
+  """Replace the production process definition for a product.
+
+  Accepts a full ordered list of `PhaseData` objects and performs an upsert
+  of phases and steps within a single ArangoDB transaction:
+  - New phases/steps are inserted; existing ones are replaced by `_key`.
+  - Removed steps are soft-deleted via a `trashed` timestamp (TTL index picks
+    them up later).
+  - Removed phases are checked for BoM components before soft-deletion; a phase
+    with active BoM lines returns HTTP 409.
+  - `requires` edges for new `ProductPhase` and `PhaseOperation` relationships
+    are inserted.
+
+  **Emits:** *(direct transaction — no event class)*
+
+  **Required scope:** `process:phase:configure`
+  """
   tx = db.begin_transaction(write=['Product', 'Phase', 'Step', 'requires'])
   timestamp = dt.timestamp()
   new_phase_sequence = []
@@ -637,8 +807,20 @@ async def update_process(product_key, process: List[PhaseData]):
 
 
 @router.get('/procedure/{phase_key}',
+    response_model=list,
+    responses={500: {"description": "Database query or media resolution error"}},
     dependencies=[Depends(auth.verify_token)])
 async def get_phase_procedure(phase_key: str):
+  """Retrieve all steps for a phase, including resolved media file metadata.
+
+  Returns an ordered list of `StepWithMediaInfo` objects for the given phase,
+  with each step's `media` list populated by scanning the step media folder
+  on disk.
+
+  **Emits:** *(direct query — no event class)*
+
+  **Required scope:** `process:template:read`
+  """
 
   db_steps = db.aql.execute(
     Queries.GET_PHASE_PROCEDURE,
@@ -653,11 +835,25 @@ async def get_phase_procedure(phase_key: str):
 
 
 @router.post("/step/{step_key}/media",
+    response_model=str,
+    responses={
+      400: {"description": "File write error"},
+    },
     dependencies=[Depends(auth.verify_token)])
 async def save_step_media(
   step_key: str,
   media_file: UploadFile = File(...)
 ):
+  """Upload a media file and attach it to a process step.
+
+  Saves the uploaded file to the step's media folder on disk and returns the
+  stored filename. The file is associated with `step_key` via the folder
+  hierarchy used by `search_step_media`.
+
+  **Emits:** *(direct file write — no event class)*
+
+  **Required scope:** `process:template:update`
+  """
 
   new_media = FileHandler.step_media(
     object_key=step_key,
@@ -686,11 +882,24 @@ async def save_step_media(
 
 
 @router.delete("/step/{step_key}/media/{filename}",
+    response_model=None,
+    responses={
+      400: {"description": "File deletion error"},
+    },
     dependencies=[Depends(auth.verify_token)])
 async def delete_step_media(
   step_key: str,
   filename: str
 ):
+  """Delete a media file from a process step's media folder.
+
+  Removes the file named `filename` from the disk folder associated with
+  `step_key`. Returns no body on success.
+
+  **Emits:** *(direct file delete — no event class)*
+
+  **Required scope:** `process:template:update`
+  """
 
   media_to_delete = FileHandler.step_media(
     object_key=step_key,

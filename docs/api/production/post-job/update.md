@@ -1,0 +1,17 @@
+---
+title: POST /job/update
+operationId: update_jobs_post
+description: Apply a batch of job insert, update, or close operations. — Progress Platform API Reference
+---
+
+# POST /job/update
+
+<OAOperation operationId="update_jobs_post" />
+
+## Events Emitted
+
+*This endpoint emits no domain events.*
+
+## Related
+
+[← API Overview](/api/) · [← Production](/api/production/) · [Events Reference](/events/)

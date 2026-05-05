@@ -2,7 +2,7 @@ from collections.abc import AsyncIterable
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.sse import EventSourceResponse, ServerSentEvent
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from managers.server_event_manager import ServerEventManager
 from models.auth import TokenData
@@ -12,12 +12,24 @@ router = APIRouter()
 
 
 class SseTicketRequest(BaseModel):
-  topic: str
+  topic: str = Field(
+    ...,
+    description="NATS / SSE topic the caller wants to subscribe to (e.g. `user:user42`, `task`, `inventory`).",
+    examples=["user:user42"],
+  )
 
 
 class SseTicketResponse(BaseModel):
-  ticket: str
-  expires_in: int
+  ticket: str = Field(
+    ...,
+    description="Short-lived signed JWT scoped to the requested topic. Pass as `?ticket=<value>` when opening the SSE stream.",
+    examples=["eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyNDIiLCJ0b3BpYyI6InVzZXI6dXNlcjQyIn0.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"],
+  )
+  expires_in: int = Field(
+    ...,
+    description="Number of seconds until the ticket expires.",
+    examples=[60],
+  )
 
 
 def _enforce_topic_access(topic: str, token_data: TokenData) -> TokenData:
@@ -39,7 +51,14 @@ def _enforce_topic_access(topic: str, token_data: TokenData) -> TokenData:
   return token_data
 
 
-@router.post("/notification/ticket", response_model=SseTicketResponse)
+@router.post(
+  "/notification/ticket",
+  response_model=SseTicketResponse,
+  responses={
+    401: {"description": "Missing or invalid session JWT"},
+    403: {"description": "Caller's consumer_key does not match the requested user:<key> topic"},
+  },
+)
 async def mint_ticket(
   body: SseTicketRequest,
   token_data: TokenData = Depends(auth.verify_token),
@@ -54,6 +73,10 @@ async def mint_ticket(
   For `user:<key>` topics, the caller's consumer_key must match `<key>` —
   a user cannot mint a ticket that lets them eavesdrop on another user's
   personal notification stream.
+
+  **Emits:** *(SSE stream — emits are downstream NATS subjects)*
+
+  **Required scope:** `notification:stream:subscribe`
   """
   if body.topic.startswith("user:"):
     _, _, suffix = body.topic.partition(":")
@@ -88,7 +111,14 @@ async def _verify_stream_access(
   raise auth.credentials_exception
 
 
-@router.get("/notification/{topic}", response_class=EventSourceResponse)
+@router.get(
+  "/notification/{topic}",
+  response_class=EventSourceResponse,
+  responses={
+    401: {"description": "No valid ticket or Authorization header provided"},
+    403: {"description": "Ticket or JWT consumer_key does not match the requested user:<key> topic"},
+  },
+)
 async def message_stream(
   request: Request,
   topic: str,
@@ -105,6 +135,10 @@ async def message_stream(
       it here directly.
     * Non-user topics (task, inventory, ...) require auth but are not
       owner-scoped in v1.
+
+  **Emits:** *(SSE stream — emits are downstream NATS subjects)*
+
+  **Required scope:** `notification:stream:subscribe`
   """
   async for event in ServerEventManager.getInstance().push_events(request, topic):
     yield event

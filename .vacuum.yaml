@@ -1,0 +1,12 @@
+# vacuum ruleset — descriptions-only CI gate (D-04)
+#
+# Examples (D-05) are AI-generated bonus content, not CI-enforced. Tightening
+# to require examples= is a post-launch decision tracked in the docs backlog.
+
+rules:
+  operation-description:
+    severity: error
+  oas3-parameter-description:
+    severity: error
+  component-description:
+    severity: error

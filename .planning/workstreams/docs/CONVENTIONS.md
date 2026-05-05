@@ -27,13 +27,60 @@ async def start_job(payload: JobStartRequest):
     """
 ```
 
-## 2. AI drafting prompt scaffold (Pitfall 5.1, 5.3) — STUB
+## 2. AI drafting prompt scaffold (Pitfall 5.1, 5.3)
 
-Phase 2/3 will refine this scaffold per-section. Initial template:
+### Grounding rule (non-negotiable)
 
-> "You are documenting `{symbol}` from `{source_path}`. Read the source verbatim. Do NOT invent fields, parameters, or behaviors not present. Output markdown matching the section template at `.planning/workstreams/docs/templates/{section}.md`. After draft, the human reviewer applies the curation gate (§4)."
+Every example value, field name, parameter name, and code snippet in AI-drafted
+content MUST originate in `docs/public/openapi.json` or the corresponding
+source file under `backend/api/`. No invented values. If the source is ambiguous,
+leave a `<!-- TODO: verify -->` comment instead of guessing.
 
-The grounding rule (Pitfall 5.1) is non-negotiable: every example value must originate in `openapi.json` or source code. The anti-bland-prose rule (Pitfall 5.3) is enforced by the curation gate.
+### Endpoint sweep prompt template
+
+> You are documenting the FastAPI endpoint `{function_name}` in `backend/api/endpoints/{file}.py`.
+> Read the source verbatim using the Read tool. Do NOT invent fields, parameters, or behaviors not present in the source.
+>
+> Your output:
+>
+> 1. Add a docstring matching CONVENTIONS.md §1 shape:
+>    - One-line summary (becomes OpenAPI `summary`).
+>    - Multi-line markdown description.
+>    - Trailing **Emits:** block listing event class names this endpoint instantiates (read the function body to find them; write `*(direct transaction — no event class)*` if none).
+>    - Trailing **Required scope:** block (read `dependencies=[Depends(auth.verify_token)]` — public routes write `*(public — no auth)*`).
+> 2. Add `response_model=` to the `@router.<method>` decorator. Default: `response_model=APIResponse` (from `utils.api`). Endpoints that return typed lists or specific models use the actual return type — verify by reading the function body.
+> 3. Add `responses={...}` covering documented non-200 paths the handler raises (404, 409, 500). Use shared response models if they exist in `models/`; otherwise inline `{"description": "..."}` entries.
+> 4. For every Pydantic input/output model touched, add `Field(..., description=, examples=)` to every field. The `examples=` value MUST originate in source-code constants, fixture data, or be a clearly-illustrative literal (e.g., `"WO-2026-001"` for a work order code).
+>
+> Constraints (D-03):
+> - Do NOT modify `except:` or `except Exception:` blocks. Document via `responses={500: ...}`, do not refactor.
+> - Do NOT change function signatures, route paths, or `dependencies=` values.
+> - Do NOT add new endpoints or remove existing ones.
+>
+> After draft, the human reviewer applies the curation gate (§4).
+
+### Event page prompt template
+
+> You are documenting `{EventClassName}` from `backend/api/events/{domain}/{file}.py`.
+> Read the source verbatim using the Read tool. Extract:
+>   - InfoModel fields and types (exact — no invented fields). Walk the nested `class InfoModel(EventInfoModel):` body.
+>   - `apply()` mutations: which collections are written, what fields change. Read the apply() method body.
+>   - `post_processing()` side effects: child events spawned via `create_as_child(...)`, NATS publish behavior. If the event has no `post_processing` override, note "Inherits post_processing() from `Base{Domain}Event`".
+>   - `_notification_subtopic`: class attribute (or inherited from base). Map to NATS subject via the table in CONVENTIONS.md §3 / RESEARCH.md §NATS Subtopic Map. If `None`, write `—` for NATS subject.
+>
+> Your output: markdown matching `docs/.vitepress/templates/event.md` with all `{placeholder}` tokens replaced from extracted source data.
+>
+> Prose constraint (Pitfall 5.3 — anti-bland-prose): The 1–2 prose sentences below the metadata block must name specific preconditions and state changes. Do NOT use filler phrases like "this event handles", "allows users to", or "is responsible for".
+>
+> After draft, the human reviewer applies the curation gate (§4).
+
+### Section template reference
+
+Templates live at `docs/.vitepress/templates/`:
+- [`endpoint.md`](../../docs/.vitepress/templates/endpoint.md) — for API reference pages (`<OAOperation>` + Events Emitted block).
+- [`event.md`](../../docs/.vitepress/templates/event.md) — for Events reference pages (EVT-04 H2 structure + Mermaid placeholder).
+
+Both templates are read-only references. Sweep agents copy the structure into target files; they do not modify the templates themselves.
 
 ## 3. Mermaid sequenceDiagram transaction-boundary convention (Pitfall 3.2)
 
@@ -109,3 +156,89 @@ Markdown filenames use kebab-case:
 - ✗ `job_started.md` (snake_case file) → `/events/production/job_started/` (URL non-canonical)
 
 Matches D-08 URL contract.
+
+## 7. Screenshot placeholders (D-02 / Phase 3)
+
+L2 user-walkthrough pages (`docs/users/*.md`) ship in v1 without screenshots.
+Every screen description reserves a placeholder slot using an HTML comment so
+a post-launch human (or capture script) can swap to a real `![]()` image link
+without restructuring the page.
+
+Format:
+
+```markdown
+<!-- screenshot: {module}-{screen-slug} -->
+```
+
+Rules:
+
+- One placeholder per `### {Screen}` heading.
+- One additional placeholder at the top of the page (just under the H1) for
+  the module-overview shot.
+- `{module}` matches the page slug (`production`, `inventory`, `counting`,
+  `user-hub`, `warehouse`).
+- `{screen-slug}` is kebab-case derived from the screen heading
+  (e.g. `### Work-order detail` → `screenshot: production-work-order-detail`).
+- A second example: `### Inventory dashboard` → `screenshot: inventory-dashboard`.
+- HTML comments survive markdown→HTML rendering invisibly and are skipped by
+  `lychee` — no CI warnings.
+- Do NOT use `<img>` tags, custom Vue components, or commented-out
+  `![alt](...)` syntax. The plain HTML comment is the only allowed form.
+
+Post-launch swap target:
+
+```markdown
+![{Module} {screen} screen](/screenshots/{module}-{screen-slug}.png)
+```
+
+The swap is one-line and `grep`-able.
+
+## 8. CLI page validation contract (D-07 / CLI-04)
+
+Pages under `docs/cli/` are gated by `tests/cli/test_cli_help.py`, which
+invokes `progress {command} --help` via `typer.testing.CliRunner` and
+snapshot-compares the output to `tests/cli/snapshots/progress_{cmd}_help.txt`.
+Drift fails CI.
+
+### Frontmatter contract
+
+Every `docs/cli/*.md` page declares whether its underlying `cli/{cmd}.py`
+source has shipped:
+
+```yaml
+---
+title: progress {command}
+description: progress {command} reference — Progress Platform.
+cli_validated: true     # default — snapshot test runs unconditionally
+---
+```
+
+When the source has NOT yet shipped (sparkplug-demo S4 is still delivering
+`cli/{init,restore,tap}.py` per ADR-0006), the page ships with:
+
+```yaml
+---
+title: progress {command}
+description: progress {command} reference — Progress Platform.
+cli_validated: false    # snapshot test skips for this command
+---
+
+> 🚧 Coming soon — `progress {command}` is in active development; this
+> page will be promoted to validated content when the underlying source
+> lands.
+```
+
+The `cli_validated: false` flag is **temporary**; remove it (and the
+"Coming soon" callout) on the same PR that lands `cli/{cmd}.py` registration.
+
+### Snapshot lifecycle
+
+- **First run after `cli_validated: true` is set:** the test writes
+  `tests/cli/snapshots/progress_{cmd}_help.txt` and skips with a "Wrote
+  initial snapshot — re-run" message.
+- **Every subsequent run:** byte-for-byte equality with the snapshot.
+- **Intentional refresh** (e.g. flag rename in `cli/{cmd}.py`): delete the
+  snapshot file in the same PR that updates `docs/cli/{cmd}.md`. CI
+  regenerates and the next run passes.
+
+Do NOT manually edit snapshot files.

@@ -17,9 +17,9 @@ class FileBucket(str, Enum):
   TASK = 'task'
 
 class FileTargetData(BaseModel):
-  bucket: FileBucket
-  object_key: str
-  subfolder: str | None = None
+  bucket: FileBucket = Field(..., description="Storage bucket category for the file.", examples=["step"])
+  object_key: str = Field(..., description="ArangoDB _key of the entity this file belongs to.", examples=["step-001"])
+  subfolder: str | None = Field(None, description="Optional subfolder within the bucket for organising files.", examples=["attachments"])
 
 class FieldType(str, Enum):
   TEXT = 'text'
@@ -45,25 +45,25 @@ field_type_map = {
 # if the field model has multiple = True, the type becomes List[type]
 
 class CustomListValue(ArangoDocument):
-  field_key: str # Reference to CustomField
-  ext_key: str | None = None # Optional reference to external identification, e.g. ERP id
-  value: str
+  field_key: str = Field(..., description="ArangoDB _key of the CustomField this list value belongs to.", examples=["cf-001"])
+  ext_key: str | None = Field(None, description="Optional external identifier (e.g. ERP code) for this list value.", examples=["ERP-COL-9005"])
+  value: str = Field(..., description="Display value shown to the operator when filling the form.", examples=["RAL 9005 Jet Black"])
 
 class CustomField(ArangoDocument):
-  type: FieldType
-  name: str = Field(..., min_length=1) # To search when building the form
-  default_label: str | None = None # To show to the user when filling up the forms
-  default_hint: str | None = None # To show to the user when filling up the forms
+  type: FieldType = Field(..., description="Data type of this custom field, determining how it is rendered and validated.", examples=["text"])
+  name: str = Field(..., min_length=1, description="Unique human-readable name used to identify this field and compute its slug.", examples=["Surface Colour"])
+  default_label: str | None = Field(None, description="Default label shown to the operator when filling a form; can be overridden per-instance.", examples=["Surface Colour"])
+  default_hint: str | None = Field(None, description="Default hint text shown below the field input; can be overridden per-instance.", examples=["Select the RAL colour code applied to this part"])
 
 class FormFieldDefinition(BaseModel):
-  key: str | None = Field(None, alias="_key")
-  custom_field_key: str
-  multiple: bool = False
-  label: str | None = None
-  hint: str | None = None
-  default: str | None = None # this value should be able to be parsed to get current data
-  mandatory: bool = False
-  hidden: bool | None = None
+  key: str | None = Field(None, alias="_key", description="ArangoDB _key of this form field definition instance.", examples=["ffd-001"])
+  custom_field_key: str = Field(..., description="ArangoDB _key of the CustomField definition this instance is linked to.", examples=["cf-001"])
+  multiple: bool = Field(False, description="When true, the operator can select or enter multiple values for this field.", examples=[False])
+  label: str | None = Field(None, description="Label override for this form field instance; falls back to CustomField.default_label.", examples=["Colour Code"])
+  hint: str | None = Field(None, description="Hint text override for this instance; falls back to CustomField.default_hint.", examples=["Verify against approved colour chart"])
+  default: str | None = Field(None, description="Default value pre-populated in the field; must be parseable to the field type. Required when hidden=true.", examples=["pass"])
+  mandatory: bool = Field(False, description="When true, the operator must fill this field before completing the step.", examples=[False])
+  hidden: bool | None = Field(None, description="When true, the field is hidden from the operator and filled automatically from default.", examples=[False])
 
   @model_validator(mode="before")
   @classmethod
@@ -73,31 +73,31 @@ class FormFieldDefinition(BaseModel):
     return values
 
 class FormFieldValue(BaseModel):
-  form_field_key: str
+  form_field_key: str = Field(..., description="ArangoDB _key of the FormFieldDefinition this value corresponds to.", examples=["ffd-001"])
   # This causes data duplication, but it's for ease of access.
   # It can't be changed in FormField, so there is no risk of data inconsistency, at least for now.
-  custom_field_key: str | None = None
-  value: Any | None = None
+  custom_field_key: str | None = Field(None, description="ArangoDB _key of the CustomField definition; duplicated from FormFieldDefinition for read performance.", examples=["cf-001"])
+  value: Any | None = Field(None, description="Recorded value for this field instance; type depends on the associated FieldType.", examples=["RAL 9005"])
 
 
 class TaskFormFieldValue(BaseModel):
-  form_field_key: str
-  custom_field_key: str
-  label: str
-  hint: str | None = None
-  mandatory: bool | None = False
-  value: Any | None = None
-  last_updated: str | None = None
+  form_field_key: str = Field(..., description="ArangoDB _key of the FormFieldDefinition.", examples=["ffd-001"])
+  custom_field_key: str = Field(..., description="ArangoDB _key of the associated CustomField.", examples=["cf-001"])
+  label: str = Field(..., description="Resolved label for display in the task UI.", examples=["Surface Colour"])
+  hint: str | None = Field(None, description="Resolved hint text for display in the task UI.", examples=["Verify against approved colour chart"])
+  mandatory: bool | None = Field(False, description="Whether this field must be completed before the task can close.", examples=[False])
+  value: Any | None = Field(None, description="Current recorded value for this field on this task.", examples=[None])
+  last_updated: str | None = Field(None, description="ISO 8601 timestamp of the last time this field value was updated.", examples=["2026-03-22T14:30:00Z"])
 
 
 class SerialFormFieldValue(BaseModel):
-  form_field_key: str | None = None
-  custom_field_key: str | None = None
-  label: str | None = None
-  hint: str | None = None
-  mandatory: bool | None = None
-  value: Any | None = None
-  batch_key: str | None = None
-  step_key: str | None = None
-  phase_key: str | None = None
-  last_updated: str | None = None
+  form_field_key: str | None = Field(None, description="ArangoDB _key of the FormFieldDefinition.", examples=["ffd-001"])
+  custom_field_key: str | None = Field(None, description="ArangoDB _key of the associated CustomField.", examples=["cf-001"])
+  label: str | None = Field(None, description="Resolved label for traceability display.", examples=["Surface Colour"])
+  hint: str | None = Field(None, description="Resolved hint text.", examples=["Verify against approved colour chart"])
+  mandatory: bool | None = Field(None, description="Whether this field was mandatory at the time of recording.", examples=[False])
+  value: Any | None = Field(None, description="Recorded value for the serial traceability record.", examples=["RAL 9005"])
+  batch_key: str | None = Field(None, description="ArangoDB _key of the production batch during which this value was recorded.", examples=["batch-001"])
+  step_key: str | None = Field(None, description="ArangoDB _key of the step at which this value was recorded.", examples=["step-001"])
+  phase_key: str | None = Field(None, description="ArangoDB _key of the phase at which this value was recorded.", examples=["phase-001"])
+  last_updated: str | None = Field(None, description="ISO 8601 timestamp of the last time this field value was updated.", examples=["2026-03-22T14:30:00Z"])

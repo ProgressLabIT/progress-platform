@@ -39,9 +39,28 @@ def write_media_file(file: UploadFile, media_key: str):
     raise HTTPError(500, 'Could not write file to disk')
 
 # TODO: If a created media is not connected to any entity in a reasonable amount of time, delete it (cron job?) (use created_at field as reference)
-@router.post('/media/create',
-    dependencies=[Depends(auth.verify_token)])
+@router.post(
+  '/media/create',
+  response_model=APIResponse,
+  responses={
+    422: {"description": "Uploaded file fails Media model validation (e.g. missing filename)"},
+    500: {"description": "Filesystem error while writing the media file"},
+  },
+  dependencies=[Depends(auth.verify_token)],
+)
 def create_media(file: UploadFile):
+  """Upload a new media file and create its `Media` record.
+
+  Generates a UUID key, writes the file to `{media_root}/{key}` on disk,
+  and inserts a `Media` document into the `Media` collection. The returned
+  `detail` contains the new media document. The media record is initially
+  unconnected — link it to an entity via the `media_connection` edge
+  collection after creation.
+
+  **Emits:** *(direct transaction — no event class)*
+
+  **Required scope:** `attachment:media:upload`
+  """
   media = make_media(file)
   write_media_file(file, media.key)
 
@@ -53,9 +72,28 @@ def create_media(file: UploadFile):
     detail=media
   )
 
-@router.patch('/media/{media_key}',
-    dependencies=[Depends(auth.verify_token)])
+@router.patch(
+  '/media/{media_key}',
+  response_model=APIResponse,
+  responses={
+    404: {"description": "No Media document exists for the given key"},
+    422: {"description": "Uploaded file fails Media model validation"},
+    500: {"description": "Filesystem error while replacing the media file"},
+  },
+  dependencies=[Depends(auth.verify_token)],
+)
 def update_media(media_key: str, file: UploadFile):
+  """Replace the file content for an existing media record.
+
+  Looks up the `Media` document by `media_key`, overwrites the file at
+  `{media_root}/{media_key}` with the new upload, and updates the `Media`
+  document fields (name, size, content_type). Returns 404 if no media
+  record exists for the given key.
+
+  **Emits:** *(direct transaction — no event class)*
+
+  **Required scope:** `attachment:media:upload`
+  """
   media = db.collection('Media').get(media_key)
   if not media:
     raise HTTPError(404, 'Media not found')
@@ -71,9 +109,28 @@ def update_media(media_key: str, file: UploadFile):
     detail=media
   )
 
-@router.delete('/media/{media_key}',
-    dependencies=[Depends(auth.verify_token)])
+@router.delete(
+  '/media/{media_key}',
+  response_model=APIResponse,
+  responses={
+    404: {"description": "No Media document exists for the given key"},
+    422: {"description": "Media still has active connections to other entities — remove connections first"},
+    500: {"description": "Unexpected error during media deletion"},
+  },
+  dependencies=[Depends(auth.verify_token)],
+)
 def delete_media(media_key: str):
+  """Delete a media record and its file from disk.
+
+  Returns 404 if the media record does not exist. Returns 422 if the media
+  is still referenced by one or more `media_connection` edges — all connections
+  must be removed before the media can be deleted. On success, removes both
+  the `Media` document and the file from the filesystem.
+
+  **Emits:** *(direct transaction — no event class)*
+
+  **Required scope:** `attachment:media:delete`
+  """
   media = db.collection('Media').has(media_key)
   if not media:
     raise HTTPException(
@@ -101,9 +158,26 @@ def delete_media(media_key: str):
     raise HTTPException(status_code=500, detail=str(ex))
 
 
-@router.get('/media/{media_key}',
-    dependencies=[Depends(auth.verify_token)])
+@router.get(
+  '/media/{media_key}',
+  response_class=FileResponse,
+  responses={
+    404: {"description": "No Media document exists for the given key"},
+  },
+  dependencies=[Depends(auth.verify_token)],
+)
 def get_media(media_key: str):
+  """Serve a media file as a direct file download.
+
+  Looks up the `Media` document by `media_key` to retrieve the original
+  filename and content type, then streams the file from
+  `{media_root}/{media_key}` using FastAPI's `FileResponse`. The
+  `Content-Disposition` header will include the original filename.
+
+  **Emits:** *(direct transaction — no event class)*
+
+  **Required scope:** `attachment:media:read`
+  """
   media = db.collection('Media').get(media_key)
   if not media:
     raise HTTPException(

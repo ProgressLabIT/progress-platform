@@ -15,11 +15,38 @@ _DOM_TOKENS = {'%d'}
 
 
 class Counter(ArangoDocument):
-  name: str | None = ""
-  next_tick: int | None = 1
-  template: list[str] = []
-  frequency: str | None = None
-  reset_date: datetime | None = None
+  name: str | None = Field(
+    "",
+    description="Human-readable name for this counter sequence. Used to identify the counter in the UI and via the `name` query parameter.",
+    examples=["Work Order Counter"],
+  )
+  next_tick: int | None = Field(
+    1,
+    description="The integer value that will be used on the next counter tick. Automatically incremented after each use.",
+    examples=[1],
+  )
+  template: list[str] = Field(
+    default_factory=list,
+    description=(
+      "Ordered list of template tokens that form the counter string. "
+      "Tokens are strftime-style date codes (e.g. `%Y`, `%m`, `%d`) or literal strings. "
+      "Example: `['WO-', '%Y', '-', '%m', '-']` yields `WO-2026-05-`."
+    ),
+    examples=[["WO-", "%Y", "-", "%m", "-"]],
+  )
+  frequency: str | None = Field(
+    None,
+    description=(
+      "Reset frequency for the tick counter. Accepted values: `year`, `month`, `week`, `day`, `none` (or `null` for no reset). "
+      "The template must include tokens that uniquely identify each reset cycle."
+    ),
+    examples=["month"],
+  )
+  reset_date: datetime | None = Field(
+    None,
+    description="UTC timestamp of the most recent counter reset. `null` if the counter has never been reset.",
+    examples=["2026-05-01T00:00:00Z"],
+  )
 
   @model_validator(mode='after')
   def _template_covers_reset_period(self):
@@ -52,4 +79,3 @@ class Counter(ArangoDocument):
         "year + day-of-year for daily)."
       )
     return self
-

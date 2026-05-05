@@ -36,8 +36,19 @@ def sanitize_filename(filename):
 
 
 @router.get('/serial-field',
+    response_model=list,
+    responses={},
     dependencies=[Depends(auth.verify_token)])
 def fetch_field():
+  """Return the configured serial custom field definitions.
+
+  Reads the `serial_fields` key from the `Config` collection and returns the
+  list of field definitions used to render extra data entry forms for serial
+  numbers. Returns an empty list if no serial fields have been configured.
+
+  **Emits:** *(direct query — no event class)*
+  **Required scope:** `serial:read`
+  """
   serial_fields = db.collection('Config').get('serial_fields')
   fields = []
   if serial_fields is not None:
@@ -45,11 +56,22 @@ def fetch_field():
   return fields
 
 @router.get('/serial-batch',
+    response_model=list,
+    responses={},
     dependencies=[Depends(auth.verify_token)])
 def get_serial_batch(
   batch_key: str | None = None,
   filter_empty: bool = False
 ):
+  """Return all serials belonging to a production batch.
+
+  Queries the `GET_ALL_SERIALS_IN_BATCH` AQL query against the `Serial`
+  collection for the given `batch_key`. When `filter_empty=True`, serials
+  without a code are excluded from the result.
+
+  **Emits:** *(direct query — no event class)*
+  **Required scope:** `serial:read`
+  """
   bind_vars = dict(batch_key = batch_key)
   batch_serials = []
   for serial in [e for e in db.aql.execute(Queries.GET_ALL_SERIALS_IN_BATCH, bind_vars=bind_vars)]:
@@ -58,18 +80,40 @@ def get_serial_batch(
   return batch_serials
 
 @router.get('/component-batch',
+    response_model=list,
+    responses={},
     dependencies=[Depends(auth.verify_token)])
 def get_serial_batch(batch_key: str | None = None):
+  """Return all component serials linked to a batch.
+
+  Queries the `GET_ALL_COMPONENTS_IN_BATCH` AQL query starting from
+  `Batch/<batch_key>` and returns all serials that are linked as components
+  via the `contains` edge collection.
+
+  **Emits:** *(direct query — no event class)*
+  **Required scope:** `serial:read`
+  """
   bind_vars = dict(
     from_id = f'Batch/{batch_key}'
   )
   return [e for e in db.aql.execute(Queries.GET_ALL_COMPONENTS_IN_BATCH, bind_vars=bind_vars)]
 
 @router.get('/serial-parents',
+    response_model=list,
+    responses={500: {"description": "Database error"}},
     dependencies=[Depends(auth.verify_token)])
 def get_serial_parents(
   serial_key: str | None = None,
 ):
+  """Return the ancestor chain for a serial number.
+
+  Traverses the `contains` edge collection upward from `Serial/<serial_key>`
+  and returns the list of parent serials in bottom-up order (closest parent
+  first), then reverses it so the root ancestor is first.
+
+  **Emits:** *(direct query — no event class)*
+  **Required scope:** `serial:read`
+  """
   try:
     bind_vars = dict(
       serial_id = f'Serial/{serial_key}'
@@ -87,10 +131,20 @@ def get_serial_parents(
     )
 
 @router.get('/serial-children',
+    response_model=list,
+    responses={500: {"description": "Database error"}},
     dependencies=[Depends(auth.verify_token)])
 def get_serial_children(
   serial_key: str | None = None,
 ):
+  """Return the direct children of a serial number.
+
+  Traverses one level down the `contains` edge collection from
+  `Serial/<serial_key>` and returns all immediate child serials.
+
+  **Emits:** *(direct query — no event class)*
+  **Required scope:** `serial:read`
+  """
   try:
     bind_vars = dict(
       serial_id = f'Serial/{serial_key}',
@@ -107,13 +161,23 @@ def get_serial_children(
       )
     )
 
-@router.get('/serial-hierarchy', dependencies=[Depends(auth.verify_token)])
+@router.get('/serial-hierarchy',
+    response_model=list[SerialTreeNode],
+    responses={500: {"description": "Database error"}},
+    dependencies=[Depends(auth.verify_token)])
 def get_serial_hierarchy(
   serial_key: str,
   include_expected_components: bool = True,
 ):
-  """
-  Get the serial hierarchy, from the root ancestor (the one with no parent) to all descendants of the given serial.
+  """Get the serial hierarchy, from the root ancestor (the one with no parent) to all descendants of the given serial.
+
+  Resolves the root ancestor of `serial_key` using `GET_SERIAL_ROOT_ANCESTOR`,
+  then builds a full recursive `SerialTreeNode` tree by walking the `contains`
+  edge collection downward. Returns a list containing the single root node with
+  all descendants nested under `children`.
+
+  **Emits:** *(direct query — no event class)*
+  **Required scope:** `serial:read`
   """
   try:
     # Get the root ancestor of the serial
@@ -149,12 +213,23 @@ def get_serial_hierarchy(
     )
 
 @router.get('/wip-serial',
+    response_model=list[SerialSelection],
+    responses={},
     dependencies=[Depends(auth.verify_token)])
 def get_serial_wip(
   wo_key: str | None = None,
   job_key: str | None = None,
   phase_key: str | None = None,
 ):
+  """Return WIP serials available for a work order, job, or phase.
+
+  Queries `GET_AVAILABLE_WIP_SERIALS` to find serials currently in WIP status
+  that can be assigned to the given work order, job, or phase combination.
+  Used by the production UI to populate the serial selector when starting a batch.
+
+  **Emits:** *(direct query — no event class)*
+  **Required scope:** `serial:read`
+  """
   bind_vars = dict(
     wo_key = wo_key,
     phase_key = phase_key,
@@ -164,6 +239,8 @@ def get_serial_wip(
   return [SerialSelection(**s) for s in cursor]
 
 @router.get('/serial-selection',
+    response_model=list,
+    responses={},
     dependencies=[Depends(auth.verify_token)])
 def get_serial_selection(
   search: str | None = None,
@@ -176,6 +253,15 @@ def get_serial_selection(
   include_unreleased: bool = False,
   limit: int = 100
 ):
+  """Return a filtered list of serials for use in UI selection widgets.
+
+  Executes `GET_ALL_SERIALS` with the given filters and returns serial objects
+  suitable for display in dropdowns and search-as-you-type widgets. Supports
+  filtering by work order, product, batch, inventory state, and release status.
+
+  **Emits:** *(direct query — no event class)*
+  **Required scope:** `serial:read`
+  """
   return [e for e in db.aql.execute(Queries.GET_ALL_SERIALS, bind_vars=dict(
     search = search,
     wo_key = wo_key,
@@ -194,8 +280,18 @@ def get_serial_selection(
 # ---------------------------------------------
 
 @router.get('/serial/{serial_key}',
+    response_model=dict,
+    responses={500: {"description": "Database error"}},
     dependencies=[Depends(auth.verify_token)])
 def get_serial_from_key(serial_key: str):
+  """Fetch a serial document by its primary key.
+
+  Retrieves the raw `Serial` document from ArangoDB by `serial_key`. Returns
+  the full document including all custom data fields and lifecycle timestamps.
+
+  **Emits:** *(direct query — no event class)*
+  **Required scope:** `serial:read`
+  """
   try:
     return db.collection('Serial').get(serial_key)
   except Exception:
@@ -208,9 +304,20 @@ def get_serial_from_key(serial_key: str):
     )
 
 @router.get('/serial-code',
+    response_model=list,
+    responses={500: {"description": "Database error"}},
     dependencies=[Depends(auth.verify_token)])
 def get_serial_from_code(serial_code: str | None = None,
                          product_key: str | None = None):
+  """Look up serials by code and optional product filter.
+
+  Executes `GET_SERIALS_FOR_CODE` to find all `Serial` documents whose `code`
+  matches `serial_code`, optionally scoped to a specific product. Serial codes
+  are normalized to uppercase before the query.
+
+  **Emits:** *(direct query — no event class)*
+  **Required scope:** `serial:read`
+  """
   bind_vars = dict(
     serial_code = serial_code,
     product_key = product_key
@@ -228,11 +335,22 @@ def get_serial_from_code(serial_code: str | None = None,
     )
 
 @router.get('/serial-code/verify-free',
+    response_model=bool,
+    responses={},
     dependencies=[Depends(auth.verify_token)])
 def verify_serial_code_free(serial_code: str | None = None,
                          product_key: str | None = None,
                          serial_key: str | None = None):
-   cursor = db.aql.execute(
+  """Check whether a serial code is available for use.
+
+  Executes `GET_SERIALS_FOR_SERIAL_CODE` and returns `True` if no other
+  `Serial` document already uses the given `serial_code` for the given product
+  (excluding `serial_key` itself, used for edit scenarios).
+
+  **Emits:** *(direct query — no event class)*
+  **Required scope:** `serial:read`
+  """
+  cursor = db.aql.execute(
      Queries.GET_SERIALS_FOR_SERIAL_CODE,
           bind_vars=dict(
             serial_key=serial_key,
@@ -240,12 +358,14 @@ def verify_serial_code_free(serial_code: str | None = None,
             product_key=product_key
           )
         )
-   try:
+  try:
     return len([Serial(**t) for t in cursor])<=0
-   except:
+  except:
      return False
 
 @router.get('/serial',
+    response_model=list,
+    responses={500: {"description": "Database error"}},
     dependencies=[Depends(auth.verify_token)])
 async def search_serials(
   serial_key: Union[List[str], None] = Query(default=None),
@@ -269,6 +389,17 @@ async def search_serials(
   sort_by: str | None = 'created',
   sorting_order: str | None = 'desc',
   ):
+  """Search serials with rich filtering and sorting.
+
+  Executes the `FIND_SERIALS` AQL query with the full set of filter parameters.
+  Wildcard search fields (`serial_search`, `product_code_search`, etc.) accept
+  shell-style wildcards (`*`, `?`) which are converted to AQL regex before
+  execution. `advanced_filters` accepts a base64-encoded JSON array of custom
+  field filters.
+
+  **Emits:** *(direct query — no event class)*
+  **Required scope:** `serial:read`
+  """
 
   serial_fields = db.collection('Config').get('serial_fields')
   fields = []
@@ -313,9 +444,25 @@ async def search_serials(
 
 
 
-@router.get('/serial/{serial_key}/dhr', dependencies=[Depends(auth.verify_token)])
+@router.get('/serial/{serial_key}/dhr',
+    response_model=None,
+    responses={
+      404: {"description": "Serial not found"},
+      500: {"description": "PDF generation error"},
+    },
+    dependencies=[Depends(auth.verify_token)])
 def get_device_history_record(serial_key: str, include_attachments: bool = False, include_children: bool = False, include_step_data: bool = False):
-  """Generate a device history record for a serial"""
+  """Generate a device history record for a serial.
+
+  Renders a PDF Device History Record (DHR) for the serial identified by
+  `serial_key` using WeasyPrint. When `include_children=True`, DHRs for all
+  complex child serials (those with step data or sub-children) are appended in
+  order of product code then serial code. Returns the combined PDF as a binary
+  download attachment.
+
+  **Emits:** *(direct query — no event class)*
+  **Required scope:** `serial:read`
+  """
   try:
     # Fetch children serials using GET_SERIAL_CHILDREN_FOR_DHR query for DHR generation
     children_serials = []

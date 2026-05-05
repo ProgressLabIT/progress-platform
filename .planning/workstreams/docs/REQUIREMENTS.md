@@ -9,58 +9,58 @@ Requirements for the v1.0 OSS launch. Every item maps to exactly one roadmap pha
 
 ### Mirror & OSS Table Stakes (MIR)
 
-- [ ] **MIR-01**: GitHub mirror configured to receive one-way push from GitLab `DEV` (GitLab remains canonical)
-- [ ] **MIR-02**: Mirror propagates tags (matters for `v*.*.*` releases)
-- [ ] **MIR-03**: GitHub repo settings: Issues enabled, Discussions enabled, Wiki disabled, branch protection on `DEV`
-- [ ] **MIR-04**: `LICENSE` file in main repo root (license choice locked separately)
-- [ ] **MIR-05**: `CONTRIBUTING.md` honestly explains the mirror workflow — direct GitHub PRs cannot merge; contribution path is "open issue + attach patch"
-- [ ] **MIR-06**: `CODE_OF_CONDUCT.md` in main repo root (Contributor Covenant v2.1)
-- [ ] **MIR-07**: `README.md` includes a banner clarifying mirror status, link to docs site, and quickstart pointer
+- [x] **MIR-01**: GitHub mirror configured to receive one-way push from GitLab `DEV` (GitLab remains canonical)
+- [x] **MIR-02**: Mirror propagates tags (matters for `v*.*.*` releases)
+- [x] **MIR-03**: GitHub repo settings: Issues enabled, Discussions enabled, Wiki disabled, branch protection on `DEV`
+- [x] **MIR-04**: `LICENSE` file in main repo root (license choice locked separately)
+- [x] **MIR-05**: `CONTRIBUTING.md` honestly explains the mirror workflow — direct GitHub PRs cannot merge; contribution path is "open issue + attach patch"
+- [x] **MIR-06**: `CODE_OF_CONDUCT.md` in main repo root (Contributor Covenant v2.1)
+- [x] **MIR-07**: `README.md` includes a banner clarifying mirror status, link to docs site, and quickstart pointer
 - [ ] **MIR-08**: Pre-launch mirror push verification — SHA-match script confirms GitLab and GitHub `DEV` are in sync; GitLab `DEV` frozen for 24h before May 15
 
 ### API Reference (API) — L0 sweep + site rendering
 
-- [ ] **API-01**: Every public-facing endpoint in `backend/api/endpoints/` has a FastAPI route docstring (one-line summary + multi-line markdown description)
-- [ ] **API-02**: Every public-facing endpoint declares `response_model=` and `responses={...}` for non-200 paths (errors, validations)
-- [ ] **API-03**: Pydantic input/output models on public endpoints have `Field(..., description=, examples=)` on every field
-- [ ] **API-04**: `tags_metadata` defined in `backend/api/main.py` — every tag has a description and `externalDocs` link to the relevant events / users / admins page
-- [ ] **API-05**: OpenAPI schema validated by **Vacuum** (Spectral-compatible Go binary) in CI; lint thresholds defined and enforced
-- [ ] **API-06**: **`vitepress-openapi`** integrated to render API reference inline in the docs site (not Swagger UI iframe)
-- [ ] **API-07**: API reference deep-links from each endpoint to events it emits (cross-tab navigation between API ↔ Events sections)
-- [ ] **API-08**: `openapi.json` is exported as a build artifact and grounds AI-drafted prose (prevents hallucinated parameters)
+- [x] **API-01**: Every public-facing endpoint in `backend/api/endpoints/` has a FastAPI route docstring (one-line summary + multi-line markdown description)
+- [x] **API-02**: Every public-facing endpoint declares `response_model=` and `responses={...}` for non-200 paths (errors, validations)
+- [x] **API-03**: Pydantic input/output models on public endpoints have `Field(..., description=, examples=)` on every field
+- [x] **API-04**: `tags_metadata` defined in `backend/api/main.py` — every tag has a description and `externalDocs` link to the relevant events / users / admins page
+- [x] **API-05**: OpenAPI schema validated by **Vacuum** (Spectral-compatible Go binary) in CI; lint thresholds defined and enforced
+- [x] **API-06**: **`vitepress-openapi`** integrated to render API reference inline in the docs site (not Swagger UI iframe)
+- [x] **API-07**: API reference deep-links from each endpoint to events it emits (cross-tab navigation between API ↔ Events sections)
+- [x] **API-08**: `openapi.json` is exported as a build artifact and grounds AI-drafted prose (prevents hallucinated parameters)
 
 ### Events Reference (EVT)
 
-- [ ] **EVT-01**: Events index page lists every event type from `backend/api/events/` with auto-extracted metadata (event name, `EventType` enum value, info model, transaction collections, post-processing summary)
-- [ ] **EVT-02**: Top ~10 critical events identified (jointly with Sparkplug demo workstream) and documented with hand-crafted Mermaid `sequenceDiagram` flowcharts
-- [ ] **EVT-03**: Each handcrafted event flowchart shows pre-conditions, transactional `apply` boundary as `rect`, and post-processing (NATS subjects emitted)
-- [ ] **EVT-04**: Each documented event has its own page with: name, `EventType`, info model schema, transaction collections, business preconditions, post-processing side effects
-- [ ] **EVT-05**: Events with >20 nodes use the ELK renderer (`%%{init: {"flowchart": {"defaultRenderer":"elk"}}}%%`); fan-out events (e.g., `BatchCompletedEvent`) decomposed into multiple diagrams
-- [ ] **EVT-06**: Events reference cross-links to NATS subject taxonomy (Sparkplug demo ADR 0002) where applicable
+- [x] **EVT-01**: Events index page lists every event type from `backend/api/events/` with auto-extracted metadata (event name, `EventType` enum value, info model, transaction collections, post-processing summary)
+- [x] **EVT-02**: Top ~10 critical events identified (jointly with Sparkplug demo workstream) and documented with hand-crafted Mermaid `sequenceDiagram` flowcharts
+- [x] **EVT-03**: Each handcrafted event flowchart shows pre-conditions, transactional `apply` boundary as `rect`, and post-processing (NATS subjects emitted)
+- [x] **EVT-04**: Each documented event has its own page with: name, `EventType`, info model schema, transaction collections, business preconditions, post-processing side effects
+- [x] **EVT-05**: Events with >20 nodes use the ELK renderer (`%%{init: {"flowchart": {"defaultRenderer":"elk"}}}%%`); fan-out events (e.g., `BatchCompletedEvent`) decomposed into multiple diagrams
+- [x] **EVT-06**: Events reference cross-links to NATS subject taxonomy (Sparkplug demo ADR 0002) where applicable
 
 ### CLI Reference (CLI)
 
-- [ ] **CLI-01**: `progress init` page documents usage, options, examples, and mapping to Compose stack
-- [ ] **CLI-02**: `progress restore` page documents usage, options, examples
-- [ ] **CLI-03**: `progress tap` page documents usage, options, examples
-- [ ] **CLI-04**: CLI examples are validated executable via `pytest-markdown-docs` (or equivalent) so docs/code drift fails CI
+- [x] **CLI-01**: `progress init` page documents usage, options, examples, and mapping to Compose stack
+- [x] **CLI-02**: `progress restore` page documents usage, options, examples
+- [x] **CLI-03**: `progress tap` page documents usage, options, examples
+- [x] **CLI-04**: CLI examples are validated executable via `pytest-markdown-docs` (or equivalent) so docs/code drift fails CI
 
 ### User Docs v1 (USER) — L2
 
-- [ ] **USER-01**: Product overview — what Progress Platform is, who it's for, where it fits (MES + Industry 4.0 + Sparkplug ingestion)
-- [ ] **USER-02**: Production module walkthrough — jobs, batches, steps; main screens, key buttons, expected business logic
-- [ ] **USER-03**: Inventory module walkthrough — positions, movements; main screens
-- [ ] **USER-04**: Counting module walkthrough — sessions, application; main screens
-- [ ] **USER-05**: User Hub / Assignments walkthrough — assignment tab flow
-- [ ] **USER-06**: Warehouse mobile app overview — Vue SPA app, scanning, missions/movement-lists/counting-sessions
-- [ ] **USER-07**: Coverage philosophy v1: breadth > depth; main features visible in the UI; deep tutorials deferred
+- [x] **USER-01**: Product overview — what Progress Platform is, who it's for, where it fits (MES + Industry 4.0 + Sparkplug ingestion)
+- [x] **USER-02**: Production module walkthrough — jobs, batches, steps; main screens, key buttons, expected business logic
+- [x] **USER-03**: Inventory module walkthrough — positions, movements; main screens
+- [x] **USER-04**: Counting module walkthrough — sessions, application; main screens
+- [x] **USER-05**: User Hub / Assignments walkthrough — assignment tab flow
+- [x] **USER-06**: Warehouse mobile app overview — Vue SPA app, scanning, missions/movement-lists/counting-sessions
+- [x] **USER-07**: Coverage philosophy v1: breadth > depth; main features visible in the UI; deep tutorials deferred
 
 ### Admin / Integrator Docs (ADM) — L3
 
-- [ ] **ADM-01**: Deployment basics — Docker Compose stack overview, volumes, secrets, Traefik
-- [ ] **ADM-02**: Configuration reference — every `PROGRESS_*` env var from `backend/api/utils/config.py` with type, default, description
-- [ ] **ADM-03**: Integration touchpoints — NATS subject taxonomy, Sparkplug bridge HTTP read API, OpenAPI consumer notes (codegen pointers)
-- [ ] **ADM-04**: Operations basics — health checks, log locations, common diagnostic commands (e.g., `progress tap`)
+- [x] **ADM-01**: Deployment basics — Docker Compose stack overview, volumes, secrets, Traefik
+- [x] **ADM-02**: Configuration reference — every `PROGRESS_*` env var from `backend/api/utils/config.py` with type, default, description
+- [x] **ADM-03**: Integration touchpoints — NATS subject taxonomy, Sparkplug bridge HTTP read API, OpenAPI consumer notes (codegen pointers)
+- [x] **ADM-04**: Operations basics — health checks, log locations, common diagnostic commands (e.g., `progress tap`)
 
 ### Site Infrastructure (SITE)
 
@@ -140,55 +140,55 @@ Filled by `/gsd-roadmapper` 2026-04-29. Every v1 REQ-ID maps to exactly one phas
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| MIR-01 | Phase 1 (Scaffold & Public Foundation) | Pending |
-| MIR-02 | Phase 1 (Scaffold & Public Foundation) | Pending |
-| MIR-03 | Phase 1 (Scaffold & Public Foundation) | Pending |
-| MIR-04 | Phase 1 (Scaffold & Public Foundation) | Pending |
-| MIR-05 | Phase 1 (Scaffold & Public Foundation) | Pending |
-| MIR-06 | Phase 1 (Scaffold & Public Foundation) | Pending |
-| MIR-07 | Phase 1 (Scaffold & Public Foundation) | Pending |
-| MIR-08 | Phase 4 (Launch Readiness) | Pending |
-| API-01 | Phase 2 (Code-Grounded Reference) | Pending |
-| API-02 | Phase 2 (Code-Grounded Reference) | Pending |
-| API-03 | Phase 2 (Code-Grounded Reference) | Pending |
-| API-04 | Phase 2 (Code-Grounded Reference) | Pending |
-| API-05 | Phase 2 (Code-Grounded Reference) | Pending |
-| API-06 | Phase 2 (Code-Grounded Reference) | Pending |
-| API-07 | Phase 2 (Code-Grounded Reference) | Pending |
-| API-08 | Phase 2 (Code-Grounded Reference) | Pending |
-| EVT-01 | Phase 2 (Code-Grounded Reference) | Pending |
-| EVT-02 | Phase 2 (Code-Grounded Reference) | Pending |
-| EVT-03 | Phase 2 (Code-Grounded Reference) | Pending |
-| EVT-04 | Phase 2 (Code-Grounded Reference) | Pending |
-| EVT-05 | Phase 2 (Code-Grounded Reference) | Pending |
-| EVT-06 | Phase 2 (Code-Grounded Reference) | Pending |
-| CLI-01 | Phase 3 (Human-Facing Content) | Pending |
-| CLI-02 | Phase 3 (Human-Facing Content) | Pending |
-| CLI-03 | Phase 3 (Human-Facing Content) | Pending |
-| CLI-04 | Phase 3 (Human-Facing Content) | Pending |
-| USER-01 | Phase 3 (Human-Facing Content) | Pending |
-| USER-02 | Phase 3 (Human-Facing Content) | Pending |
-| USER-03 | Phase 3 (Human-Facing Content) | Pending |
-| USER-04 | Phase 3 (Human-Facing Content) | Pending |
-| USER-05 | Phase 3 (Human-Facing Content) | Pending |
-| USER-06 | Phase 3 (Human-Facing Content) | Pending |
-| USER-07 | Phase 3 (Human-Facing Content) | Pending |
-| ADM-01 | Phase 3 (Human-Facing Content) | Pending |
-| ADM-02 | Phase 3 (Human-Facing Content) | Pending |
-| ADM-03 | Phase 3 (Human-Facing Content) | Pending |
-| ADM-04 | Phase 3 (Human-Facing Content) | Pending |
-| SITE-01 | Phase 1 (Scaffold & Public Foundation) | Pending |
-| SITE-02 | Phase 1 (Scaffold & Public Foundation) | Pending |
-| SITE-03 | Phase 1 (Scaffold & Public Foundation) | Pending |
-| SITE-04 | Phase 1 (Scaffold & Public Foundation) | Pending |
-| SITE-05 | Phase 1 (Scaffold & Public Foundation) | Pending |
-| SITE-06 | Phase 1 (Scaffold & Public Foundation) | Pending |
-| SITE-07 | Phase 1 (Scaffold & Public Foundation) | Pending |
-| SITE-08 | Phase 1 (Scaffold & Public Foundation) | Pending |
-| SITE-09 | Phase 1 (Scaffold & Public Foundation) | Pending |
-| SITE-10 | Phase 1 (Scaffold & Public Foundation) | Pending |
-| SITE-11 | Phase 4 (Launch Readiness) | Pending |
-| SITE-12 | Phase 1 (Scaffold & Public Foundation) | Pending |
+| MIR-01 | Phase 1 (Scaffold & Public Foundation) | Complete |
+| MIR-02 | Phase 1 (Scaffold & Public Foundation) | Complete |
+| MIR-03 | Phase 1 (Scaffold & Public Foundation) | Complete |
+| MIR-04 | Phase 1 (Scaffold & Public Foundation) | Complete |
+| MIR-05 | Phase 1 (Scaffold & Public Foundation) | Complete |
+| MIR-06 | Phase 1 (Scaffold & Public Foundation) | Complete |
+| MIR-07 | Phase 1 (Scaffold & Public Foundation) | Complete |
+| MIR-08 | Phase 4 (Launch Readiness) | Pending (May 14) |
+| API-01 | Phase 2 (Code-Grounded Reference) | Complete |
+| API-02 | Phase 2 (Code-Grounded Reference) | Complete |
+| API-03 | Phase 2 (Code-Grounded Reference) | Complete |
+| API-04 | Phase 2 (Code-Grounded Reference) | Complete |
+| API-05 | Phase 2 (Code-Grounded Reference) | Complete |
+| API-06 | Phase 2 (Code-Grounded Reference) | Complete |
+| API-07 | Phase 2 (Code-Grounded Reference) | Complete |
+| API-08 | Phase 2 (Code-Grounded Reference) | Complete |
+| EVT-01 | Phase 2 (Code-Grounded Reference) | Complete |
+| EVT-02 | Phase 2 (Code-Grounded Reference) | Complete |
+| EVT-03 | Phase 2 (Code-Grounded Reference) | Complete |
+| EVT-04 | Phase 2 (Code-Grounded Reference) | Complete |
+| EVT-05 | Phase 2 (Code-Grounded Reference) | Complete |
+| EVT-06 | Phase 2 (Code-Grounded Reference) | Complete |
+| CLI-01 | Phase 3 (Human-Facing Content) | Complete |
+| CLI-02 | Phase 3 (Human-Facing Content) | Complete |
+| CLI-03 | Phase 3 (Human-Facing Content) | Complete |
+| CLI-04 | Phase 3 (Human-Facing Content) | Complete |
+| USER-01 | Phase 3 (Human-Facing Content) | Complete |
+| USER-02 | Phase 3 (Human-Facing Content) | Complete |
+| USER-03 | Phase 3 (Human-Facing Content) | Complete |
+| USER-04 | Phase 3 (Human-Facing Content) | Complete |
+| USER-05 | Phase 3 (Human-Facing Content) | Complete |
+| USER-06 | Phase 3 (Human-Facing Content) | Complete |
+| USER-07 | Phase 3 (Human-Facing Content) | Complete |
+| ADM-01 | Phase 3 (Human-Facing Content) | Complete |
+| ADM-02 | Phase 3 (Human-Facing Content) | Complete |
+| ADM-03 | Phase 3 (Human-Facing Content) | Complete |
+| ADM-04 | Phase 3 (Human-Facing Content) | Complete |
+| SITE-01 | Phase 1 (Scaffold & Public Foundation) | Complete |
+| SITE-02 | Phase 1 (Scaffold & Public Foundation) | Complete |
+| SITE-03 | Phase 1 (Scaffold & Public Foundation) | Complete |
+| SITE-04 | Phase 1 (Scaffold & Public Foundation) | Complete |
+| SITE-05 | Phase 1 (Scaffold & Public Foundation) | Complete |
+| SITE-06 | Phase 1 (Scaffold & Public Foundation) | Complete |
+| SITE-07 | Phase 1 (Scaffold & Public Foundation) | Complete |
+| SITE-08 | Phase 1 (Scaffold & Public Foundation) | Complete |
+| SITE-09 | Phase 1 (Scaffold & Public Foundation) | Complete |
+| SITE-10 | Phase 1 (Scaffold & Public Foundation) | Complete |
+| SITE-11 | Phase 4 (Launch Readiness) | Pending (May 14) |
+| SITE-12 | Phase 1 (Scaffold & Public Foundation) | Complete |
 
 **Coverage:**
 - v1 requirements: 49 total

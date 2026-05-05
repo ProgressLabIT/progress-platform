@@ -43,8 +43,23 @@ def _validate_event_context(context_type: str | None, context_key: str | None) -
 
 
 @router.post('/event',
+    response_model=APIResponse,
+    responses={
+      422: {"description": "Domain precondition failure or invalid event context"},
+      500: {"description": "Database error during event save"},
+    },
     dependencies=[Depends(auth.verify_token)])
 async def record_event(event_data: EventInfoModel):
+  """Record a single domain event.
+
+  Dispatches an event of the type specified in `event_data.event_type` through
+  the event class registry. The event's `save()` method runs `pre_processing`,
+  `apply` (inside an ArangoDB transaction), `store_event`, and
+  `post_processing`. Returns the event's `response` payload on success.
+
+  **Emits:** *(dynamic — event class resolved from `event_type` field at runtime)*
+  **Required scope:** `traceability:event:create`
+  """
   # Event data validation will happen at the event class level
   try:
     _validate_event_context(event_data.context_type, event_data.context_key)
@@ -95,15 +110,24 @@ async def record_event(event_data: EventInfoModel):
 
 
 @router.post('/event/bulk',
+    response_model=APIResponse,
+    responses={
+      422: {"description": "Domain precondition failure, invalid context, or no events provided"},
+      500: {"description": "Database error during bulk event save"},
+    },
     dependencies=[Depends(auth.verify_token)])
 async def record_events_bulk(request: BulkEventRequest):
-  """
-  Record multiple events atomically in a single transaction.
-  All events succeed or all fail together.
+  """Record multiple events atomically in a single transaction.
 
-  The shared_data contains common fields (event_type, user_key, user_session_key, timestamp).
-  All events must be of the same type (specified in shared_data.event_type).
-  The events list contains event-specific data for each event.
+  All events succeed or all fail together. The `shared_data` contains common
+  fields (`event_type`, `user_key`, `user_session_key`, `timestamp`). All
+  events must be of the same type (specified in `shared_data.event_type`). The
+  `events` list contains event-specific data for each event. When
+  `shared_data.context_type` is set, it applies to all events and per-row
+  overrides are stripped.
+
+  **Emits:** *(dynamic — event class resolved from `shared_data.event_type` at runtime)*
+  **Required scope:** `traceability:event:create`
   """
   try:
     if not request.events:
@@ -170,6 +194,10 @@ async def record_events_bulk(request: BulkEventRequest):
 
 
 @router.get('/event',
+    response_model=list,
+    responses={
+      422: {"description": "Invalid context type"},
+    },
     dependencies=[Depends(auth.verify_token)])
 async def get_events(
   issue_key: str | None = None,
@@ -183,6 +211,16 @@ async def get_events(
   context_key: str | None = None,
   type: EventType | None = None
 ):
+  """Search the event log.
+
+  Queries the `Event` collection using the supplied entity reference filters
+  (serial, job, work order, task, issue) and optional time range and event type
+  filters. `context_type` must be a known value from `EventContextType` or 422
+  is returned.
+
+  **Emits:** *(direct query — no event class)*
+  **Required scope:** `traceability:event:read`
+  """
 
   if context_type is not None and context_type not in context_map:
     raise HTTPException(status_code=422, detail=f'Invalid context type: {context_type}')
@@ -204,8 +242,19 @@ async def get_events(
 
 
 @router.get('/batch/{batch_key}',
+    response_model=APIResponse,
+    responses={500: {"description": "Database error"}},
     dependencies=[Depends(auth.verify_token)])
 async def get_batch_execution_data(batch_key: str):
+  """Fetch full execution data for a production batch.
+
+  Executes `GET_BATCH_EXECUTION_DATA` to retrieve the `Batch` document together
+  with its linked `StepExecutionData` records and work sessions. Returns an
+  empty detail dict when no batch matching `batch_key` is found.
+
+  **Emits:** *(direct query — no event class)*
+  **Required scope:** `traceability:batch-execution-record:read`
+  """
 
   try:
     db_resp = db.aql.execute(Queries.GET_BATCH_EXECUTION_DATA, bind_vars=dict(batch_key=batch_key))
@@ -230,8 +279,22 @@ async def get_batch_execution_data(batch_key: str):
   return APIResponse(detail=batch_data)
 
 @router.get('/batch/{batch_key}/serials',
+    response_model=list[SerialSelection],
+    responses={
+      404: {"description": "No serials found for batch"},
+      500: {"description": "Database error"},
+    },
     dependencies=[Depends(auth.verify_token)])
 async def get_batch_serials(batch_key: str):
+  """Return serials associated with a production batch.
+
+  Queries `GET_BATCH_SERIALS` in the `Serial` collection for all serials linked
+  to `batch_key`. Each result has `active=True` set before returning so the
+  frontend can treat them as currently in-use serials.
+
+  **Emits:** *(direct query — no event class)*
+  **Required scope:** `traceability:batch-execution-record:read`
+  """
 
   try:
     batch_serials_cursor = db.aql.execute(
@@ -260,10 +323,18 @@ async def get_batch_serials(batch_key: str):
 
 
 @router.post('/job/{job_key}/heartbeat',
+    response_model=APIResponse,
+    responses={},
     dependencies=[Depends(auth.verify_token)])
 async def job_heartbeat(job_key: str, work_session_key: str | None = None):
-  """
-  Updates the work session `last_online` attribute with current time
+  """Updates the work session `last_online` attribute with current time.
+
+  Writes the current timestamp to `Job.last_online` within a transaction on the
+  `Job` and `WorkSession` collections. Used by the production UI to signal that
+  an operator is still active on a job without recording a full event.
+
+  **Emits:** *(direct transaction — no event class)*
+  **Required scope:** `traceability:batch-execution-record:read`
   """
   try:
     now = timestamp()
@@ -285,8 +356,20 @@ async def job_heartbeat(job_key: str, work_session_key: str | None = None):
 
 
 @router.get('/wip',
+    response_model=dict,
+    responses={},
     dependencies=[Depends(auth.verify_token)])
 async def get_wip_availability_for_job(job_key: str):
+  """Return WIP quantity availability upstream and downstream of a job.
+
+  Executes `GET_AVAILABLE_WIP_UPSTREAM_AND_DOWNSTREAM_OF_JOB` to calculate the
+  total free WIP quantities on both sides of the job in the process graph.
+  Returns `free_wip_qt_upstream` and `free_wip_qt_downstream` as floats summed
+  across all matching WIP records.
+
+  **Emits:** *(direct query — no event class)*
+  **Required scope:** `traceability:batch-execution-record:read`
+  """
   tx = db.begin_transaction()
   available_wip_records = tx.aql.execute(
     Queries.GET_AVAILABLE_WIP_UPSTREAM_AND_DOWNSTREAM_OF_JOB,
@@ -303,11 +386,23 @@ async def get_wip_availability_for_job(job_key: str):
   )
 
 
-@router.post('/batch/temp-data', dependencies=[Depends(auth.verify_token)])
+@router.post('/batch/temp-data',
+    response_model=APIResponse,
+    responses={
+      422: {"description": "Missing context (execution_record_key or batch_key+step_key), empty form data, or step already done"},
+    },
+    dependencies=[Depends(auth.verify_token)])
 async def store_temp_step_data(data: ExecutionDataUpdate):
-  """
-  Creates or updates a step execution data record with the given form data
-  without setting the step as done
+  """Creates or updates a step execution data record with the given form data without setting the step as done.
+
+  Locates an existing `StepExecutionData` record by `execution_record_key` or
+  by `(batch_key, step_key)` pair. Merges the provided `form_data` values into
+  the existing record's fields in-place. If no record exists yet, a new one is
+  created by reading the step's `form_fields` definition and pre-populating all
+  fields. Returns 422 when the step is already marked `done`.
+
+  **Emits:** *(direct transaction — no event class)*
+  **Required scope:** `traceability:batch-execution-record:read`
   """
   execution_data = db.collection('StepExecutionData')
 
@@ -377,10 +472,23 @@ async def store_temp_step_data(data: ExecutionDataUpdate):
 
 
 
-@router.put('/batch/{batch_key}/serial-temp-links', dependencies=[Depends(auth.verify_token)])
+@router.put('/batch/{batch_key}/serial-temp-links',
+    response_model=APIResponse,
+    responses={
+      403: {"description": "Confirmed link or link not related to this batch"},
+      404: {"description": "Batch or serial not found"},
+    },
+    dependencies=[Depends(auth.verify_token)])
 def create_temporary_link(batch_key: str, links: list[SerialLink]):
-  """
-  Replace batch temporary component serial links with the provided ones
+  """Replace batch temporary component serial links with the provided ones.
+
+  Deletes all existing temporary `contains` edges for `batch_key` and
+  re-inserts the supplied links. All links must be unconfirmed (`confirmed=False`)
+  and must reference the given batch. Confirmed links must be created via
+  `SerialLinkedEvent` instead.
+
+  **Emits:** *(direct transaction — no event class)*
+  **Required scope:** `traceability:batch-execution-record:read`
   """
   # Check if batch_key is valid
   if not db.collection('Batch').has(batch_key):

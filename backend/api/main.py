@@ -15,8 +15,61 @@ logger = logging.getLogger("main")
 
 config = get_config()
 
+tags_metadata = [
+    {
+        "name": "Production",
+        "description": "Work orders, jobs, batches, steps.",
+        "externalDocs": {
+            "description": "Events reference",
+            "url": "https://progresslabit.github.io/progress-platform/events/production/",
+        },
+    },
+    {
+        "name": "Warehouse",
+        "description": "Inventory positions, movements, counting sessions.",
+        "externalDocs": {
+            "description": "Events reference",
+            "url": "https://progresslabit.github.io/progress-platform/events/inventory/",
+        },
+    },
+    {
+        "name": "Serial",
+        "description": "Serial traceability lifecycle.",
+        "externalDocs": {
+            "description": "Events reference",
+            "url": "https://progresslabit.github.io/progress-platform/events/serial/",
+        },
+    },
+    {
+        "name": "Collaboration",
+        "description": "Issues, tasks, messages.",
+        "externalDocs": {
+            "description": "Events reference",
+            "url": "https://progresslabit.github.io/progress-platform/events/collaboration/",
+        },
+    },
+    {"name": "Security", "description": "Authentication, session management, password reset."},
+    {"name": "Administration", "description": "System configuration, overrides, admin operations."},
+    {"name": "Organization", "description": "Users, roles, org structure."},
+    {"name": "Quality", "description": "Forms, print templates, DHR generation."},
+    {
+        "name": "Traceability",
+        "description": "Batch execution records, counters, serial search.",
+        "externalDocs": {
+            "description": "Events reference",
+            "url": "https://progresslabit.github.io/progress-platform/events/serial/",
+        },
+    },
+    {"name": "Process", "description": "Process templates and phase configuration."},
+    {"name": "Product", "description": "Product catalogue and BOM management."},
+    {"name": "Attachments", "description": "File and media attachment management."},
+    {"name": "Notification", "description": "SSE notification stream."},
+    {"name": "Configuration", "description": "System-level tag, custom field, and configuration utilities."},
+]
+
 app = FastAPI(
-	root_path=config.api_root_path
+    root_path=config.api_root_path,
+    openapi_tags=tags_metadata,
 )
 
 app.add_middleware(
@@ -70,7 +123,7 @@ app.include_router(endpoints.print, tags=['Quality', 'Traceability'])
 app.include_router(endpoints.process, tags=['Process'])
 app.include_router(endpoints.product, prefix="/product", tags=['Product'])
 app.include_router(endpoints.production, tags=['Production'])
-app.include_router(endpoints.tag)
+app.include_router(endpoints.tag, tags=['Configuration'])
 app.include_router(endpoints.collaboration, tags=['Collaboration'])
 app.include_router(endpoints.traceability, tags=['Traceability'])
 app.include_router(endpoints.counter, tags=['Traceability'])
