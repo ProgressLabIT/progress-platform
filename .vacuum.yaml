@@ -3,10 +3,10 @@
 # Examples (D-05) are AI-generated bonus content, not CI-enforced. Tightening
 # to require examples= is a post-launch decision tracked in the docs backlog.
 
+extends:
+  - - spectral:oas
+    - off
 rules:
-  operation-description:
-    severity: error
-  oas3-parameter-description:
-    severity: error
-  component-description:
-    severity: error
+  operation-description: error
+  oas3-parameter-description: error
+  component-description: error
