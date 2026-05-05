@@ -22,7 +22,7 @@ sequenceDiagram
   participant API as FastAPI
   participant E as IssueCreatedEvent
   participant DB as ArangoDB
-  participant N as NATS
+  participant N as Broker
 
   U->>API: POST /event (event_type: ISSUE_CREATED)
   API->>E: Event.save()
@@ -68,7 +68,7 @@ with `event_type: ISSUE_CREATED`.
 Inherits `post_processing()` from `BaseCollaboration` (which extends `BaseEvent`).
 `BaseCollaboration` does not override `_notification_subtopic`, but the
 `Issue*` events resolve to `progress.notification.issue` via the domain
-NATS subject map.
+broker subject map.
 
 ## InfoModel Fields
 

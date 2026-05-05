@@ -9,7 +9,7 @@ Inventory-domain events record movements, count sessions, and stock adjustments.
 Most inventory events extend `BaseInventoryEvent`, which publishes to
 `progress.notification.inventory` after commit. The notable exception is
 `CountSessionAppliedEvent`, which extends `BaseEvent` directly and has no
-NATS notification — downstream consumers re-read the session state after async
+broker notification — downstream consumers re-read the session state after async
 processing completes.
 
 ## Events

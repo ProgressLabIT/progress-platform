@@ -13,10 +13,10 @@ Stores arbitrary extra data on a job or work order document without going
 through the standard production event flow. Used for operator-assisted data
 corrections or custom field updates that do not map to a domain event.
 
-::: warning No NATS notification
+::: warning No broker notification
 `ExtraUpdateRequestedEvent` extends `BaseAdmin`, which itself extends
 `BaseProductionEvent`. However, `ExtraUpdateRequestedEvent` does not set
-`_notification_subtopic`, so no NATS message is published after commit.
+`_notification_subtopic`, so no broker message is published after commit.
 :::
 
 ## Trigger
@@ -42,7 +42,7 @@ with `event_type: EXTRA_UPDATE_REQUESTED`.
 Extends `BaseAdmin.post_processing()`:
 - Calls `update_work_order()`
 - Sets `job.forced = event_key`
-- No NATS publish (no `_notification_subtopic`)
+- No broker publish (no `_notification_subtopic`)
 
 ## InfoModel Fields
 

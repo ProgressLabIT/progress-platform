@@ -15,9 +15,9 @@ locked by the session, tallies movements created vs failed, marks the
 adjustment `MovementList` as `COMPLETED`, and updates the session to
 `APPLIED` with result statistics.
 
-::: warning No NATS notification
+::: warning No broker notification
 `CountSessionAppliedEvent` extends `BaseEvent` directly — not
-`BaseInventoryEvent`. Its `_notification_subtopic` is `null`, so no NATS
+`BaseInventoryEvent`. Its `_notification_subtopic` is `null`, so no broker
 message is published after commit. Downstream consumers poll or re-read the
 session state after async processing signals completion.
 :::
@@ -42,7 +42,7 @@ sequenceDiagram
   end
   Note right of E: commit_transaction
 
-  Note right of E: No NATS publish (subtopic = None — Pitfall 4)
+  Note right of E: No broker publish (subtopic = None — Pitfall 4)
   API-->>U: 200 OK
 ```
 
@@ -73,7 +73,7 @@ processing worker after all per-record movements have been applied.
 
 ## Side Effects (post_processing)
 
-Inherits `post_processing()` from `BaseEvent` — no NATS publish.
+Inherits `post_processing()` from `BaseEvent` — no broker publish.
 
 ## InfoModel Fields
 

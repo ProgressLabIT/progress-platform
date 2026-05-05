@@ -22,7 +22,7 @@ sequenceDiagram
   participant API as FastAPI
   participant E as MovementCompletedEvent
   participant DB as ArangoDB
-  participant N as NATS
+  participant N as Broker
   participant IC as InventoryChangedEvent
 
   API->>E: Event.save() (spawned by BatchCompletedEvent or direct POST /event)

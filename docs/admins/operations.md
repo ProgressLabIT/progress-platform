@@ -95,7 +95,7 @@ that ships to your aggregation backend (`syslog`, `journald`, `gelf`,
 
 ## progress tap
 
-`progress tap` streams live event traffic from the Progress Platform NATS
+`progress tap` streams live event traffic from the Progress Platform
 broker to the terminal — it is the primary diagnostic for "did my action
 emit the event I expected?".
 

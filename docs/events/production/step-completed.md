@@ -22,7 +22,7 @@ sequenceDiagram
   participant API as FastAPI
   participant E as StepCompletedEvent
   participant DB as ArangoDB
-  participant N as NATS
+  participant N as Broker
   participant BC as BatchCompletedEvent
 
   U->>API: POST /event (event_type: STEP_COMPLETED)

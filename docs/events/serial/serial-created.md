@@ -22,7 +22,7 @@ sequenceDiagram
   participant API as FastAPI
   participant E as SerialCreatedEvent
   participant DB as ArangoDB
-  participant N as NATS
+  participant N as Broker
 
   U->>API: POST /event (event_type: SERIAL_CREATED)
   API->>E: Event.save()

@@ -23,7 +23,7 @@ sequenceDiagram
   participant API as FastAPI
   participant E as BatchCompletedEvent
   participant DB as ArangoDB
-  participant N as NATS
+  participant N as Broker
   participant WSC as WorkSessionClosedEvent
   participant WR as WIPRemovedEvent
   participant WD as WIPDeclaredEvent

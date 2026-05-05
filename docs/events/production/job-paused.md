@@ -21,7 +21,7 @@ sequenceDiagram
   participant API as FastAPI
   participant E as JobPausedEvent
   participant DB as ArangoDB
-  participant N as NATS
+  participant N as Broker
   participant WSC as WorkSessionClosedEvent
 
   U->>API: POST /event (event_type: JOB_PAUSED)

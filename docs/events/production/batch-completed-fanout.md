@@ -35,7 +35,7 @@ sequenceDiagram
   participant DB as ArangoDB
   participant NB as BatchCreatedEvent (next phase)
   participant NW as WorkSessionCreatedEvent (next phase)
-  participant N as NATS
+  participant N as Broker
 
   API->>BC: Event.save() (spawned by StepCompletedEvent)
 

@@ -21,7 +21,7 @@ sequenceDiagram
   participant API as FastAPI
   participant E as JobClosedEvent
   participant DB as ArangoDB
-  participant N as NATS
+  participant N as Broker
 
   API->>E: Event.save() (spawned by BatchCompletedEvent when qt_completed >= qt_planned)
 

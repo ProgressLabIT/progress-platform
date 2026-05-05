@@ -11,7 +11,7 @@ description: TASK_UPDATED — Progress Platform Events Reference
 
 Updates mutable fields of an existing task. Unlike other task events,
 `TaskUpdatedEvent` overrides `_build_event_payload()` to emit a
-user-scoped NATS subject — each assigned user receives a targeted
+user-scoped broker subject — each assigned user receives a targeted
 notification at `progress.notification.user.{user_key}` rather than the
 shared task subject.
 
