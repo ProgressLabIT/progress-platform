@@ -103,8 +103,9 @@ jobs:
 
       - name: Install vacuum (descriptions-only OpenAPI lint gate — D-04)
         run: |
-          VACUUM_VERSION=$(curl -s https://api.github.com/repos/daveshanley/vacuum/releases/latest | grep '"tag_name"' | cut -d'"' -f4)
-          curl -fsSL "https://github.com/daveshanley/vacuum/releases/download/${VACUUM_VERSION}/vacuum_Linux_x86_64.tar.gz" | tar xz
+          VACUUM_VERSION="v0.26.4"
+          VACUUM_SEMVER="${VACUUM_VERSION#v}"
+          curl -fsSL "https://github.com/daveshanley/vacuum/releases/download/${VACUUM_VERSION}/vacuum_${VACUUM_SEMVER}_linux_x86_64.tar.gz" | tar xz
           sudo mv vacuum /usr/local/bin/vacuum
         working-directory: ${{ github.workspace }}
 
