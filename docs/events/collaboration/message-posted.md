@@ -7,7 +7,7 @@ description: MESSAGE_POSTED — Progress Platform Events Reference
 
 **EventType:** `MESSAGE_POSTED`
 **Domain:** collaboration
-**NATS subject:** `progress.notification.message`
+**Broker subject:** `progress.notification.message`
 
 Inserts a new message in a collaboration thread. The message is linked to a
 sender, a recipient (user or group key), and carries the text content.

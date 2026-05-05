@@ -7,11 +7,3 @@ description: Get completed positions for a counting session. — Progress Platfo
 # GET /inventory/count-session/{session_key}/completed-positions
 
 <OAOperation operationId="get_session_completed_positions_get" />
-
-## Events Emitted
-
-*This endpoint emits no domain events.*
-
-## Related
-
-[← API Overview](/api/) · [← Warehouse](/api/warehouse/) · [Events Reference](/events/)

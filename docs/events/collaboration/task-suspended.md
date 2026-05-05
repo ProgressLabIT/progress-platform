@@ -7,7 +7,7 @@ description: TASK_SUSPENDED — Progress Platform Events Reference
 
 **EventType:** `TASK_SUSPENDED`
 **Domain:** collaboration
-**NATS subject:** `progress.notification.task`
+**Broker subject:** `progress.notification.task`
 
 Suspends an open task by setting its `status → SUSPENDED`. Suspended tasks
 can be reopened via `TaskReopenedEvent`.

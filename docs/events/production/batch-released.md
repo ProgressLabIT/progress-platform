@@ -7,7 +7,7 @@ description: BATCH_RELEASED — Progress Platform Events Reference
 
 **EventType:** `BATCH_RELEASED`
 **Domain:** production
-**NATS subject:** `progress.notification.production`
+**Broker subject:** `progress.notification.production`
 
 Records the release of a completed batch to a downstream phase or shipping,
 linking the batch with its product, work order, released quantity, and

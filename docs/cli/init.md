@@ -94,7 +94,7 @@ Each step in the install touches a specific file under `deploy/compose/`, a name
 | Generate Docker secrets | `deploy/compose/stack.yaml` (`secrets:` block) | secret `progress_admin_pwd` |
 | Generate Docker secrets | `deploy/compose/stack.yaml` (`secrets:` block) | secret `progress_jwt_secret` |
 | Generate Docker secrets | `deploy/compose/stack.yaml` (`secrets:` block) | secret `progress_db_root_pwd` |
-| NATS broker bring-up | `deploy/compose/base.yaml` (`broker` service) | volume `nats_data` (external) |
+| Broker bring-up | `deploy/compose/base.yaml` (`broker` service) | volume `nats_data` (external) |
 | Stack deploy — API | `deploy/compose/stack.yaml` (`api` service) | image `registry.gitlab.com/progresslab/progress-platform/api:${VERSION}` |
 | Stack deploy — Traefik routing | `deploy/compose/stack.yaml` (`router` service) | host port `80` (HTTP) |
 | Stack deploy — TLS overlay (when `--enable-tls`) | `deploy/compose/tls.yaml` | volume `letsencrypt` |

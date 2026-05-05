@@ -7,7 +7,7 @@ description: JOB_RESUMED — Progress Platform Events Reference
 
 **EventType:** `JOB_RESUMED`
 **Domain:** production
-**NATS subject:** `progress.notification.production`
+**Broker subject:** `progress.notification.production`
 
 Resumes a paused job: sets `stage → STARTED`, creates a new `WorkSession`,
 and optionally updates the active batch's serial keys.

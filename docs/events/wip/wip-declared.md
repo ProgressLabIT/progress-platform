@@ -7,7 +7,7 @@ description: WIP_DECLARED — Progress Platform Events Reference
 
 **EventType:** `WIP_DECLARED`
 **Domain:** wip
-**NATS subject:** `progress.notification.production`
+**Broker subject:** `progress.notification.production`
 
 Declares a quantity of material as WIP at a job boundary — typically when
 a batch enters a phase but has not been booked with full serial detail yet.

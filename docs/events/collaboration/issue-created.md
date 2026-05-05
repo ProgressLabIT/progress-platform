@@ -7,7 +7,7 @@ description: ISSUE_CREATED — Progress Platform Events Reference
 
 **EventType:** `ISSUE_CREATED`
 **Domain:** collaboration
-**NATS subject:** `progress.notification.issue`
+**Broker subject:** `progress.notification.issue`
 
 Inserts a new `Issue` document and creates `issue_rel` edges to all linked
 entities (work orders, jobs, products, serials, users, etc.). After writing

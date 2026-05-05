@@ -7,7 +7,7 @@ description: WORK_SESSION_CANCELED — Progress Platform Events Reference
 
 **EventType:** `WORK_SESSION_CANCELED`
 **Domain:** work_session
-**NATS subject:** `progress.notification.production`
+**Broker subject:** `progress.notification.production`
 
 Cancels a work session, marking it as canceled without recording a normal
 end. Used in administrative corrections when a session must be voided —

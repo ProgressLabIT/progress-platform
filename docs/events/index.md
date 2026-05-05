@@ -8,7 +8,7 @@ description: Domain events emitted by the Progress Platform - Progress Platform 
 Every state change in the Progress Platform that requires post-commit
 side effects flows through a typed **Event** object. Events are
 applied within an ArangoDB transaction and, on commit, publish
-notifications via NATS subjects (consumed by the SSE stream and the
+notifications via broker subjects (consumed by the SSE stream and the
 Sparkplug bridge).
 
 The catalogue below is auto-extracted from `backend/api/events/` on every
@@ -28,7 +28,7 @@ remainder ship with auto-extracted InfoModel and post-processing summaries
 
 ## Full event index
 
-| Event | Domain | EventType | NATS Subject |
+| Event | Domain | EventType | Broker Subject |
 |-------|--------|-----------|--------------|
 | [ExtraUpdateRequestedEvent](/events/admin/extra-update-requested) | admin | `EXTRA_UPDATE_REQUESTED` | — |
 | [IssueClosedEvent](/events/collaboration/issue-closed) | collaboration | `ISSUE_CLOSED` | `progress.notification.issue` |

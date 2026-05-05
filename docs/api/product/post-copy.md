@@ -7,11 +7,3 @@ description: Copy a product to create a new variant. — Progress Platform API R
 # POST /copy
 
 <OAOperation operationId="copy_product_post" />
-
-## Events Emitted
-
-*This endpoint emits no domain events.*
-
-## Related
-
-[← API Overview](/api/) · [← Product](/api/product/) · [Events Reference](/events/)

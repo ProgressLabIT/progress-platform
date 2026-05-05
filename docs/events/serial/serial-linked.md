@@ -7,7 +7,7 @@ description: SERIAL_LINKED — Progress Platform Events Reference
 
 **EventType:** `SERIAL_LINKED`
 **Domain:** serial
-**NATS subject:** `progress.notification.serial`
+**Broker subject:** `progress.notification.serial`
 
 Links a child serial to a parent serial via the `contains` edge collection,
 optionally moving the child's inventory record from its current position and

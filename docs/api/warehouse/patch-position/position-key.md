@@ -7,11 +7,3 @@ description: Update an existing inventory position. — Progress Platform API Re
 # PATCH /position/{position_key}
 
 <OAOperation operationId="update_position_patch" />
-
-## Events Emitted
-
-*This endpoint emits no domain events.*
-
-## Related
-
-[← API Overview](/api/) · [← Warehouse](/api/warehouse/) · [Events Reference](/events/)

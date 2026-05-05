@@ -7,7 +7,7 @@ description: COUNT_SESSION_COMPLETED — Progress Platform Events Reference
 
 **EventType:** `COUNT_SESSION_COMPLETED`
 **Domain:** inventory
-**NATS subject:** `progress.notification.inventory`
+**Broker subject:** `progress.notification.inventory`
 
 Marks all count records in a session as complete and transitions the session
 to `COMPLETED` status, ready for the confirmation step.

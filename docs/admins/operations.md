@@ -7,7 +7,7 @@ description: Health checks, log locations, and diagnostic commands for Progress 
 
 > If you're operating a running Progress Platform deployment, this page covers
 > how to verify the stack is healthy, where to find logs, and how to use
-> `progress tap` to inspect live event traffic on the NATS broker.
+> `progress tap` to inspect live event traffic on the broker.
 
 ## Health checks
 
@@ -31,9 +31,9 @@ routing `/api`. If a dedicated `/api/health` endpoint is present in your
 deployed version, prefer it over `/api/hello` — try `GET /api/health` first
 and fall back to `/api/hello` on 404.
 
-### Broker liveness — `/api/broker/health` and NATS `/healthz`
+### Broker liveness — `/api/broker/health` and `/healthz`
 
-The NATS broker exposes its native monitoring endpoint at
+The broker exposes its native monitoring endpoint at
 `http://broker:8222/healthz` (declared in `deploy/compose/base.yaml` as the
 broker's healthcheck command):
 
@@ -65,7 +65,7 @@ docker compose -f deploy/compose/base.yaml ps
 ```
 
 The Sparkplug bridge stack (`sparkplug_bridge`, `historian_ingester`,
-`sparkplug_sim` in `deploy/compose/sparkplug.yaml`) uses NATS-subscription
+`sparkplug_sim` in `deploy/compose/sparkplug.yaml`) uses broker-subscription
 healthchecks: each service must publish a heartbeat on
 `progress.notification.health.sparkplug.<service>` within the timeout window
 or Docker marks it unhealthy.
@@ -81,7 +81,7 @@ is no shared `logs:` named volume in `base.yaml`. View logs per service:
   the stream.
 - **ArangoDB logs** — `docker service logs -f progress_db`. ArangoDB also
   writes durable logs inside the `db_data` volume at `/var/lib/arangodb3`.
-- **NATS broker logs** — `docker service logs -f progress_broker`. Connection
+- **Broker logs** — `docker service logs -f progress_broker`. Connection
   events, JetStream operations, and slow-consumer warnings appear here.
 - **Sparkplug bridge logs** — `docker service logs -f progress_sparkplug_bridge`
   (when the Sparkplug stack is enabled). Includes MQTT connection state,

@@ -7,7 +7,7 @@ description: TASK_COMPLETED — Progress Platform Events Reference
 
 **EventType:** `TASK_COMPLETED`
 **Domain:** collaboration
-**NATS subject:** `progress.notification.task`
+**Broker subject:** `progress.notification.task`
 
 Marks a task as completed by setting `status → COMPLETED` and recording
 the `closed` timestamp and `closed_by` user key.

@@ -7,11 +7,3 @@ description: List custom data entries. — Progress Platform API Reference
 # GET /custom-data
 
 <OAOperation operationId="list_custom_data_get" />
-
-## Events Emitted
-
-*This endpoint emits no domain events.*
-
-## Related
-
-[← API Overview](/api/) · [← Configuration](/api/configuration/) · [Events Reference](/events/)

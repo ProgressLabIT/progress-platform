@@ -20,7 +20,7 @@ the matching combination — see [progress init](/cli/init).
 
 | File | Role |
 |------|------|
-| `deploy/compose/base.yaml` | Production base — defines `router`, `api`, `db`, `broker`, the named volumes (`media`, `db_data`, `db_backup`, `nats_data`), and the broker NATS healthcheck. |
+| `deploy/compose/base.yaml` | Production base — defines `router`, `api`, `db`, `broker`, the named volumes (`media`, `db_data`, `db_backup`, `nats_data`), and the broker healthcheck. |
 | `deploy/compose/stack.yaml` | Docker Swarm overlay — adds external `progress` network, Docker secrets, Traefik labels and routers, and the `app` (main webapp) service. |
 | `deploy/compose/dev.yaml` | Local-development overrides for the base stack. |
 | `deploy/compose/sparkplug.yaml` | Optional Sparkplug bridge extension (`sparkplug_bridge`, `historian_ingester`, `sparkplug_sim`). |
@@ -39,9 +39,9 @@ Service names and image tags are taken directly from `base.yaml` and `stack.yaml
 | `db` | `arangodb:3.11` | ArangoDB multi-model database. Reads root password from `progress_db_root_pwd` Docker secret. |
 | `api` | `registry.gitlab.com/progresslab/progress-platform/api:${VERSION}` | FastAPI backend. Reads `PROGRESS_API_DB_PWD`, `PROGRESS_JWT_SECRET`, `PROGRESS_ADMIN_PWD` from Docker secrets. |
 | `app` | `registry.gitlab.com/progresslab/progress-platform/app:${VERSION}` | Main webapp (Quasar SPA). Mounts `appConfig.js` and the `media` volume read-only. |
-| `broker` | `nats:2.12-alpine` | NATS message broker. Exposes 4222 (NATS), 8222 (HTTP monitoring), 1883 (MQTT). Native `/healthz` healthcheck. |
+| `broker` | `nats:2.12-alpine` | Message broker. Exposes 4222 (client), 8222 (HTTP monitoring), 1883 (MQTT). Native `/healthz` healthcheck. |
 | `warehouse` (optional) | `registry.gitlab.com/progresslab/progress-platform/warehouse:${VERSION}` | Warehouse SPA. Activated via `deploy/compose/warehouse.yaml`. Routed under `/wh` prefix. |
-| `sparkplug_bridge` (optional) | `registry.gitlab.com/progresslab/progress-platform/sparkplug-bridge:${VERSION}` | Decodes Sparkplug B MQTT frames and re-emits them on NATS. Activated via `sparkplug.yaml`. |
+| `sparkplug_bridge` (optional) | `registry.gitlab.com/progresslab/progress-platform/sparkplug-bridge:${VERSION}` | Decodes Sparkplug B MQTT frames and re-emits them on the broker. Activated via `sparkplug.yaml`. |
 
 The Sparkplug optional services (`sparkplug_bridge`, `historian_ingester`, `sparkplug_sim`)
 are described in [Integration](/admins/integration).
@@ -57,7 +57,7 @@ first `docker stack deploy`.
 - **`db_data`** — ArangoDB on-disk data files (`/var/lib/arangodb3` in the `db` container).
 - **`db_backup`** — ArangoDB backup target (`/db_backup` in the `db` container). Used by
   `progress restore` and scheduled `arangodump` jobs.
-- **`nats_data`** — NATS broker JetStream KV state (`/data` in the `broker` container).
+- **`nats_data`** — Broker JetStream KV state (`/data` in the `broker` container).
   Holds `sparkplug_sessions`, `sparkplug_aliases`, `sparkplug_last_seq`, and
   `sparkplug_last_values` buckets when the Sparkplug bridge is enabled.
 

@@ -7,7 +7,7 @@ description: WORK_SESSION_CLOSED — Progress Platform Events Reference
 
 **EventType:** `WORK_SESSION_CLOSED`
 **Domain:** work_session
-**NATS subject:** `progress.notification.production`
+**Broker subject:** `progress.notification.production`
 
 Closes an active work session by setting `active → false` and recording the
 `work_session_end` timestamp. Spawned automatically by `JobPausedEvent`,

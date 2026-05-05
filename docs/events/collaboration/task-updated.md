@@ -7,7 +7,7 @@ description: TASK_UPDATED — Progress Platform Events Reference
 
 **EventType:** `TASK_UPDATED`
 **Domain:** collaboration
-**NATS subject:** `progress.notification.user.{user_key}`
+**Broker subject:** `progress.notification.user.{user_key}`
 
 Updates mutable fields of an existing task. Unlike other task events,
 `TaskUpdatedEvent` overrides `_build_event_payload()` to emit a

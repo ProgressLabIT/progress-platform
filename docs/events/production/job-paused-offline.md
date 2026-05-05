@@ -7,7 +7,7 @@ description: JOB_PAUSED_OFFLINE — Progress Platform Events Reference
 
 **EventType:** `JOB_PAUSED_OFFLINE`
 **Domain:** production
-**NATS subject:** `progress.notification.production`
+**Broker subject:** `progress.notification.production`
 
 Pauses a job that was detected as offline (e.g., operator disconnected without
 explicitly pausing). Records the `work_session_end` timestamp so the work

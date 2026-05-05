@@ -7,7 +7,7 @@ description: MOVEMENT_COMPLETED — Progress Platform Events Reference
 
 **EventType:** `MOVEMENT_COMPLETED`
 **Domain:** inventory
-**NATS subject:** `progress.notification.inventory`
+**Broker subject:** `progress.notification.inventory`
 
 Records a confirmed inventory movement of any type (RECEIPT, SHIPMENT,
 ADJUSTMENT, TRANSFER, PRODUCTION, CONSUMPTION). Dispatches to a

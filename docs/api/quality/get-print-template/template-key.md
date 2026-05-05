@@ -7,11 +7,3 @@ description: Get print template details. — Progress Platform API Reference
 # GET /print-template/{template_key}
 
 <OAOperation operationId="get_print_template_details_get" />
-
-## Events Emitted
-
-*This endpoint emits no domain events.*
-
-## Related
-
-[← API Overview](/api/) · [← Quality](/api/quality/) · [Events Reference](/events/)

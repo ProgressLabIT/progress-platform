@@ -8,10 +8,4 @@ description: Apply a batch of job insert, update, or close operations. — Progr
 
 <OAOperation operationId="update_jobs_post" />
 
-## Events Emitted
-
-*This endpoint emits no domain events.*
-
-## Related
-
-[← API Overview](/api/) · [← Production](/api/production/) · [Events Reference](/events/)
+**Emits:** [JobClosed](/events/production/job-closed) — when a job update or close action triggers job closure

@@ -7,11 +7,3 @@ description: Get products with recent movement activity. — Progress Platform A
 # GET /movement/latest-products
 
 <OAOperation operationId="get_recent_movement_products_get" />
-
-## Events Emitted
-
-*This endpoint emits no domain events.*
-
-## Related
-
-[← API Overview](/api/) · [← Warehouse](/api/warehouse/) · [Events Reference](/events/)

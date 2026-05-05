@@ -7,7 +7,7 @@ description: WIP_UNBOOKED — Progress Platform Events Reference
 
 **EventType:** `WIP_UNBOOKED`
 **Domain:** wip
-**NATS subject:** `progress.notification.production`
+**Broker subject:** `progress.notification.production`
 
 Reverses a WIP booking, releasing material that was reserved for a phase
 back to the previous phase or pool. Used when a batch or job is reset or

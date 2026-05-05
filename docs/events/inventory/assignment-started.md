@@ -7,7 +7,7 @@ description: ASSIGNMENT_STARTED — Progress Platform Events Reference
 
 **EventType:** `ASSIGNMENT_STARTED`
 **Domain:** inventory
-**NATS subject:** `progress.notification.inventory`
+**Broker subject:** `progress.notification.inventory`
 
 Marks a count assignment as started, recording when an operator begins
 working the delegated portion of an inventory count session.

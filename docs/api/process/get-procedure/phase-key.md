@@ -7,11 +7,3 @@ description: Fetch the procedure for a phase. — Progress Platform API Referenc
 # GET /procedure/{phase_key}
 
 <OAOperation operationId="get_phase_procedure_get" />
-
-## Events Emitted
-
-*This endpoint emits no domain events.*
-
-## Related
-
-[← API Overview](/api/) · [← Process](/api/process/) · [Events Reference](/events/)

@@ -7,7 +7,7 @@ description: JOB_PAUSED — Progress Platform Events Reference
 
 **EventType:** `JOB_PAUSED`
 **Domain:** production
-**NATS subject:** `progress.notification.production`
+**Broker subject:** `progress.notification.production`
 
 Pauses an active job, setting its stage to `PAUSED` and closing the
 current work session. The job remains assigned and the active batch is

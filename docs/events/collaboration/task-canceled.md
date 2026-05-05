@@ -7,7 +7,7 @@ description: TASK_CANCELED — Progress Platform Events Reference
 
 **EventType:** `TASK_CANCELED`
 **Domain:** collaboration
-**NATS subject:** `progress.notification.task`
+**Broker subject:** `progress.notification.task`
 
 Cancels a task by setting its `status` to `CANCELED` and optionally
 recording a cancellation reason.

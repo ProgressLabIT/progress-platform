@@ -7,7 +7,7 @@ description: MESSAGE_UPDATED — Progress Platform Events Reference
 
 **EventType:** `MESSAGE_UPDATED`
 **Domain:** collaboration
-**NATS subject:** `progress.notification.message`
+**Broker subject:** `progress.notification.message`
 
 Updates the content of an existing message. Records an `edited` timestamp
 for audit purposes.

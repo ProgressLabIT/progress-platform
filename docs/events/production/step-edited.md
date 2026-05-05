@@ -7,7 +7,7 @@ description: STEP_EDITED — Progress Platform Events Reference
 
 **EventType:** `STEP_EDITED`
 **Domain:** production
-**NATS subject:** `progress.notification.production`
+**Broker subject:** `progress.notification.production`
 
 Updates the form data on an existing `StepExecutionData` record after the
 step has already been completed. Used when a supervisor or quality officer

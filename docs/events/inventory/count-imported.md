@@ -7,7 +7,7 @@ description: COUNT_IMPORTED — Progress Platform Events Reference
 
 **EventType:** `COUNT_IMPORTED`
 **Domain:** inventory
-**NATS subject:** `progress.notification.inventory`
+**Broker subject:** `progress.notification.inventory`
 
 Imports count records from an uploaded spreadsheet file into an inventory count
 session. Creates `inventory_count_record`, `Position`, and `Serial` documents

@@ -7,7 +7,7 @@ description: TASK_REOPENED — Progress Platform Events Reference
 
 **EventType:** `TASK_REOPENED`
 **Domain:** collaboration
-**NATS subject:** `progress.notification.task`
+**Broker subject:** `progress.notification.task`
 
 Reopens a completed or suspended task by setting `status → OPEN` and
 clearing the `closed` timestamp.

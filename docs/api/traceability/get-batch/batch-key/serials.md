@@ -7,11 +7,3 @@ description: Fetch serials linked to a batch. — Progress Platform API Referenc
 # GET /batch/{batch_key}/serials
 
 <OAOperation operationId="get_batch_serials_get" />
-
-## Events Emitted
-
-*This endpoint emits no domain events.*
-
-## Related
-
-[← API Overview](/api/) · [← Traceability](/api/traceability/) · [Events Reference](/events/)

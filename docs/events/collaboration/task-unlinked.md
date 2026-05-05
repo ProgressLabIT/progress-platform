@@ -7,7 +7,7 @@ description: TASK_UNLINKED — Progress Platform Events Reference
 
 **EventType:** `TASK_UNLINKED`
 **Domain:** collaboration
-**NATS subject:** `progress.notification.task`
+**Broker subject:** `progress.notification.task`
 
 Removes a `task_rel` edge, unlinking a task from a previously linked entity.
 

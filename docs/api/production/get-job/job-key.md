@@ -7,11 +7,3 @@ description: Fetch full working data for a single job by key. — Progress Platf
 # GET /job/{job_key}
 
 <OAOperation operationId="get_job_data_get" />
-
-## Events Emitted
-
-*This endpoint emits no domain events.*
-
-## Related
-
-[← API Overview](/api/) · [← Production](/api/production/) · [Events Reference](/events/)

@@ -7,7 +7,7 @@ description: TASK_CREATED — Progress Platform Events Reference
 
 **EventType:** `TASK_CREATED`
 **Domain:** collaboration
-**NATS subject:** `progress.notification.task`
+**Broker subject:** `progress.notification.task`
 
 Creates a new task document with a generated code (via `Counter`) and
 optional assignments, dates, and custom extra data.

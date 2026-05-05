@@ -7,11 +7,3 @@ description: Return the full position tree rooted at a given position. — Progr
 # GET /position-hierarchy
 
 <OAOperation operationId="get_position_hierarchy_get" />
-
-## Events Emitted
-
-*This endpoint emits no domain events.*
-
-## Related
-
-[← API Overview](/api/) · [← Warehouse](/api/warehouse/) · [Events Reference](/events/)

@@ -34,18 +34,70 @@ export default withMermaid(defineConfig({
   themeConfig: {
     siteTitle: 'Progress Platform',
 
-    // D-07: 5 sections in fixed order
+    // 4-section navigation
     nav: [
-      { text: 'API', link: '/api/' },
-      { text: 'Events', link: '/events/' },
-      { text: 'CLI', link: '/cli/' },
-      { text: 'Users', link: '/users/' },
-      { text: 'Admins', link: '/admins/' },
+      { text: 'Overview', link: '/overview/' },
+      { text: 'User Manual', link: '/manual/' },
+      { text: 'Admin & Developers', link: '/admin/' },
+      { text: 'Technical Reference', link: '/reference/' },
     ],
 
     // Pitfall 1.2: hand-written sidebar (no auto-sidebar plugin)
     // CP-4: links omit .html (cleanUrls: true)
     sidebar: {
+      // ── New section sidebars ──────────────────────────────────
+      '/overview/': [
+        { text: 'Overview', items: [
+          { text: 'Introduction', link: '/overview/' },
+          { text: 'Why Progress', link: '/overview/why-progress' },
+          { text: 'Features', link: '/overview/features' },
+          { text: 'Concepts & Glossary', link: '/overview/concepts' },
+        ]},
+      ],
+      '/manual/': [
+        { text: 'User Manual', items: [
+          { text: 'Introduction', link: '/manual/' },
+          { text: 'User Hub', link: '/manual/user-hub' },
+          { text: 'Library', link: '/manual/library' },
+          { text: 'Production', link: '/manual/production' },
+          { text: 'Quality', link: '/manual/quality' },
+          { text: 'Traceability', link: '/manual/traceability' },
+          { text: 'Tasks & Issues', link: '/manual/tasks' },
+          { text: 'Warehouse', link: '/manual/warehouse' },
+          { text: 'Reports', link: '/manual/reports' },
+          { text: 'Admin Panel', link: '/manual/admin-panel' },
+        ]},
+      ],
+      '/admin/': [
+        { text: 'Admin & Developers', items: [
+          { text: 'Overview', link: '/admin/' },
+          { text: 'Platform Architecture', link: '/admin/architecture' },
+          { text: 'Installation', link: '/admin/installation' },
+          { text: 'Configuration', link: '/admins/configuration' },
+          { text: 'Deployment', link: '/admins/deployment' },
+          { text: 'Operations', link: '/admins/operations' },
+          { text: 'Integration', link: '/admins/integration' },
+          { text: 'Release & Update', link: '/admin/release-update' },
+          { text: 'Backup & Restore', link: '/admin/backup-restore' },
+        ]},
+        { text: 'Developing Extensions', items: [
+          { text: 'Prefect Workflows', link: '/admin/prefect-workflows' },
+          { text: 'Streamlit Apps', link: '/admin/streamlit-apps' },
+          { text: 'IIoT Streams', link: '/admin/iiot-streams' },
+        ]},
+      ],
+      '/reference/': [
+        { text: 'Technical Reference', items: [
+          { text: 'Overview', link: '/reference/' },
+          { text: 'API Reference', link: '/api/' },
+          { text: 'Events Reference', link: '/events/' },
+          { text: 'CLI Reference', link: '/cli/' },
+          { text: 'DB Collections', link: '/reference/db-collections' },
+          { text: 'Broker Subjects', link: '/reference/broker-subjects' },
+        ]},
+      ],
+
+      // ── Existing section sidebars (preserved for direct URL access) ──
       '/api/': [
         { text: 'API Reference', items: [
           { text: 'Overview', link: '/api/' },
@@ -255,9 +307,93 @@ export default withMermaid(defineConfig({
       '/events/': [
         { text: 'Events Reference', items: [
           { text: 'Overview', link: '/events/' },
-          { text: 'production: JobStarted', link: '/events/production/job-started' },
-          { text: 'production: BatchCompleted', link: '/events/production/batch-completed' },
-          { text: '↳ Fan-out: next-phase spawn', link: '/events/production/batch-completed-fanout' },
+          { text: 'Production', collapsed: true, items: [
+            { text: 'Overview', link: '/events/production/' },
+            { text: 'ActiveBatchChanged', link: '/events/production/active-batch-changed' },
+            { text: 'BatchCompleted', link: '/events/production/batch-completed' },
+            { text: '↳ Fan-out', link: '/events/production/batch-completed-fanout' },
+            { text: 'BatchCreated', link: '/events/production/batch-created' },
+            { text: 'BatchReleased', link: '/events/production/batch-released' },
+            { text: 'JobBackOnline', link: '/events/production/job-back-online' },
+            { text: 'JobClosed', link: '/events/production/job-closed' },
+            { text: 'JobPauseForced', link: '/events/production/job-pause-forced' },
+            { text: 'JobPaused', link: '/events/production/job-paused' },
+            { text: 'JobPausedOffline', link: '/events/production/job-paused-offline' },
+            { text: 'JobResumed', link: '/events/production/job-resumed' },
+            { text: 'JobStarted', link: '/events/production/job-started' },
+            { text: 'QueueUpdated', link: '/events/production/queue-updated' },
+            { text: 'StepCompleted', link: '/events/production/step-completed' },
+            { text: 'StepEdited', link: '/events/production/step-edited' },
+            { text: 'WorkOrderStarted', link: '/events/production/work-order-started' },
+          ]},
+          { text: 'Inventory', collapsed: true, items: [
+            { text: 'Overview', link: '/events/inventory/' },
+            { text: 'AssignmentCompleted', link: '/events/inventory/assignment-completed' },
+            { text: 'AssignmentStarted', link: '/events/inventory/assignment-started' },
+            { text: 'CountApplied', link: '/events/inventory/count-applied' },
+            { text: 'CountCanceled', link: '/events/inventory/count-canceled' },
+            { text: 'CountCompleted', link: '/events/inventory/count-completed' },
+            { text: 'CountDiscarded', link: '/events/inventory/count-discarded' },
+            { text: 'CountImported', link: '/events/inventory/count-imported' },
+            { text: 'CountSessionApplied', link: '/events/inventory/count-session-applied' },
+            { text: 'CountSessionCompleted', link: '/events/inventory/count-session-completed' },
+            { text: 'CountSessionConfirmed', link: '/events/inventory/count-session-confirmed' },
+            { text: 'CountSessionResumed', link: '/events/inventory/count-session-resumed' },
+            { text: 'CountSessionStarted', link: '/events/inventory/count-session-started' },
+            { text: 'CountStarted', link: '/events/inventory/count-started' },
+            { text: 'InventoryChanged', link: '/events/inventory/inventory-changed' },
+            { text: 'MovementCompleted', link: '/events/inventory/movement-completed' },
+            { text: 'MovementPlanned', link: '/events/inventory/movement-planned' },
+            { text: 'MovementReversed', link: '/events/inventory/movement-reversed' },
+            { text: 'MovementUpdated', link: '/events/inventory/movement-updated' },
+            { text: 'PositionConfirmedEmpty', link: '/events/inventory/position-confirmed-empty' },
+            { text: 'WarehouseListClosed', link: '/events/inventory/warehouse-list-closed' },
+          ]},
+          { text: 'Serial', collapsed: true, items: [
+            { text: 'Overview', link: '/events/serial/' },
+            { text: 'SerialCreated', link: '/events/serial/serial-created' },
+            { text: 'SerialDeleted', link: '/events/serial/serial-deleted' },
+            { text: 'SerialLinked', link: '/events/serial/serial-linked' },
+            { text: 'SerialReleased', link: '/events/serial/serial-released' },
+            { text: 'SerialUnlinked', link: '/events/serial/serial-unlinked' },
+            { text: 'SerialUpdated', link: '/events/serial/serial-updated' },
+          ]},
+          { text: 'Collaboration', collapsed: true, items: [
+            { text: 'Overview', link: '/events/collaboration/' },
+            { text: 'IssueClosed', link: '/events/collaboration/issue-closed' },
+            { text: 'IssueCreated', link: '/events/collaboration/issue-created' },
+            { text: 'IssueDeleted', link: '/events/collaboration/issue-deleted' },
+            { text: 'IssueReopened', link: '/events/collaboration/issue-reopened' },
+            { text: 'IssueUpdated', link: '/events/collaboration/issue-updated' },
+            { text: 'MessageDeleted', link: '/events/collaboration/message-deleted' },
+            { text: 'MessagePosted', link: '/events/collaboration/message-posted' },
+            { text: 'MessageUpdated', link: '/events/collaboration/message-updated' },
+            { text: 'TaskCanceled', link: '/events/collaboration/task-canceled' },
+            { text: 'TaskCompleted', link: '/events/collaboration/task-completed' },
+            { text: 'TaskCreated', link: '/events/collaboration/task-created' },
+            { text: 'TaskLinked', link: '/events/collaboration/task-linked' },
+            { text: 'TaskReopened', link: '/events/collaboration/task-reopened' },
+            { text: 'TaskSuspended', link: '/events/collaboration/task-suspended' },
+            { text: 'TaskUnlinked', link: '/events/collaboration/task-unlinked' },
+            { text: 'TaskUpdated', link: '/events/collaboration/task-updated' },
+          ]},
+          { text: 'WIP', collapsed: true, items: [
+            { text: 'Overview', link: '/events/wip/' },
+            { text: 'WIPBooked', link: '/events/wip/wip-booked' },
+            { text: 'WIPDeclared', link: '/events/wip/wip-declared' },
+            { text: 'WIPRemoved', link: '/events/wip/wip-removed' },
+            { text: 'WIPUnbooked', link: '/events/wip/wip-unbooked' },
+          ]},
+          { text: 'Work Session', collapsed: true, items: [
+            { text: 'Overview', link: '/events/work_session/' },
+            { text: 'WorkSessionCanceled', link: '/events/work_session/work-session-canceled' },
+            { text: 'WorkSessionClosed', link: '/events/work_session/work-session-closed' },
+            { text: 'WorkSessionCreated', link: '/events/work_session/work-session-created' },
+          ]},
+          { text: 'Admin', collapsed: true, items: [
+            { text: 'Overview', link: '/events/admin/' },
+            { text: 'ExtraUpdateRequested', link: '/events/admin/extra-update-requested' },
+          ]},
         ]},
       ],
       '/cli/': [

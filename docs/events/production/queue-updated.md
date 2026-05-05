@@ -7,7 +7,7 @@ description: QUEUE_UPDATED — Progress Platform Events Reference
 
 **EventType:** `QUEUE_UPDATED`
 **Domain:** production
-**NATS subject:** `progress.notification.production`
+**Broker subject:** `progress.notification.production`
 
 Signals that a production queue document has changed. This is a lightweight
 notification event — the queue update itself is performed by the calling code,

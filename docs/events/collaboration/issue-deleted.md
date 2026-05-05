@@ -7,7 +7,7 @@ description: ISSUE_DELETED — Progress Platform Events Reference
 
 **EventType:** `ISSUE_DELETED`
 **Domain:** collaboration
-**NATS subject:** `progress.notification.issue`
+**Broker subject:** `progress.notification.issue`
 
 Permanently removes an issue document and all associated `issue_rel` edges.
 Recalculates the `critical` flag on any linked work orders and jobs after

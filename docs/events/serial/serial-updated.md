@@ -7,7 +7,7 @@ description: SERIAL_UPDATED — Progress Platform Events Reference
 
 **EventType:** `SERIAL_UPDATED`
 **Domain:** serial
-**NATS subject:** `progress.notification.serial`
+**Broker subject:** `progress.notification.serial`
 
 Updates a serial's code, form data fields, or release status. Can
 selectively clear data from specific phases and optionally un-release a

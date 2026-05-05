@@ -7,7 +7,7 @@ description: COUNT_COMPLETED — Progress Platform Events Reference
 
 **EventType:** `COUNT_COMPLETED`
 **Domain:** inventory
-**NATS subject:** `progress.notification.inventory`
+**Broker subject:** `progress.notification.inventory`
 
 Marks a single count record as completed by recording the counted quantity,
 optional serial keys, and notes. Updates the `is_in_position` lock state and

@@ -7,7 +7,7 @@ description: SERIAL_UNLINKED — Progress Platform Events Reference
 
 **EventType:** `SERIAL_UNLINKED`
 **Domain:** serial
-**NATS subject:** `progress.notification.serial`
+**Broker subject:** `progress.notification.serial`
 
 Removes a child serial from its parent by deleting the `contains` edge.
 Optionally reverts the inventory movement that was created when the serial

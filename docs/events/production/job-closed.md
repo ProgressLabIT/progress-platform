@@ -7,7 +7,7 @@ description: JOB_CLOSED — Progress Platform Events Reference
 
 **EventType:** `JOB_CLOSED`
 **Domain:** production
-**NATS subject:** `progress.notification.production`
+**Broker subject:** `progress.notification.production`
 
 Closes a job by running the `COMPLETE_JOB` AQL macro, which sets
 `stage → CLOSED`, records `qt_completed`, and writes `notes` and `end`

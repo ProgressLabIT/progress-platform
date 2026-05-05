@@ -7,7 +7,7 @@ description: WORK_ORDER_STARTED — Progress Platform Events Reference
 
 **EventType:** `WORK_ORDER_STARTED`
 **Domain:** production
-**NATS subject:** `progress.notification.production`
+**Broker subject:** `progress.notification.production`
 
 Records that a work order has transitioned to `STARTED` status. Spawned
 automatically by `BaseProductionEvent.update_work_order()` when the work

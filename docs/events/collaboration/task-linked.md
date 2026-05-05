@@ -7,7 +7,7 @@ description: TASK_LINKED — Progress Platform Events Reference
 
 **EventType:** `TASK_LINKED`
 **Domain:** collaboration
-**NATS subject:** `progress.notification.task`
+**Broker subject:** `progress.notification.task`
 
 Creates a `task_rel` edge linking a task to another entity (issue, work
 order, product, serial, or another task).

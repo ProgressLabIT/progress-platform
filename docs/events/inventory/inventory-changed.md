@@ -7,7 +7,7 @@ description: INVENTORY_CHANGED — Progress Platform Events Reference
 
 **EventType:** `INVENTORY_CHANGED`
 **Domain:** inventory
-**NATS subject:** `progress.notification.inventory`
+**Broker subject:** `progress.notification.inventory`
 
 Updates the `is_in_position` quantity for a product at a position by
 applying a signed `quantity_change`. Inserts a new record if none exists,

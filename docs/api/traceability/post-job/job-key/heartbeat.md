@@ -7,11 +7,3 @@ description: Send a heartbeat for an active job. — Progress Platform API Refer
 # POST /job/{job_key}/heartbeat
 
 <OAOperation operationId="job_heartbeat_post" />
-
-## Events Emitted
-
-*This endpoint emits no domain events.*
-
-## Related
-
-[← API Overview](/api/) · [← Traceability](/api/traceability/) · [Events Reference](/events/)

@@ -7,7 +7,7 @@ description: ACTIVE_BATCH_CHANGED — Progress Platform Events Reference
 
 **EventType:** `ACTIVE_BATCH_CHANGED`
 **Domain:** production
-**NATS subject:** `progress.notification.production`
+**Broker subject:** `progress.notification.production`
 
 Updates the active batch quantity on a job and optionally sets the serial
 keys associated with that batch. Used when the operator adjusts how many

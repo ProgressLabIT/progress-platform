@@ -7,7 +7,7 @@ description: COUNT_STARTED — Progress Platform Events Reference
 
 **EventType:** `COUNT_STARTED`
 **Domain:** inventory
-**NATS subject:** `progress.notification.inventory`
+**Broker subject:** `progress.notification.inventory`
 
 Registers a new count record within a session and locks the relevant
 `is_in_position` records so no concurrent movements can alter the position

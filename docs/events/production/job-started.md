@@ -7,7 +7,7 @@ description: JOB_STARTED — Progress Platform Events Reference
 
 **EventType:** `JOB_STARTED`
 **Domain:** production
-**NATS subject:** `progress.notification.production`
+**Broker subject:** `progress.notification.production`
 
 Transitions a job from `CREATED` to `STARTED` state, creates the first
 `Batch` and a `WorkSession` record as child events, assigns the operator

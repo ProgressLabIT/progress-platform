@@ -7,7 +7,7 @@ description: ISSUE_REOPENED — Progress Platform Events Reference
 
 **EventType:** `ISSUE_REOPENED`
 **Domain:** collaboration
-**NATS subject:** `progress.notification.issue`
+**Broker subject:** `progress.notification.issue`
 
 Re-opens a previously closed issue by setting `open: true` and clearing the
 `closed` timestamp. Updates the `critical` flag on linked work orders and

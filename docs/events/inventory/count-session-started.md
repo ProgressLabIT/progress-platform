@@ -7,7 +7,7 @@ description: COUNT_SESSION_STARTED — Progress Platform Events Reference
 
 **EventType:** `COUNT_SESSION_STARTED`
 **Domain:** inventory
-**NATS subject:** `progress.notification.inventory`
+**Broker subject:** `progress.notification.inventory`
 
 Creates a new `InventoryCountSession` document with `status: STARTED`,
 initialising the session for count record collection.

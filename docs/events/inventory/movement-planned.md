@@ -7,7 +7,7 @@ description: MOVEMENT_PLANNED — Progress Platform Events Reference
 
 **EventType:** `MOVEMENT_PLANNED`
 **Domain:** inventory
-**NATS subject:** `progress.notification.inventory`
+**Broker subject:** `progress.notification.inventory`
 
 Creates a planned (uncommitted) movement record that can be confirmed later
 via `MovementCompletedEvent`. Optionally pre-reserves a serial for the

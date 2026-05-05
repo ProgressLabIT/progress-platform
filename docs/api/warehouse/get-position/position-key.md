@@ -7,11 +7,3 @@ description: Fetch detailed data for a single position. — Progress Platform AP
 # GET /position/{position_key}
 
 <OAOperation operationId="get_position_details_get" />
-
-## Events Emitted
-
-*This endpoint emits no domain events.*
-
-## Related
-
-[← API Overview](/api/) · [← Warehouse](/api/warehouse/) · [Events Reference](/events/)

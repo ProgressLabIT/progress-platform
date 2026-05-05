@@ -7,7 +7,7 @@ description: SERIAL_CREATED — Progress Platform Events Reference
 
 **EventType:** `SERIAL_CREATED`
 **Domain:** serial
-**NATS subject:** `progress.notification.serial`
+**Broker subject:** `progress.notification.serial`
 
 Creates a new `Serial` document for a product that has traceability enabled.
 If the product requires a code at creation (or the serial is being released

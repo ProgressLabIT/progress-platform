@@ -7,7 +7,7 @@ description: WORK_SESSION_CREATED — Progress Platform Events Reference
 
 **EventType:** `WORK_SESSION_CREATED`
 **Domain:** work_session
-**NATS subject:** `progress.notification.production`
+**Broker subject:** `progress.notification.production`
 
 Inserts a new `WorkSession` document linking an operator to their active
 batch on a job. Each time an operator starts or resumes a job, a new work

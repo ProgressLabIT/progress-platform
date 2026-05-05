@@ -7,7 +7,7 @@ description: COUNT_SESSION_CONFIRMED — Progress Platform Events Reference
 
 **EventType:** `COUNT_SESSION_CONFIRMED`
 **Domain:** inventory
-**NATS subject:** `progress.notification.inventory`
+**Broker subject:** `progress.notification.inventory`
 
 Confirms a completed inventory count session, triggering the creation of an
 adjustment `MovementList` and locking all involved positions. This is the

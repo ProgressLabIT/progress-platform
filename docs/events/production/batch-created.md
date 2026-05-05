@@ -7,7 +7,7 @@ description: BATCH_CREATED — Progress Platform Events Reference
 
 **EventType:** `BATCH_CREATED`
 **Domain:** production
-**NATS subject:** `progress.notification.production`
+**Broker subject:** `progress.notification.production`
 
 Creates a new `Batch` document for a job phase, initialising it with the
 job, work order, product, and phase keys. The new batch key is stored in the

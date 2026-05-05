@@ -7,11 +7,3 @@ description: Reset all warehouse/inventory data. — Progress Platform API Refer
 # DELETE /reset/inventory
 
 <OAOperation operationId="reset_warehouse_data_delete" />
-
-## Events Emitted
-
-*This endpoint emits no domain events.*
-
-## Related
-
-[← API Overview](/api/) · [← Administration](/api/administration/) · [Events Reference](/events/)

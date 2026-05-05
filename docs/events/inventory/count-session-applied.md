@@ -7,7 +7,7 @@ description: COUNT_SESSION_APPLIED — Progress Platform Events Reference
 
 **EventType:** `COUNT_SESSION_APPLIED`
 **Domain:** inventory
-**NATS subject:** —
+**Broker subject:** —
 
 Finalises an inventory count session after its async processing completes.
 Validates the session is in `PROCESSING` status, unlocks all positions

@@ -8,10 +8,4 @@ description: Update the planned quantity of a work order and its jobs. — Progr
 
 <OAOperation operationId="update_work_order_quantities_patch" />
 
-## Events Emitted
-
-*This endpoint emits no domain events.*
-
-## Related
-
-[← API Overview](/api/) · [← Production](/api/production/) · [Events Reference](/events/)
+**Emits:** [JobClosed](/events/production/job-closed) — when a job's completed quantity meets or exceeds the new planned quantity

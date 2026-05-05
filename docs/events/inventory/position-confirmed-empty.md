@@ -7,7 +7,7 @@ description: POSITION_CONFIRMED_EMPTY — Progress Platform Events Reference
 
 **EventType:** `POSITION_CONFIRMED_EMPTY`
 **Domain:** inventory
-**NATS subject:** `progress.notification.inventory`
+**Broker subject:** `progress.notification.inventory`
 
 Records that an operator explicitly confirmed a storage position is empty
 during a count session. Inserts an `inventory_count_position_complete` record

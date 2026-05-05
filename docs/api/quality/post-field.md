@@ -7,11 +7,3 @@ description: Create a form field definition. — Progress Platform API Reference
 # POST /field
 
 <OAOperation operationId="create_field_post" />
-
-## Events Emitted
-
-*This endpoint emits no domain events.*
-
-## Related
-
-[← API Overview](/api/) · [← Quality](/api/quality/) · [Events Reference](/events/)

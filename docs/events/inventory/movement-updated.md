@@ -7,7 +7,7 @@ description: MOVEMENT_UPDATED — Progress Platform Events Reference
 
 **EventType:** `MOVEMENT_UPDATED`
 **Domain:** inventory
-**NATS subject:** `progress.notification.inventory`
+**Broker subject:** `progress.notification.inventory`
 
 Updates a planned movement's confirmed quantity, positions, or splits it into
 multiple movements. Adjusts `is_in_position` balances accordingly and

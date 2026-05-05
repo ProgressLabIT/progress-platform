@@ -7,7 +7,7 @@ description: WIP_REMOVED — Progress Platform Events Reference
 
 **EventType:** `WIP_REMOVED`
 **Domain:** wip
-**NATS subject:** `progress.notification.production`
+**Broker subject:** `progress.notification.production`
 
 Removes a quantity of WIP from a job, reducing the `wip` records by
 the given amount. Used when material is consumed, rejected, or when a

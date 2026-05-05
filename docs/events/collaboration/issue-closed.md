@@ -7,7 +7,7 @@ description: ISSUE_CLOSED — Progress Platform Events Reference
 
 **EventType:** `ISSUE_CLOSED`
 **Domain:** collaboration
-**NATS subject:** `progress.notification.issue`
+**Broker subject:** `progress.notification.issue`
 
 Closes an open issue by setting `open: false` and recording the close
 timestamp and user. Updates the `critical` flag on linked work orders and

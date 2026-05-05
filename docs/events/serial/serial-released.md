@@ -7,7 +7,7 @@ description: SERIAL_RELEASED — Progress Platform Events Reference
 
 **EventType:** `SERIAL_RELEASED`
 **Domain:** serial
-**NATS subject:** `progress.notification.serial`
+**Broker subject:** `progress.notification.serial`
 
 Releases a serial by setting its `released` timestamp, making it available
 for shipment and downstream traceability queries. Spawned as a child event

@@ -7,11 +7,3 @@ description: Fetch the current job assignment state grouped by operator. — Pro
 # GET /job-assignment
 
 <OAOperation operationId="get_assignment_list_get" />
-
-## Events Emitted
-
-*This endpoint emits no domain events.*
-
-## Related
-
-[← API Overview](/api/) · [← Production](/api/production/) · [Events Reference](/events/)

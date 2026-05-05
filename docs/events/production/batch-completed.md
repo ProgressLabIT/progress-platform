@@ -7,7 +7,7 @@ description: BATCH_COMPLETED — Progress Platform Events Reference
 
 **EventType:** `BATCH_COMPLETED`
 **Domain:** production
-**NATS subject:** `progress.notification.production`
+**Broker subject:** `progress.notification.production`
 
 Records completion of an active batch against a job: validates that the
 declared quantity matches the batch total, stores step execution data,

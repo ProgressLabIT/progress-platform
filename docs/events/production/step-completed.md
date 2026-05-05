@@ -7,7 +7,7 @@ description: STEP_COMPLETED — Progress Platform Events Reference
 
 **EventType:** `STEP_COMPLETED`
 **Domain:** production
-**NATS subject:** `progress.notification.production`
+**Broker subject:** `progress.notification.production`
 
 Marks a single step within an active batch as done by writing a
 `StepExecutionData` record. If this was the last pending step in the batch,

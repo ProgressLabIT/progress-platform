@@ -7,7 +7,7 @@ description: SERIAL_DELETED — Progress Platform Events Reference
 
 **EventType:** `SERIAL_DELETED`
 **Domain:** serial
-**NATS subject:** `progress.notification.serial`
+**Broker subject:** `progress.notification.serial`
 
 Deletes a serial, either soft-deleting it (setting `deleted: true`) or
 permanently removing the document. Optionally cascades to child serials in

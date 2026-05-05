@@ -7,7 +7,7 @@ description: COUNT_DISCARDED — Progress Platform Events Reference
 
 **EventType:** `COUNT_DISCARDED`
 **Domain:** inventory
-**NATS subject:** `progress.notification.inventory`
+**Broker subject:** `progress.notification.inventory`
 
 Discards a completed or pending count record, removing it from the session
 without applying any inventory adjustments.

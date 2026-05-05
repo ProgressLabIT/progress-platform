@@ -7,7 +7,7 @@ description: ISSUE_UPDATED — Progress Platform Events Reference
 
 **EventType:** `ISSUE_UPDATED`
 **Domain:** collaboration
-**NATS subject:** `progress.notification.issue`
+**Broker subject:** `progress.notification.issue`
 
 Updates fields of an existing issue (title, description, severity, assignee,
 etc.) and recalculates the `critical` production status.

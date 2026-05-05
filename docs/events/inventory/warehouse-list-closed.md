@@ -7,7 +7,7 @@ description: WAREHOUSE_LIST_CLOSED — Progress Platform Events Reference
 
 **EventType:** `WAREHOUSE_LIST_CLOSED`
 **Domain:** inventory
-**NATS subject:** `progress.notification.inventory`
+**Broker subject:** `progress.notification.inventory`
 
 Closes a warehouse movement list by setting its status to `CLOSED` and
 canceling any remaining open planned movements within the list.

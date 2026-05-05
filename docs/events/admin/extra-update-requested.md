@@ -7,7 +7,7 @@ description: EXTRA_UPDATE_REQUESTED — Progress Platform Events Reference
 
 **EventType:** `EXTRA_UPDATE_REQUESTED`
 **Domain:** admin
-**NATS subject:** —
+**Broker subject:** —
 
 Stores arbitrary extra data on a job or work order document without going
 through the standard production event flow. Used for operator-assisted data

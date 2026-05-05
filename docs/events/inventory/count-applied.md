@@ -7,7 +7,7 @@ description: COUNT_APPLIED — Progress Platform Events Reference
 
 **EventType:** `COUNT_APPLIED`
 **Domain:** inventory
-**NATS subject:** `progress.notification.inventory`
+**Broker subject:** `progress.notification.inventory`
 
 Applies a single count record from a count session: creates inventory
 adjustment movements and updates `is_in_position` quantities for the

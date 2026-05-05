@@ -7,11 +7,3 @@ description: Create a new inventory position. — Progress Platform API Referenc
 # POST /position
 
 <OAOperation operationId="create_position_post" />
-
-## Events Emitted
-
-*This endpoint emits no domain events.*
-
-## Related
-
-[← API Overview](/api/) · [← Warehouse](/api/warehouse/) · [Events Reference](/events/)

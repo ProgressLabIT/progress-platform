@@ -7,11 +7,3 @@ description: Subscribe to a Server-Sent Events notification stream. — Progress
 # GET /notification/{topic}
 
 <OAOperation operationId="message_stream_get" />
-
-## Events Emitted
-
-*This endpoint emits no domain events.*
-
-## Related
-
-[← API Overview](/api/) · [← Notification](/api/notification/) · [Events Reference](/events/)

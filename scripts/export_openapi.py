@@ -8,6 +8,7 @@ introspection and does not fire startup handlers.
 import json
 import os
 import sys
+import types
 from pathlib import Path
 
 # Point Python at the backend package root so `from main import app` resolves.
@@ -18,6 +19,12 @@ sys.path.insert(0, str(REPO_ROOT / "backend" / "api"))
 # defaults, but JWT_SECRET and API_DB_PWD validate non-empty — set placeholders.
 os.environ.setdefault("PROGRESS_JWT_SECRET", "build-time-placeholder")
 os.environ.setdefault("PROGRESS_API_DB_PWD", "build-time-placeholder")
+
+# WeasyPrint needs system libs (pango/gobject) unavailable in CI/docs builds.
+# Mock it — only needed by the DHR PDF endpoint, not for schema introspection.
+_wp = types.ModuleType("weasyprint")
+_wp.HTML = type("HTML", (), {})
+sys.modules["weasyprint"] = _wp
 
 from main import app  # noqa: E402 — sys.path.insert must precede
 

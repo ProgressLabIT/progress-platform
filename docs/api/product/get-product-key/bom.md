@@ -7,11 +7,3 @@ description: Fetch the BOM for a product. — Progress Platform API Reference
 # GET /{product_key}/bom
 
 <OAOperation operationId="get_product_bom_get" />
-
-## Events Emitted
-
-*This endpoint emits no domain events.*
-
-## Related
-
-[← API Overview](/api/) · [← Product](/api/product/) · [Events Reference](/events/)

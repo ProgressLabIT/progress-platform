@@ -7,7 +7,7 @@ description: MESSAGE_DELETED — Progress Platform Events Reference
 
 **EventType:** `MESSAGE_DELETED`
 **Domain:** collaboration
-**NATS subject:** `progress.notification.message`
+**Broker subject:** `progress.notification.message`
 
 Soft-deletes a message in a collaboration thread by setting its `deleted`
 flag. The message document is retained for audit purposes.

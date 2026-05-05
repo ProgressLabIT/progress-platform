@@ -7,7 +7,7 @@ description: ASSIGNMENT_COMPLETED — Progress Platform Events Reference
 
 **EventType:** `ASSIGNMENT_COMPLETED`
 **Domain:** inventory
-**NATS subject:** `progress.notification.inventory`
+**Broker subject:** `progress.notification.inventory`
 
 Marks a count assignment as completed. A count assignment represents a
 portion of an inventory count session delegated to a specific operator or

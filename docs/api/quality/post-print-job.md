@@ -7,11 +7,3 @@ description: Execute a print job using a template. — Progress Platform API Ref
 # POST /print-job
 
 <OAOperation operationId="create_print_job_post" />
-
-## Events Emitted
-
-*This endpoint emits no domain events.*
-
-## Related
-
-[← API Overview](/api/) · [← Quality](/api/quality/) · [Events Reference](/events/)

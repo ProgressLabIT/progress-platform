@@ -7,7 +7,7 @@ description: JOB_BACK_ONLINE — Progress Platform Events Reference
 
 **EventType:** `JOB_BACK_ONLINE`
 **Domain:** production
-**NATS subject:** `progress.notification.production`
+**Broker subject:** `progress.notification.production`
 
 Marks a paused job as back online (re-active) after an offline period,
 updating `last_online` and resuming the work session. Counterpart to

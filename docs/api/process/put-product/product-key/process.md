@@ -7,11 +7,3 @@ description: Replace the production process for a product. — Progress Platform
 # PUT /product/{product_key}/process
 
 <OAOperation operationId="update_process_put" />
-
-## Events Emitted
-
-*This endpoint emits no domain events.*
-
-## Related
-
-[← API Overview](/api/) · [← Process](/api/process/) · [Events Reference](/events/)

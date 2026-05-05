@@ -7,7 +7,7 @@ description: WIP_BOOKED — Progress Platform Events Reference
 
 **EventType:** `WIP_BOOKED`
 **Domain:** wip
-**NATS subject:** `progress.notification.production`
+**Broker subject:** `progress.notification.production`
 
 Books a quantity of WIP (Work-In-Progress) material for a specific phase
 of a job, recording the batch and serial keys involved. WIP booking reserves

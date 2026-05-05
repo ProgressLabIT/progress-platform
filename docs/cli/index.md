@@ -13,7 +13,7 @@ The `progress` command-line tool spins up, restores, and inspects the Progress P
 |---------|---------|
 | [`progress init`](/cli/init) | Initialize a new Progress Platform deployment from the Compose stack |
 | [`progress restore`](/cli/restore) | Restore the database from a backup archive |
-| [`progress tap`](/cli/tap) | Tap into NATS subjects for live event diagnostics |
+| [`progress tap`](/cli/tap) | Tap into broker subjects for live event diagnostics |
 
 ## How CLI examples stay in sync
 

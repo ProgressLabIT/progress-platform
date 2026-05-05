@@ -6,7 +6,7 @@ description: Collaboration domain events - Progress Platform Events Reference.
 # Collaboration Events
 
 Collaboration-domain events cover issues, tasks, and messages attached to
-production entities. NATS subjects are class-specific: `Issue*` events publish
+production entities. Broker subjects are class-specific: `Issue*` events publish
 to `progress.notification.issue`, `Task*` events to `progress.notification.task`,
 and `Message*` events to `progress.notification.message`. The special case
 `TaskUpdatedEvent` overrides `_build_event_payload()` to emit per-user scoped

@@ -7,7 +7,7 @@ description: COUNT_CANCELED — Progress Platform Events Reference
 
 **EventType:** `COUNT_CANCELED`
 **Domain:** inventory
-**NATS subject:** `progress.notification.inventory`
+**Broker subject:** `progress.notification.inventory`
 
 Cancels a pending count record and releases the associated position locks in
 `is_in_position`. Allows an operator to abandon an in-progress count without

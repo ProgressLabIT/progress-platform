@@ -7,7 +7,7 @@ description: JOB_PAUSE_FORCED — Progress Platform Events Reference
 
 **EventType:** `JOB_PAUSE_FORCED`
 **Domain:** production
-**NATS subject:** `progress.notification.production`
+**Broker subject:** `progress.notification.production`
 
 Administratively forces a running job into paused state. Unlike the
 voluntary `JobPausedEvent`, this event flags the job with `forced` after

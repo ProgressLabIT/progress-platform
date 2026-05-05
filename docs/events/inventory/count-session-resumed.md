@@ -7,7 +7,7 @@ description: COUNT_SESSION_RESUMED — Progress Platform Events Reference
 
 **EventType:** `COUNT_SESSION_RESUMED`
 **Domain:** inventory
-**NATS subject:** `progress.notification.inventory`
+**Broker subject:** `progress.notification.inventory`
 
 Resumes a paused inventory count session, setting its status back to `STARTED`
 so operators can continue adding count records.

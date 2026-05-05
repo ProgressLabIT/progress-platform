@@ -7,11 +7,3 @@ description: Fetch the full production process for a product. — Progress Platf
 # GET /product/{product_key}/process
 
 <OAOperation operationId="get_production_process_get" />
-
-## Events Emitted
-
-*This endpoint emits no domain events.*
-
-## Related
-
-[← API Overview](/api/) · [← Process](/api/process/) · [Events Reference](/events/)

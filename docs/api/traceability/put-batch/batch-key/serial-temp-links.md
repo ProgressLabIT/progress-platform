@@ -7,11 +7,3 @@ description: Create temporary serial links for a batch. — Progress Platform AP
 # PUT /batch/{batch_key}/serial-temp-links
 
 <OAOperation operationId="create_temporary_link_put" />
-
-## Events Emitted
-
-*This endpoint emits no domain events.*
-
-## Related
-
-[← API Overview](/api/) · [← Traceability](/api/traceability/) · [Events Reference](/events/)

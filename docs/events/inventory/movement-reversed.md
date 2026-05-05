@@ -7,7 +7,7 @@ description: MOVEMENT_REVERSED — Progress Platform Events Reference
 
 **EventType:** `MOVEMENT_REVERSED`
 **Domain:** inventory
-**NATS subject:** `progress.notification.inventory`
+**Broker subject:** `progress.notification.inventory`
 
 Creates an inverse movement to undo a previously completed movement,
 restoring the inventory positions to their pre-movement state. Optionally
