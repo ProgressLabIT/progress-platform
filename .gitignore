@@ -77,3 +77,12 @@ testing/robot-test/reports
 .cursor/
 .claude/
 .specstory/
+
+# Git worktrees for parallel sessions
+.worktrees/
+
+# GSD per-clone state — active workstream pointer
+.planning/active-workstream
+
+# Graphify
+graphify-out/
