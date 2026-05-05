@@ -32,11 +32,10 @@ exclude = [
   "^file://.*/docs/(?:openapi\\.json|sitemap\\.xml|robots\\.txt)$",
 ]
 
+# Note: docs/.vitepress/templates is excluded via --exclude-path in
+# .github/workflows/lychee.yml (lychee.toml has no exclude_path key).
 # Templates carry literal {placeholder} link targets and aren't user-facing
-# pages (excluded from VitePress build via srcExclude). Skip the directory.
-exclude_path = [
-  "docs/.vitepress/templates",
-]
+# pages (excluded from VitePress build via srcExclude in config.ts).
 
 # Accept 403 from sites that bot-block lychee's UA (gitlab.com is the prime offender —
 # the repo URL works fine in a browser but returns 403 to scripted user-agents).
