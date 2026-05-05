@@ -14,9 +14,9 @@ after transaction commit.
 
 | Event | EventType |
 |-------|-----------|
-| [SerialCreatedEvent](/events/serial/serial-created/) | `SERIAL_CREATED` |
-| [SerialDeletedEvent](/events/serial/serial-deleted/) | `SERIAL_DELETED` |
-| [SerialLinkedEvent](/events/serial/serial-linked/) | `SERIAL_LINKED` |
-| [SerialReleasedEvent](/events/serial/serial-released/) | `SERIAL_RELEASED` |
-| [SerialUnlinkedEvent](/events/serial/serial-unlinked/) | `SERIAL_UNLINKED` |
-| [SerialUpdatedEvent](/events/serial/serial-updated/) | `SERIAL_UPDATED` |
+| [SerialCreatedEvent](/events/serial/serial-created) | `SERIAL_CREATED` |
+| [SerialDeletedEvent](/events/serial/serial-deleted) | `SERIAL_DELETED` |
+| [SerialLinkedEvent](/events/serial/serial-linked) | `SERIAL_LINKED` |
+| [SerialReleasedEvent](/events/serial/serial-released) | `SERIAL_RELEASED` |
+| [SerialUnlinkedEvent](/events/serial/serial-unlinked) | `SERIAL_UNLINKED` |
+| [SerialUpdatedEvent](/events/serial/serial-updated) | `SERIAL_UPDATED` |

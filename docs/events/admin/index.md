@@ -15,4 +15,4 @@ a `forced` marker. The `ExtraUpdateRequestedEvent` does not override
 
 | Event | EventType |
 |-------|-----------|
-| [ExtraUpdateRequestedEvent](/events/admin/extra-update-requested/) | `EXTRA_UPDATE_REQUESTED` |
+| [ExtraUpdateRequestedEvent](/events/admin/extra-update-requested) | `EXTRA_UPDATE_REQUESTED` |

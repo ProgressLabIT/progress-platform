@@ -50,7 +50,7 @@ Inherits `post_processing()` from `BaseProductionEvent`:
 
 ## Related Events
 
-- [`WorkSessionCreatedEvent`](/events/work_session/work-session-created/) — spawned to open a new work session
+- [`WorkSessionCreatedEvent`](/events/work_session/work-session-created) — spawned to open a new work session
 
 ## Source
 

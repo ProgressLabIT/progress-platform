@@ -52,7 +52,7 @@ sequenceDiagram
   E-->>N: publish progress.notification.production
 ```
 
-> **See also:** the [BatchCompleted -> child-batch-spawn fan-out](/events/production/batch-completed-fanout/)
+> **See also:** the [BatchCompleted -> child-batch-spawn fan-out](/events/production/batch-completed-fanout)
 > diagram illustrates how this event spawns the next-phase batch when remaining
 > production quantity is non-zero (per EVT-05 decomposition rule).
 
@@ -104,15 +104,15 @@ Inherits `post_processing()` from `BaseProductionEvent`:
 
 ## Related Events
 
-- [`JobClosedEvent`](/events/production/job-closed/) — spawned when batch completes the last required quantity
-- [`BatchCreatedEvent`](/events/production/batch-created/) — spawned when job continues with a new batch
-- [`WorkSessionClosedEvent`](/events/work_session/work-session-closed/) — spawned to close the current work session
-- [`WorkSessionCreatedEvent`](/events/work_session/work-session-created/) — spawned if a new batch is created
-- [`SerialLinkedEvent`](/events/serial/serial-linked/) — spawned to link serials to parent/batch
-- [`SerialReleasedEvent`](/events/serial/serial-released/) — spawned to release serials on completion
-- [`MovementCompletedEvent`](/events/inventory/movement-completed/) — spawned for PRODUCTION and CONSUMPTION movements
-- [`WIPDeclaredEvent`](/events/wip/wip-declared/) — spawned to declare WIP at phase boundary
-- [`WIPRemovedEvent`](/events/wip/wip-removed/) — spawned to remove WIP consumed by this batch
+- [`JobClosedEvent`](/events/production/job-closed) — spawned when batch completes the last required quantity
+- [`BatchCreatedEvent`](/events/production/batch-created) — spawned when job continues with a new batch
+- [`WorkSessionClosedEvent`](/events/work_session/work-session-closed) — spawned to close the current work session
+- [`WorkSessionCreatedEvent`](/events/work_session/work-session-created) — spawned if a new batch is created
+- [`SerialLinkedEvent`](/events/serial/serial-linked) — spawned to link serials to parent/batch
+- [`SerialReleasedEvent`](/events/serial/serial-released) — spawned to release serials on completion
+- [`MovementCompletedEvent`](/events/inventory/movement-completed) — spawned for PRODUCTION and CONSUMPTION movements
+- [`WIPDeclaredEvent`](/events/wip/wip-declared) — spawned to declare WIP at phase boundary
+- [`WIPRemovedEvent`](/events/wip/wip-removed) — spawned to remove WIP consumed by this batch
 
 ## Source
 

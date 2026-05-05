@@ -14,7 +14,7 @@ across production phases. WIP events are production-adjacent: they extend
 
 | Event | EventType |
 |-------|-----------|
-| [WIPBookedEvent](/events/wip/wip-booked/) | `WIP_BOOKED` |
-| [WIPDeclaredEvent](/events/wip/wip-declared/) | `WIP_DECLARED` |
-| [WIPRemovedEvent](/events/wip/wip-removed/) | `WIP_REMOVED` |
-| [WIPUnbookedEvent](/events/wip/wip-unbooked/) | `WIP_UNBOOKED` |
+| [WIPBookedEvent](/events/wip/wip-booked) | `WIP_BOOKED` |
+| [WIPDeclaredEvent](/events/wip/wip-declared) | `WIP_DECLARED` |
+| [WIPRemovedEvent](/events/wip/wip-removed) | `WIP_REMOVED` |
+| [WIPUnbookedEvent](/events/wip/wip-unbooked) | `WIP_UNBOOKED` |

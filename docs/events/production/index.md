@@ -16,17 +16,17 @@ recalculates work order status after each commit.
 
 | Event | EventType |
 |-------|-----------|
-| [ActiveBatchChangedEvent](/events/production/active-batch-changed/) | `ACTIVE_BATCH_CHANGED` |
-| [BatchCompletedEvent](/events/production/batch-completed/) | `BATCH_COMPLETED` |
-| [BatchCreatedEvent](/events/production/batch-created/) | `BATCH_CREATED` |
-| [BatchReleasedEvent](/events/production/batch-released/) | `BATCH_RELEASED` |
-| [JobBackOnlineEvent](/events/production/job-back-online/) | `JOB_BACK_ONLINE` |
-| [JobPauseForcedEvent](/events/production/job-pause-forced/) | `JOB_PAUSE_FORCED` |
-| [JobPausedEvent](/events/production/job-paused/) | `JOB_PAUSED` |
-| [JobPausedOfflineEvent](/events/production/job-paused-offline/) | `JOB_PAUSED_OFFLINE` |
-| [JobResumedEvent](/events/production/job-resumed/) | `JOB_RESUMED` |
-| [JobStartedEvent](/events/production/job-started/) | `JOB_STARTED` |
-| [QueueUpdatedEvent](/events/production/queue-updated/) | `QUEUE_UPDATED` |
-| [StepCompletedEvent](/events/production/step-completed/) | `STEP_COMPLETED` |
-| [StepEditedEvent](/events/production/step-edited/) | `STEP_EDITED` |
-| [WorkOrderStartedEvent](/events/production/work-order-started/) | `WORK_ORDER_STARTED` |
+| [ActiveBatchChangedEvent](/events/production/active-batch-changed) | `ACTIVE_BATCH_CHANGED` |
+| [BatchCompletedEvent](/events/production/batch-completed) | `BATCH_COMPLETED` |
+| [BatchCreatedEvent](/events/production/batch-created) | `BATCH_CREATED` |
+| [BatchReleasedEvent](/events/production/batch-released) | `BATCH_RELEASED` |
+| [JobBackOnlineEvent](/events/production/job-back-online) | `JOB_BACK_ONLINE` |
+| [JobPauseForcedEvent](/events/production/job-pause-forced) | `JOB_PAUSE_FORCED` |
+| [JobPausedEvent](/events/production/job-paused) | `JOB_PAUSED` |
+| [JobPausedOfflineEvent](/events/production/job-paused-offline) | `JOB_PAUSED_OFFLINE` |
+| [JobResumedEvent](/events/production/job-resumed) | `JOB_RESUMED` |
+| [JobStartedEvent](/events/production/job-started) | `JOB_STARTED` |
+| [QueueUpdatedEvent](/events/production/queue-updated) | `QUEUE_UPDATED` |
+| [StepCompletedEvent](/events/production/step-completed) | `STEP_COMPLETED` |
+| [StepEditedEvent](/events/production/step-edited) | `STEP_EDITED` |
+| [WorkOrderStartedEvent](/events/production/work-order-started) | `WORK_ORDER_STARTED` |

@@ -8,7 +8,7 @@ description: Fan-out illustration — how BatchCompletedEvent spawns the next-ph
 This page illustrates the **fan-out pattern** of `BatchCompletedEvent`
 specifically for the case where the work order has more remaining
 production quantity to make. Per EVT-05, fan-out events are decomposed
-into multiple diagrams — the [BatchCompletedEvent main page](/events/production/batch-completed/)
+into multiple diagrams — the [BatchCompletedEvent main page](/events/production/batch-completed)
 covers the primary commit path; this page focuses on the next-phase
 spawn lifecycle in isolation, so the parent->child relationship is
 visible without the noise of the other 7+ siblings.
@@ -66,14 +66,14 @@ specific decision the reader cares about: _"when does the next batch
 start?"_. EVT-05 directs that fan-out events be broken into focused
 diagrams; this page is the focused view of the next-phase spawn.
 
-For the full primary path see the [BatchCompletedEvent main page](/events/production/batch-completed/).
+For the full primary path see the [BatchCompletedEvent main page](/events/production/batch-completed).
 
 ## Related
 
-- [`BatchCompletedEvent`](/events/production/batch-completed/) — the parent event (full diagram)
-- [`BatchCreatedEvent`](/events/production/batch-created/) — the spawned next-phase batch
-- [`WorkSessionCreatedEvent`](/events/work_session/work-session-created/) — the spawned next-phase session
-- [`JobClosedEvent`](/events/production/job-closed/) — the alternative branch when qt_completed >= qt_planned
+- [`BatchCompletedEvent`](/events/production/batch-completed) — the parent event (full diagram)
+- [`BatchCreatedEvent`](/events/production/batch-created) — the spawned next-phase batch
+- [`WorkSessionCreatedEvent`](/events/work_session/work-session-created) — the spawned next-phase session
+- [`JobClosedEvent`](/events/production/job-closed) — the alternative branch when qt_completed >= qt_planned
 
 ## Source
 

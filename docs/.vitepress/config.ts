@@ -12,6 +12,11 @@ export default withMermaid(defineConfig({
   lastUpdated: true,            // CP-9: requires fetch-depth: 0 in deploy workflow
   // ignoreDeadLinks: VitePress default is false; lychee handles fragments separately (Pitfall 1.4)
 
+  // Templates carry literal {placeholder} syntax for content authors; they're
+  // not user-facing pages. Exclude from build so VitePress doesn't validate
+  // their placeholder links and lychee doesn't either (covered by paths in lychee.toml).
+  srcExclude: ['**/.vitepress/templates/**'],
+
   // SEO / discoverability
   sitemap: {
     hostname: 'https://progresslabit.github.io/progress-platform/',  // D-13 / CP-3

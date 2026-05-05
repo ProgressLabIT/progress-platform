@@ -76,7 +76,7 @@ Inherits `post_processing()` from `BaseProductionEvent`:
 
 ## Related Events
 
-- [`WorkSessionClosedEvent`](/events/work_session/work-session-closed/) — spawned to close the current work session
+- [`WorkSessionClosedEvent`](/events/work_session/work-session-closed) — spawned to close the current work session
 
 ## Source
 

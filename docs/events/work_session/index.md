@@ -15,6 +15,6 @@ commit.
 
 | Event | EventType |
 |-------|-----------|
-| [WorkSessionCanceledEvent](/events/work_session/work-session-canceled/) | `WORK_SESSION_CANCELED` |
-| [WorkSessionClosedEvent](/events/work_session/work-session-closed/) | `WORK_SESSION_CLOSED` |
-| [WorkSessionCreatedEvent](/events/work_session/work-session-created/) | `WORK_SESSION_CREATED` |
+| [WorkSessionCanceledEvent](/events/work_session/work-session-canceled) | `WORK_SESSION_CANCELED` |
+| [WorkSessionClosedEvent](/events/work_session/work-session-closed) | `WORK_SESSION_CLOSED` |
+| [WorkSessionCreatedEvent](/events/work_session/work-session-created) | `WORK_SESSION_CREATED` |

@@ -91,7 +91,7 @@ Inherits `post_processing()` from `BaseProductionEvent`:
 
 ## Related Events
 
-- [`BatchCompletedEvent`](/events/production/batch-completed/) — spawned as child when the last step in the batch is marked done
+- [`BatchCompletedEvent`](/events/production/batch-completed) — spawned as child when the last step in the batch is marked done
 
 ## Source
 

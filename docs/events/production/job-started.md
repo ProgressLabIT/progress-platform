@@ -91,8 +91,8 @@ Inherits `post_processing()` from `BaseProductionEvent`:
 
 ## Related Events
 
-- [`BatchCreatedEvent`](/events/production/batch-created/) — spawned as child to create the first active batch
-- [`WorkSessionCreatedEvent`](/events/work_session/work-session-created/) — spawned as child to open the operator's session
+- [`BatchCreatedEvent`](/events/production/batch-created) — spawned as child to create the first active batch
+- [`WorkSessionCreatedEvent`](/events/work_session/work-session-created) — spawned as child to open the operator's session
 
 ## Source
 

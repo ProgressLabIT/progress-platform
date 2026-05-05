@@ -87,8 +87,8 @@ Inherits `post_processing()` from `BaseInventoryEvent`:
 
 ## Related Events
 
-- [`InventoryChangedEvent`](/events/inventory/inventory-changed/) — spawned for each position quantity update
-- [`SerialCreatedEvent`](/events/serial/serial-created/) — spawned for receipt of a traceable product without an existing serial
+- [`InventoryChangedEvent`](/events/inventory/inventory-changed) — spawned for each position quantity update
+- [`SerialCreatedEvent`](/events/serial/serial-created) — spawned for receipt of a traceable product without an existing serial
 
 ## Source
 

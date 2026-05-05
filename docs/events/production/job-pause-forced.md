@@ -49,7 +49,7 @@ Extends `BaseAdmin.post_processing()`:
 
 ## Related Events
 
-- [`WorkSessionClosedEvent`](/events/work_session/work-session-closed/) — spawned to close the active work session
+- [`WorkSessionClosedEvent`](/events/work_session/work-session-closed) — spawned to close the active work session
 
 ## Source
 

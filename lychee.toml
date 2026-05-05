@@ -17,6 +17,25 @@ exclude = [
   # `/api/` → `docs/api/index.md` because directory-to-index inference depends on
   # serving conventions, not filesystem lookup.
   "^/(?:|api|events|cli|users|admins)(?:/|$)",
+  # When lychee resolves root-relative links against the source tree it produces
+  # file:// URLs without the .md suffix (cleanUrls mode). VitePress validates
+  # these at build time; lychee should not.
+  "^file://.*/docs/(api|events|cli|users|admins)(/|$)",
+  # Cross-workstream ADR references (sparkplug-demo decisions). These live on
+  # GSD until the sparkplug-demo workstream ships its decisions/ to DEV. Once
+  # that lands, remove this exclusion.
+  "^https?://github\\.com/ProgressLabIT/progress-platform/blob/DEV/\\.planning/workstreams/sparkplug-demo/decisions/",
+  # VitePress public assets (served from docs/public/) — root-relative links
+  # to /openapi.json, /sitemap.xml, /robots.txt, etc. resolve at runtime via
+  # the public/ directory; lychee sees them as docs/openapi.json (missing).
+  "^/(?:openapi\\.json|sitemap\\.xml|robots\\.txt)$",
+  "^file://.*/docs/(?:openapi\\.json|sitemap\\.xml|robots\\.txt)$",
+]
+
+# Templates carry literal {placeholder} link targets and aren't user-facing
+# pages (excluded from VitePress build via srcExclude). Skip the directory.
+exclude_path = [
+  "docs/.vitepress/templates",
 ]
 
 # Accept 403 from sites that bot-block lychee's UA (gitlab.com is the prime offender —
