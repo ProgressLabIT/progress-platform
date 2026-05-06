@@ -19,7 +19,15 @@ if (typeof window !== 'undefined') {
 export default {
   extends: DefaultTheme,
   enhanceApp({ app }) {
-    useOpenapi({ spec })
+    useOpenapi({
+      spec,
+      config: {
+        operation: {
+          cols: 1,
+          hiddenSlots: ['playground', 'try-it'],
+        },
+      },
+    })
     openapiTheme.enhanceApp({ app })
   },
 } satisfies Theme
