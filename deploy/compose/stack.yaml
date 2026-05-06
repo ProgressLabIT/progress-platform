@@ -68,7 +68,12 @@ services:
   api:
     image: registry.gitlab.com/progresslab/progress-platform/api:${VERSION}
     volumes:
-      - /opt/progress/config/api.env:/api/.env
+      - type: volume
+        source: config
+        target: /api/.env
+        volume:
+          subpath: api.env
+        read_only: true
     depends_on:
       - db
       - broker
@@ -112,7 +117,12 @@ services:
   app:
     image: registry.gitlab.com/progresslab/progress-platform/app:${VERSION}
     volumes:
-      - /opt/progress/config/appConfig.js:/usr/share/nginx/html/config.js
+      - type: volume
+        source: config
+        target: /usr/share/nginx/html/config.js
+        volume:
+          subpath: appConfig.js
+        read_only: true
       - media:/usr/share/nginx/html/media
     depends_on:
       - api

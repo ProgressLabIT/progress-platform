@@ -5,6 +5,8 @@ volumes:
     external: true
   media:
     external: true
+  config:
+    external: true
 
 networks:
   progress:

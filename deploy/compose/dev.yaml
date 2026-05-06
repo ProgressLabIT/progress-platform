@@ -2,6 +2,16 @@ volumes:
   robot_reports:
     external: True
 
+secrets:
+  progress_admin_pwd:
+    file: ../secrets/dev/admin_pwd.txt
+  progress_api_db_pwd:
+    file: ../secrets/dev/api_db_pwd.txt
+  progress_jwt_secret:
+    file: ../secrets/dev/jwt_secret.txt
+  progress_db_root_pwd:
+    file: ../secrets/dev/db_root_pwd.txt
+
 services:
   router:
     restart: unless-stopped

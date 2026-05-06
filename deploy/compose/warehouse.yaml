@@ -1,6 +1,8 @@
 volumes:
   media:
     external: true
+  config:
+    external: true
 
 networks:
   progress:
@@ -10,7 +12,12 @@ services:
   warehouse:
     image: registry.gitlab.com/progresslab/progress-platform/warehouse:${VERSION}
     volumes:
-      - /opt/progress/config/appConfig.js:/usr/share/nginx/html/config.js
+      - type: volume
+        source: config
+        target: /usr/share/nginx/html/config.js
+        volume:
+          subpath: appConfig.js
+        read_only: true
       - media:/usr/share/nginx/html/media
     depends_on:
       - api

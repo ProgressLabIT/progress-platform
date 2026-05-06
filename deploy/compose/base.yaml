@@ -5,6 +5,10 @@ volumes:
     external: True
   db_data:
     external: True
+  nats_data:
+    external: True
+  config:
+    external: True
 
 services:
   router:
