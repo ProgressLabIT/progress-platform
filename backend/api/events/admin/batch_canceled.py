@@ -103,6 +103,12 @@ class BatchCanceledEvent(BaseAdmin):
 
     self.tx.collection('Job').update(job_update)
 
+    # Recompute NBA for all jobs in this phase now that active_batch_qt is 0
+    # and any booked WIP has been freed. WIPUnbookedEvent above also triggers
+    # this, but before the job update, so active_batch_qt was still non-zero.
+    if not self.job.first_phase:
+      self.update_wip_availability_for_phases(phase_keys=[self.job.phase_key])
+
   # ================================
 
   def _handle_traceability(self):

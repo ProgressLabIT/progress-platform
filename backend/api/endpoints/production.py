@@ -299,7 +299,15 @@ async def update_work_order_quantities(
         if 'phase_key' not in update.data:
           raise HTTPError(422, "Please provide a phase key for each new job")
 
-        update.data['next_batch_available'] = _get_phase_batch_available_state(db=tx, wo_key=wo_key, phase_key=update.data['phase_key'])
+        phase_doc = tx.document(f'Phase/{update.data["phase_key"]}')
+        production_batch_qt = phase_doc.get('params', {}).get('production_batch_qt', 0) if phase_doc else 0
+        update.data['next_batch_available'] = _get_phase_batch_available_state(
+          db=tx,
+          wo_key=wo_key,
+          phase_key=update.data['phase_key'],
+          qt_planned=update.data['qt_planned'],
+          production_batch_qt=production_batch_qt,
+        )
 
         create_job_record(
           tx,
@@ -958,7 +966,15 @@ async def update_jobs(job_updates:List[JobUpdate]):
         wo_data = WorkOrderFull(**tx.collection('WorkOrder').get(u.data['work_order_key']))
 
         # Get next batch available state for the job
-        u.data['next_batch_available'] = _get_phase_batch_available_state(db=tx, wo_key=u.data['work_order_key'], phase_key=u.data['phase_key'])
+        phase_doc = tx.document(f'Phase/{u.data["phase_key"]}')
+        production_batch_qt = phase_doc.get('params', {}).get('production_batch_qt', 0) if phase_doc else 0
+        u.data['next_batch_available'] = _get_phase_batch_available_state(
+          db=tx,
+          wo_key=u.data['work_order_key'],
+          phase_key=u.data['phase_key'],
+          qt_planned=u.data['qt_planned'],
+          production_batch_qt=production_batch_qt,
+        )
 
         new_job_data = create_job_record(
           tx,

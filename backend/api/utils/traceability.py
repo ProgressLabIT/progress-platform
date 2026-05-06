@@ -405,18 +405,21 @@ def _update_job_progress(db, job_key):
   db.aql.execute(Queries.UPDATE_JOB_PROGRESS, bind_vars=dict(job_key=job_key))
 
 
-def _get_phase_batch_available_state(db, wo_key: str, phase_key: str) -> bool | None:
+def _get_phase_batch_available_state(db, wo_key: str, phase_key: str, qt_planned: float, production_batch_qt: float = 0) -> bool:
   """
-  Returns the next batch available state for a given work order and phase.
-  Used to determine the state for new jobs in the phase.
-  Raises HTTPError 422 if no sibling job exists in the phase.
+  Returns the next batch available state for a new job being created in a phase.
+  Computes directly from WIP availability rather than copying from sibling jobs
+  (which may be closed/null and cause incorrect defaults for non-first phases).
   """
-  try:
-    phase_nba = db.aql.execute(
-      'FOR j IN Job FILTER j.wo_key == @wo_key && j.phase_key == @phase_key LIMIT 1 RETURN j.next_batch_available',
-      bind_vars=dict(wo_key=wo_key, phase_key=phase_key)
-    ).next()
-  except StopIteration:
-    raise HTTPError(422, "There is no other job in the same phase to determine next batch available state")
+  wo = db.collection('WorkOrder').get(wo_key)
+  first_phase = wo['phase_sequence'][0] == phase_key
+  if first_phase:
+    return True
 
-  return phase_nba
+  input_for_phase = db.aql.execute(
+    'RETURN SUM(FOR w IN wip FILTER w.wo_key == @wo_key && w._to == CONCAT("Phase/", @phase_key) RETURN w.quantity)',
+    bind_vars=dict(wo_key=wo_key, phase_key=phase_key)
+  ).next()
+
+  qt_next_batch = qt_planned if production_batch_qt == 0 else min(production_batch_qt, qt_planned)
+  return qt_next_batch <= (input_for_phase or 0)
