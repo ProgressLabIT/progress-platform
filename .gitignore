@@ -30,7 +30,7 @@ media/
 !docs/api/**/media/
 
 # DBs
-integration_db/
+workflow_db/
 backup/
 
 # Docker Volumes
