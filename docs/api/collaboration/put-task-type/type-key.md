@@ -1,9 +1,9 @@
 ---
 title: PUT /task-type/{type_key}
-operationId: update_task_type_put
+operationId: update_task_type_task_type__type_key__put
 description: Update a task type. — Progress Platform API Reference
 ---
 
 # PUT /task-type/{type_key}
 
-<OAOperation operationId="update_task_type_put" />
+<OAOperation operationId="update_task_type_task_type__type_key__put" />

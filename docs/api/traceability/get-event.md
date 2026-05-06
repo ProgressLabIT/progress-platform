@@ -1,9 +1,9 @@
 ---
 title: GET /event
-operationId: get_events_get
+operationId: get_events_event_get
 description: Fetch domain events. — Progress Platform API Reference
 ---
 
 # GET /event
 
-<OAOperation operationId="get_events_get" />
+<OAOperation operationId="get_events_event_get" />

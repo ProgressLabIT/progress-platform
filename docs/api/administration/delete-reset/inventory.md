@@ -1,9 +1,9 @@
 ---
 title: DELETE /reset/inventory
-operationId: reset_warehouse_data_delete
+operationId: reset_warehouse_data_reset_inventory_delete
 description: Reset all warehouse/inventory data. — Progress Platform API Reference
 ---
 
 # DELETE /reset/inventory
 
-<OAOperation operationId="reset_warehouse_data_delete" />
+<OAOperation operationId="reset_warehouse_data_reset_inventory_delete" />

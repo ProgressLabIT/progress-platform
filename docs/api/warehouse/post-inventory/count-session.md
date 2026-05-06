@@ -1,9 +1,9 @@
 ---
 title: POST /inventory/count-session
-operationId: create_counting_session_post
+operationId: create_counting_session_inventory_count_session_post
 description: Create a new inventory counting session. — Progress Platform API Reference
 ---
 
 # POST /inventory/count-session
 
-<OAOperation operationId="create_counting_session_post" />
+<OAOperation operationId="create_counting_session_inventory_count_session_post" />

@@ -1,9 +1,9 @@
 ---
 title: GET /batch/{batch_key}/serials
-operationId: get_batch_serials_get
+operationId: get_batch_serials_batch__batch_key__serials_get
 description: Fetch serials linked to a batch. — Progress Platform API Reference
 ---
 
 # GET /batch/{batch_key}/serials
 
-<OAOperation operationId="get_batch_serials_get" />
+<OAOperation operationId="get_batch_serials_batch__batch_key__serials_get" />

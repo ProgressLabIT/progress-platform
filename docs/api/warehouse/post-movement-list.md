@@ -1,12 +1,12 @@
 ---
 title: POST /movement-list
-operationId: create_movement_list_post
+operationId: create_movement_list_movement_list_post
 description: Create a new movement list. — Progress Platform API Reference
 ---
 
 # POST /movement-list
 
-<OAOperation operationId="create_movement_list_post" />
+<OAOperation operationId="create_movement_list_movement_list_post" />
 
 
 | Event | Condition | Reference |

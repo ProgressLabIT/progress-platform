@@ -1,9 +1,9 @@
 ---
 title: GET /serial-parents
-operationId: get_serial_parents_get
+operationId: get_serial_parents_serial_parents_get
 description: Get parent serials. — Progress Platform API Reference
 ---
 
 # GET /serial-parents
 
-<OAOperation operationId="get_serial_parents_get" />
+<OAOperation operationId="get_serial_parents_serial_parents_get" />

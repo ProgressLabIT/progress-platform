@@ -1,9 +1,9 @@
 ---
 title: POST /list/{field_key}
-operationId: create_or_update_custom_list_values_post
+operationId: create_or_update_custom_list_values_list__field_key__post
 description: Create or update custom list values. — Progress Platform API Reference
 ---
 
 # POST /list/{field_key}
 
-<OAOperation operationId="create_or_update_custom_list_values_post" />
+<OAOperation operationId="create_or_update_custom_list_values_list__field_key__post" />

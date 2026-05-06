@@ -1,9 +1,9 @@
 ---
 title: GET /work-order/{wo_key}/traceability
-operationId: get_wo_traceability_data_get
+operationId: get_wo_traceability_data_work_order__wo_key__traceability_get
 description: Fetch serial traceability data for a work order. — Progress Platform API Reference
 ---
 
 # GET /work-order/{wo_key}/traceability
 
-<OAOperation operationId="get_wo_traceability_data_get" />
+<OAOperation operationId="get_wo_traceability_data_work_order__wo_key__traceability_get" />

@@ -1,9 +1,9 @@
 ---
 title: DELETE /session/{session_key}
-operationId: close_user_session_delete
+operationId: close_user_session_session__session_key__delete
 description: Close an active user session and revoke its token. — Progress Platform API Reference
 ---
 
 # DELETE /session/{session_key}
 
-<OAOperation operationId="close_user_session_delete" />
+<OAOperation operationId="close_user_session_session__session_key__delete" />

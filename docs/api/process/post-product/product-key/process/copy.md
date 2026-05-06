@@ -1,9 +1,9 @@
 ---
 title: POST /product/{product_key}/process/copy
-operationId: copy_process_to_products_post
+operationId: copy_process_to_products_product__product_key__process_copy_post
 description: Copy a product process template to other products. — Progress Platform API Reference
 ---
 
 # POST /product/{product_key}/process/copy
 
-<OAOperation operationId="copy_process_to_products_post" />
+<OAOperation operationId="copy_process_to_products_product__product_key__process_copy_post" />
