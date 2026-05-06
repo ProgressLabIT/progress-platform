@@ -29,7 +29,7 @@ Custom certificates take precedence when present. This avoids requiring DNS cred
 
 3. **File provider (custom certificates)**
    - Watches `/letsencrypt/custom/` for dynamic TLS config
-   - Loads certificates from `tls.yml` + `cert.pem` / `key.pem`
+   - Loads certificates from `custom-cert.yml` + `cert.pem` / `key.pem`
    - Hot reload on file change
 
 ## Configuration Files
@@ -41,7 +41,7 @@ Custom certificates take precedence when present. This avoids requiring DNS cred
 - **`deploy/compose/warehouse.yaml`**: Warehouse mobile app (optional)
 - **`deploy/config/progress.env.yaml`**: Domain and TLS_EMAIL (for Let's Encrypt)
 - **`deploy/config/env_template.j2`**: Generates `progress.env`
-- **`deploy/config/tls.yml`**: Template for custom certificate dynamic config (Traefik file provider)
+- **`deploy/config/custom-cert.yml`**: Template for custom certificate dynamic config (Traefik file provider)
 
 ## Deployment
 
@@ -141,7 +141,7 @@ No DNS provider or API credentials are required for HTTP challenge.
 - **Path in container**: `/letsencrypt/custom`
 - **Mode**: `0700` (created by Ansible)
 - Required files when using custom certs:
-  - `tls.yml` — Traefik dynamic TLS config (see below)
+  - `custom-cert.yml` — Traefik dynamic TLS config (see below)
   - `cert.pem` — Certificate (or full chain)
   - `key.pem` — Private key
 
@@ -149,12 +149,12 @@ No DNS provider or API credentials are required for HTTP challenge.
 
 For private networks or when HTTP challenge is not possible, customers install certificates via SSH.
 
-1. **Copy the TLS config template** (from repo `deploy/config/tls.yml`) to the server:
+1. **Copy the TLS config template** (from repo `deploy/config/custom-cert.yml`) to the server:
    ```bash
-   sudo cp tls.yml /opt/progress/letsencrypt/custom/tls.yml
+   sudo cp custom-cert.yml /opt/progress/letsencrypt/custom/custom-cert.yml
    ```
 
-2. **Copy certificate and key** (names must match `tls.yml`):
+2. **Copy certificate and key** (names must match `custom-cert.yml`):
    ```bash
    sudo cp your-cert.pem /opt/progress/letsencrypt/custom/cert.pem
    sudo cp your-key.pem /opt/progress/letsencrypt/custom/key.pem
@@ -167,9 +167,9 @@ For private networks or when HTTP challenge is not possible, customers install c
 
 4. Traefik picks up the new files automatically (file provider with watch). No router restart required for certificate changes.
 
-### tls.yml format
+### custom-cert.yml format
 
-The file in `deploy/config/tls.yml` is the reference. It must live in `/opt/progress/letsencrypt/custom/tls.yml`:
+The file in `deploy/config/custom-cert.yml` is the reference. It must live in `/opt/progress/letsencrypt/custom/custom-cert.yml`:
 
 ```yaml
 tls:
@@ -200,9 +200,9 @@ Use container paths (`/letsencrypt/custom/...`), not host paths.
    - Rate limits: use Let's Encrypt staging for testing if needed.
 
 3. **Custom certificates**
-   - Confirm files exist: `tls.yml`, `cert.pem`, `key.pem` in `/opt/progress/letsencrypt/custom/`.
+   - Confirm files exist: `custom-cert.yml`, `cert.pem`, `key.pem` in `/opt/progress/letsencrypt/custom/`.
    - Check PEM permissions (e.g. 600 for key).
-   - Ensure `tls.yml` uses container paths (`/letsencrypt/custom/...`).
+   - Ensure `custom-cert.yml` uses container paths (`/letsencrypt/custom/...`).
    - Restart router only if file provider does not reload: `docker service update progress_router`.
 
 ### Routing / dashboard
@@ -232,7 +232,7 @@ Use container paths (`/letsencrypt/custom/...`), not host paths.
    - Services will be accessible via HTTP on port 80
 
 4. **Switch to custom certificates**
-   - Add `tls.yml`, `cert.pem`, and `key.pem` under `/opt/progress/letsencrypt/custom/` as above. Traefik will use them in addition to or instead of ACME-issued certs depending on configuration.
+   - Add `custom-cert.yml`, `cert.pem`, and `key.pem` under `/opt/progress/letsencrypt/custom/` as above. Traefik will use them in addition to or instead of ACME-issued certs depending on configuration.
 
 5. **Switch back to Let's Encrypt only**
-   - Remove or rename the dynamic config (e.g. `tls.yml`) and cert files from `custom/` so Traefik relies only on the Let's Encrypt resolver.
+   - Remove or rename the dynamic config (e.g. `custom-cert.yml`) and cert files from `custom/` so Traefik relies only on the Let's Encrypt resolver.
