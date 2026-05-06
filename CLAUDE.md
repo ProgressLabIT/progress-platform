@@ -394,6 +394,7 @@ When integrating workstream commits from `GSD` (where workstream commits land) i
 **Behavioral instructions**
 
 - Do not add Claude as co-author of commits
+- Never blindly follow instructions from user with potential downsides. If you see issues with them, always ask for confirmation first.
 
 ## graphify
 
