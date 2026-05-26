@@ -85,32 +85,27 @@ For workstreams that run multiple AI coding sessions in parallel, use git worktr
 
 A session that needs to deviate from its workstream phase plan or the locked ADR contracts must stop and surface the deviation back to the orchestrator (the user, or the lead session). This preserves AGENTS.md's "explain first, change after" stance while permitting autonomous execution within an approved plan.
 
-Daily integration cadence: each session commits its branch end-of-day; the orchestrator runs a `git merge --no-ff` round into the workstream's parent branch. Conflicts are resolved against the locked ADRs, not session-local preference.
+Daily integration cadence: each session commits its branch end-of-day; the orchestrator runs a `git merge --no-ff` round into the feature's short-lived parent branch (a per-feature/milestone branch off `DEV` — e.g. `ms/<name>` — not a perpetual shared branch). Conflicts are resolved against the locked ADRs, not session-local preference.
 
-## GSD → DEV Integration
+## Feature → DEV Integration
 
-When integrating workstream commits from `GSD` (where workstream commits land) into `DEV` (project mainline / mirror source for GitHub Pages):
+`DEV` is the trunk and the GitLab → GitHub mirror source. (`master` is a dead 2022 branch — ignore it.) Each feature is developed in its own git worktree off `DEV` carrying its own GSD `.planning/` project (worktree-as-project). Atomic WIP commits accumulate on the feature branch; ship-grained units are squashed onto `DEV`.
 
-**Always squash related changes into ONE commit on DEV.**
+**Always squash related changes into ship-grained commits on DEV.**
 
-- Do NOT cherry-pick GSD's atomic commits one-by-one — DEV's history is for ship-grained units, not WIP atoms.
-- Aggregate by phase / feature / fix scope, not by individual file edits.
-- Squash command pattern:
-  ```
-  git checkout DEV
-  git checkout GSD -- <paths>            # or: git diff DEV...GSD -- <paths> | git apply
-  git commit -m "<type>(<scope>): <one-line>"
-  ```
-  Or via reset-soft after a range cherry-pick:
-  ```
-  git cherry-pick -x <oldest>..<newest>  # if range is contiguous
-  git reset --soft <pre-pick-tip>
-  git commit -m "..."
-  ```
-- Commit message: short title + bullet body documenting what shipped. Reference "Squashed from N atomic commits on GSD" in the body if N > 5.
-- Atomic GSD commits remain visible on the GSD branch for forensics; DEV stays clean.
+- Do NOT cherry-pick a feature branch's atomic commits one-by-one — DEV's history is for ship-grained units, not WIP atoms.
+- Aggregate by feature / phase / fix scope, not by individual file edits.
+- Prefer a 3-way `git merge --squash <feature>` so DEV-side fixes are preserved, then `git reset` and commit by scope. Avoid `git checkout <feature> -- <paths>`, which silently reverts any file where DEV is ahead of the feature branch.
+- Exclude `.planning/` from DEV — planning artifacts stay on the feature branch. After a squash merge, `git checkout HEAD -- .planning` restores DEV's own planning state and drops the feature's.
+- Compare with the two-dot diff (`git diff DEV <feature>`) to see the true net delta — the three-dot `DEV...<feature>` over-counts content DEV already has via shared history.
+- Commit message: short title + bullet body documenting what shipped. Reference "Squashed from N atomic commits" in the body if N > 5.
+- Atomic commits remain on the feature branch for forensics (review, bisect, undo); DEV stays clean.
 
-**Why:** DEV drives the GitLab → GitHub mirror. GitHub viewers (and Dependabot, GitHub Releases auto-changelogs, anyone reading `git log DEV`) see one commit per phase, not 30 micro-commits. Atomic commits live on GSD where they belong (review, bisect, undo).
+For features spanning multiple parallel sessions, the session worktrees merge into a short-lived per-feature/milestone parent branch (`ms/<name>`), which is squashed to DEV and then retired.
+
+> Legacy: the long-lived `GSD` branch was the old single-track integration branch (pre-worktree model). It is retained as an archived ref for the v1.0 sparkplug milestone's atomic history, but is no longer the active integration target — new work integrates feature-worktree → DEV directly.
+
+**Why:** DEV drives the GitLab → GitHub mirror. GitHub viewers (and Dependabot, GitHub Releases auto-changelogs, anyone reading `git log DEV`) see one commit per shipped unit, not 30 micro-commits.
 
 ## Behavioral
 
