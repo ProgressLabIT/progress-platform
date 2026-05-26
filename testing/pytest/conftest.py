@@ -1,3 +1,17 @@
+"""Repo-root pytest conftest.
+
+Defines session-scope autouse fixtures that spin up a real ArangoDB
+testcontainer, patch the `db` singleton, and mock NATS. Every test
+inheriting from this conftest pays the testcontainer startup cost
+(~8s) regardless of whether it touches the DB.
+
+Pure-Python tests that do NOT need ArangoDB / NATS / event-class
+imports live under `tests/unit/`. That subtree has its own conftest
+(`tests/unit/conftest.py`) which overrides each autouse fixture here
+with a no-op of the same name so unit tests run without Docker. See
+`tests/unit/conftest.py` and `.planning/codebase/TESTING.md` § "Unit
+Tests — No Docker, No ArangoDB" for the full rule.
+"""
 import os
 import sys
 import types

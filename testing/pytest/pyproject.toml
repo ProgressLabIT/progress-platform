@@ -29,12 +29,20 @@ dependencies = [
     "confluent-kafka",
     "schemathesis>=4.15",
     "locust>=2.0",
+    "aiomqtt==2.5.1",
+    "docker>=7.0",
+    "protobuf>=4.0",
+    "asyncpg==0.31.0",
+    "typer>=0.25.1",
 ]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 pythonpath = ["../../backend/api"]
 testpaths = ["tests"]
+markers = [
+    "integration: tests that require an already-deployed docker stack (e.g. Sparkplug spike)",
+]
 
 [tool.hatch.build.targets.wheel]
 packages = ["conftest_helpers"]
