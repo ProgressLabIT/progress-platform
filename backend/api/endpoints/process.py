@@ -288,7 +288,7 @@ async def delete_operation(op_key: str):
   """
 
   try:
-    is_used_for_products = [p.code for p in get_products_using_operation(op_key)]
+    is_used_for_products = [p['code'] for p in get_products_using_operation(op_key)]
 
   except:
     status_code = 500
