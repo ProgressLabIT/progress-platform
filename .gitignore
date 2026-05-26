@@ -8,6 +8,7 @@ files
 .env
 .env.local
 .env.*.local
+# Compose env override (host-side paths, dev-only — see deploy/compose/.env.example)
 deploy/compose/.env
 
 # Local tooling / editor + file-based secrets (never commit)
@@ -47,6 +48,10 @@ backup/
 db_data/
 db_backup/
 logs/
+nats_data/
+
+# Dev secrets (file-based Docker secrets for compose)
+deploy/secrets/
 
 # Dev utility scripts
 *.app/

@@ -12,8 +12,11 @@ Canonical repo: GitLab (`progresslab/progress-platform`). GitHub is a **read-onl
 
 **Backend tests** (pytest + testcontainers, ArangoDB spun up per-run — never mocked):
 ```bash
-cd testing/pytest && uv sync && uv run pytest
+cd testing/pytest && uv sync && uv run pytest                  # full integration suite
+cd testing/pytest && uv run pytest tests/unit/                 # pure-Python only, no Docker (~4s)
 ```
+
+`tests/unit/` is reserved for pure-Python tests that do NOT touch ArangoDB / NATS / event-class chains — its conftest overrides the repo-root autouse fixtures with no-ops. Anything that needs a `db` parameter belongs under `tests/integration/` (or a sibling domain dir), not `tests/unit/`. See `testing/pytest/README.md` for the full subtree map and the macOS `DOCKER_HOST` gotcha.
 
 **Webapp dev (main desktop SPA):**
 ```bash
@@ -23,7 +26,9 @@ yarn lint && yarn format                  # eslint + prettier
 
 **Warehouse mobile app:** same pattern under `webapps/warehouse/`.
 
-**Local stack:** `docker compose -f deploy/compose/base.yaml -f deploy/compose/dev.yaml up`. Sparkplug demo overlay: `deploy/compose/sparkplug.yaml`.
+**Local Progress stack** (api/db/broker/historian/webapp — all-in-one on dev host): `docker compose -f deploy/compose/base.yaml -f deploy/compose/dev.yaml up`.
+
+**Sparkplug local edge stack** (bridge + sim only, points at a remote Progress server per `deploy/compose/.env`): `docker compose -f deploy/compose/sparkplug.yaml up -d`. Topology revised 2026-05-11: cloud Progress + local Mac bridge/sim. Kill switch is Docker Desktop's stop button, or `.env` edit + `up -d --force-recreate sparkplug_bridge`.
 
 **Install (user-facing 5-min path, locked from rehearsal):** see `readme.md` `## Try it in 5 minutes`.
 
