@@ -45,6 +45,11 @@ Detailed documentation of the application's core capabilities, mapping to `backe
 - [Deployment](guides/deployment.md) - CI/CD pipelines and release process.
 - [AI Agent Rules](guides/agent-rules.md) - Instructions for AI assistants working in this repo.
 
+### 🛠️ Operations
+Runbooks and operational procedures for production / customer deployments.
+- [Workflow DB Recovery](operations/workflow-db-recovery.md) — `progress_workflow-db` crash-loop diagnosis and `pg_resetwal` recovery.
+- [Workflow DB Backup](operations/workflow-db-backup.md) — `pg_dump` backup strategy and restore procedure.
+
 ---
 
 *This documentation is automatically mirrored to the GitLab Wiki.*
