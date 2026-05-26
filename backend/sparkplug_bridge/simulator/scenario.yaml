@@ -1,0 +1,94 @@
+# Sparkplug simulator scenario parameters
+#
+# This file is the single source of truth for the demo's tweakable
+# scenario parameters: anomaly slope, threshold, cue timestamps, and
+# correlated metric dynamics. Edit values here to recalibrate the demo
+# without rebuilding the simulator image — set PROGRESS_SIM_SCENARIO_PATH
+# at the container level to bind-mount an override file at runtime.
+#
+# References:
+#   - ADR-0007 (workstream decisions/0007-simulator-scenario.md) — schema
+#     and amendment history. The amendment dated 2026-04-29 is the source
+#     of the calibrated values below.
+#   - ADR-0010 (workstream decisions/0010-hardcoded-automation-for-v1-demo.md)
+#     locks the wedge THRESHOLD = 100.0. The simulator asserts at startup
+#     that pump3_anomaly.threshold_mm_s equals that constant.
+#
+# Values are validated at simulator startup (see ADR-0007 § Amendment
+# 2026-04-29 § Validation rules). Any failed assertion exits non-zero
+# before the first NBIRTH so demo-day calibration mistakes surface fast.
+
+version: 1
+
+# ---------------------------------------------------------------------------
+# Pump-3 anomaly window
+#
+# Calibrated so Vibration crosses pump3_anomaly.threshold_mm_s upward at
+# t ≈ 3:48 (within the ADR-0007 ±15s tolerance window anchored on t=3:50).
+# Math:
+#   start_value (22.0) + slope (1.0) × elapsed (78s) = 100.0  → cross at t=3:48
+#   start_value (22.0) + slope (1.0) × ramp_seconds (90s) = 112.0 → peak
+# ---------------------------------------------------------------------------
+pump3_anomaly:
+  # mm/s — must equal the pump3.Vibration initial value in topology.py.
+  start_value_mm_s: 22.0
+
+  # mm/s — must equal ADR-0010's THRESHOLD constant in
+  # backend/sparkplug_bridge/automations/pump_anomaly.py.
+  threshold_mm_s: 100.0
+
+  # mm/s per second. ADR-0007 originally specified 0.08 (= +0.4 / 5s) which
+  # could not reach 100 in 80s; the 2026-04-29 amendment corrected this to
+  # +1.0 (= +5.0 / 5s). Keep slope × ramp_seconds ≥ threshold − start_value.
+  slope_mm_s_per_sec: 1.0
+
+  # Anomaly window length in seconds. Begins at timeline.pump_anomaly_begin_at_sec.
+  ramp_seconds: 90
+
+  # Linear decay back to start_value_mm_s after the ramp ends.
+  return_to_baseline_decay_sec: 30
+
+  # Correlated drop in pump3.OutletPressure during the anomaly window.
+  # bar/sec; default = -0.05 / 4s.
+  correlated_outlet_pressure_slope_bar_per_sec: -0.0125
+
+# ---------------------------------------------------------------------------
+# Scenario timeline cues
+#
+# All times are seconds from t=0 (the moment the simulator publishes its
+# first NBIRTH). The orchestrator schedules these as asyncio.Events.
+# kill_cue and restart_cue are informational — the presenter triggers
+# them manually via `docker service rm` / `docker service create`.
+# ---------------------------------------------------------------------------
+timeline:
+  oven_setpoint_step_at_sec: 30
+  oven_setpoint_step_to_c: 245.0
+
+  mixer_running_rising_at_sec: 90
+
+  pump_anomaly_begin_at_sec: 150
+  pump_anomaly_end_at_sec: 240   # = pump_anomaly_begin_at_sec + pump3_anomaly.ramp_seconds
+
+  oven4_ddeath_at_sec: 270   # 4:30 — per-device cascade demo (999.4 D-04)
+  oven4_dbirth_at_sec: 290   # 4:50 — oven4 returns; sibling mixer2 unaffected throughout
+
+  kill_cue_at_sec: 285           # informational — presenter manual
+  restart_cue_at_sec: 300        # informational — presenter manual
+  steady_state_resume_at_sec: 330
+
+# ---------------------------------------------------------------------------
+# Edge metadata
+# ---------------------------------------------------------------------------
+edges:
+  # bdSeq starts here every fresh container start. RESEARCH §Open Question #4
+  # recommendation (a) — Phase 1 has no JetStream KV persistence; Phase 2 may
+  # change this to read prior bdSeq from KV at startup.
+  bdseq_starts_at: 0
+
+# ---------------------------------------------------------------------------
+# Demo metadata
+# ---------------------------------------------------------------------------
+demo:
+  # Set on mixer2.Running rising edge (timeline.mixer_running_rising_at_sec)
+  # and cleared on its falling edge.
+  batch_id: "B-2026-04-28-001"

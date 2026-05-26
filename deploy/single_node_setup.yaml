@@ -28,7 +28,6 @@
       - cmounts
       - notebooks
       - letsencrypt
-    additional_folders:
       - config
     swarm_join_tkn_manager: "{{ init.swarm_facts.JoinTokens.Manager }}"
     swarm_join_tkn_worker: "{{ init.swarm_facts.JoinTokens.Worker }}"
@@ -122,7 +121,7 @@
           ansible.builtin.file:
             path: "{{ root_dir }}/{{ item }}"
             state: directory
-          loop: "{{ volumes + additional_folders }}"
+          loop: "{{ volumes }}"
 
         - name: Create custom certificates directory
           ansible.builtin.file:
@@ -189,11 +188,8 @@
 
         - name: Copy reports application files
           ansible.builtin.copy:
-            src: scripts/{{ item }}
-            dest: "{{ root_dir }}/reports/{{ item }}"
-          loop:
-            - main.py
-            - entrypoint.sh
+            src: scripts/reports/
+            dest: "{{ root_dir }}/reports/"
 
         - name: Create progress.env file with non-secret environment variables
           ansible.builtin.template:

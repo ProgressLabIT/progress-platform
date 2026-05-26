@@ -1,0 +1,11 @@
+[client]
+toolbarMode = "minimal"
+
+[server]
+runOnSave = true
+enableCORS = false
+enableXsrfProtection = false
+headless = true
+
+[theme]
+primaryColor = "#22AED1"

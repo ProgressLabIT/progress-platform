@@ -12,9 +12,6 @@ networks:
   progress:
     external: true
 
-secrets:
-  progress_api_db_pwd:
-    external: true
 
 
 services:
@@ -33,16 +30,18 @@ services:
       HOST: ${HOST}
     entrypoint: >
       sh -c "chmod +x /app/entrypoint.sh && /app/entrypoint.sh"
+    x-traefik-labels: &reporting-labels
+      - "traefik.enable=true"
+      - "traefik.docker.network=progress"
+      - "traefik.http.services.reporting.loadbalancer.server.port=8501"
+      - "traefik.http.routers.reporting.priority=10"
+      - "traefik.http.routers.reporting.rule=Host(`${HOST}`) && PathPrefix(`/reports`)"
+      # Ensure access is only via iframe from main sub.domain url
+      - "traefik.http.routers.reporting.middlewares=reporting-embed"
+      - "traefik.http.middlewares.reporting-embed.headers.framedeny=false"
+      # Allows embedding in iframe from main sub.domain url
+      - "traefik.http.middlewares.reporting-embed.headers.customresponseheaders.Content-Security-Policy=frame-ancestors 'self' ${PROTOCOL:-https}://${HOST} http://localhost:9000"
+    labels: *reporting-labels
     deploy:
       replicas: 1
-      labels:
-        - "traefik.enable=true"
-        - "traefik.docker.network=progress"
-        - "traefik.http.services.reporting.loadbalancer.server.port=8501"
-        - "traefik.http.routers.reporting.priority=10"
-        - "traefik.http.routers.reporting.rule=Host(`${HOST}`) && PathPrefix(`/reports`)"
-        # Ensure access is only via iframe from main sub.domain url
-        - "traefik.http.routers.reporting.middlewares=reporting-embed"
-        - "traefik.http.middlewares.reporting-embed.headers.framedeny=false"
-        # Allows embedding in iframe from main sub.domain url
-        - "traefik.http.middlewares.reporting-embed.headers.customresponseheaders.Content-Security-Policy=frame-ancestors 'self' ${PROTOCOL:-https}://${HOST}"
+      labels: *reporting-labels

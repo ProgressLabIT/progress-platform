@@ -1,20 +1,23 @@
-volumes:
-  robot_reports:
-    external: True
+
+networks:
+  progress:
+    name: progress
 
 secrets:
   progress_admin_pwd:
-    file: config/secrets/dev/admin_pwd.txt
+    file: ../secrets/dev/admin_pwd.txt
   progress_api_db_pwd:
-    file: config/secrets/dev/api_db_pwd.txt
+    file: ../secrets/dev/api_db_pwd.txt
   progress_jwt_secret:
-    file: config/secrets/dev/jwt_secret.txt
+    file: ../secrets/dev/jwt_secret.txt
   progress_db_root_pwd:
-    file: config/secrets/dev/db_root_pwd.txt
+    file: ../secrets/dev/db_root_pwd.txt
 
 services:
   router:
     restart: unless-stopped
+    networks:
+      - progress
     command:
       - --providers.docker
       - --accesslog
@@ -25,6 +28,8 @@ services:
 
   api:
     restart: unless-stopped
+    networks:
+      - progress
     build:
       context: ./backend/api
     logging:
@@ -33,7 +38,7 @@ services:
         max-size: "1k"
         max-file: "3"
     volumes:
-      - ./backend/api:/api
+      - ../../backend/api:/api
     environment:
       - PROGRESS_DB_NAME=PROGRESS_PROD
       - PROGRESS_WEBAPP_URL=http://localhost:9000
@@ -58,6 +63,8 @@ services:
   db:
     image: arangodb:3.11
     restart: unless-stopped
+    networks:
+      - progress
     environment:
       - ARANGO_NO_AUTH=1
     ports:
@@ -72,7 +79,13 @@ services:
     image: nats:2-alpine
     hostname: broker
     restart: unless-stopped
-    command: ["-js", "-m", "8222"]
+    networks:
+      - progress
+    command: ["-c", "/etc/nats/nats-server.conf"]
+    volumes:
+      - nats_data:/data
+      - ../config/nats-server.conf:/etc/nats/nats-server.conf:ro
     ports:
       - "4222:4222"
       - "8222:8222"
+      - "1883:1883"

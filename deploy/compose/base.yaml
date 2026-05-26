@@ -44,10 +44,24 @@ services:
       - "8529"
 
   broker:
-    image: nats:latest
+    image: nats:2.12-alpine
     hostname: broker
     restart: unless-stopped
-    command: ["-js"]
+    command: ["-c", "/etc/nats/nats-server.conf"]
+    volumes:
+      - nats_data:/data
     ports:
       - "4222:4222"
       - "8222:8222"
+      - "1883:1883"
+    healthcheck:
+      # NATS server has its own native health endpoint at /healthz on http_port (8222).
+      # See https://docs.nats.io/running-a-nats-service/nats_admin/monitoring#health-endpoint
+      # Using `wget` because the alpine base image has BusyBox wget (no curl in slim images).
+      test:
+        - "CMD-SHELL"
+        - "wget -qO- http://127.0.0.1:8222/healthz || exit 1"
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s

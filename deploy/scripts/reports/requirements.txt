@@ -1,0 +1,10 @@
+# Streamlit reports — Phase 4 sparkplug page deps.
+# Auto-installed by deploy/scripts/entrypoint.sh:4 at container start.
+# Versions verified 2026-05-05 against pypi.org per 04-RESEARCH.md §Standard Stack.
+# All four packages have cp311-manylinux wheels (no compile-from-source on python:3.11-slim).
+# DEVIATION 04-02: streamlit-echarts dropped from 0.6.0 → 0.4.0; see 04-02-SUMMARY.md.
+# 0.6.0/0.5.0 are broken upstream (use streamlit.components.v2 which third-party wheels cannot register).
+streamlit==1.56.0
+streamlit-echarts==0.4.0
+nats-py==2.14.0
+asyncpg==0.31.0

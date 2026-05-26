@@ -1,0 +1,81 @@
+# Local edge stack for the v1.0 Sparkplug B demo.
+#
+# Topology: sparkplug_bridge + sparkplug_sim run on the developer's machine
+# (Docker Desktop on macOS or any docker host). Both connect to a remote
+# Progress server's NATS broker, MQTT broker, and HTTP API over the public
+# internet. The Progress platform (api, db, broker, historian, webapp) lives
+# cloud-side; nothing in this compose file declares Progress services.
+#
+# Configuration:
+#   cp deploy/compose/.env.example deploy/compose/.env
+#   # edit PROGRESS_*_URL + PROGRESS_SECRETS_DIR to point at the cloud
+#
+# Start:  docker compose -f deploy/compose/sparkplug.yaml up -d
+# Stop:   docker compose -f deploy/compose/sparkplug.yaml stop
+# Or use Docker Desktop's GUI.
+#
+# Kill switch for the Phase 5 pump-anomaly automation (ADR-0010):
+#   1. Edit deploy/compose/.env: SPARKPLUG_AUTOMATIONS_ENABLED=false
+#   2. docker compose -f deploy/compose/sparkplug.yaml up -d --force-recreate sparkplug_bridge
+# Or just stop the bridge container in Docker Desktop.
+
+services:
+
+  sparkplug_bridge:
+    image: progress-sparkplug-bridge:dev   # build: docker build -t progress-sparkplug-bridge:dev -f backend/sparkplug_bridge/Dockerfile backend/
+    hostname: sparkplug_bridge
+    restart: unless-stopped
+    environment:
+      # The bridge reads PROGRESS_* env vars via pydantic-settings (Plan 01-02 config.py).
+      # All endpoint URLs come from deploy/compose/.env — no hardcoded hostnames.
+      - PROGRESS_NATS_URL=${PROGRESS_NATS_URL}
+      - PROGRESS_MQTT_URL=${PROGRESS_MQTT_URL}
+      - PROGRESS_MQTT_CLIENT_ID=${PROGRESS_MQTT_CLIENT_ID:-sparkplug-bridge-1}
+      - PROGRESS_BRIDGE_HEARTBEAT_INTERVAL_SEC=${PROGRESS_BRIDGE_HEARTBEAT_INTERVAL_SEC:-5}
+      - PROGRESS_BRIDGE_HOST_ID=${PROGRESS_BRIDGE_HOST_ID:-progress-bridge}
+      - PROGRESS_BRIDGE_GAP_TOLERANCE=${PROGRESS_BRIDGE_GAP_TOLERANCE:-5}
+      - PROGRESS_BRIDGE_GAP_WINDOW_SEC=${PROGRESS_BRIDGE_GAP_WINDOW_SEC:-60}
+      # Phase 5 (ADR-0010) — pump-anomaly automation. SPARKPLUG_AUTOMATIONS_ENABLED is
+      # the kill switch (read via os.environ, not via BridgeSettings). The other two
+      # auto-map to BridgeSettings.progress_api_base_url and progress_sparkplug_token_path.
+      - SPARKPLUG_AUTOMATIONS_ENABLED=${SPARKPLUG_AUTOMATIONS_ENABLED:-true}
+      - PROGRESS_API_BASE_URL=${PROGRESS_API_BASE_URL}
+      - PROGRESS_SPARKPLUG_TOKEN_PATH=/opt/progress/config/.sparkplug-token
+      # IssueCreatedEvent link targets. Defaults are WO-DEMO-001 / PH-DEMO-001
+      # (demo dataset); override via .env to point at existing records.
+      # Identity (user_key, session) is NOT env-driven — the API derives it
+      # from the JWT bearer token in the Authorization header.
+      - PUMP_ANOMALY_LINKED_WO_KEY=${PUMP_ANOMALY_LINKED_WO_KEY:-WO-DEMO-001}
+      - PUMP_ANOMALY_LINKED_PHASE_KEY=${PUMP_ANOMALY_LINKED_PHASE_KEY:-PH-DEMO-001}
+      - PUMP_ANOMALY_ISSUE_TYPE_KEY=${PUMP_ANOMALY_ISSUE_TYPE_KEY:-}
+      - PUMP_ANOMALY_CREATED_BY=${PUMP_ANOMALY_CREATED_BY:-User/USR-SPARKPLUG-BRIDGE}
+      - PUMP_ANOMALY_USER_KEY=${PUMP_ANOMALY_USER_KEY:-USR-SPARKPLUG-BRIDGE}
+      - PUMP_ANOMALY_USER_SESSION_KEY=${PUMP_ANOMALY_USER_SESSION_KEY:-sparkplug-bridge}
+      # Dwell + latch (defaults 5s / 60s per ADR-0010). For fast-iteration
+      # testing with a short ramp window, lower DWELL to ~1.
+      - PUMP_ANOMALY_DWELL_SECONDS=${PUMP_ANOMALY_DWELL_SECONDS:-5}
+      - PUMP_ANOMALY_LATCH_SECONDS=${PUMP_ANOMALY_LATCH_SECONDS:-60}
+    # JWT bearer file (ADR-0010 § Token storage). The bridge container always reads
+    # /opt/progress/config/.sparkplug-token. The HOST side is parameterized so the
+    # JWT file can live under $HOME on dev machines (no sudo required).
+    # Default ./secrets keeps the file local to the repo checkout; override with
+    # PROGRESS_SECRETS_DIR=$HOME/.progress/secrets in deploy/compose/.env.
+    volumes:
+      - ${PROGRESS_SECRETS_DIR:-./secrets}:/opt/progress/config:ro
+
+  sparkplug_sim:
+    image: progress-sparkplug-sim:dev   # build: docker build -t progress-sparkplug-sim:dev -f backend/sparkplug_bridge/simulator/Dockerfile backend/
+    hostname: sparkplug_sim
+    restart: unless-stopped
+    environment:
+      - PROGRESS_NATS_URL=${PROGRESS_NATS_URL}
+      - PROGRESS_MQTT_URL=${PROGRESS_MQTT_URL}
+      - PROGRESS_SIM_HEARTBEAT_INTERVAL_SEC=${PROGRESS_SIM_HEARTBEAT_INTERVAL_SEC:-5}
+      - PROGRESS_SCENARIO_START_OFFSET_SEC=${PROGRESS_SCENARIO_START_OFFSET_SEC:-0}
+      # Fast-iteration overrides for the pump-anomaly window. Defaults preserve
+      # the rehearsal scenario (begin t=150, ramp 90s, slope 1.0 → cross at
+      # t=3:48). For test runs: begin=5, ramp=10, slope=10 → cross at t≈13s,
+      # fire ~18s after sim NBIRTH.
+      - SIM_PUMP_ANOMALY_BEGIN_SEC=${SIM_PUMP_ANOMALY_BEGIN_SEC:-}
+      - SIM_PUMP_ANOMALY_RAMP_SEC=${SIM_PUMP_ANOMALY_RAMP_SEC:-}
+      - SIM_PUMP_ANOMALY_SLOPE=${SIM_PUMP_ANOMALY_SLOPE:-}

@@ -1,0 +1,13 @@
+# aiomqtt 2.5.1 (RESEARCH §Standard Stack) declares paho-mqtt>=2.1.0,<3 while
+# pysparkplug 0.6.1 declares paho-mqtt<2 — they cannot co-install. Pinned to
+# 2.0.1 (the last aiomqtt 2.x release before the paho-mqtt 2.x bump). API
+# surface used by encoder.py / main.py (Client(hostname,port,identifier,
+# protocol,will,clean_session), Will(topic,payload,qos,retain),
+# ProtocolVersion.V311, MqttError) is identical to 2.5.1.
+# See 01-03-SUMMARY.md "Deviations from Plan" §1.
+aiomqtt==2.0.1
+pysparkplug==0.6.1
+nats-py
+pydantic>=2.0,<3.0
+pydantic-settings>=2.0,<3.0
+PyYAML>=6.0,<7.0
