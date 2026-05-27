@@ -182,7 +182,7 @@
                   @click="cancelTask"
                 >
                   <q-tooltip anchor="center right" self="center left" :delay="200">
-                    {{ $t('cancel_task') }}
+                    {{ $t('task_cancel') }}
                   </q-tooltip>
                 </q-btn>
 
@@ -192,7 +192,6 @@
                   flat
                   icon="mdi-delete-outline"
                   round
-                  color="negative"
                   @click="deleteTask"
                 >
                   <q-tooltip anchor="center right" self="center left" :delay="200">
