@@ -929,11 +929,13 @@ const jobItems = computed(() => [
   }
 ])
 
-const workOrderItems = computed(() => [
+const workOrderItems = computed(() => {
+  const isClosed = woData.status === 'closed'
+  return [
   {
     label: 'project_update',
     icon: 'mdi-folder-edit-outline',
-    disable: woData.active,
+    disable: isClosed,
     action: async () => {
       await initTempData();
       action.value = saveWorkOrderUpdate;
@@ -943,7 +945,7 @@ const workOrderItems = computed(() => [
   {
     label: 'quantity.update',
     icon: 'mdi-plus-minus-variant',
-    disable: woData.active,
+    disable: woData.active || isClosed,
     action: async () => {
       await initTempData();
       action.value = saveWorkOrderUpdate;
@@ -953,7 +955,7 @@ const workOrderItems = computed(() => [
   {
     label: 'work_order.update_from_date',
     icon: 'mdi-calendar-start',
-    disable: woData.active,
+    disable: woData.active || isClosed,
     action: async () => {
       await initTempData();
       action.value = saveWorkOrderUpdate;
@@ -963,7 +965,7 @@ const workOrderItems = computed(() => [
   {
     label: 'work_order.update_due_date',
     icon: 'mdi-calendar-end',
-    disable: woData.active,
+    disable: isClosed,
     action: async () => {
       await initTempData();
       action.value = saveWorkOrderUpdate;
@@ -973,7 +975,7 @@ const workOrderItems = computed(() => [
   {
     label: 'edit_extra',
     icon: 'mdi-code-json',
-    disable: woData.active,
+    disable: false,
     action: editWorkOrderExtra,
   },
   {
@@ -987,5 +989,6 @@ const workOrderItems = computed(() => [
       confirmColor.value = 'theme-red'
     },
   },
-]);
+]
+})
 </script>

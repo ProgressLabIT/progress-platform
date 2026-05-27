@@ -148,6 +148,7 @@ export default {
   end_max: 'fine max',
   end_min: 'fine min',
   equipment: 'attrezzatura | attrezzature',
+  equipment_class: 'classe di attrezzature | classi di attrezzature',
   equipment_classes: 'classe di attrezzature | classi di attrezzature',
   errors: {
     save_err: 'Non è stato possibile salvare gli aggiornamenti',
@@ -365,6 +366,8 @@ export default {
     'Indicare un nome per il tipo di segnalazione',
   issue_type_alerts_in_use:
     'Questo tipo di segnalazione non può essere eliminato perché le seguenti segnalazioni sono id questo tipo',
+  issue_type_alerts_delete_general_error:
+    'Non è stato possibile eliminare questo tipo di segnalazione per un errore nel server',
   issue_types_alerts_delete_general_error:
     'Non è stato possibile eliminare questo tipo di segnalazione per un errore nel server',
   issue_type_close_within_explainer:
@@ -706,6 +709,11 @@ export default {
       label: 'Pagina iniziale',
       error:
         'Si è verificato un errore durante il cambio della pagina iniziale',
+    },
+    printer: {
+      label: 'Stampante',
+      error:
+        'Si è verificato un errore durante il cambio della stampante predefinita',
     },
   },
   print: 'stampa',
@@ -1282,6 +1290,10 @@ export default {
     short: 'CLR',
     long: 'Carico di lavoro residuo (ore)',
   },
+  movement: {
+    revert_success: 'Movimento annullato con successo',
+    revert_error: 'Errore durante l\'annullamento del movimento',
+  },
   yes: 'Sì',
   mandatory: 'Obbligatorio',
   fill_mandatory_fields: 'Compila tutti i campi obbligatori per continuare',
@@ -1364,6 +1376,7 @@ export default {
       add: 'Aggiungi posizione',
       new: 'Crea nuova posizione',
       parent_position: 'Contenitore',
+      code: 'Codice',
       owned: 'Posseduto',
       fixed: 'Fisso',
       available: 'Disponibile',
