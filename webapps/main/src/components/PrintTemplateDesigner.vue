@@ -449,6 +449,11 @@ const pdfmeTheme = computed(() => {
 /** @type {import('@pdfme/ui').Designer} */
 let designer;
 
+// Guards against re-entrancy: our restore logic clicks .pdfme-ui-page-next which itself
+// fires onPageChange. Without this flag the onPageChange handler would re-invoke the
+// restore loop for every intermediate click.
+let isRestoringPageCursor = false;
+
 function getPlugins() {
   return buildPlugins(customFields.value);
 }
@@ -486,6 +491,24 @@ function initDesigner() {
       workingTemplate.value.template.basePdf = trackedBasePdf;
     }
   });
+
+  // When the user uses pdfme's built-in "Add page after" menu (or any other internal
+  // navigation), pdfme's internal q() sets the cursor then awaits W() which resets it
+  // back to 0. After q() completes it fires onPageChange with the target page. If the
+  // UI ended up on page 0 instead (compact template, no scroll-driven resync), drive
+  // the same DOM-level restore we use for addField.
+  designer.onPageChange((info) => {
+    if (isRestoringPageCursor) return;
+    if (!info || info.currentPage <= 0) return;
+    requestAnimationFrame(() => {
+      const c = document.getElementById('pdf-designer');
+      const prevBtn = c?.querySelector('.pdfme-ui-page-prev');
+      if (prevBtn && prevBtn.disabled) {
+        isRestoringPageCursor = true;
+        restorePageCursorAfterReset(info.currentPage, () => { isRestoringPageCursor = false; });
+      }
+    });
+  });
 }
 
 watch(pdfmeTheme, (newTheme) => {
@@ -497,8 +520,9 @@ watch(pdfmeTheme, (newTheme) => {
 function addField(type, overrides = {}) {
   if (!designer) return;
   const template = designer.getTemplate();
+  const pageIndex = typeof designer.getPageCursor === 'function' ? designer.getPageCursor() : 0;
   const schemas = template.schemas && template.schemas.length > 0 ? [...template.schemas] : [[]];
-  const pageIndex = 0;
+  while (schemas.length <= pageIndex) schemas.push([]);
   const pageSchemas = Array.isArray(schemas[pageIndex]) ? [...schemas[pageIndex]] : [];
   const plugins = getPlugins();
   const plugin = plugins[type];
@@ -520,7 +544,57 @@ function addField(type, overrides = {}) {
 
   pageSchemas.push(defaultSchema);
   schemas[pageIndex] = pageSchemas;
+
   designer.updateTemplate({ ...template, schemas });
+
+  if (pageIndex > 0) {
+    isRestoringPageCursor = true;
+    restorePageCursorAfterReset(pageIndex, () => { isRestoringPageCursor = false; });
+  }
+}
+
+/**
+ * pdfme's updateTemplate triggers an async internal callback that resets its React-state
+ * pageCursor to 0 and smooth-scrolls the canvas to top. When the template is compact enough
+ * that all pages fit in the viewport, no scroll happens and pdfme's internal useScrollPageCursor
+ * cannot resync — so the wrong page is shown as active.
+ *
+ * There is no public Designer API to set pageCursor. The only navigation hook is the
+ * .pdfme-ui-page-next button in the CtlBar, whose onClick calls the internal setPageCursor.
+ * page-prev's `disabled` attribute is a reliable signal: it flips false→true exactly when
+ * pdfme finishes resetting to cursor=0. We observe that transition and then click page-next
+ * once per animation frame (each click triggers a React render so the next click reads the
+ * updated cursor from its closure).
+ */
+function restorePageCursorAfterReset(targetPage, onDone) {
+  const finish = () => { onDone && onDone(); };
+  const container = document.getElementById('pdf-designer');
+  if (!container) { finish(); return; }
+  const prevBtn = container.querySelector('.pdfme-ui-page-prev');
+  if (!prevBtn) { finish(); return; }
+
+  let clicksLeft = targetPage;
+  const advance = () => {
+    if (clicksLeft <= 0) { finish(); return; }
+    const nextBtn = container.querySelector('.pdfme-ui-page-next');
+    if (!nextBtn || nextBtn.disabled) { finish(); return; }
+    nextBtn.click();
+    clicksLeft -= 1;
+    if (clicksLeft > 0) requestAnimationFrame(advance);
+    else finish();
+  };
+
+  if (prevBtn.disabled) {
+    advance();
+    return;
+  }
+  const observer = new MutationObserver(() => {
+    if (prevBtn.disabled) {
+      observer.disconnect();
+      advance();
+    }
+  });
+  observer.observe(prevBtn, { attributes: true, attributeFilter: ['disabled'] });
 }
 
 function addTemplateExpressionField() {
