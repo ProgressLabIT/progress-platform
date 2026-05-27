@@ -1,10 +1,11 @@
-# Progress Platform — IIoT Strategy and Architecture
+# Progress Platform — IIoT Architecture
 
 **Author:** CTO, Progress Platform
 **Status:** v0.1 draft
-**Last updated:** 2026-05-21
+**Last updated:** 2026-05-26
 **Audience:** internal strategy + technical reference; basis for prospect-facing materials
 **Companion documents:**
+- `km/security/iiot-security.md` — IIoT security model (control plane, identity/PKI, supply chain, audit/compliance). **The security half of this reference lives there.**
 - `km/strategy/defense-aerospace-roadmap.md` — security & compliance posture roadmap
 - `km/strategy/arangodb-migration.md` — substrate migration analysis
 - `.planning/workstreams/sparkplug-demo/decisions/0011-database-substrate.md`
@@ -15,9 +16,9 @@
 
 ## 1. Purpose of this document
 
-Establish a single reference for Progress Platform's IIoT approach — strategic positioning, design principles, and the corrected architecture that supersedes the original "IIoT Edge-to-Cloud Architecture Specification v1.0" (May 2026, single-cloud-node, docker.sock-based update model). The original spec captured the right *intent* (decoupled OT/IT, NATS as unified data plane, outbound-443 connectivity, edge buffering) but the *security, supply-chain, and HA* dimensions need substantial rework — done here.
+Establish a single reference for Progress Platform's IIoT approach — strategic positioning, design principles, and the corrected architecture that supersedes the original "IIoT Edge-to-Cloud Architecture Specification v1.0" (May 2026, single-cloud-node, docker.sock-based update model). The original spec captured the right *intent* (decoupled OT/IT, NATS as unified data plane, outbound-443 connectivity, edge buffering) but the *security, supply-chain, and HA* dimensions need substantial rework.
 
-This document is the place to point when an engineer, partner, or prospect asks "how does Progress Platform actually approach IIoT?" It deliberately stays at strategy + architecture; per-component implementation lives in ADRs and `km/architecture/`.
+This document covers **strategy + architecture**: positioning, topology, data plane, edge deployment, protocols, federation, HA/DR, and data lifecycle. The **security model** — control-plane integrity, signed updates, identity/PKI, audit and compliance evidence — lives in the companion `km/security/iiot-security.md`. Per-component implementation lives in ADRs and `km/architecture/`.
 
 ---
 
@@ -60,7 +61,7 @@ Two adjacent profiles where Progress fits but is not the obvious first choice:
 - ISA-95 logical hierarchy as the contextual taxonomy
 - Audit trail by construction (event sourcing)
 - On-prem and Managed Cloud deployment (same primitives)
-- Defense/aerospace security posture, on roadmap (see companion doc)
+- Defense/aerospace security posture, on roadmap (see companion docs)
 
 **Out of scope (will not pursue):**
 - Closed-loop control or safety functions (telemetry-only; no PLC writeback in critical paths; no SIL claim)
@@ -71,22 +72,20 @@ Two adjacent profiles where Progress fits but is not the obvious first choice:
 
 ### 2.4 Design principles
 
-Six principles that drive every architectural decision:
+Six principles that drive every architectural decision. They are referenced throughout as **[P1]–[P6]**. Principles **[P4]–[P6]** are security-critical and elaborated in `km/security/iiot-security.md`.
 
 1. **Event-sourced everything that matters.** Every state-changing action is an immutable, queryable event before it is a mutation. This makes traceability, audit, and AS9100D evidence chains *free*, not bolt-on. (Established in `backend/api/events/`, 50+ event types, `Event.save()` → `pre_processing()` → `apply()` → `store_event()` transaction chain.)
 2. **On-prem first; Managed Cloud uses the same primitives.** No architecture or feature exists *only* in cloud. The customer's deployment model is a config choice, not a different product.
-3. **Decoupled OT/IT respecting Purdue.** Edge container topology is designed so PLC-facing components live on the OT-facing network interface and IT-facing components live on the IT-facing one. No flat collapse.
-4. **Outbound-only edge.** Edge IPCs never accept inbound from the IT-side network. All cloud (or central on-prem) ingress is outbound from the edge, port 443 (or customer's allowed egress), TLS.
-5. **mTLS and decentralised JWT auth as defaults.** Not optional, not "advanced configuration." Every NATS, API, and service-to-service connection is mutually authenticated with cryptographic identities derived from a documented PKI.
-6. **Signed, A/B, rolled-back-on-failure updates.** No update is fire-and-forget. Every component is delivered as a signed image (Cosign), deployed into one of two slots, health-gated, and automatically reverted on probe failure. No `docker.sock` exposure to any container.
-
-These principles are referenced throughout the architecture section as **[P1]–[P6]**.
+3. **Decoupled OT/IT respecting Purdue.** OT-facing and IT-facing functions are never collapsed onto one flat interface. In the single-host default (§3.3.1) the separation is enforced by network namespaces + host firewall; in the dual-host variant it is physical. PLC-facing components reach only the OT side; cloud-egress components reach only the IT side.
+4. **Outbound-only edge.** Edge IPCs never accept inbound from the IT-side network. All cloud (or central on-prem) ingress is outbound from the edge, port 443 (or customer's allowed egress), TLS. *(Security detail: `km/security/iiot-security.md`.)*
+5. **mTLS and decentralised JWT auth as defaults.** Not optional, not "advanced configuration." Every NATS, API, and service-to-service connection is mutually authenticated with cryptographic identities derived from a documented PKI. *(Security detail: `km/security/iiot-security.md`.)*
+6. **Signed, A/B, rolled-back-on-failure updates.** No update is fire-and-forget. Every component is delivered as a signed image (Cosign), deployed into one of two slots, health-gated, and automatically reverted on probe failure. No `docker.sock` exposure to any container. *(Security detail: `km/security/iiot-security.md`.)*
 
 ---
 
 ## 3. Architecture — the corrected reference model
 
-This section supersedes the original "IIoT Edge-to-Cloud Architecture Specification v1.0." The original captured the right *shape*; what changes here is the security, supply-chain, HA, and federation detail.
+This section supersedes the original "IIoT Edge-to-Cloud Architecture Specification v1.0." The original captured the right *shape*; what changes is the security, supply-chain, HA, and federation detail. The control-plane and identity mechanics are in `km/security/iiot-security.md`; this section covers topology, data plane, edge deployment, protocols, federation, and HA.
 
 ### 3.1 Topology overview
 
@@ -122,10 +121,10 @@ The deployment fans out across three concentric scopes:
 
 Four architectural facts to internalise:
 
-1. **OT tier and Facility tier are on different L2 networks.** The edge host has at least two NICs; the bridge container binds to the OT-facing one for ingress and the IT-facing one for egress. In single-host deployments (the default — see §3.4), network namespaces + host firewall rules enforce the separation. In dual-host variant, the separation is physical. **[P3]**
+1. **OT tier and Facility tier are on different L2 networks.** The edge host has at least two NICs; the bridge container binds to the OT-facing one for ingress and the IT-facing one for egress. In single-host deployments (the default — see §3.3) network namespaces + host firewall rules enforce the separation. In the dual-host variant the separation is physical. **[P3]**
 2. **Edge → Enterprise is always outbound.** No inbound port opened on the edge's IT-facing interface. NATS leaf-node connection initiates from the edge over WSS:443. **[P4]**
-3. **Enterprise tier is per region, on the customer's private network by default.** Not "one global cloud," not internet-exposed unless the customer chooses Managed Cloud. On-prem deployments place Enterprise NATS on the customer's corporate WAN / MPLS / site-to-site VPN; sites in each region route to their regional Enterprise instance; cross-region replication is **data-classification-aware** (see §3.6). Managed Cloud uses the same primitives behind Traefik + mTLS on internet-routable endpoints — the outbound-from-edge property is preserved. **[P2]**
-4. **The edge's control plane is one cryptographically gated channel.** Inbound to the edge from the Enterprise tier consists of exactly two things: (a) a single NATS KV key watch (`EDGE_DESIRED.{uuid}`) carrying a signed deployment manifest, and (b) HTTPS GETs to the registry for image layers (by digest). Nothing else. This collapses the customer-side firewall ACL to two lines and is the architectural primitive that makes the rest of the security model defensible. **[P5, P6]**
+3. **Enterprise tier is per region, on the customer's private network by default.** Not "one global cloud," not internet-exposed unless the customer chooses Managed Cloud. On-prem deployments place Enterprise NATS on the customer's corporate WAN / MPLS / site-to-site VPN; sites in each region route to their regional Enterprise instance; cross-region replication is **data-classification-aware** (see §3.5). **[P2]**
+4. **The edge's control plane is one cryptographically gated channel.** Inbound to the edge from the Enterprise tier consists of exactly two things: (a) a single NATS KV key watch (`EDGE_DESIRED.{uuid}`) carrying a signed deployment manifest, and (b) HTTPS GETs to the registry for image layers (by digest). Nothing else. This collapses the customer-side firewall ACL to two lines. The mechanics and threat model are in `km/security/iiot-security.md`. **[P5, P6]**
 
 That fourth point matters for procurement: the customer's network team can write a one-line outbound ACL ("WSS:443 to `nats.region.customer.example.com`; HTTPS:443 to `registry.region.customer.example.com`; drop everything else") and defend it in audit. We do not ask them to open inbound ports, accept arbitrary protocols, or trust a vendor-specific tunnel.
 
@@ -146,7 +145,7 @@ audit.{component}.{action}                    # security-relevant audit events
 
 **ISA-95 path as logical label, equipment UUID as stable key.** The ISA-95 hierarchy (`enterprise.site.area.line.workcell.equipment`) is the *human-readable* contextual taxonomy. The primary key for an asset is a stable UUID. ISA-95 path is an attribute on the asset that can change (re-org, line renumbering, equipment moved) without breaking historian continuity or KV state references. This was the single largest mistake in the original spec and is corrected here.
 
-**KV buckets** (governance per ADR-0011/0012):
+**KV buckets** (governance per ADR-0011/0012; ACL enforcement detail in `km/security/iiot-security.md`):
 
 | Bucket | Writer | Reader | Purpose |
 |---|---|---|---|
@@ -157,7 +156,7 @@ audit.{component}.{action}                    # security-relevant audit events
 | `SPARKPLUG_LAST_SEQ` | Bridge | Bridge | Last sequence per session (existing) |
 | `SPARKPLUG_LAST_VALUES` | Bridge | Reports, UI | Last good value per metric (existing) |
 
-Bucket ACLs are enforced per-NATS-account. Edge accounts cannot write `EDGE_DESIRED`; CI accounts cannot write `EDGE_REPORTED`. ACL drift is itself an alert.
+Bucket ACLs are enforced per-NATS-account. Edge accounts cannot write `EDGE_DESIRED`; CI accounts cannot write `EDGE_REPORTED`. ACL drift is itself an alert. (Full ACL model: `km/security/iiot-security.md`.)
 
 **Backpressure policy** (replaces the original spec's hand-wave):
 
@@ -166,91 +165,11 @@ Bucket ACLs are enforced per-NATS-account. Edge accounts cannot write `EDGE_DESI
 - Edge reports buffer depth into `EDGE_REPORTED.buffer_depth`; central monitoring alerts at 70% and pages at 90%.
 - Backfill replay on reconnect is **rate-limited and downsampled** for telemetry older than a configurable threshold (default: 1 hour). Raw historical replay over cellular would otherwise saturate the link. Customers can opt into full-fidelity replay where bandwidth permits.
 
-### 3.3 Control plane — signed deployment manifests, content-addressed images
+### 3.3 Edge architecture
 
-The edge runs immutable infrastructure. All configuration is baked into the image. To change behaviour: rebuild image, push to registry, update the deployment manifest in KV. No remote commands, no live config tuning, no diagnostic shells through the control plane. SSH access exists separately on the customer's VPN / jump-host channel, outside the IIoT control plane.
+> **Control plane & supply chain:** the signed-manifest update flow, Cosign verification, content-addressed images, edge NATS ACLs, and the compromise/threat analysis are in `km/security/iiot-security.md`. This section covers the **deployment topology** of the edge — what runs where, on what hardware, across which networks.
 
-This stance is a security primitive **[P5, P6]**, not an operational accident. It is also a selling point — every configuration change produces a signed, traceable artifact, which is exactly what auditors want.
-
-**Update model: signed manifest in KV + content-addressed image + Cosign verification + podman/systemd A/B slots.**
-
-```
-CI/CD writes signed deployment manifest into EDGE_DESIRED.{uuid}
-   manifest = {
-     image_digest: "sha256:abc...",            # content-addressed, not tag
-     image_repository: "registry.example.com/progress/bridge",
-     effective_from: 2026-05-23T10:00:00Z,
-     minimum_version: "v1.4.0",                # downgrade protection
-     issuer: "deployments.progress.example.com",
-     signature: "ed25519:..."                  # signed offline
-   }
-        │
-        ▼
-Edge Update Agent KV watcher fires
-        │
-        ▼
-Validate manifest:
-  ├── parse strictly (memory-safe parser; reject malformed input early)
-  ├── verify ed25519 signature against pinned deployment-signing public key
-  ├── check minimum_version against currently active version (no downgrade)
-  ├── check effective_from <= now (no replay of stale manifests)
-  └── validate registry hostname against allowlist
-        │  (any check fails → abort + log to EDGE_REPORTED.last_validation_failure)
-        ▼
-Pull image by digest (NOT tag) from registry over HTTPS
-        │  (registry can only serve the exact bytes pinned by digest)
-        ▼
-Verify Cosign signature on image against pinned Cosign public key
-        │  (verification failure → abort + report)
-        ▼
-Stage into inactive slot (slot B if A is active)
-        │
-        ▼
-Pre-swap health probe for N minutes (default 5)
-        │  (probe failure → abort + report; slot A remains active)
-        ▼
-Atomic systemd unit swap: deactivate slot A, activate slot B
-        │
-        ▼
-Post-swap health probe for further N minutes
-        │  (probe failure → automatic rollback to slot A)
-        ▼
-EDGE_REPORTED.{uuid} write (active_digest, health, swap_timestamp)
-```
-
-**What it takes to compromise the edge through this control plane:**
-
-Three independent compromises are required:
-
-1. **Deployment-signing key** — offline, in HSM or sealed file with documented custody chain (see §3.7 and `defense-aerospace-roadmap.md`).
-2. **Cosign signing key** — separate, also offline, separate custody.
-3. **Registry write access** — to host the malicious image bytes.
-
-Two-person integrity on either signing key raises this to four or five compromises with separation of duties. This is the same threshold that protects production OS update channels at major OS vendors.
-
-**Key properties of the validation pipeline:**
-
-- **Content-addressed.** Image references in the manifest are SHA-256 digests, never tags. Registry becomes untrusted byte distribution; even a fully compromised registry can only serve the exact bytes the manifest already pinned.
-- **No `docker.sock` exposure.** The Update Agent runs under a constrained systemd unit and invokes `podman` directly. No container has access to the container runtime control socket. **[P6]**
-- **Strict, fuzzed parser.** The manifest parser is minimal and treated as a security-critical component — fuzzed continuously, audited every release. Manifest parser CVEs are the highest-severity incident class on the edge.
-- **Downgrade protection.** A compromised manifest-signer cannot push an old, vulnerable-but-validly-signed image because `minimum_version` is enforced. (Eventually: chained-revocation list with explicit deny entries.)
-- **Replay protection.** `effective_from` rejects stale manifests; combined with KV revision numbers, an attacker who captured an old manifest cannot replay it later.
-- **Rollback writes `EDGE_REPORTED`, not `EDGE_DESIRED`.** Rollback never modifies the desired state, so the operations dashboard surfaces failures without ping-pong loops between Agent and CI.
-- **Phased rollout enforced at the orchestrator.** CI writes manifests in cohorts (5% → 25% → 100%) with bake periods, jitter on edge watchers, and pull-through registry caches at regional and facility levels to avoid thundering herd.
-
-**NATS account permissions on the edge (the silent prerequisite).** The edge's NATS user has the tightest possible permission grant:
-
-- *Subscribe* on `EDGE_DESIRED.{its-uuid}` only — no wildcards, no other subjects.
-- *Publish* on `telemetry.{its-isa-95-path}.*`, `events.{...}`, `EDGE_REPORTED.{its-uuid}` only.
-- *No* request/reply, *no* KV write outside its own `EDGE_REPORTED` entry.
-
-An ACL slip here undoes the entire security model. This is verified on every deploy by an automated ACL-diff check and surfaced in the security ADR for the deployment.
-
-This update model supersedes the original spec's `docker.sock`-based Agent pattern outright. ADR documenting the design is pending; `km/operations/edge-ota.md` is the Stage 1 deliverable.
-
-### 3.4 Edge architecture
-
-#### 3.4.1 Single-host reference deploy (the default)
+#### 3.3.1 Single-host reference deploy (the default)
 
 A single edge IPC runs all edge functions in containers under podman + systemd. This is the right architecture for the demo, pilots, and the majority of production sites. Concretely:
 
@@ -282,7 +201,7 @@ A single edge IPC runs all edge functions in containers under podman + systemd. 
                                  Private network → OCI registry
 ```
 
-**Single-host is defensible if and only if these five conditions hold.** They are checklist items in every reference-deploy validation; failure of any one means the deploy is non-compliant.
+**Single-host is defensible if and only if these five conditions hold.** They are checklist items in every reference-deploy validation; failure of any one means the deploy is non-compliant. The security rationale and verification for each is expanded in `km/security/iiot-security.md`.
 
 | # | Condition | Why |
 |---|---|---|
@@ -301,7 +220,7 @@ A single edge IPC runs all edge functions in containers under podman + systemd. 
 | Large | High-frequency telemetry, facility aggregator | 8-16 core x86 | 32 GB | 1 TB NVMe RAID-1 | 2× 10 GbE |
 
 **Host software stack:**
-- **OS:** Minimal Linux (Debian / Ubuntu Server LTS / RHEL-derivative depending on customer policy). Provisioned via Ansible (not USB cloud-init — see §3.7).
+- **OS:** Minimal Linux (Debian / Ubuntu Server LTS / RHEL-derivative depending on customer policy). Provisioned via Ansible (not USB cloud-init — see `km/security/iiot-security.md` §provisioning).
 - **Container runtime:** podman + systemd. No Docker engine. No `docker.sock`. **[P6]**
 - **Disk encryption:** LUKS with TPM-sealed key (where TPM 2.0 is available) or operator-keyed boot.
 - **Secure boot:** enabled. Signed kernel where the customer's hardware supports it.
@@ -319,7 +238,7 @@ A single edge IPC runs all edge functions in containers under podman + systemd. 
 
 All containers run as non-root, with capability allow-lists, no host network sharing, and read-only root filesystems where possible.
 
-#### 3.4.2 Dual-host reference variant (defense / aerospace / IDS-visibility customers)
+#### 3.3.2 Dual-host reference variant (defense / aerospace / IDS-visibility customers)
 
 Two edge IPCs per facility, with the bridge on an OT-side host and the leaf + update agent on an IT-side host. Same image set as single-host; deployment mode is a topology choice, not a software change.
 
@@ -364,13 +283,13 @@ Two edge IPCs per facility, with the bridge on an OT-side host and the leaf + up
 
 The architecture supports both modes from the same image set; switching mode is a deployment topology + Ansible playbook choice, not a software change.
 
-#### 3.4.3 High-assurance variant (data diode)
+#### 3.3.3 High-assurance variant (data diode)
 
-Documented in §3.x of `defense-aerospace-roadmap.md` Stage 4. Not built proactively; documented as available scope for sites with classified-adjacent data or hard regulatory firewalls (some NASA programs, some UK MoD work). Data diode hardware (Owl Cyber Defense, Fox-IT, Advenica) replaces the inter-host bidirectional link with a unidirectional one. Config updates happen via signed bundles delivered out-of-band.
+Documented in `defense-aerospace-roadmap.md` Stage 4. Not built proactively; documented as available scope for sites with classified-adjacent data or hard regulatory firewalls (some NASA programs, some UK MoD work). Data diode hardware (Owl Cyber Defense, Fox-IT, Advenica) replaces the inter-host bidirectional link with a unidirectional one. Config updates happen via signed bundles delivered out-of-band.
 
-### 3.5 Protocol matrix
+### 3.4 Protocol matrix
 
-Per the defense-aerospace roadmap §3.5 / `arangodb-migration.md`-adjacent thinking, each protocol has an explicit security stance:
+Each protocol has an explicit security stance (enforcement detail in `km/security/iiot-security.md`):
 
 | Protocol | Use | Security stance | Status |
 |---|---|---|---|
@@ -383,7 +302,7 @@ Per the defense-aerospace roadmap §3.5 / `arangodb-migration.md`-adjacent think
 
 For each protocol, a separate ADR will document the bridge implementation, security defaults, supported PLC vendor matrix, and known limitations.
 
-### 3.6 Multi-region federation
+### 3.5 Multi-region federation
 
 For customers with multiple facilities spread across regulatory regions (the tier-1 defense/aerospace profile), a single global Enterprise tier is not appropriate. Federation architecture:
 
@@ -398,45 +317,11 @@ For customers with multiple facilities spread across regulatory regions (the tie
 | **Controlled (export)** | ITAR / EAR / CGP / SCOMET-scoped technical data, classified-program telemetry | **Stays in source region.** No cross-region replication. Federated KPIs derived from anonymised aggregates only. |
 | **Personal data (GDPR / DPDP / PIPEDA)** | Operator identifiers, badge scans, biometric login | Stays in source region; replicated only with documented lawful basis |
 
-The policy is enforced at the NATS stream / subject level: streams tagged with a data-classification attribute are only mirrored to regions whitelisted for that class. Violation attempts are themselves audit events.
+The policy is enforced at the NATS stream / subject level: streams tagged with a data-classification attribute are only mirrored to regions whitelisted for that class. Violation attempts are themselves audit events (see `km/security/iiot-security.md`).
 
 This addresses the four-regime regulatory exposure (US ITAR/DFARS, UK MoD/GDPR, Canada CGP/PIPEDA, India SCOMET/DPDP) head-on. **No customer of meaningful size will accept a single-region "global cloud" model — federation is a Day-1 architectural commitment.**
 
-### 3.7 Provisioning and identity
-
-**Edge enrollment** (replaces the original spec's USB cloud-init):
-
-1. Edge IPC is built and tested in a controlled staging facility.
-2. A **bootstrap certificate** (short-lived, X.509) is installed on the IPC during staging. Bootstrap cert is issued by a customer-side or Progress-side intermediate CA, tracked in a chain-of-custody log.
-3. At first boot in the destination facility, the Edge Update Agent uses the bootstrap cert to authenticate to the regional **enrollment service**.
-4. Enrollment service verifies the bootstrap cert, looks up the device's expected identity, **and requires two-person approval** (an operator + an admin) in the Progress admin UI before issuing the device's permanent NATS NKEY/JWT.
-5. The bootstrap cert is revoked after first successful enrollment; the device transitions to its permanent identity.
-
-This closes the original spec's "USB = social engineering" hole.
-
-**Identity hierarchy** (per `defense-aerospace-roadmap.md`):
-
-- **Operator:** Progress Platform itself (the system integrator entity). Signing key offline; HSM target in Stage 3.
-- **Account:** per-customer (e.g. `acme-aerospace`). Account-signing key stored offline on customer-side or Progress-managed; documented custody chain.
-- **Account (sub):** per-facility, optionally. Allows facility-scoped JWT revocation without affecting other facilities.
-- **User:** per-service-instance (e.g. `acme.vicenza.line3.bridge1`). Signed by the facility's Account key.
-
-**Revocation:** documented procedure with RTO < 1 hour. Account JWT carries a `revocations` field maintained centrally. Revocation list propagation tested as part of DR drills.
-
-### 3.8 Security model summary
-
-| Concern | Posture |
-|---|---|
-| **Transport** | mTLS end-to-end (NATS, API, DB, Prefect, internal HTTP). External edge: Traefik + Let's Encrypt or customer-CA-issued cert (see `km/architecture/https.md`). Internal: cert-manager + internal CA (offline root + online intermediate). |
-| **Identity** | Decentralised NATS JWT (Operator → Account → User) + Progress-API JWT (Ed25519 post-Stage-1; HS256 today per `backend/api/utils/auth.py`). |
-| **Revocation** | NATS revocation lists + Progress `Token.revoked` collection. Documented RTO. |
-| **Audit trail** | Event-sourced platform events (immutable in Postgres post-ADR-0011); structured audit events on NATS `audit.*`; `pgAudit` on the DB. NIST 800-171 AU-family coverage. |
-| **Encryption at rest** | LUKS at host level; Postgres TDE (Cybertec / Percona) for customers requiring FIPS-validated modules in Stage 3. |
-| **Supply chain** | Cosign-signed images; SBOM (syft) per image; signing key in sealed file (Stage 1) → HSM (Stage 3). SLSA L3 target in Stage 3. |
-| **Vulnerability management** | Dependabot + Renovate + weekly image vuln scan; public CVD policy from Stage 2. |
-| **Multi-tenancy isolation** | NATS account-level isolation between customers in Managed Cloud; documented pen-test scope from Stage 1. |
-
-### 3.9 High availability and disaster recovery
+### 3.6 High availability and disaster recovery
 
 **HA topology (on-prem, customer-deployed):**
 
@@ -458,6 +343,8 @@ Managed Cloud uses the same primitives, operated by Progress, with documented mu
 ---
 
 ## 4. Data lifecycle
+
+> Audit-trail and compliance-evidence aspects of the lifecycle are in `km/security/iiot-security.md`.
 
 ### 4.1 Telemetry path
 
@@ -503,20 +390,7 @@ Side-effect fan-out via Managers + NATS subjects (events.*)
 Downstream consumers (notifications, automations, reports)
 ```
 
-The event sourcing model is what makes the AS9100D 7.5 + 8.5.2 evidence story essentially free — every state-changing operation is captured as an immutable event before it becomes a state mutation, with the transaction guaranteeing both halves succeed or neither does.
-
-### 4.3 Audit + compliance evidence
-
-| Standard | Control family | How Progress evidences it |
-|---|---|---|
-| **AS9100D 7.5** (documented information) | Records | Event store is the system of record; all events immutable, queryable, exportable |
-| **AS9100D 8.5.2** (identification & traceability) | Genealogy | Serial graph (`contains` edges, see ADR-0011) + event history per serial = full as-built/as-maintained chain |
-| **NIST 800-171 AU-2/AU-3** | Auditable events | `audit.*` NATS subjects + `pgAudit` + platform event store |
-| **IEC 62443-3-3 SR 2.8** | Auditable events | Same as above |
-| **NIS2 Article 21** | Incident handling | Incident response runbook (Stage 2) + audit-trail forensic preservation |
-| **GDPR Art. 30** | Records of processing | Documented data classification + replication policy per §3.6 |
-
-A dedicated `km/compliance/matrix.md` (Stage 0 deliverable per defense roadmap) maps every applicable control to evidence pointers in the codebase / deployment.
+The event sourcing model is what makes the AS9100D 7.5 + 8.5.2 evidence story essentially free — every state-changing operation is captured as an immutable event before it becomes a state mutation, with the transaction guaranteeing both halves succeed or neither does. (Compliance mapping: `km/security/iiot-security.md`.)
 
 ---
 
@@ -540,32 +414,31 @@ Progress is the substrate; it must integrate cleanly with the customer's existin
 - **Vulnerability management:** SBOMs published per release; integration with customer's vuln scanner via standard SPDX / CycloneDX formats.
 
 **Analytics estate:**
-- Customers running their own data lake (Snowflake, Databricks, BigQuery): Progress exports via Debezium-style CDC or scheduled bulk export; data residency rules from §3.6 apply.
+- Customers running their own data lake (Snowflake, Databricks, BigQuery): Progress exports via Debezium-style CDC or scheduled bulk export; data residency rules from §3.5 apply.
 
 ---
 
 ## 6. Open questions / unresolved
 
-Listed because pretending they're solved would be dishonest. Resolution path noted.
+Listed because pretending they're solved would be dishonest. Resolution path noted. Security-specific open questions are tracked in `km/security/iiot-security.md`.
 
 1. **Edge OTA orchestrator implementation** — write our own thin updater on podman+systemd vs adopt Mender / RAUC. ADR pending; depends on Stage 1 spike.
-2. **PKI substrate** — internal cert-manager + our CA vs customer-issued certs from their CA vs hybrid. Likely customer-driven per deployment.
-3. **AGE vs recursive-CTE** for graph queries on Postgres — per ADR-0011 spike (Stage 0.5).
-4. **Bytewax adoption timing** — per ADR-0009 (post-demo). Affects whether streaming processing happens in-bridge (today) or in a separate stream-processing tier (future).
-5. **Reports/UI strategy at scale** — Streamlit is right for current customer profile; tier-1 customers will want full-featured BI integration (PowerBI / Tableau / Grafana Enterprise). Plan TBD.
-6. **Commercial-support function shape** — see `defense-aerospace-roadmap.md` §5 + companion conversation on solo-maintainer positioning at tier-1 scale.
-7. **Live-config-without-redeploy workflow** — the immutable-infrastructure stance (§3.3) means every behaviour change requires a new signed image. This is a security feature but an operational tension for customers used to runtime config knobs. Resolution path: invest in a CI/CD pipeline that makes "change threshold → new image → new deploy" feel like 90 seconds end-to-end; document the workflow as a feature, not a limitation. Stage 2 deliverable. Where customers reject immutable infrastructure outright, document the trade-off frankly and let the customer choose — do not add a runtime-config back-channel that undermines the control-plane security model.
+2. **AGE vs recursive-CTE** for graph queries on Postgres — per ADR-0011 spike (Stage 0.5).
+3. **Bytewax adoption timing** — per ADR-0009 (post-demo). Affects whether streaming processing happens in-bridge (today) or in a separate stream-processing tier (future).
+4. **Reports/UI strategy at scale** — Streamlit is right for current customer profile; tier-1 customers will want full-featured BI integration (PowerBI / Tableau / Grafana Enterprise). Plan TBD.
+5. **Commercial-support function shape** — see `defense-aerospace-roadmap.md` §5 + companion conversation on solo-maintainer positioning at tier-1 scale.
 
 ---
 
 ## 7. Reference list
 
 **Internal:**
+- `km/security/iiot-security.md` — IIoT security model (control plane, identity/PKI, supply chain, audit/compliance)
 - `km/strategy/defense-aerospace-roadmap.md` — security / compliance posture roadmap
 - `km/strategy/arangodb-migration.md` — substrate migration analysis
-- `km/architecture/https.md` — Traefik / TLS setup
+- `km/security/https.md` — Traefik / TLS setup
 - `km/architecture/sparkplug.md` — Sparkplug B integration details
-- `km/auth/tokens.md` — current API token lifecycle
+- `km/security/tokens.md` — current API token lifecycle
 - `.planning/workstreams/sparkplug-demo/decisions/0002-nats-subject-taxonomy.md`
 - `.planning/workstreams/sparkplug-demo/decisions/0005-timescale-schema-and-downsampling.md`
 - `.planning/workstreams/sparkplug-demo/decisions/0008-natsmqtt-subject-mapping.md`
@@ -590,3 +463,4 @@ Listed because pretending they're solved would be dishonest. Resolution path not
 | Version | Date | Author | Notes |
 |---|---|---|---|
 | v0.1 | 2026-05-21 | CTO | Initial draft; supersedes external "IIoT Edge-to-Cloud Architecture Spec v1.0" by addressing security, supply-chain, HA, and federation gaps surfaced in the May 2026 architectural review. |
+| v0.1 (split) | 2026-05-26 | CTO | Split the original single document into this architecture reference and a companion `km/security/iiot-security.md`. Control plane (signed manifests), provisioning/identity, security-model summary, and audit/compliance moved to the security doc; topology, data plane, edge deployment, protocols, federation, HA, and data lifecycle remain here. Moved `km/architecture/https.md` → `km/security/https.md` and `km/auth/tokens.md` → `km/security/tokens.md`. |

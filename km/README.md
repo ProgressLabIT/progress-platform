@@ -45,6 +45,12 @@ Detailed documentation of the application's core capabilities, mapping to `backe
 - [Deployment](guides/deployment.md) - CI/CD pipelines and release process.
 - [AI Agent Rules](guides/agent-rules.md) - Instructions for AI assistants working in this repo.
 
+### 🔐 Security
+Security model, identity, and transport hardening.
+- [IIoT Security Model](security/iiot-security.md) - Control plane, signed updates, edge identity/PKI, audit & compliance evidence.
+- [Tokens (Authentication)](security/tokens.md) - JWT access/session/API tokens, SSE tickets, revocation.
+- [HTTPS / TLS](security/https.md) - Traefik termination, Let's Encrypt, custom certificates.
+
 ### 🛠️ Operations
 Runbooks and operational procedures for production / customer deployments.
 - [Workflow DB Recovery](operations/workflow-db-recovery.md) — `progress_workflow-db` crash-loop diagnosis and `pg_resetwal` recovery.
