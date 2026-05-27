@@ -789,10 +789,11 @@ const helpFunctionGroups = computed(() => [
 </style>
 
 <style>
-/* Ant Design Select/Cascader dropdowns are portalled to document.body with z-index ~1050.
-   Quasar q-dialog uses z-index ~6000. Override so pdfme prop-panel dropdowns are visible. */
+/* Ant Design dropdowns are portalled to document.body with z-index ~1050.
+   Quasar q-dialog uses z-index ~6000. Override so pdfme prop-panel and ctl-bar menus are visible. */
 .ant-select-dropdown,
-.ant-cascader-dropdown {
+.ant-cascader-dropdown,
+.ant-dropdown {
   z-index: 9999 !important;
 }
 </style>
