@@ -440,6 +440,16 @@
             @click.stop="updateTasks"
           />
           <q-btn color="theme-grey" unelevated size="0.75rem" :label="$t('cancel_changes')" @click.stop="exitEditMode"/>
+          <q-btn
+            v-if="selected_tasks.size"
+            color="theme-red"
+            icon="mdi-delete"
+            unelevated
+            size="0.75rem"
+            :label="$t('delete')"
+            :loading="deleting"
+            @click.stop="bulkDeleteSelected"
+          />
         </div>
   </div>
 
@@ -511,6 +521,7 @@ const hoveredTask = ref(null);
 const edit_mode = ref(false);
 const selected_tasks = ref(new Set());
 const saving = ref(false);
+const deleting = ref(false);
 
 // task edit fields
 const task_start_from = ref(null);
@@ -612,6 +623,53 @@ function exitEditMode() {
   task_assigned_to.value = [];
   task_owner_key.value = null;
   task_status.value = null;
+}
+
+async function bulkDeleteSelected() {
+  const taskKeys = Array.from(selected_tasks.value);
+  const count = taskKeys.length;
+
+  $q.dialog({
+    title: t('task_delete'),
+    message: t('task_delete_confirmation_bulk', { count }),
+    cancel: true,
+    persistent: false,
+  }).onOk(async () => {
+    deleting.value = true;
+    try {
+      const results = await taskStore.bulkDeleteTasks(taskKeys);
+      const softCount = results.filter(r => r.success && r.mode === 'soft').length;
+      const hardCount = results.filter(r => r.success && r.mode === 'hard').length;
+      const failCount = results.filter(r => !r.success).length;
+
+      if (softCount > 0) {
+        $q.notify({
+          message: t('task_bulk_delete_summary', { hard: hardCount, soft: softCount, fail: failCount }),
+          color: 'theme-orange',
+          timeout: 5000,
+          position: 'top',
+        });
+      } else {
+        $q.notify({
+          message: t('task_delete_success'),
+          color: 'theme-green',
+          timeout: 2000,
+          position: 'top',
+        });
+      }
+      exitEditMode();
+    } catch (error) {
+      console.error('Error bulk deleting tasks:', error);
+      $q.notify({
+        message: t('errors.delete_err'),
+        color: 'theme-red',
+        timeout: 3000,
+        position: 'top',
+      });
+    } finally {
+      deleting.value = false;
+    }
+  });
 }
 
 function initUserOptions() {

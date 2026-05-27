@@ -185,6 +185,20 @@
                     {{ $t('cancel_task') }}
                   </q-tooltip>
                 </q-btn>
+
+                <!-- DELETE BUTTON -->
+                <q-btn
+                  size="10px"
+                  flat
+                  icon="mdi-delete-outline"
+                  round
+                  color="negative"
+                  @click="deleteTask"
+                >
+                  <q-tooltip anchor="center right" self="center left" :delay="200">
+                    {{ $t('task_delete') }}
+                  </q-tooltip>
+                </q-btn>
               </div>
             </div>
 
@@ -1168,6 +1182,20 @@ async function suspendTask() {
 async function cancelTask() {
   await taskStore.cancelTaskWithConfirmation(props.taskKey, $t);
   await fetchTaskData();
+}
+
+async function deleteTask() {
+  const deleted = await taskStore.deleteTaskWithConfirmation(props.taskKey, $t);
+  if (deleted) {
+    // Task is gone — navigate back
+    if (route.query.back_to) {
+      const query = { ...route.query };
+      delete query.back_to;
+      router.push({ name: route.query.back_to, query });
+    } else {
+      router.back();
+    }
+  }
 }
 
 // Activate task

@@ -220,6 +220,7 @@ class Queries:
       Task: { type: 'task', code: 'code' }
     }
     FOR t IN Task
+    FILTER t.deleted == null
     FILTER
       (@search ? CONTAINS(LOWER(CONCAT(t.code, ' ', t.title)), LOWER(@search)) : true)
       && (@task_type_key ? t.task_type_key == @task_type_key : true)
@@ -304,7 +305,7 @@ class Queries:
     }
 
     FOR t IN Task
-    FILTER t._key == @task_key
+    FILTER t._key == @task_key AND t.deleted == null
 
     LET task_type = FIRST(
       FOR tt IN TaskType

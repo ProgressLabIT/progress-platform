@@ -1,4 +1,5 @@
 import traceback
+import uuid
 from datetime import datetime
 from typing import Annotated
 from base64 import b64decode
@@ -6,12 +7,15 @@ import json
 
 from fastapi import APIRouter, Body, HTTPException, Query, Depends
 from fastapi.encoders import jsonable_encoder
+from pydantic import BaseModel
 
 from models.collaboration import *
+from models.event import EventType
 from utils.api import APIResponse
 from utils import auth
 from utils.db import db
 from utils.collaboration import Queries
+from events.collaboration.task_deleted import TaskDeletedEvent
 
 router = APIRouter()
 
@@ -378,6 +382,106 @@ async def get_task_data(task_key: str):
       status_code=500,
       detail=traceback.format_exc()
     )
+
+
+class BulkDeleteRequest(BaseModel):
+  task_keys: list[str]
+  user_key: str | None = None
+  user_session_key: str | None = None
+
+
+@router.delete(
+  '/task/{task_key}',
+  response_model=APIResponse,
+  responses={
+    404: {"description": "Task not found or already deleted"},
+    500: {"description": "Database error during task deletion"},
+  },
+  dependencies=[Depends(auth.verify_token)],
+)
+async def delete_task(task_key: str, user_key: str | None = None, user_session_key: str | None = None):
+  """Delete a task by key.
+
+  If no events exist for the task beyond `TASK_CREATED` the task document,
+  its `task_rel` edges, and the `TASK_CREATED` event are permanently removed.
+  Otherwise the task is soft-deleted (hidden from all listings) while its
+  history is preserved.
+
+  Returns `mode: 'hard'` for permanent deletion or `mode: 'soft'` for
+  history-preserving soft-delete.
+
+  **Emits:** `TASK_DELETED`
+
+  **Required scope:** `collaboration:task:delete`
+  """
+  try:
+    task = db.collection('Task').get(task_key)
+    if task is None:
+      raise HTTPException(status_code=404, detail=f"Task {task_key} not found")
+    if task.get('deleted') is not None:
+      raise HTTPException(status_code=404, detail=f"Task {task_key} is already deleted")
+
+    event = TaskDeletedEvent(info=dict(
+      event_type=EventType.TASK_DELETED,
+      task_key=task_key,
+      user_key=user_key,
+      user_session_key=user_session_key,
+      primary=True,
+    ))
+    event.save()
+    return APIResponse(message=event.response['message'], detail=event.response)
+  except HTTPException:
+    raise
+  except Exception:
+    raise HTTPException(status_code=500, detail=traceback.format_exc())
+
+
+@router.post(
+  '/task/bulk-delete',
+  response_model=list[dict],
+  responses={
+    500: {"description": "Unexpected error during bulk delete"},
+  },
+  dependencies=[Depends(auth.verify_token)],
+)
+async def bulk_delete_tasks(request: BulkDeleteRequest):
+  """Delete multiple tasks in a single request.
+
+  Each task is processed independently so a failure on one does not roll back
+  the others. Returns a list of per-task results with `task_key`, `mode`
+  (`hard` | `soft`), `success` (bool), and an optional `error` string.
+
+  **Emits:** `TASK_DELETED` (one event per task)
+
+  **Required scope:** `collaboration:task:delete`
+  """
+  shared_event_group = str(uuid.uuid4())
+  results = []
+
+  for task_key in request.task_keys:
+    try:
+      task = db.collection('Task').get(task_key)
+      if task is None:
+        results.append(dict(task_key=task_key, success=False, error="Task not found"))
+        continue
+      if task.get('deleted') is not None:
+        results.append(dict(task_key=task_key, success=False, error="Task already deleted"))
+        continue
+
+      event = TaskDeletedEvent(info=dict(
+        event_type=EventType.TASK_DELETED,
+        task_key=task_key,
+        event_group=shared_event_group,
+        user_key=request.user_key,
+        user_session_key=request.user_session_key,
+        primary=True,
+      ))
+      event.save()
+      results.append(dict(task_key=task_key, success=True, **event.response))
+    except Exception as exc:
+      results.append(dict(task_key=task_key, success=False, error=str(exc)))
+
+  return results
 
 
 @router.get(

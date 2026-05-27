@@ -451,6 +451,16 @@ class Task(ArangoDocument):
     description="ArangoDB `_key` of the User who closed this task.",
     examples=["user42"],
   )
+  deleted: datetime | None = Field(
+    None,
+    description="UTC timestamp at which this task was soft-deleted (history preserved). null while active.",
+    examples=[None],
+  )
+  deleted_by: str | None = Field(
+    None,
+    description="_key of the TASK_DELETED Event that triggered the soft-delete. Trace back to actor and timestamp via this event.",
+    examples=[None],
+  )
   title: str | None = Field(
     None,
     description="Short title describing what needs to be done.",

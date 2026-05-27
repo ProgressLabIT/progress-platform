@@ -25,6 +25,7 @@ from events.collaboration.task_reopened import TaskReopenedEvent
 from events.collaboration.task_suspended import TaskSuspendedEvent
 from events.collaboration.task_linked import TaskLinkedEvent
 from events.collaboration.task_unlinked import TaskUnlinkedEvent
+from events.collaboration.task_deleted import TaskDeletedEvent
 
 #INVENTORY EVENTS
 from events.inventory.base_inventory import BaseInventoryEvent

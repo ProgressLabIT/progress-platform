@@ -39,6 +39,7 @@ class EventType(str, Enum):
   TASK_SUSPENDED = 'TASK_SUSPENDED'
   TASK_LINKED = 'TASK_LINKED'
   TASK_UNLINKED = 'TASK_UNLINKED'
+  TASK_DELETED = 'TASK_DELETED'
 
   # Admin Events
   # e.g. WorkSession time Forced, etc.

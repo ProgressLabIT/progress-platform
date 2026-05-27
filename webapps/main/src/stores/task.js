@@ -288,17 +288,65 @@ export const useTaskStore = defineStore('task', {
     },
 
     async deleteTask(taskKey) {
-      try {
-        await api.delete(`/task/${taskKey}`)
-        // Remove task from local state
-        const taskIndex = this.tasks.findIndex(task => task._key === taskKey)
-        if (taskIndex !== -1) {
-          this.tasks.splice(taskIndex, 1)
-        }
-      } catch (error) {
-        console.error('Error deleting task:', error)
-        throw error
+      const { data } = await api.delete(`/task/${taskKey}`)
+      const taskIndex = this.tasks.findIndex(task => task._key === taskKey)
+      if (taskIndex !== -1) {
+        this.tasks.splice(taskIndex, 1)
       }
+      return data?.detail ?? {}
+    },
+
+    async deleteTaskWithConfirmation(taskKey, t) {
+      return new Promise((resolve) => {
+        Dialog.create({
+          title: t('task_delete'),
+          message: t('task_delete_confirmation'),
+        }).onOk(async () => {
+          try {
+            const result = await this.deleteTask(taskKey)
+            if (result.mode === 'soft') {
+              Notify.create({
+                message: t('task_delete_soft_warning'),
+                color: 'theme-orange',
+                timeout: 4000,
+                position: 'top',
+              })
+            } else {
+              Notify.create({
+                message: t('task_delete_success'),
+                color: 'theme-green',
+                timeout: 2000,
+                position: 'top',
+              })
+            }
+            resolve(true)
+          } catch (error) {
+            console.error('Error deleting task:', error)
+            Notify.create({
+              message: t('errors.delete_err'),
+              color: 'theme-red',
+              timeout: 3000,
+              position: 'top',
+            })
+            resolve(false)
+          }
+        }).onCancel(() => {
+          resolve(false)
+        })
+      })
+    },
+
+    async bulkDeleteTasks(taskKeys, userKey = null) {
+      const { data } = await api.post('/task/bulk-delete', {
+        task_keys: taskKeys,
+        user_key: userKey,
+      })
+      // Remove successfully deleted tasks from local state
+      const deletedKeys = new Set(
+        data.filter(r => r.success).map(r => r.task_key)
+      )
+      this.tasks = this.tasks.filter(t => !deletedKeys.has(t._key))
+      return data
     },
 
     // Task activation/deactivation methods
