@@ -449,7 +449,7 @@ const tempData = reactive({})
 
 
 async function getWoData() {
-  if (props.wo) {
+  if (props.wo?.jobs) {
     Object.assign(woData, props.wo)
     return
   }
@@ -494,7 +494,7 @@ watch(() => props.job?.wo_key || props.wo?._key, async (wo_key) => {
 
 // Watch for changes in props.wo to update woData
 watch(() => props.wo, (newWo) => {
-  if (newWo) {
+  if (newWo?.jobs) {
     Object.assign(woData, newWo)
   }
 }, { deep: true })
