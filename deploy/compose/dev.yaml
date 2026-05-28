@@ -31,7 +31,7 @@ services:
     networks:
       - progress
     build:
-      context: ./backend/api
+      context: ../../backend/api
     logging:
       driver: "json-file"
       options:
