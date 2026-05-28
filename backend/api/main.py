@@ -2,9 +2,11 @@ import asyncio
 import logging
 
 from fastapi import FastAPI
+from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.cors import CORSMiddleware
 
 from utils.config import get_config
+import utils.error_log as error_log
 import utils.nats_client as nats_client
 from managers.server_event_manager import ServerEventManager
 from middlewares.gzipfilter_middleware import GZipFilterMiddleware
@@ -83,6 +85,11 @@ app.add_middleware(
 
 app.add_middleware(GZipFilterMiddleware, minimum_size=500, filtered_api="/notification")
 
+# Persist 5xx failures to ArangoDB for inspection (see utils/error_log.py).
+# StarletteHTTPException covers FastAPI's HTTPException and the codebase's HTTPError.
+app.add_exception_handler(StarletteHTTPException, error_log.http_exception_handler)
+app.add_exception_handler(Exception, error_log.unhandled_exception_handler)
+
 
 """
 Each package __init__ file imports the router object from the
@@ -93,8 +100,15 @@ relative endpoint.py module, so it's easily available here
 async def hello():
   return 'Hi!'
 
+
+@app.post("/debug-boom")
+async def debug_boom():
+    raise HTTPException(status_code=500, detail="manual test boom")
+
 @app.on_event("startup")
 async def startup_event():
+    error_log.ensure_collection()
+
     nc = await nats_client.connect(config.nats_url)
 
     async def on_notification(msg):

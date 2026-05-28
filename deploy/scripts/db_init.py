@@ -146,6 +146,15 @@ class DBIndex(BaseModel):
   fields: list[str]
   name: str
   storedValues: list[str] | None = Field(None, exclude=True)
+  expireAfter: int | None = Field(None, exclude=True)  # seconds; TTL indexes only
+
+  def model_dump(self, **kwargs):
+    # expireAfter is excluded by default so persistent indexes don't emit it;
+    # re-add it only for TTL indexes where it is actually set.
+    data = super().model_dump(**kwargs)
+    if self.expireAfter is not None:
+      data['expireAfter'] = self.expireAfter
+    return data
 
 class Collection(BaseModel):
   name: str
@@ -382,6 +391,9 @@ collections = [
     DBIndex(fields=['batch_key, canceled'], name='ws-batch-canceled'),
   ]),
   Collection(name='event_source'),  # Edge collection for parent-child event relationships
+  Collection(name='ErrorLog', indexes=[
+    DBIndex(type='ttl', fields=['ts'], name='errorlog-ttl', expireAfter=2592000)  # 30-day retention
+  ]),
 ]
 
 
