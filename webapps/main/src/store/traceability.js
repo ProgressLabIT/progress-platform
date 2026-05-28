@@ -125,9 +125,16 @@ const traceability = {
     },
 
     SET_HEARTBEAT(state, alive) {
-      alive
-        ? (state.heartbeat = setInterval(() => sendHeartBeat(state), 10000))
-        : clearInterval(state.heartbeat);
+      // Always clear any existing interval before (re)setting. Without this
+      // guard, calling SET_HEARTBEAT(true) twice orphans the previous timer
+      // handle and leaks an interval that fires forever until the tab closes.
+      if (state.heartbeat) {
+        clearInterval(state.heartbeat);
+        state.heartbeat = null;
+      }
+      if (alive) {
+        state.heartbeat = setInterval(() => sendHeartBeat(state), 10000);
+      }
     },
 
     SET_CURRENT_STEP_KEY(state, stepKey) {

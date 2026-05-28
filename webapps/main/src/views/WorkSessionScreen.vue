@@ -555,6 +555,9 @@ export default {
     window.removeEventListener('beforeunload', this.beforeUnloadAlert);
     this.$store.state.traceability.current_step_key = undefined;
     this.$store.commit('UPDATE_BATCH_SERIALS', []);
+    // Stop heartbeat on screen teardown so route changes / hot-reloads /
+    // any unmount path don't leave the 10s interval running.
+    this.$store.commit('SET_HEARTBEAT', false);
   },
 
   methods: {
