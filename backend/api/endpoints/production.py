@@ -522,6 +522,8 @@ async def delete_work_order(wo_key: str):
     tx.commit_transaction()
     return APIResponse(message='Work order deleted correctly')
 
+  except HTTPException:
+    raise
   except Exception as e:
     tx.abort_transaction()
 
