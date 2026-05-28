@@ -542,7 +542,7 @@ async def delete_work_order(wo_key: str):
 
 @router.get('/work-order-search-opts',
     dependencies=[Depends(auth.verify_token)],
-    response_model=APIResponse,
+    response_model=list,
     responses={})
 async def search_work_orders():
   """Return distinct work order code/project code options for search filters.
@@ -564,7 +564,7 @@ async def search_work_orders():
 
 @router.get('/work-order',
     dependencies=[Depends(auth.verify_token)],
-    response_model=APIResponse,
+    response_model=list,
     responses={})
 async def search_work_orders(
   search: str | None = None,

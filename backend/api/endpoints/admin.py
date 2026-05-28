@@ -85,7 +85,7 @@ async def reset_production_and_traceability_data():
     for dir in media_directories:
       clean_dir("/media/"+dir)
 
-    return 'Reset of Production and Traceability data successful'
+    return APIResponse(message='Reset of Production and Traceability data successful')
 
   except Exception:
     tx.abort_transaction()
@@ -127,7 +127,7 @@ async def reset_warehouse_data():
       FILTER IS_SAME_COLLECTION(Product, i._from)
       REMOVE i IN is_in_position
     """)
-    return 'Reset of inventory data successful'
+    return APIResponse(message='Reset of inventory data successful')
 
   except Exception:
     tx.abort_transaction()
@@ -238,7 +238,7 @@ async def force_delete_work_order_data(work_order_key: str):
 
     # 9. Commit and return
     tx.commit_transaction()
-    return f"All data related to WorkOrder {work_order_key} has been deleted."
+    return APIResponse(message=f"All data related to WorkOrder {work_order_key} has been deleted.")
 
   except Exception:
     tx.abort_transaction()

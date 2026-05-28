@@ -559,3 +559,39 @@ class TestWorkOrderCRUD:
         assert wo_detail.get("project_code") == "PRJ-Y", (
             f"Expected project_code='PRJ-Y' after POST /event, got {wo_detail.get('project_code')!r}"
         )
+
+
+class TestResponseModelContract:
+    """Regression for the `response_model=APIResponse` + bare-return mismatch
+    (commit ca6a9fbc) that made these routes 500 on every call. List-returning
+    endpoints must serialize as a JSON array; the admin reset must return an
+    APIResponse envelope.
+    """
+
+    async def test_search_opts_returns_list_not_500(self, client, auth_headers):
+        """GET /work-order-search-opts returned 500 unconditionally (list under
+        response_model=APIResponse). It must return 200 with a JSON list whose
+        single element carries the option groups the UI reads as data[0]."""
+        auth_headers("operator production admin")
+        resp = await client.get("/work-order-search-opts")
+        assert resp.status_code == 200, f"got {resp.status_code}: {resp.text}"
+        body = resp.json()
+        assert isinstance(body, list), f"expected list, got {type(body).__name__}"
+        # query always yields one options object; frontend reads body[0].wo_codes
+        assert {"phases", "products", "wo_codes"} <= set(body[0].keys())
+
+    async def test_work_order_search_returns_list_not_500(self, client, auth_headers):
+        """GET /work-order returned 500 unconditionally; must return a JSON list."""
+        auth_headers("operator production admin")
+        resp = await client.get("/work-order")
+        assert resp.status_code == 200, f"got {resp.status_code}: {resp.text}"
+        assert isinstance(resp.json(), list)
+
+    async def test_reset_inventory_returns_envelope_not_500(self, client, auth_headers):
+        """DELETE /reset/inventory returned 500 (bare string under
+        response_model=APIResponse); must return a 200 APIResponse envelope."""
+        auth_headers("operator production admin")
+        resp = await client.delete("/reset/inventory")
+        assert resp.status_code == 200, f"got {resp.status_code}: {resp.text}"
+        body = resp.json()
+        assert isinstance(body, dict) and "message" in body and "status" in body
