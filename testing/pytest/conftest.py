@@ -411,6 +411,7 @@ def create_product(db):
                 "order": p_idx,
                 "name": f"Phase {p_idx + 1}",
                 "alias": f"P{p_idx + 1}",
+                "step_sequence": [],  # required by GET_PRODUCTION_PROCESS AQL: FOR step_key IN phase.step_sequence — null crashes with ERR 1563
             }
             db.collection("Phase").insert(phase)
             phases.append(phase)
@@ -436,6 +437,14 @@ def create_product(db):
                 db.collection("Step").insert(step)
                 steps.append(step)
                 step_global_idx += 1
+
+        # Link phases to product.process_phases so POST /work-order resolves
+        # the phase sequence instead of falling back to the ['default'] sentinel.
+        # Without this, PhaseData(alias='default') is called and fails under Pydantic v2
+        # because product_key and operation_key are required fields with no default.
+        phase_keys = [p["_key"] for p in phases]
+        db.collection("Product").update({"_key": product_key, "process_phases": phase_keys})
+        product["process_phases"] = phase_keys
 
         return {
             "product": product,

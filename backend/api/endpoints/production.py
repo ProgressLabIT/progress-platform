@@ -2,6 +2,9 @@ import traceback
 from datetime import datetime
 from typing import List
 
+from events.production.work_order_events import WorkOrderUpdatedEvent
+from models.event import EventType
+
 from fastapi import APIRouter, Body, HTTPException, Query, Depends
 from utils import auth
 
@@ -211,46 +214,32 @@ async def update_work_order(
   propagate to jobs (start date, project code). Commits all changes in a
   single transaction.
 
-  **Emits:** *(direct transaction — no event class)*
+  **Emits:** WORK_ORDER_UPDATED
   **Required scope:** `production:work-order:update`
   """
 
   try:
-    tx = db.begin_transaction(write=['WorkOrder', 'Job'])
-    wo_update = dict(_key=wo_key)
-    job_match = dict(wo_key=wo_key)
-    job_update = dict()
+    event = WorkOrderUpdatedEvent(info=dict(
+      event_type=EventType.WORK_ORDER_UPDATED,
+      work_order_key=wo_key,
+      new_due_date=new_due_date,
+      new_from_date=new_from_date,
+      new_project_code=new_project_code,
+      new_bom=new_bom,
+      new_output_position_key=new_output_position_key,
+      notes=notes,
+      primary=True,
+    ))
+    event.save()
+    return APIResponse(detail=event.response)
 
-    if new_due_date is not None:
-      wo_update['due_by'] = new_due_date
-
-    if notes is not None:
-      wo_update['notes'] = notes
-
-    if new_from_date is not None:
-      wo_update['start_from'] = new_from_date
-      job_update.update({ 'start_from': new_from_date })
-
-    if new_project_code is not None:
-      wo_update['project_code'] = new_project_code
-      job_update.update({ 'project_code': new_project_code })
-
-    if new_project_code or new_from_date:
-      tx.collection('Job').update_match(job_match, job_update)
-
-    if new_bom:
-      wo_update['wo_bom'] = new_bom
-
-    if new_output_position_key:
-      wo_update['output_position_key'] = new_output_position_key
-
-    updated_wo_data = tx.collection('WorkOrder').update(wo_update, return_new=True)['new']
-
-    tx.commit_transaction()
-    return APIResponse(detail=updated_wo_data)
+  except ValueError as e:
+    raise HTTPException(status_code=422, detail=dict(
+      error_type=e.__class__.__name__,
+      message=e.args[0] if e.args else None,
+    ))
 
   except Exception:
-    tx.abort_transaction()
     raise HTTPError(500, "There was a problem updating the work order")
 
 # ----------------------------------------------------------------------
