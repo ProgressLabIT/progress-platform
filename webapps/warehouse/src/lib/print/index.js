@@ -51,26 +51,28 @@ function buildPositionContext(positionCode) {
 
 /**
  * Resolve all fields of a template against a context object.
- * Returns inputs array suitable for generateZpl().
+ * Returns inputs array suitable for generateZpl(): a single merged record
+ * holding every field across all pages (pdfme record semantics — one record
+ * renders the whole multi-page template). Field names are unique template-wide.
  */
 function resolveTemplateInputs(templateData, context) {
   const schemas = templateData.template?.schemas || [];
-  return schemas.map(pageSchema => {
-    const fields = normalizePageSchema(pageSchema);
-    return Object.fromEntries(
-      fields.map(field => {
-        let value = '';
-        if (field.linkType === 'preset' && field.linkValue) {
-          value = context.getPresetValue(field.linkValue) ?? '';
-        } else if (field.linkType === 'template_expression' && field.templateExpression) {
-          value = resolveExpression(field.templateExpression, context, []) ?? '';
-        } else if (!field.linkType || field.linkType === 'none') {
-          value = field.content ?? '';
-        }
-        return [field.name, String(value)];
-      })
-    );
-  });
+  const record = {};
+  for (const pageSchema of schemas) {
+    for (const field of normalizePageSchema(pageSchema)) {
+      if (!field.name) continue;
+      let value = '';
+      if (field.linkType === 'preset' && field.linkValue) {
+        value = context.getPresetValue(field.linkValue) ?? '';
+      } else if (field.linkType === 'template_expression' && field.templateExpression) {
+        value = resolveExpression(field.templateExpression, context, []) ?? '';
+      } else if (!field.linkType || field.linkType === 'none') {
+        value = field.content ?? '';
+      }
+      record[field.name] = String(value);
+    }
+  }
+  return [record];
 }
 
 /**

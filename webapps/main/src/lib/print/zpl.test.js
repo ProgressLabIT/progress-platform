@@ -46,13 +46,22 @@ describe('Envelope', () => {
     expect(result.indexOf('^PQ3')).toBeLessThan(result.lastIndexOf('^XZ'));
   });
 
-  it('2-page template returns two ^XA...^XZ blocks', () => {
+  it('2-page template: one record renders both pages as two ^XA...^XZ blocks', () => {
+    // pdfme semantics: a single record fills the whole multi-page template.
     const template = makeTemplate([makeField()], 2);
-    const result = generateZpl(template, [{}, {}]);
+    const result = generateZpl(template, [{}]);
     const xaCount = (result.match(/\^XA/g) || []).length;
     const xzCount = (result.match(/\^XZ/g) || []).length;
     expect(xaCount).toBe(2);
     expect(xzCount).toBe(2);
+  });
+
+  it('multi-page values populate every page, not just the first', () => {
+    // Regression: per-page indexing left pages after the first blank.
+    const template = makeTemplate([makeField()], 3);
+    const result = generateZpl(template, [{ field1: 'PRESENT' }]);
+    const occurrences = (result.match(/\^FDPRESENT\^FS/g) || []).length;
+    expect(occurrences).toBe(3);
   });
 
   it('uses dpi=203 and quantity=1 by default', () => {

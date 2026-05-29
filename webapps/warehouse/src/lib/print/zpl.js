@@ -268,20 +268,31 @@ function renderPage(fields, inputValues, dpi, quantity, offsetXDots, offsetYDots
 /**
  * Generate a ZPL string from a pdfme template and resolved inputs.
  *
+ * Matches pdfme semantics: `inputs` is an array of RECORDS, and each record
+ * renders the entire multi-page template. Field names are unique across the
+ * whole template, so every page reads its values from the same record. One
+ * record over an N-page template therefore yields N ^XA...^XZ label blocks.
+ *
  * @param {object}  template          - pdfme template ({ basePdf, schemas })
- * @param {object[]} inputs           - Array of per-page input objects, e.g. [{ fieldName: value }]
+ * @param {object[]} inputs           - Array of record objects, each rendering all pages, e.g. [{ fieldName: value }]
  * @param {object}  [options]
  * @param {number}  [options.dpi=203] - Printer DPI (203 or 300)
  * @param {number}  [options.quantity=1] - ^PQ print quantity per label
  * @param {number}  [options.offsetX=0] - Horizontal calibration offset in mm (positive = shift right)
  * @param {number}  [options.offsetY=0] - Vertical calibration offset in mm (positive = shift down)
- * @returns {string} ZPL string, one ^XA...^XZ block per template page, joined with newlines
+ * @returns {string} ZPL string, one ^XA...^XZ block per (record × template page), joined with newlines
  */
 export function generateZpl(template, inputs, { dpi = DEFAULT_DPI, quantity = 1, offsetX = 0, offsetY = 0 } = {}) {
   const offsetXDots = mmToDots(offsetX, dpi);
   const offsetYDots = mmToDots(offsetY, dpi);
   const pages = schemasToV5(template.schemas);
-  return pages
-    .map((fields, pageIndex) => renderPage(fields, inputs?.[pageIndex] ?? {}, dpi, quantity, offsetXDots, offsetYDots))
-    .join('\n');
+  // pdfme requires ≥1 record; an empty inputs array still emits one blank label set.
+  const records = inputs?.length ? inputs : [{}];
+  const blocks = [];
+  for (const record of records) {
+    for (const fields of pages) {
+      blocks.push(renderPage(fields, record, dpi, quantity, offsetXDots, offsetYDots));
+    }
+  }
+  return blocks.join('\n');
 }

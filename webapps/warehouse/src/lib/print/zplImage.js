@@ -105,33 +105,33 @@ export async function imageToZplGraphic(base64DataUrl, widthMm, heightMm, dpi = 
  *
  * Non-image values pass through untouched. Returns a new inputs array.
  *
+ * `inputs` follows pdfme record semantics — each record holds every field
+ * across all template pages (field names are unique template-wide). Image
+ * fields from any page are therefore converted against each record directly,
+ * not by page index.
+ *
  * @param {object[][]} schemas  - pdfme v5 normalised schemas (array of page arrays)
- * @param {object[]}   inputs   - per-page input objects, e.g. [{ fieldName: value }]
+ * @param {object[]}   inputs   - record objects, each holding all fields, e.g. [{ fieldName: value }]
  * @param {number}     [dpi=203]
  * @returns {Promise<object[]>} new inputs array with images converted to ^GFA strings
  */
 export async function processZplImageFields(schemas, inputs, dpi = 203) {
-  const result = inputs.map(page => ({ ...page }));
+  const result = inputs.map(record => ({ ...record }));
+  const imageFields = schemas.flat().filter(f => f.name && IMAGE_TYPE_RE.test(f.type));
 
-  for (let pageIdx = 0; pageIdx < schemas.length; pageIdx++) {
-    const fields = schemas[pageIdx] || [];
-    const pageInputs = result[pageIdx] || (result[pageIdx] = {});
-
-    for (const field of fields) {
-      if (!field.name || !IMAGE_TYPE_RE.test(field.type)) continue;
-
-      const runtimeValue = pageInputs[field.name];
+  for (const record of result) {
+    for (const field of imageFields) {
+      const runtimeValue = record[field.name];
       const isUnlinked = !field.linkType || field.linkType === 'none';
       const dataUrl = runtimeValue || (isUnlinked ? field.content : '') || '';
 
       if (!dataUrl) continue;
 
       try {
-        const gfa = await imageToZplGraphic(dataUrl, field.width, field.height, dpi);
-        pageInputs[field.name] = gfa;
+        record[field.name] = await imageToZplGraphic(dataUrl, field.width, field.height, dpi);
       } catch (err) {
         console.warn(`[processZplImageFields] Failed to convert image "${field.name}":`, err);
-        pageInputs[field.name] = '';
+        record[field.name] = '';
       }
     }
   }
