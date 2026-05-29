@@ -860,6 +860,9 @@ async def get_job_data(job_key: str):
   try:
     job_data = db.aql.execute(Queries.GET_WORKING_JOB_DATA, bind_vars=bind_vars).next()
 
+  except StopIteration:
+    raise HTTPException(status_code=404, detail=f"Job/{job_key} not found")
+
   except:
     status_code=500
     response=dict(

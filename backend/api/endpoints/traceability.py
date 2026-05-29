@@ -1,5 +1,6 @@
 import traceback
 
+from arango.exceptions import DocumentUpdateError
 from fastapi import APIRouter, HTTPException, Depends
 from utils import auth
 
@@ -336,9 +337,9 @@ async def job_heartbeat(job_key: str, work_session_key: str | None = None):
   **Emits:** *(direct transaction — no event class)*
   **Required scope:** `traceability:batch-execution-record:read`
   """
+  now = timestamp()
+  tx = db.begin_transaction(write=['Job', 'WorkSession'])
   try:
-    now = timestamp()
-    tx = db.begin_transaction(write=['Job', 'WorkSession'])
     tx.collection('Job').update({"_key": job_key, "last_online": now})
 
     """
@@ -349,10 +350,26 @@ async def job_heartbeat(job_key: str, work_session_key: str | None = None):
 
     tx.commit_transaction()
 
-    return APIResponse(detail={"last_online": now})
+  except DocumentUpdateError as e:
+    # A concurrent writer can hold the same Job doc — another heartbeat, or a
+    # production event's update_job_last_online (base_production.py) touching
+    # last_online. The old bare `except` aborted and fell through returning
+    # None, which FastAPI then failed to serialise against APIResponse
+    # (ResponseValidationError → 500). Handle the race explicitly instead.
+    try:
+      tx.abort_transaction()
+    except Exception:
+      pass
+    if e.error_code == 1200:
+      # write-write conflict: the winning tx already wrote last_online, so the
+      # lost race is a harmless no-op for a heartbeat — report success.
+      return APIResponse(detail={"last_online": now})
+    if e.error_code == 1202:
+      # document not found: job closed/deleted → tell the client to stop beating.
+      raise HTTPException(status_code=404, detail=f"Job/{job_key} not found")
+    raise
 
-  except Exception:
-    tx.abort_transaction()
+  return APIResponse(detail={"last_online": now})
 
 
 @router.get('/wip',

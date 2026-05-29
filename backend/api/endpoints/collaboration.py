@@ -377,6 +377,8 @@ async def get_task_data(task_key: str):
   try:
     task = db.aql.execute(Queries.GET_TASK_DATA, bind_vars=dict(task_key=task_key)).next()
     return task
+  except StopIteration:
+    raise HTTPException(status_code=404, detail=f"Task/{task_key} not found")
   except Exception:
     raise HTTPException(
       status_code=500,
