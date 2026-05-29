@@ -23,24 +23,33 @@ def error_log_ready(db):
 
 @pytest.fixture
 def throwaway_routes():
-    """Register throwaway routes that deterministically raise, once."""
+    """Register throwaway routes that deterministically raise, then remove them.
+
+    `include_in_schema=False` keeps them out of /openapi.json (so schemathesis
+    never discovers them); teardown removes them from app.routes so route-
+    introspection tests (e.g. test_openapi_audit) in the shared session app
+    don't see them either. Without both, these test-only routes leak across the
+    session-scoped app and pollute other API tests.
+    """
     from main import app
 
-    existing = {getattr(r, "path", None) for r in app.router.routes}
+    test_paths = {"/_err500", "/_err400"}
 
-    if "/_err500" not in existing:
-        @app.post("/_err500")
-        async def _err500(payload: dict = Body(...)):
-            # Body is parsed (and cached on the request) before the failure — this
-            # mirrors real endpoints that 500 inside business logic post-validation.
-            raise HTTPException(status_code=500, detail="boom-traceback-string")
+    @app.post("/_err500", include_in_schema=False)
+    async def _err500(payload: dict = Body(...)):
+        # Body is parsed (and cached on the request) before the failure — this
+        # mirrors real endpoints that 500 inside business logic post-validation.
+        raise HTTPException(status_code=500, detail="boom-traceback-string")
 
-    if "/_err400" not in existing:
-        @app.post("/_err400")
-        async def _err400():
-            raise HTTPException(status_code=400, detail="bad request")
+    @app.post("/_err400", include_in_schema=False)
+    async def _err400():
+        raise HTTPException(status_code=400, detail="bad request")
 
-    return app
+    yield app
+
+    app.router.routes = [
+        r for r in app.router.routes if getattr(r, "path", None) not in test_paths
+    ]
 
 
 def _bearer(user_key="test-user-key"):
