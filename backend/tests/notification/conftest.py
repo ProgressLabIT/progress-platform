@@ -168,8 +168,17 @@ def fastapi_app(monkeypatch):
             yield  # pragma: no cover - makes this an async generator
         return
 
+    async def _empty_push_events_multi(self, request, topics):
+        # Same immediate-terminate stand-in for the multiplexed stream.
+        if False:
+            yield  # pragma: no cover - makes this an async generator
+        return
+
     monkeypatch.setattr(
         ServerEventManager, "push_events", _empty_push_events, raising=True
+    )
+    monkeypatch.setattr(
+        ServerEventManager, "push_events_multi", _empty_push_events_multi, raising=True
     )
 
     module_path = _API_PATH / "endpoints" / "notification.py"

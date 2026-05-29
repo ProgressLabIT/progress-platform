@@ -12,10 +12,15 @@ router = APIRouter()
 
 
 class SseTicketRequest(BaseModel):
-  topic: str = Field(
-    ...,
-    description="NATS / SSE topic the caller wants to subscribe to (e.g. `user:user42`, `task`, `inventory`).",
+  topic: str | None = Field(
+    default=None,
+    description="Single NATS / SSE topic the caller wants to subscribe to (e.g. `user:user42`, `task`, `inventory`). Legacy single-topic path — provide either this or `topics`.",
     examples=["user:user42"],
+  )
+  topics: list[str] | None = Field(
+    default=None,
+    description="Set of topics for a multiplexed stream (one EventSource carrying every subscribed topic). Provide either this or `topic`.",
+    examples=[["task", "message", "user:user42"]],
   )
 
 
@@ -72,20 +77,31 @@ async def mint_ticket(
 
   For `user:<key>` topics, the caller's consumer_key must match `<key>` —
   a user cannot mint a ticket that lets them eavesdrop on another user's
-  personal notification stream.
+  personal notification stream. This holds for every topic in a `topics` set.
+
+  Provide exactly one of `topic` (legacy single-topic stream) or `topics`
+  (multiplexed stream).
 
   **Emits:** *(SSE stream — emits are downstream NATS subjects)*
 
   **Required scope:** `notification:stream:subscribe`
   """
-  if body.topic.startswith("user:"):
-    _, _, suffix = body.topic.partition(":")
-    if suffix != token_data.consumer_key:
-      raise HTTPException(
-        status_code=403,
-        detail="Forbidden: topic does not match session user",
-      )
-  ticket = auth.issue_sse_ticket(token_data.consumer_key, body.topic)
+  if (body.topic is None) == (body.topics is None):
+    raise HTTPException(
+      status_code=422,
+      detail="Provide exactly one of `topic` or `topics`.",
+    )
+
+  if body.topics is not None:
+    if not body.topics:
+      raise HTTPException(status_code=422, detail="`topics` must be non-empty.")
+    for topic in body.topics:
+      _enforce_topic_access(topic, token_data)
+    ticket = auth.issue_sse_ticket_multi(token_data.consumer_key, body.topics)
+  else:
+    _enforce_topic_access(body.topic, token_data)
+    ticket = auth.issue_sse_ticket(token_data.consumer_key, body.topic)
+
   return SseTicketResponse(ticket=ticket, expires_in=auth.SSE_TICKET_TTL_SECONDS)
 
 
@@ -109,6 +125,77 @@ async def _verify_stream_access(
     _enforce_topic_access(topic, header_token_data)
     return
   raise auth.credentials_exception
+
+
+async def _verify_multi_stream_access(
+  topics: str = Query(
+    ...,
+    description="Comma-separated set of topics to multiplex over this one stream (e.g. `task,message,user:user42`).",
+    examples=["task,message,user:user42"],
+  ),
+  ticket: str | None = Query(default=None),
+  header_token_data: TokenData | None = Depends(auth.verify_token_optional),
+) -> list[str]:
+  """Parse + authorize the requested topic set BEFORE the SSE stream starts.
+
+  Returning the parsed topic list (and raising here, in a dependency, rather
+  than inside the streaming async generator) keeps 401/403/422 responses clean
+  — raising inside the generator would wrap the error and yield a 500.
+  """
+  topic_list = [t for t in (topics.split(",") if topics else []) if t]
+  if not topic_list:
+    raise HTTPException(
+      status_code=422,
+      detail="`topics` must be a non-empty comma-separated list.",
+    )
+
+  if ticket is not None:
+    auth.verify_sse_ticket_multi(ticket, topic_list)
+  elif header_token_data is not None:
+    for topic in topic_list:
+      _enforce_topic_access(topic, header_token_data)
+  else:
+    raise auth.credentials_exception
+
+  return topic_list
+
+
+@router.get(
+  "/notification/stream",
+  response_class=EventSourceResponse,
+  responses={
+    401: {"description": "No valid ticket or Authorization header provided"},
+    403: {"description": "Ticket or JWT consumer_key does not match a requested user:<key> topic"},
+    422: {"description": "`topics` query param missing or empty"},
+  },
+)
+async def multi_stream(
+  request: Request,
+  topic_list: list[str] = Depends(_verify_multi_stream_access),
+) -> AsyncIterable[ServerSentEvent]:
+  """Multiplexed Server-Sent Events stream for a SET of topics.
+
+  One browser tab opens ONE EventSource here carrying every topic it cares
+  about, instead of one connection per topic — which otherwise exhausts the
+  browser's per-host HTTP/1.1 connection budget the moment a second tab opens.
+
+  Authorization (in `_verify_multi_stream_access`) mirrors the single-topic
+  stream, applied to every topic:
+    * Ticket path (preferred, browser EventSource): `?ticket=<jwt>` from
+      POST /notification/ticket with a `topics` body. The ticket's granted
+      topics must cover every requested topic.
+    * Header path (server-to-server): `Authorization: Bearer <JWT>`; each
+      `user:<key>` topic must match the caller's consumer_key.
+
+  Emitted events keep the same `event: <topic>` name as /notification/{topic},
+  so clients route them per topic with no payload change.
+
+  **Emits:** *(SSE stream — emits are downstream NATS subjects)*
+
+  **Required scope:** `notification:stream:subscribe`
+  """
+  async for event in ServerEventManager.getInstance().push_events_multi(request, topic_list):
+    yield event
 
 
 @router.get(

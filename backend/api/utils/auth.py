@@ -375,6 +375,53 @@ def verify_sse_ticket(ticket: str, path_topic: str) -> str:
   return sub
 
 
+def issue_sse_ticket_multi(consumer_key: str, topics: list[str]) -> str:
+  """Mint a short-lived ticket scoped to a SET of topics.
+
+  Powers the multiplexed SSE stream (one EventSource per browser tab carrying
+  every subscribed topic) so a tab no longer burns one HTTP/1.1 connection per
+  topic. The granted topics are frozen into the ticket; the stream endpoint
+  rejects any requested topic not in this set.
+  """
+  now = datetime.utcnow()
+  claims = {
+    "sub": consumer_key,
+    "topics": sorted(set(topics)),
+    "ctx": TokenContext.SSE_TICKET.value,
+    "iat": now,
+    "exp": now + timedelta(seconds=SSE_TICKET_TTL_SECONDS),
+  }
+  return jwt.encode(claims, get_config().jwt_secret, algorithm=ALGORITHM)
+
+
+def verify_sse_ticket_multi(ticket: str, requested_topics: list[str]) -> str:
+  """Validate a multi-topic SSE ticket against the requested topic set.
+
+  Returns consumer_key; raises 401 unless the ticket is a valid SSE ticket
+  whose granted topics are a superset of every requested topic. A single-topic
+  ticket (legacy `topic` claim) is also accepted as a one-element grant so the
+  two issuance paths interoperate.
+  """
+  try:
+    payload = jwt.decode(ticket, get_config().jwt_secret, algorithms=[ALGORITHM])
+  except Exception:
+    raise credentials_exception
+  if payload.get("ctx") != TokenContext.SSE_TICKET.value:
+    raise credentials_exception
+  sub = payload.get("sub")
+  if not sub:
+    raise credentials_exception
+  granted = payload.get("topics")
+  if granted is None:
+    # Interop with a legacy single-topic ticket.
+    single = payload.get("topic")
+    granted = [single] if single else []
+  granted_set = set(granted)
+  if not requested_topics or not set(requested_topics).issubset(granted_set):
+    raise credentials_exception
+  return sub
+
+
 def verify_print_service_token(token_str: str = Depends(bearer_token)):
   token_data = _verify_token_base(token_str)
   # The print service authenticates via POST /api/auth (OAuth2 password grant),

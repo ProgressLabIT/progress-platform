@@ -67,3 +67,45 @@ class ServerEventManager:
                     yield ServerSentEvent(raw_data=event, event=topic)
         finally:
             ServerEventManager.getInstance().undergisterQueue(topic, request)
+
+    async def push_events_multi(self, request: Request, topics):
+        """Stream events for MULTIPLE topics over a single SSE connection.
+
+        Lets one browser tab open one EventSource carrying every subscribed
+        topic instead of one connection per topic — which exhausts the
+        browser's per-host HTTP/1.1 connection budget once a second tab opens.
+
+        Each topic keeps its own queue (so `enqueue`'s exact + wildcard fan-out
+        is untouched); a pump task drains each into a shared local queue, and
+        emitted events keep the same `event: <topic>` name as the single-topic
+        stream so the client routes them per topic unchanged.
+        """
+        mgr = ServerEventManager.getInstance()
+        topics = list(dict.fromkeys(topics))  # de-dupe, preserve order
+        queues = {topic: mgr.getQueue(topic, request) for topic in topics}
+        merged: asyncio.Queue = asyncio.Queue()
+
+        async def _pump(topic, queue):
+            while True:
+                msg = await queue.get()
+                merged.put_nowait((topic, msg))
+
+        pumps = [asyncio.create_task(_pump(t, q)) for t, q in queues.items()]
+        try:
+            while not self.cancelled:
+                if await request.is_disconnected():
+                    break
+
+                try:
+                    topic, event = await asyncio.wait_for(merged.get(), timeout=14.0)
+                except asyncio.TimeoutError:
+                    yield ServerSentEvent(comment="")
+                    continue
+
+                if event:
+                    yield ServerSentEvent(raw_data=event, event=topic)
+        finally:
+            for pump in pumps:
+                pump.cancel()
+            for topic in topics:
+                mgr.undergisterQueue(topic, request)
