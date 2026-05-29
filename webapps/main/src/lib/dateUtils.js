@@ -27,13 +27,13 @@ function nextyear() {
 }
 
 function formatResetDate(d) {
-  return date.formatDate(d, 'YYYY/MM/DD');
+  return date.formatDate(d, 'YYYY-MM-DD');
 }
 
 function calculateResetDate(reset_period) {
   switch (reset_period) {
     case 'none':
-      return '9999/12/31';
+      return '9999-12-31';
     case 'day':
       return formatResetDate(tomorrow());
     case 'week':

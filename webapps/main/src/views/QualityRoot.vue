@@ -149,7 +149,7 @@
             dense
             clearable
             debounce="1000"
-            mask="date"
+            mask="####-##-##"
             :label="$t('opened_min')"
           >
             <template #append>
@@ -159,7 +159,7 @@
                   transition-show="scale"
                   transition-hide="scale"
                 >
-                  <q-date v-model="time_created_from" minimal>
+                  <q-date v-model="time_created_from" mask="YYYY-MM-DD" minimal>
                     <div class="row items-center justify-end">
                       <q-btn v-close-popup label="Close" color="primary" flat />
                     </div>
@@ -175,7 +175,7 @@
             filled
             dense
             clearable
-            mask="date"
+            mask="####-##-##"
             debounce="1000"
             :label="$t('opened_max')"
           >
@@ -186,7 +186,7 @@
                   transition-show="scale"
                   transition-hide="scale"
                 >
-                  <q-date v-model="time_created_to" minimal>
+                  <q-date v-model="time_created_to" mask="YYYY-MM-DD" minimal>
                     <div class="row items-center justify-end">
                       <q-btn v-close-popup label="Close" color="primary" flat />
                     </div>
@@ -206,7 +206,7 @@
             filled
             dense
             clearable
-            mask="date"
+            mask="####-##-##"
             debounce="1000"
             :label="$t('closed_min')"
           >
@@ -217,7 +217,7 @@
                   transition-show="scale"
                   transition-hide="scale"
                 >
-                  <q-date v-model="time_closed_from" minimal>
+                  <q-date v-model="time_closed_from" mask="YYYY-MM-DD" minimal>
                     <div class="row items-center justify-end">
                       <q-btn v-close-popup label="Close" color="primary" flat />
                     </div>
@@ -233,7 +233,7 @@
             filled
             dense
             clearable
-            mask="date"
+            mask="####-##-##"
             debounce="1000"
             :label="$t('closed_max')"
           >
@@ -244,7 +244,7 @@
                   transition-show="scale"
                   transition-hide="scale"
                 >
-                  <q-date v-model="time_closed_to" minimal>
+                  <q-date v-model="time_closed_to" mask="YYYY-MM-DD" minimal>
                     <div class="row items-center justify-end">
                       <q-btn v-close-popup label="Close" color="primary" flat />
                     </div>
@@ -604,7 +604,8 @@ export default {
       this.filter_list.forEach((f) => {
         if (this[f] != undefined) {
           if (f.startsWith('time')) {
-            const date = new Date(this[f]);
+            // Append a time so the YYYY-MM-DD value parses as local midnight, not UTC
+            const date = new Date(`${this[f]}T00:00:00`);
 
             // The api handles full timestamps, thus to include issues created/closed during the day indicated we need to set the filter at the end of the same
             if (f.endsWith('_to')) {

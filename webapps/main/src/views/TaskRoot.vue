@@ -141,7 +141,7 @@
                   transition-show="scale"
                   transition-hide="scale"
                 >
-                  <q-date v-model="start_from_min" minimal>
+                  <q-date v-model="start_from_min" mask="YYYY-MM-DD" minimal>
                     <div class="row items-center justify-end">
                       <q-btn v-close-popup label="Close" color="primary" flat />
                     </div>
@@ -168,7 +168,7 @@
                   transition-show="scale"
                   transition-hide="scale"
                 >
-                  <q-date v-model="start_from_max" minimal>
+                  <q-date v-model="start_from_max" mask="YYYY-MM-DD" minimal>
                     <div class="row items-center justify-end">
                       <q-btn v-close-popup label="Close" color="primary" flat />
                     </div>
@@ -199,7 +199,7 @@
                   transition-show="scale"
                   transition-hide="scale"
                 >
-                  <q-date v-model="due_by_min" minimal>
+                  <q-date v-model="due_by_min" mask="YYYY-MM-DD" minimal>
                     <div class="row items-center justify-end">
                       <q-btn v-close-popup label="Close" color="primary" flat />
                     </div>
@@ -226,7 +226,7 @@
                   transition-show="scale"
                   transition-hide="scale"
                 >
-                  <q-date v-model="due_by_max" minimal>
+                  <q-date v-model="due_by_max" mask="YYYY-MM-DD" minimal>
                     <div class="row items-center justify-end">
                       <q-btn v-close-popup label="Close" color="primary" flat />
                     </div>
@@ -257,7 +257,7 @@
                   transition-show="scale"
                   transition-hide="scale"
                 >
-                  <q-date v-model="created_min" minimal>
+                  <q-date v-model="created_min" mask="YYYY-MM-DD" minimal>
                     <div class="row items-center justify-end">
                       <q-btn v-close-popup label="Close" color="primary" flat />
                     </div>
@@ -284,7 +284,7 @@
                   transition-show="scale"
                   transition-hide="scale"
                 >
-                  <q-date v-model="created_max" minimal>
+                  <q-date v-model="created_max" mask="YYYY-MM-DD" minimal>
                     <div class="row items-center justify-end">
                       <q-btn v-close-popup label="Close" color="primary" flat />
                     </div>
@@ -315,7 +315,7 @@
                   transition-show="scale"
                   transition-hide="scale"
                 >
-                  <q-date v-model="closed_min" minimal>
+                  <q-date v-model="closed_min" mask="YYYY-MM-DD" minimal>
                     <div class="row items-center justify-end">
                       <q-btn v-close-popup label="Close" color="primary" flat />
                     </div>
@@ -342,7 +342,7 @@
                   transition-show="scale"
                   transition-hide="scale"
                 >
-                  <q-date v-model="closed_max" minimal>
+                  <q-date v-model="closed_max" mask="YYYY-MM-DD" minimal>
                     <div class="row items-center justify-end">
                       <q-btn v-close-popup label="Close" color="primary" flat />
                     </div>

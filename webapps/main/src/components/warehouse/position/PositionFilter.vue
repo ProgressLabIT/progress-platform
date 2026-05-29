@@ -97,7 +97,7 @@
           dense
           clearable
           debounce="1000"
-          mask="date"
+          mask="####-##-##"
           :label="
             $capitalize($t('work_order.list_headers.start_from')) +
             ' (' +
@@ -112,7 +112,7 @@
                 transition-show="scale"
                 transition-hide="scale"
               >
-                <q-date v-model="created_min" minimal>
+                <q-date v-model="created_min" mask="YYYY-MM-DD" minimal>
                   <div class="row items-center justify-end">
                     <q-btn v-close-popup label="Close" color="primary" flat />
                   </div>
@@ -128,7 +128,7 @@
           filled
           dense
           clearable
-          mask="date"
+          mask="####-##-##"
           debounce="1000"
           :label="
             $capitalize($t('work_order.list_headers.start_from')) +
@@ -144,7 +144,7 @@
                 transition-show="scale"
                 transition-hide="scale"
               >
-                <q-date v-model="created_max" minimal>
+                <q-date v-model="created_max" mask="YYYY-MM-DD" minimal>
                   <div class="row items-center justify-end">
                     <q-btn v-close-popup label="Close" color="primary" flat />
                   </div>

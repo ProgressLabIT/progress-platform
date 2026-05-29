@@ -198,7 +198,7 @@
         <q-icon name="mdi-calendar" />
       </template>
       <q-popup-proxy anchor="center middle" self="center middle" @hide="blur">
-        <q-date v-model="fieldValue" minimal>
+        <q-date v-model="fieldValue" mask="YYYY-MM-DD" minimal>
           <div class="row items-center justify-end">
             <q-btn v-close-popup :label="$t('close')" color="primary" flat />
           </div>

@@ -89,7 +89,7 @@
           dense
           clearable
           debounce="1000"
-          mask="date"
+          mask="####-##-##"
           :label="
             $capitalize($t('warehouse.movement.start_from')) +
             ' (' +
@@ -104,7 +104,7 @@
                 transition-show="scale"
                 transition-hide="scale"
               >
-                <q-date v-model="start_from" minimal>
+                <q-date v-model="start_from" mask="YYYY-MM-DD" minimal>
                   <div class="row items-center justify-end">
                     <q-btn v-close-popup label="Close" color="primary" flat />
                   </div>
@@ -120,7 +120,7 @@
           filled
           dense
           clearable
-          mask="date"
+          mask="####-##-##"
           debounce="1000"
           :label="
             $capitalize($t('warehouse.movement.start_to')) +
@@ -136,7 +136,7 @@
                 transition-show="scale"
                 transition-hide="scale"
               >
-                <q-date v-model="start_to" minimal>
+                <q-date v-model="start_to" mask="YYYY-MM-DD" minimal>
                   <div class="row items-center justify-end">
                     <q-btn v-close-popup label="Close" color="primary" flat />
                   </div>
@@ -153,7 +153,7 @@
           dense
           clearable
           debounce="1000"
-          mask="date"
+          mask="####-##-##"
           :label="
             $capitalize($t('warehouse.movement.end_from')) +
             ' (' +
@@ -168,7 +168,7 @@
                 transition-show="scale"
                 transition-hide="scale"
               >
-                <q-date v-model="end_from" minimal>
+                <q-date v-model="end_from" mask="YYYY-MM-DD" minimal>
                   <div class="row items-center justify-end">
                     <q-btn v-close-popup label="Close" color="primary" flat />
                   </div>
@@ -184,7 +184,7 @@
           filled
           dense
           clearable
-          mask="date"
+          mask="####-##-##"
           debounce="1000"
           :label="
             $capitalize($t('warehouse.movement.end_to')) +
@@ -200,7 +200,7 @@
                 transition-show="scale"
                 transition-hide="scale"
               >
-                <q-date v-model="end_to" minimal>
+                <q-date v-model="end_to" mask="YYYY-MM-DD" minimal>
                   <div class="row items-center justify-end">
                     <q-btn v-close-popup label="Close" color="primary" flat />
                   </div>

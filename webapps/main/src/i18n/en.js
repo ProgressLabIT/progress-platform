@@ -108,6 +108,7 @@ export default {
   created_date: 'Created',
   critical: 'critical',
   date_format: 'YYYY-MM-DD',
+  invalid_date: 'Invalid date',
   deactivate: 'deactivate',
   dismiss: 'dismiss',
   dismiss_task: 'Deactivate Task',

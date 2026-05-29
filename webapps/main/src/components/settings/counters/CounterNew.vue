@@ -47,14 +47,14 @@
       filled
       readonly
       disable
-      mask="date"
+      mask="####-##-##"
       :label="$t('reset_date')"
       class="q-mt-md"
     >
       <template #append>
         <q-icon name="mdi-calendar" class="cursor-pointer">
           <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-            <q-date v-model="new_counter.reset_date">
+            <q-date v-model="new_counter.reset_date" mask="YYYY-MM-DD">
               <div class="row items-center justify-end">
                 <q-btn v-close-popup label="Close" color="primary" flat />
               </div>

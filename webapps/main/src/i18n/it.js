@@ -110,6 +110,7 @@ export default {
   created_date: 'Creato',
   critical: 'critico',
   date_format: 'AAAA-MM-GG',
+  invalid_date: 'Data non valida',
   deactivate: 'disattiva',
   dismiss_task: 'Disattiva Compito',
   dismiss_task_confirmation: 'Sei sicuro di voler disattivare questo compito?',

@@ -66,7 +66,7 @@
             <q-input
               v-model="temp_data.reset_date"
               filled
-              mask="date"
+              mask="####-##-##"
               :label="$t('reset_date')"
               disable
               hide-bottom-space
@@ -78,7 +78,7 @@
                     transition-show="scale"
                     transition-hide="scale"
                   >
-                    <q-date v-model="temp_data.reset_date">
+                    <q-date v-model="temp_data.reset_date" mask="YYYY-MM-DD">
                       <div class="row items-center justify-end">
                         <q-btn
                           v-close-popup
