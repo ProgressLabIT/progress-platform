@@ -1,6 +1,7 @@
+import asyncio
 import traceback
 
-from arango.exceptions import DocumentUpdateError
+from arango.exceptions import ArangoServerError, DocumentUpdateError
 from fastapi import APIRouter, HTTPException, Depends
 from utils import auth
 
@@ -43,6 +44,14 @@ def _validate_event_context(context_type: str | None, context_key: str | None) -
     )
 
 
+# ArangoDB errorNum for a write-write conflict (HTTP 409). A concurrent writer
+# holding a shared doc — commonly a /heartbeat or another event's
+# update_job_last_online touching the same Job — aborts our streaming
+# transaction. The event itself is valid, so we retry rather than 500.
+_ARANGO_WRITE_WRITE_CONFLICT = 1200
+_EVENT_SAVE_MAX_ATTEMPTS = 4
+
+
 @router.post('/event',
     response_model=APIResponse,
     responses={
@@ -66,9 +75,25 @@ async def record_event(event_data: EventInfoModel):
     _validate_event_context(event_data.context_type, event_data.context_key)
 
     event_class = get_event_class(event_data.event_type)
-    event = event_class(info=event_data.model_dump())
 
-    event.save()
+    # Retry the whole event on a write-write conflict (errorNum 1200). Build a
+    # fresh event each attempt: apply() mutates self.info and caches
+    # @cached_property bound to the now-aborted transaction, so the object is
+    # not safe to re-run in place. The aborted tx rolled back every write
+    # (including counter increments), so a fresh attempt is deterministic.
+    for attempt in range(_EVENT_SAVE_MAX_ATTEMPTS):
+      event = event_class(info=event_data.model_dump())
+      try:
+        event.save()
+        break
+      except ArangoServerError as e:
+        if (e.error_code != _ARANGO_WRITE_WRITE_CONFLICT
+            or attempt == _EVENT_SAVE_MAX_ATTEMPTS - 1):
+          raise
+        # Let the competing transaction finish before retrying. Small backoff,
+        # async so the event loop isn't blocked while we wait.
+        await asyncio.sleep(0.05 * (attempt + 1))
+
     return APIResponse(detail=event.response)
 
   except (
