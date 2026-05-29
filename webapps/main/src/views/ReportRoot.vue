@@ -16,7 +16,10 @@ const src = computed(() => {
   const sessionData = store.state.session;
   const sessionDataStr = JSON.stringify(sessionData);
   const encodedSession = btoa(sessionDataStr);
-  return `${protocol}//${domain}/reports?session=${encodedSession}`;
+  // Trailing slash is required: Streamlit's baseUrlPath redirects /reports -> /reports/,
+  // and behind TLS-terminating Traefik that redirect downgrades to http:// (mixed content).
+  // Requesting the canonical URL avoids the redirect entirely.
+  return `${protocol}//${domain}/reports/?session=${encodedSession}`;
 });
 
 
