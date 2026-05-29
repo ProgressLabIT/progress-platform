@@ -715,29 +715,25 @@ async function loadImage(url) {
  * @throws {Error} If template schemas are not available
  */
 async function prepareInputs() {
-  // Needed to parse input type to load images as base64
-  const inputs = [];
+  // pdfme treats inputs[] as records (each entry renders all template pages),
+  // so all fields across all pages must be merged into ONE record.
+  const record = {};
 
   if (!selectedTemplate.value?.template?.schemas) {
     throw new Error('Template schemas are not available');
   }
 
   for (const pageSchema of selectedTemplate.value.template.schemas) {
-    const fields = normalizePageSchema(pageSchema);
-    const schemaFields = [];
-
-    for (const field of fields) {
+    for (const field of normalizePageSchema(pageSchema)) {
       const fieldName = field.name;
       if (!fieldName) continue;
 
       if (field.type === 'image') {
         try {
-          const imageUrl = formModel[fieldName];
-          const base64 = await loadImage(imageUrl);
-          schemaFields.push([fieldName, base64]);
+          record[fieldName] = await loadImage(formModel[fieldName]);
         } catch (err) {
           console.error(`Error loading image for field ${fieldName}:`, err);
-          schemaFields.push([fieldName, '']);
+          record[fieldName] = '';
         }
       } else {
         const link = currentGetLink?.(fieldName);
@@ -745,18 +741,16 @@ async function prepareInputs() {
         if (needsFreshResolve) {
           const allCustomFields = store.state.form.customFields;
           const resolved = resolveExpression(link.templateExpression, props.context, allCustomFields, formModel);
-          schemaFields.push([fieldName, String(resolved ?? '')]);
+          record[fieldName] = String(resolved ?? '');
         } else {
           const fieldValue = formModel[fieldName];
-          const safeValue = fieldValue != null ? String(fieldValue) : '';
-          schemaFields.push([fieldName, safeValue]);
+          record[fieldName] = fieldValue != null ? String(fieldValue) : '';
         }
       }
     }
-    inputs.push(Object.fromEntries(schemaFields));
   }
 
-  return inputs;
+  return [record];
 }
 
 /**
