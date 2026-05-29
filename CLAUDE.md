@@ -89,6 +89,8 @@ Daily integration cadence: each session commits its branch end-of-day; the orche
 
 ## Feature → DEV Integration
 
+**Before committing, run `git branch --show-current` and follow the regime for that branch.** On `DEV` directly: small, self-contained fixes may be committed as a single atomic commit (stage only the files for that fix — never `git add -A` when unrelated changes are pending). On a `feature/<name>` worktree branch: accumulate WIP atoms, then squash to `DEV` per the rules below. Do not assume which branch you are on — the session may start anywhere.
+
 `DEV` is the trunk and the GitLab → GitHub mirror source. (`master` is a dead 2022 branch — ignore it.) Each feature is developed in its own git worktree off `DEV` carrying its own GSD `.planning/` project (worktree-as-project). Atomic WIP commits accumulate on the feature branch; ship-grained units are squashed onto `DEV`.
 
 **Always squash related changes into ship-grained commits on DEV.**
