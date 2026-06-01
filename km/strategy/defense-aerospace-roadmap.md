@@ -119,7 +119,7 @@ Stages are gated by **assurance milestones**, not calendar dates. Each stage pro
 | **NIS2 + IEC 62443-3-3 SL-1 attestation** | Self-declared SL-1 with documented evidence. SL-2 targeted in Stage 3. |
 | **On-prem HA reference** | NATS 3-node JetStream cluster (RAFT, R=3 streams), TimescaleDB primary + sync replica, ArangoDB cluster mode, Traefik HA pair. All customer-deployed. Documented RPO 1 min / RTO 5 min. |
 | **DR runbook + quarterly drill** | Restore from immutable backup (S3 Object Lock or equivalent on customer's storage). Quarterly drill cadence locked. |
-| **MFA + RBAC hardening** | TOTP/WebAuthn for admin paths. RBAC matrix documented and tested. |
+| **MFA + RBAC hardening** | TOTP/WebAuthn for admin paths. RBAC matrix documented and tested. **Note:** RBAC/FR2 is the only foundational SL-2 gap not already designed — candidate to pull into Stage 1 with its own ADR (see `km/compliance/iec-62443-due-diligence.md` D4). |
 | **Encryption-at-rest** | ArangoDB rocksdb encryption, TimescaleDB transparent encryption, JetStream stream-level encryption, secrets-at-rest via sealed-secrets or customer KMS. |
 | **Vulnerability management** | Dependabot + Renovate + weekly vuln scan of release images. Public CVD policy (Coordinated Vulnerability Disclosure). |
 | **Pen-test 2: comprehensive** | 10-day engagement. Full scope including HA topology. Findings tracked publicly. |
@@ -135,7 +135,7 @@ Stages are gated by **assurance milestones**, not calendar dates. Each stage pro
 | Deliverable | Form |
 |---|---|
 | **IEC 62443-4-1 secure development lifecycle** | Formal SDL: threat modeling per release, security testing gate, vulnerability handling, security update process. Audited by accredited lab. |
-| **IEC 62443-4-2 component certification (SL-2 target)** | Progress Platform as a "host device" component. Lab engagement + remediation cycle. |
+| **IEC 62443-4-2 component certification (SL-2 target)** | Progress Platform as a **Software Application** component (SAR). Lab engagement + remediation cycle. |
 | **FIPS 140-3 validated crypto** | Migrate JWT/TLS to FIPS-validated libraries where customer requires (BoringSSL FIPS / Wolfcrypt / OS-provided FIPS modules). |
 | **HSM-backed signing keys — remaining keys** | Cosign + deployment-manifest keys already in HSM since Stage 1 (see above). This stage migrates remaining keys — NATS Operator/Account signing keys, internal CA roots, customer-side cert-issuance keys — from sealed files to YubiHSM2 / AWS CloudHSM / Thales appliances. Managed Cloud uses AWS CloudHSM end-to-end. |
 | **Reproducible builds** | SLSA Level 3 target. Build provenance attached to every release artifact. |
