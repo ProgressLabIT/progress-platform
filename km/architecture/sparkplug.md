@@ -4,6 +4,16 @@
 > Audience: developers, system integrators, and demo presenters who need a working
 > mental model of Sparkplug B and how Progress consumes it.
 
+> **Scope note.** This documents Sparkplug B as **one optional ingress adapter**, used
+> only when equipment already speaks Sparkplug B natively. Progress does **not** require
+> Sparkplug B. Its internal IIoT data plane is **normalized JSON on NATS**, protocol-agnostic
+> and fed equally by other edge bridges (OPC-UA, Modbus TCP, EtherNet/IP, S7, plain MQTT).
+> Each bridge decodes whatever its equipment emits into that JSON plane; downstream consumers
+> (historian, UNS browser, event/Issue automation) only ever see JSON. Sparkplug B is the
+> **first** such bridge to ship (the May 15 demo) — first to ship, not foundational. Mandating
+> Sparkplug B on a deployment whose equipment does not natively emit it would just mean encoding
+> data into Sparkplug protobuf so the bridge can decode it again, for no benefit.
+
 ## Why Sparkplug B exists
 
 MQTT is a thin transport: topics and bytes, nothing more. Industrial deployments need

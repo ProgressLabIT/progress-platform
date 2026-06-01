@@ -45,7 +45,7 @@ Progress Lab is not trying to out-feature i-flow or Rhize. The bet is a **differ
 The four pillars that make this genuinely different from both incumbents:
 
 1. **Open source.** Both i-flow and Rhize are proprietary, enterprise-priced (Rhize reportedly ~€200k/yr per site + services). Progress is open source. For engineering-led shops, cost-sensitive manufacturers, and especially defense/aerospace customers who need an *auditable substrate with no vendor black boxes*, this is a structural advantage, not a discount.
-2. **Whole-ecosystem suite, not a layer.** i-flow gives you plumbing; Rhize gives you a headless backend. Both require you to assemble the rest. Progress ships the whole stack — NATS substrate + event-sourced MOM (production tracking, inventory, traceability, quality) + Timescale historian + Streamlit reports + Sparkplug/IIoT bridges — as one coherent product. You don't integrate five tools; you deploy one.
+2. **Whole-ecosystem suite, not a layer.** i-flow gives you plumbing; Rhize gives you a headless backend. Both require you to assemble the rest. Progress ships the whole stack — NATS substrate + event-sourced MOM (production tracking, inventory, traceability, quality) + Timescale historian + Streamlit reports + IIoT protocol bridges (Sparkplug B, OPC-UA, Modbus TCP, ...) — as one coherent product. You don't integrate five tools; you deploy one.
 3. **On-prem-first, single-tenant, auditable.** Same primitives on-prem and in Managed Cloud. No data-egress economics, no sovereignty problem, no opaque substrate.
 4. **Compliance as a primitive.** Event sourcing makes the AS9100D audit/genealogy story free; the defense/aerospace roadmap (NIST 800-171, CMMC, IEC 62443) builds on that. Neither incumbent leads with this.
 

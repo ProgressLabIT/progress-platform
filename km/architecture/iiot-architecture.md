@@ -51,7 +51,7 @@ Two adjacent profiles where Progress fits but is not the obvious first choice:
 ### 2.3 In scope / out of scope
 
 **In scope:**
-- Plant-floor equipment connectivity (Sparkplug B today; OPC-UA next; Modbus TCP / EtherNet/IP / S7 as bridge-protocol roadmap items)
+- Plant-floor equipment connectivity via protocol-specific edge bridges that normalise every native protocol into the platform's JSON-on-NATS data plane — no protocol is privileged. Sparkplug B is the first shipping bridge (May 15 demo); OPC-UA, Modbus TCP, EtherNet/IP, and S7 follow as roadmap items, each decoding into the same JSON plane
 - Edge data buffering (offline-first), telemetry normalisation, alarm/event handling
 - Production tracking (work orders, jobs, phases, operations) — Progress core
 - Inventory + traceability (serials, lots, BOM, genealogy) — Progress core
@@ -131,6 +131,8 @@ That fourth point matters for procurement: the customer's network team can write
 ### 3.2 Data plane — NATS
 
 NATS is the unified messaging substrate for both telemetry and control. JetStream provides durability; KV provides distributed state.
+
+**The data plane is normalised JSON on NATS, and no wire protocol is privileged.** Each edge bridge decodes whatever the equipment natively emits — Sparkplug B, OPC-UA, Modbus TCP, EtherNet/IP, S7, plain MQTT — into that JSON plane; everything downstream (historian, UNS browser, event/Issue automation) only ever sees JSON. Sparkplug B is one optional ingress adapter, used when equipment already speaks Sparkplug B — not a base or default protocol every deployment must adopt. Mandating it where the equipment does not natively emit it would mean encoding into Sparkplug protobuf purely so the bridge could decode it again, which buys nothing since the data plane is JSON regardless.
 
 **Subject taxonomy** (per ADR-0002, extended for IIoT):
 
@@ -289,11 +291,11 @@ Documented in `defense-aerospace-roadmap.md` Stage 4. Not built proactively; doc
 
 ### 3.4 Protocol matrix
 
-Each protocol has an explicit security stance (enforcement detail in `km/security/iiot-security.md`):
+Each protocol is one optional ingress adapter that decodes into the JSON-on-NATS data plane (§3.2); none is the platform's base protocol, and a given site only runs the bridges its equipment actually needs. Each has an explicit security stance (enforcement detail in `km/security/iiot-security.md`):
 
 | Protocol | Use | Security stance | Status |
 |---|---|---|---|
-| **Sparkplug B (MQTT 3.1.1)** | Modern equipment with Sparkplug-aware nodes | NATS JWT auth + WSS TLS on the bridge → cluster hop; raw MQTT side handled within OT VLAN | **Shipping** (May 15 demo) |
+| **Sparkplug B (MQTT 3.1.1)** | Equipment that natively speaks Sparkplug B (Sparkplug-aware nodes) | NATS JWT auth + WSS TLS on the bridge → cluster hop; raw MQTT side handled within OT VLAN | **Shipping** — first adapter to ship (May 15 demo) |
 | **OPC-UA** | PLC/equipment with OPC-UA servers (Siemens, Rockwell, B&R, Beckhoff) | `SignAndEncrypt` security mode **mandatory**; config schema rejects `None` mode at startup; user-token auth or X.509 client cert | **Roadmap — Stage 1** |
 | **Modbus TCP** | Legacy equipment, no native security | Allowed *only* within OT VLAN; wrapped in IPsec or stunnel when crossing any L3 boundary; warning banner in config | **Roadmap — Stage 2** |
 | **EtherNet/IP (CIP)** | Rockwell-heavy plants | Read-only by default; bridge reads tags via PCCC or CIP explicit messaging | **Roadmap — Stage 2** |
