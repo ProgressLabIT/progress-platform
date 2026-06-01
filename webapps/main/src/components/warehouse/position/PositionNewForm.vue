@@ -162,6 +162,7 @@ export default {
           owned: position.owned,
           available: position.available,
           disposable: position.disposable,
+          fixed: position.fixed,
         };
       });
       this.loading = true;
