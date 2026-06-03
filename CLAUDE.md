@@ -6,7 +6,7 @@ Canonical repo: GitLab (`progresslab/progress-platform`). GitHub is a **read-onl
 
 ## Active Milestone
 
-**v1.0 Sparkplug B Demo — May 15, 2026.** Live MQTT Sparkplug B → bridge → NATS → Progress pipeline + UNS browser + Timescale history + threshold-triggered Issue automation. Status + scope: `.planning/workstreams/sparkplug-demo/STATE.md`, `ROADMAP.md`, `REQUIREMENTS.md`. ADRs in `decisions/`.
+**v1.0 Sparkplug B Demo — May 15, 2026.** Live MQTT Sparkplug B → bridge → NATS → Progress pipeline + UNS browser + Timescale history + threshold-triggered Issue automation. ADRs in `km/decisions/` (0001–0013). Demo scope/status docs remain on the retired `GSD` branch (e.g. `git show GSD:.planning/workstreams/sparkplug-demo/STATE.md`).
 
 ## Commands
 
@@ -56,16 +56,16 @@ Project messaging is **NATS** (JetStream + KV). Two skills available globally:
 - `nats:python` — nats-py SDK patterns (pub/sub, request/reply, JS, KV)
 - `nats:general` — concept reference
 
-Subject taxonomy is locked per ADR `.planning/workstreams/sparkplug-demo/decisions/0002-nats-subject-taxonomy.md`. Sparkplug↔NATS subject mapping: ADR 0008.
+Subject taxonomy is locked per ADR `km/decisions/0002-nats-subject-taxonomy.md`. Sparkplug↔NATS subject mapping: `km/decisions/0008-natsmqtt-subject-mapping.md`.
 
 ## GSD Workflow Enforcement
 
 Before using Edit, Write, or other file-changing tools, start work through a GSD command so planning artifacts and execution context stay in sync.
 
 Use these entry points:
-- `/gsd:quick` for small fixes, doc updates, ad-hoc tasks
-- `/gsd:debug` for investigation and bug fixing
-- `/gsd:execute-phase` for planned phase work
+- `/gsd-quick` for small fixes, doc updates, ad-hoc tasks
+- `/gsd-debug` for investigation and bug fixing
+- `/gsd-execute-phase` for planned phase work
 
 Do not make direct repo edits outside a GSD workflow unless the user explicitly asks to bypass it.
 
@@ -73,39 +73,38 @@ Do not make direct repo edits outside a GSD workflow unless the user explicitly 
 
 ### Decision Records
 
-Workstreams under `.planning/workstreams/<name>/` may include a `decisions/` folder holding ADR-style records that capture cross-phase decisions and trade-offs ahead of, alongside, or after `/gsd-plan-phase` outputs. They complement GSD artifacts; they do not bypass GSD execution.
+Architecture Decision Records live in **`km/decisions/`** on `DEV` — one project-level, globally-numbered ledger (`NNNN-kebab-title.md`), code-tracked so every worktree inherits it at fork and it survives squash-to-DEV. Index + conventions: `km/decisions/index.md`. Status pipeline: `discussion → decided → implemented → superseded`.
 
-Filename convention: `NNNN-kebab-title.md`. Status pipeline: `discussion → decided → implemented → superseded`. The workstream's `decisions/index.md` lists them in creation order.
+A worktree may keep purely feature-internal decisions in its own `.planning/`; anything touching a cross-worktree contract (NATS subject taxonomy, event/data schema, API shape, config-file shape) belongs in the shared `km/decisions/` ledger. When a decision affects such a contract, its ADR must reach `decided` before implementation begins on the affected files — this is what lets multiple worktrees fork against frozen contracts.
 
-When a decision affects file structure or cross-session contracts (NATS subject taxonomy, data schema, API shape, config-file shape), the corresponding ADR must reach `decided` status before implementation work begins on the affected files. This is what allows multiple sessions to fork against frozen contracts.
+## Branching & Integration
 
-### Parallel Worktree Convention
+`DEV` is the trunk and the GitLab → GitHub mirror source. (`master` is a dead 2022 branch — ignore it.) Each feature is developed in its own git worktree off `DEV`, carrying its own GSD `.planning/` project (worktree-as-project).
 
-For workstreams that run multiple AI coding sessions in parallel, use git worktrees under `.worktrees/` (gitignored). Each session works on a `feature/<short-name>` branch with a defined file-ownership scope to avoid merge collisions. The workstream's `PROJECT.md` records the per-session file-ownership map.
+**Before committing, run `git branch --show-current` and follow the regime for that branch** — the session may start anywhere, so don't assume:
+- **On `DEV` directly:** small, self-contained fixes may land as a single atomic commit. Stage only that fix's files — never `git add -A` while unrelated changes are pending. (This still goes through `/gsd-quick`.)
+- **On a `feature/<name>` worktree branch:** accumulate WIP atoms, then squash to `DEV` per the rules below.
 
-A session that needs to deviate from its workstream phase plan or the locked ADR contracts must stop and surface the deviation back to the orchestrator (the user, or the lead session). This preserves AGENTS.md's "explain first, change after" stance while permitting autonomous execution within an approved plan.
+### Worktree convention
 
-Daily integration cadence: each session commits its branch end-of-day; the orchestrator runs a `git merge --no-ff` round into the feature's short-lived parent branch (a per-feature/milestone branch off `DEV` — e.g. `ms/<name>` — not a perpetual shared branch). Conflicts are resolved against the locked ADRs, not session-local preference.
+Worktrees live under `.worktrees/` (gitignored), each on a `feature/<short-name>` branch with a defined file-ownership scope to avoid merge collisions. The workstream's `PROJECT.md` records the per-session file-ownership map.
 
-## Feature → DEV Integration
+A session that needs to deviate from its phase plan or the locked ADR contracts must stop and surface the deviation to the orchestrator (the user, or the lead session) — AGENTS.md's "explain first, change after" stance, within an approved plan. Conflicts are resolved against the locked ADRs, not session-local preference.
 
-**Before committing, run `git branch --show-current` and follow the regime for that branch.** On `DEV` directly: small, self-contained fixes may be committed as a single atomic commit (stage only the files for that fix — never `git add -A` when unrelated changes are pending). On a `feature/<name>` worktree branch: accumulate WIP atoms, then squash to `DEV` per the rules below. Do not assume which branch you are on — the session may start anywhere.
+### Squashing to DEV
 
-`DEV` is the trunk and the GitLab → GitHub mirror source. (`master` is a dead 2022 branch — ignore it.) Each feature is developed in its own git worktree off `DEV` carrying its own GSD `.planning/` project (worktree-as-project). Atomic WIP commits accumulate on the feature branch; ship-grained units are squashed onto `DEV`.
-
-**Always squash related changes into ship-grained commits on DEV.**
+**Always squash related changes into ship-grained commits on `DEV`** — aggregate by feature / phase / fix scope, not by individual file edits.
 
 - Do NOT cherry-pick a feature branch's atomic commits one-by-one — DEV's history is for ship-grained units, not WIP atoms.
-- Aggregate by feature / phase / fix scope, not by individual file edits.
 - Prefer a 3-way `git merge --squash <feature>` so DEV-side fixes are preserved, then `git reset` and commit by scope. Avoid `git checkout <feature> -- <paths>`, which silently reverts any file where DEV is ahead of the feature branch.
 - Exclude `.planning/` from DEV — planning artifacts stay on the feature branch. After a squash merge, `git checkout HEAD -- .planning` restores DEV's own planning state and drops the feature's.
-- Compare with the two-dot diff (`git diff DEV <feature>`) to see the true net delta — the three-dot `DEV...<feature>` over-counts content DEV already has via shared history.
-- Commit message: short title + bullet body documenting what shipped. Reference "Squashed from N atomic commits" in the body if N > 5.
+- Compare with the two-dot diff (`git diff DEV <feature>`) for the true net delta — the three-dot `DEV...<feature>` over-counts content DEV already has via shared history.
+- Commit message: short title + bullet body documenting what shipped. Reference "Squashed from N atomic commits" if N > 5.
 - Atomic commits remain on the feature branch for forensics (review, bisect, undo); DEV stays clean.
 
-For features spanning multiple parallel sessions, the session worktrees merge into a short-lived per-feature/milestone parent branch (`ms/<name>`), which is squashed to DEV and then retired.
+**Multiple parallel sessions:** each session commits its worktree branch end-of-day; the orchestrator merges them with `git merge --no-ff` into a short-lived per-feature/milestone parent branch (`ms/<name>`, off `DEV` — not a perpetual shared branch). That parent is then squashed to `DEV` per the rules above and retired.
 
-> Legacy: the long-lived `GSD` branch was the old single-track integration branch (pre-worktree model). It is retained as an archived ref for the v1.0 sparkplug milestone's atomic history, but is no longer the active integration target — new work integrates feature-worktree → DEV directly.
+> Legacy: the long-lived `GSD` branch was the old single-track integration branch (pre-worktree model). Retained as an archived ref for the v1.0 sparkplug milestone's atomic history, no longer the active integration target.
 
 **Why:** DEV drives the GitLab → GitHub mirror. GitHub viewers (and Dependabot, GitHub Releases auto-changelogs, anyone reading `git log DEV`) see one commit per shipped unit, not 30 micro-commits.
 
