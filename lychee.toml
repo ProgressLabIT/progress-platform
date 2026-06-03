@@ -21,10 +21,6 @@ exclude = [
   # file:// URLs without the .md suffix (cleanUrls mode). VitePress validates
   # these at build time; lychee should not.
   "^file://.*/docs/(api|events|cli|users|admins)(/|$)",
-  # Cross-workstream ADR references (sparkplug-demo decisions). These live on
-  # GSD until the sparkplug-demo workstream ships its decisions/ to DEV. Once
-  # that lands, remove this exclusion.
-  "^https?://github\\.com/ProgressLabIT/progress-platform/blob/DEV/\\.planning/workstreams/sparkplug-demo/decisions/",
   # VitePress public assets (served from docs/public/) — root-relative links
   # to /openapi.json, /sitemap.xml, /robots.txt, etc. resolve at runtime via
   # the public/ directory; lychee sees them as docs/openapi.json (missing).

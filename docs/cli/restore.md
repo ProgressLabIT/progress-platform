@@ -63,4 +63,4 @@ Transcript shape grounded in `cli/readme.md` and ADR-0001; once `cli/restore.py`
 - [Deployment basics](/admins/deployment) — the stack `progress restore` writes against
 - [Operations](/admins/operations) — backup snapshots and recovery flow
 - [progress init](/cli/init) — the prerequisite bootstrap step before restore
-- [ADR-0001](https://github.com/ProgressLabIT/progress-platform/blob/DEV/.planning/workstreams/sparkplug-demo/decisions/0001-demo-scope-cut.md) — Source of truth for `progress restore` scope
+- [ADR-0001](https://github.com/ProgressLabIT/progress-platform/blob/DEV/km/decisions/0001-demo-scope-cut.md) — Source of truth for `progress restore` scope

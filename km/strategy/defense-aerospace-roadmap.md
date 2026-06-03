@@ -36,7 +36,7 @@ Documented for credibility — no embellishment. All claims traceable to file pa
 | Audit trail | Event-sourced — immutable `Event.save()` chain through ArangoDB transaction, 50+ event types | Strong base for NIST 800-171 AU family; needs documented retention + tamper-evidence |
 | Threat model | Per-feature only, in some phase `PLAN.md` files; no platform-level model | Required deliverable for prospect |
 | Compliance docs | Zero — no AS9100D, ITAR, NIST 800-171, CMMC, IEC 62443, NIS2 mentions anywhere in repo | Required deliverable for prospect |
-| ADRs | 10 decided in `.planning/workstreams/sparkplug-demo/decisions/`; 0010 establishes bridge token pattern | Good governance pattern; extend with security-scoped ADRs |
+| ADRs | 10 decided in `km/decisions/`; 0010 establishes bridge token pattern | Good governance pattern; extend with security-scoped ADRs |
 | Code hygiene | 62 bare `except:` clauses, 44 stray `print()` calls per `.planning/codebase/CONCERNS.md` | Audit-trail concern (swallowed exceptions = missing audit events); cleanup is a Stage 1 line item |
 
 **Key correction to the prior roadmap:** the prior version assumed "no auth/TLS today is acceptable for design partners." For a defense prospect that lens is wrong. NATS auth + mTLS becomes a **Stage 1 must-fix**, not a "Stage 2 foundation."
@@ -188,7 +188,7 @@ These are the files that the implementation phases will touch. Listed here so th
 - `backend/api/utils/auth.py` — Ed25519 migration, JWKS endpoint (Stage 1)
 - `backend/sparkplug_bridge/automations/pump_anomaly.py`, `backend/sparkplug_bridge/config.py` — token rotation, cert auth (Stage 1)
 - `backend/sparkplug_bridge/kv_store.py` — KV bucket split + ACLs (Stage 1)
-- `.planning/workstreams/sparkplug-demo/decisions/` — new ADRs: NATS auth chain, edge OTA model, mTLS PKI, KV governance (Stages 0–1)
+- `km/decisions/` — new ADRs: NATS auth chain, edge OTA model, mTLS PKI, KV governance (Stages 0–1)
 - `km/security/` (new tree) — threat model, key custody, risk register, gaps, incident response (Stage 0+)
 - `km/compliance/` (new tree) — matrix, evidence packs, auditor-facing docs (Stage 0+)
 - `km/operations/secure-deploy.md` (new) — Stage 0 deliverable
@@ -200,13 +200,13 @@ These are the files that the implementation phases will touch. Listed here so th
 
 Codebase survey confirms these already work and should be the foundation, not replaced:
 
-- **Token lifecycle pattern** from ADR 0010 (`.planning/workstreams/sparkplug-demo/decisions/0010-*.md`) — file-mounted JWT with 0600 mode, dedicated service-account user (`USR-SPARKPLUG-BRIDGE`). Extend, don't rewrite.
+- **Token lifecycle pattern** from ADR 0010 (`km/decisions/0010-*.md`) — file-mounted JWT with 0600 mode, dedicated service-account user (`USR-SPARKPLUG-BRIDGE`). Extend, don't rewrite.
 - **JWT revocation via DB-backed Token collection** in `backend/api/utils/auth.py` — `_verify_token_base` already checks `revoked` flag and signature segment. Keep; add asymmetric-key migration as new code path.
 - **Event-sourced audit trail** through `Event.save()` → `pre_processing()` → `apply()` → `store_event()` — already satisfies the AU-family controls in NIST 800-171 and the configuration-management evidence requirements of AQAP 2110. Document the mapping; don't add a separate audit log.
 - **Traefik + Let's Encrypt + custom-cert file provider** per `km/security/https.md` — already handles external TLS termination. Extend for client-cert auth on admin paths; don't replace.
 - **NATS KV bucket pattern** from `backend/sparkplug_bridge/kv_store.py` (`schema_version: 1`, idempotent hydration, JSON encoding) — reuse for `EDGE_DESIRED` / `EDGE_REPORTED` buckets.
 - **pydantic-settings + Docker secrets pattern** in `backend/api/utils/config.py` — extend to load cert paths and signing keys; don't introduce a parallel config system.
-- **ADR governance** in `.planning/workstreams/sparkplug-demo/decisions/` — proven `NNNN-kebab-title.md` with discussion → decided → implemented status pipeline. New security ADRs follow the same format.
+- **ADR governance** in `km/decisions/` — proven `NNNN-kebab-title.md` with discussion → decided → implemented status pipeline. New security ADRs follow the same format.
 
 ---
 

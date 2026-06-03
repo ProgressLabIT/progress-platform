@@ -59,4 +59,4 @@ Annotate non-obvious lines with `# {what this proves}` comments.
 
 - [Deployment basics](/admins/deployment) — what `progress init` provisions
 - [Operations](/admins/operations) — `progress tap` as a diagnostic
-- [ADR-0006](https://github.com/ProgressLabIT/progress-platform/blob/DEV/.planning/workstreams/sparkplug-demo/decisions/0006-progress-init-ux.md) — Source of truth for `progress init` UX
+- [ADR-0006](https://github.com/ProgressLabIT/progress-platform/blob/DEV/km/decisions/0006-progress-init-ux.md) — Source of truth for `progress init` UX

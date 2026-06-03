@@ -9,8 +9,8 @@
 - `km/strategy/defense-aerospace-roadmap.md` — security & compliance posture roadmap (five cert-gated stages)
 - `km/security/tokens.md` — current API token lifecycle (HS256 today; Ed25519 on roadmap)
 - `km/security/https.md` — Traefik / TLS termination and custom-cert handling
-- `.planning/workstreams/sparkplug-demo/decisions/0011-database-substrate.md`
-- `.planning/workstreams/sparkplug-demo/decisions/0012-graph-query-substrate.md`
+- `km/decisions/0011-database-substrate.md`
+- `km/decisions/0012-graph-query-substrate.md`
 
 ---
 
@@ -216,11 +216,11 @@ Security-specific open questions; the architecture set is in `km/architecture/ii
 - `km/security/https.md` — Traefik / TLS setup
 - `km/security/tokens.md` — current API token lifecycle
 - `km/architecture/sparkplug.md` — Sparkplug B integration details
-- `.planning/workstreams/sparkplug-demo/decisions/0002-nats-subject-taxonomy.md`
-- `.planning/workstreams/sparkplug-demo/decisions/0008-natsmqtt-subject-mapping.md`
-- `.planning/workstreams/sparkplug-demo/decisions/0010-hardcoded-automation-for-v1-demo.md`
-- `.planning/workstreams/sparkplug-demo/decisions/0011-database-substrate.md`
-- `.planning/workstreams/sparkplug-demo/decisions/0012-graph-query-substrate.md`
+- `km/decisions/0002-nats-subject-taxonomy.md`
+- `km/decisions/0008-natsmqtt-subject-mapping.md`
+- `km/decisions/0010-hardcoded-automation-for-v1-demo.md`
+- `km/decisions/0011-database-substrate.md`
+- `km/decisions/0012-graph-query-substrate.md`
 
 **External standards:**
 - IEC 62443-3-3 — System security requirements

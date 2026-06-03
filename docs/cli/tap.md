@@ -88,4 +88,4 @@ Transcript shape grounded in ADR-0001 + ADR-0008; once `cli/tap.py` ships, this 
 - [Operations](/admins/operations) — `progress tap` as a diagnostic per ADM-04
 - [Events Reference](/events/) — what `progress tap` subscribes to
 - [Integration touchpoints](/admins/integration) — broker subject taxonomy and Sparkplug subject mapping
-- [ADR-0008](https://github.com/ProgressLabIT/progress-platform/blob/DEV/.planning/workstreams/sparkplug-demo/decisions/0008-natsmqtt-subject-mapping.md) — Source of truth for Sparkplug subject patterns
+- [ADR-0008](https://github.com/ProgressLabIT/progress-platform/blob/DEV/km/decisions/0008-natsmqtt-subject-mapping.md) — Source of truth for Sparkplug subject patterns

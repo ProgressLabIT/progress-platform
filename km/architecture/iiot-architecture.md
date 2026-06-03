@@ -8,9 +8,9 @@
 - `km/security/iiot-security.md` — IIoT security model (control plane, identity/PKI, supply chain, audit/compliance). **The security half of this reference lives there.**
 - `km/strategy/defense-aerospace-roadmap.md` — security & compliance posture roadmap
 - `km/strategy/arangodb-migration.md` — substrate migration analysis
-- `.planning/workstreams/sparkplug-demo/decisions/0011-database-substrate.md`
-- `.planning/workstreams/sparkplug-demo/decisions/0012-graph-query-substrate.md`
-- ADRs 0001–0010 in `.planning/workstreams/sparkplug-demo/decisions/`
+- `km/decisions/0011-database-substrate.md`
+- `km/decisions/0012-graph-query-substrate.md`
+- ADRs 0001–0010 in `km/decisions/`
 
 ---
 
@@ -441,13 +441,13 @@ Listed because pretending they're solved would be dishonest. Resolution path not
 - `km/security/https.md` — Traefik / TLS setup
 - `km/architecture/sparkplug.md` — Sparkplug B integration details
 - `km/security/tokens.md` — current API token lifecycle
-- `.planning/workstreams/sparkplug-demo/decisions/0002-nats-subject-taxonomy.md`
-- `.planning/workstreams/sparkplug-demo/decisions/0005-timescale-schema-and-downsampling.md`
-- `.planning/workstreams/sparkplug-demo/decisions/0008-natsmqtt-subject-mapping.md`
-- `.planning/workstreams/sparkplug-demo/decisions/0009-stream-processing-framework.md`
-- `.planning/workstreams/sparkplug-demo/decisions/0010-hardcoded-automation-for-v1-demo.md`
-- `.planning/workstreams/sparkplug-demo/decisions/0011-database-substrate.md`
-- `.planning/workstreams/sparkplug-demo/decisions/0012-graph-query-substrate.md`
+- `km/decisions/0002-nats-subject-taxonomy.md`
+- `km/decisions/0005-timescale-schema-and-downsampling.md`
+- `km/decisions/0008-natsmqtt-subject-mapping.md`
+- `km/decisions/0009-stream-processing-framework.md`
+- `km/decisions/0010-hardcoded-automation-for-v1-demo.md`
+- `km/decisions/0011-database-substrate.md`
+- `km/decisions/0012-graph-query-substrate.md`
 - `.planning/workstreams/sparkplug-demo/STATE.md` / `ROADMAP.md` / `REQUIREMENTS.md`
 
 **External standards:**

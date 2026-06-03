@@ -274,4 +274,4 @@ follow the engine on the same plumbing.
   <https://docs.nats.io/running-a-nats-service/configuration/mqtt>
 - TimescaleDB documentation — <https://docs.timescale.com/>
 - Workstream artifacts: `.planning/workstreams/sparkplug-demo/`
-- ADR registry: `.planning/workstreams/sparkplug-demo/decisions/index.md`
+- ADR registry: `km/decisions/index.md`

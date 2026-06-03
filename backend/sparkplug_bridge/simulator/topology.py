@@ -1,7 +1,7 @@
 """ADR-0007 simulator topology + metric set.
 
 This file is the canonical Python encoding of the ADR-0007 specification.
-Any change here MUST be reflected in `.planning/workstreams/sparkplug-demo/decisions/0007-simulator-scenario.md`
+Any change here MUST be reflected in `km/decisions/0007-simulator-scenario.md`
 and vice versa.
 
 Aliases follow ADR-0007 § "Aliases and birth ordering": 1-based integer index

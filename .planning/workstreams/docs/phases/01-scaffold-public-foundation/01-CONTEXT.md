@@ -125,7 +125,7 @@ Every later phase writes content into this scaffold — they do not touch infras
 ### Cross-workstream
 
 - `.planning/workstreams/sparkplug-demo/PROJECT.md` — owns CLI surface (S4) + 5-minute README quickstart (S5). Phase 1 placeholder block (D-10) syncs against S5's currently-locked CLI surface.
-- `.planning/workstreams/sparkplug-demo/decisions/0002-*.md` (NATS subject taxonomy, if present) — not Phase 1 critical, but events-reference cross-links (Phase 2) will reference it; mention in skeleton placeholders.
+- `km/decisions/0002-*.md` (NATS subject taxonomy, if present) — not Phase 1 critical, but events-reference cross-links (Phase 2) will reference it; mention in skeleton placeholders.
 
 ### Source code touch points
 

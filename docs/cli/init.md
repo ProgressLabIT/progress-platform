@@ -107,4 +107,4 @@ Volumes and secrets are sourced from `deploy/compose/base.yaml` (`volumes:`) and
 - [Deployment basics](/admins/deployment) — what `progress init` provisions
 - [Operations](/admins/operations) — `progress tap` as a diagnostic
 - [progress restore](/cli/restore) — restore demo or backup data after `init` completes
-- [ADR-0006](https://github.com/ProgressLabIT/progress-platform/blob/DEV/.planning/workstreams/sparkplug-demo/decisions/0006-progress-init-ux.md) — Source of truth for `progress init` UX
+- [ADR-0006](https://github.com/ProgressLabIT/progress-platform/blob/DEV/km/decisions/0006-progress-init-ux.md) — Source of truth for `progress init` UX

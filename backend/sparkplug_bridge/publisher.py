@@ -1,6 +1,6 @@
 """ADR-0002 envelope construction + NATS publish helpers.
 
-Subject template (per .planning/workstreams/sparkplug-demo/decisions/0002-nats-subject-taxonomy.md):
+Subject template (per km/decisions/0002-nats-subject-taxonomy.md):
 
   Edge-level NBIRTH:    progress.sparkplug.<group>.<edge>.session.online
   Device-level DBIRTH:  progress.sparkplug.<group>.<edge>.<device>.session.online

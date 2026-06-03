@@ -42,10 +42,10 @@ Tokens are slugified by the bridge to lowercase ASCII alphanumeric + dashes; the
 unslugged values are returned in `original_*` fields for display.
 
 > The locked taxonomy is defined in
-> [ADR-0002 — NATS Subject Taxonomy](https://github.com/ProgressLabIT/progress-platform/blob/DEV/.planning/workstreams/sparkplug-demo/decisions/0002-nats-subject-taxonomy.md)
+> [ADR-0002 — NATS Subject Taxonomy](https://github.com/ProgressLabIT/progress-platform/blob/DEV/km/decisions/0002-nats-subject-taxonomy.md)
 > of the Sparkplug demo workstream. Do not extend or override subjects without
 > updating that ADR. The repo path is
-> `.planning/workstreams/sparkplug-demo/decisions/0002-nats-subject-taxonomy.md`.
+> `km/decisions/0002-nats-subject-taxonomy.md`.
 
 The bridge does NOT persist raw subjects to JetStream streams. Live state lives in
 four JetStream KV buckets — `sparkplug_sessions`, `sparkplug_aliases`,
@@ -69,9 +69,9 @@ Traefik and has no auth of its own.
 > These endpoints require the Sparkplug bridge stack to be running. The bridge is
 > an optional Compose extension — enable it via
 > `deploy/compose/sparkplug.yaml`. See
-> [ADR-0004 — UNS HTTP Read API](https://github.com/ProgressLabIT/progress-platform/blob/DEV/.planning/workstreams/sparkplug-demo/decisions/0004-bridge-http-read-api.md)
+> [ADR-0004 — UNS HTTP Read API](https://github.com/ProgressLabIT/progress-platform/blob/DEV/km/decisions/0004-bridge-http-read-api.md)
 > for the full request/response shapes and error model. The repo path is
-> `.planning/workstreams/sparkplug-demo/decisions/0004-bridge-http-read-api.md`.
+> `km/decisions/0004-bridge-http-read-api.md`.
 > ADR-0004 was superseded by Phase 3 D-01..D-03, which moves the read surface
 > into a Streamlit app reading NATS KV + Timescale directly. Verify your
 > deployment's read path before integrating.
@@ -114,5 +114,5 @@ examples — use it for quick lookup before committing to SDK generation.
 - [Events reference](/events/) — full `progress.notification.*` mapping by event type
 - [Deployment](/admins/deployment) — how to enable the Sparkplug bridge stack
 - [Operations](/admins/operations) — broker and bridge health verification
-- ADR-0002 — NATS subject taxonomy (`.planning/workstreams/sparkplug-demo/decisions/0002-nats-subject-taxonomy.md`)
-- ADR-0004 — Bridge HTTP read API (`.planning/workstreams/sparkplug-demo/decisions/0004-bridge-http-read-api.md`)
+- ADR-0002 — NATS subject taxonomy (`km/decisions/0002-nats-subject-taxonomy.md`)
+- ADR-0004 — Bridge HTTP read API (`km/decisions/0004-bridge-http-read-api.md`)
