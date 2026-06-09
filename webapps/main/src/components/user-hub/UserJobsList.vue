@@ -78,6 +78,7 @@ import JobCard from '@/components/JobCard.vue';
 import JobCardSlim from '@/components/JobCardSlim.vue';
 import JobsEmpty from '@/components/user-hub/JobsEmpty.vue';
 import JobsNoMatch from '@/components/user-hub/JobsNoMatch.vue';
+import { isJobReleased } from '@/components/user-hub/jobVisibility';
 import { useSSE } from '@/composables/useSSE';
 import { useConfigStore } from '@/stores/config';
 import { useUserHubStore } from '@/stores/userHub';
@@ -116,7 +117,7 @@ function match(j) {
   if (props.filters.wo && j.wo_code !== props.filters.wo) return false;
   if (props.filters.product && j.product_code !== props.filters.product) return false;
   if (props.filters.phase && j.phase_alias !== props.filters.phase) return false;
-  if (!(j.next_batch_available || j.active_batch_qt)) return false;
+  if (!isJobReleased(j)) return false;
   if (props.filters.startedOnly && j.stage === 'created') return false;
   return true;
 }

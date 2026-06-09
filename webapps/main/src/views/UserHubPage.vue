@@ -176,6 +176,7 @@ import { useStore as useVuex } from 'vuex';
 import FilterDrawer from '@/components/FilterDrawer.vue';
 import UserJobsList from '@/components/user-hub/UserJobsList.vue';
 import UserTasksList from '@/components/user-hub/UserTasksList.vue';
+import { isJobReleased } from '@/components/user-hub/jobVisibility';
 import { useUserHubStore } from '@/stores/userHub';
 import { capitalize } from '@/boot/filters';
 import { useI18n } from 'vue-i18n';
@@ -222,9 +223,7 @@ const allJobs = computed(() => [
 // so options derived from the raw list could surface values whose jobs are all
 // hidden — picking one would yield zero results. Source options from the
 // actionable subset instead.
-const actionableJobs = computed(() =>
-  allJobs.value.filter((j) => j.next_batch_available || j.active_batch_qt),
-);
+const actionableJobs = computed(() => allJobs.value.filter(isJobReleased));
 
 const activeFilterCount = computed(
   () => [project_filter.value, wo_filter.value, product_filter.value, phase_filter.value, started_only.value].filter(Boolean).length,
@@ -244,7 +243,7 @@ function jobVisibleInHubList(j, filters) {
   if (filters.wo && j.wo_code !== filters.wo) return false;
   if (filters.product && j.product_code !== filters.product) return false;
   if (filters.phase && j.phase_alias !== filters.phase) return false;
-  if (!(j.next_batch_available || j.active_batch_qt)) return false;
+  if (!isJobReleased(j)) return false;
   if (filters.startedOnly && j.stage === 'created') return false;
   return true;
 }
