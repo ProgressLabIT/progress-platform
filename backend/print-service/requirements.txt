@@ -1,4 +1,5 @@
-nats-py>=2.0,<3.0
+nats-py>=2.2,<3.0
+aiohttp>=3.9          # required by nats-py for wss:// WebSocket transport
 pydantic>=2.0,<3.0
 pydantic-settings>=2.0,<3.0
 pytest>=8.0

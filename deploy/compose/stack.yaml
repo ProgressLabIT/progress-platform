@@ -74,6 +74,20 @@ services:
     environment:
       - PROGRESS_PRINT_SERVICE_NATS_URL=${PROGRESS_PRINT_SERVICE_NATS_URL:-nats://broker:4222}
       - PROGRESS_PRINT_SERVICE_API_URL=${PROGRESS_PRINT_SERVICE_API_URL:-http://api:8000/api}
+    deploy:
+      labels:
+        # Expose the NATS WebSocket listener (nats-server.conf `websocket{}` on :8090)
+        # through Traefik on the existing :443 entrypoint, so remote clients (e.g. the
+        # off-site print service) can reach NATS via `wss://${HOST}:443/nats` without a
+        # dedicated 4222 ingress rule. Raw 4222/8222/1883 stay published by base.yaml
+        # for in-cluster + LAN use; this only adds the firewall-friendly 443 path.
+        - "traefik.enable=true"
+        - "traefik.docker.network=progress"
+        - "traefik.http.routers.natsws.rule=Host(`${HOST}`) && PathPrefix(`/nats`)"
+        - "traefik.http.routers.natsws.priority=10"
+        - "traefik.http.routers.natsws.middlewares=natsws_strip"
+        - "traefik.http.middlewares.natsws_strip.stripprefix.prefixes=/nats"
+        - "traefik.http.services.natsws.loadbalancer.server.port=8090"
 
   api:
     image: registry.gitlab.com/progresslab/progress-platform/api:${VERSION}
