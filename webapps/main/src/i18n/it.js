@@ -472,6 +472,12 @@ export default {
       counter: 'Errore durante la copia del contatore',
       operation: "Errore durante la copia dell'operazione",
     },
+    overwriteAlias: {
+      title: 'Sovrascrivere i nomi delle fasi?',
+      message:
+        "Sostituire il nome di ogni fase corrispondente con il nome dell'operazione? Questo sovrascrive i nomi delle fasi specifici per prodotto. Lascia deselezionato per mantenerli.",
+      label: "Sovrascrivi i nomi delle fasi con il nome dell'operazione",
+    },
   },
   material_cost: 'costo materiali',
   material: 'materiale | materiali',

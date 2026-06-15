@@ -328,7 +328,8 @@ async def delete_operation(op_key: str):
     dependencies=[Depends(auth.verify_token)])
 async def copy_operation_to_phases(
   operation_key: str,
-  target_product_keys: Annotated[list[str], Body(embed=True)]
+  target_product_keys: Annotated[list[str], Body(embed=True)],
+  overwrite_aliases: Annotated[bool, Body(embed=True)] = False
 ):
   """Copy an operation's default steps to all matching phases across target products.
 
@@ -338,6 +339,10 @@ async def copy_operation_to_phases(
   - Step records are duplicated with new UUIDs for `form_fields`.
   - Media files are physically copied to the new step's media folder.
   - `can_use_print_template` edges are re-created for each new step.
+
+  Each matched phase keeps its product-local `alias` by default. When
+  `overwrite_aliases` is true, every matched phase's `alias` is replaced with
+  the operation's `name` (opt-in — destroys per-product phase naming).
 
   All mutations run inside a single ArangoDB transaction.
 
@@ -416,12 +421,15 @@ async def copy_operation_to_phases(
 
         new_step_sequence.append(new_step['_key'])
 
-      phase_updates.append(dict(
+      phase_update = dict(
         _key=phase.key,
         params=operation_data['default_phase_parameters'],
         production_notes=operation_data['default_phase_notes'],
         step_sequence=new_step_sequence
-      ))
+      )
+      if overwrite_aliases:
+        phase_update['alias'] = operation_data['name']
+      phase_updates.append(phase_update)
 
       # TODO: Copy phase print templates (when implemented)
 

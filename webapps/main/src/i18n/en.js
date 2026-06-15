@@ -461,6 +461,12 @@ export default {
       counter: 'An error occurred while copying the counter',
       operation: 'An error occurred while copying the operation',
     },
+    overwriteAlias: {
+      title: 'Overwrite phase names?',
+      message:
+        'Replace each matched phase name with the operation name? This overwrites the per-product phase names. Leave unchecked to keep them.',
+      label: 'Overwrite phase names with the operation name',
+    },
   },
   material: 'material | materials',
   material_cost: 'material cost',

@@ -197,11 +197,41 @@ export default {
           },
         },
       }).onOk(async (selectedProducts) => {
+        // Second, operation-only prompt: optionally overwrite each matched
+        // phase's product-local alias with the operation name. Dismissing
+        // (cancel) aborts the whole copy so an accidental close is safe.
+        const overwriteAliases = await new Promise((resolve) => {
+          Dialog.create({
+            title: t('massCopyProcess.overwriteAlias.title'),
+            message: t('massCopyProcess.overwriteAlias.message'),
+            options: {
+              type: 'checkbox',
+              model: [],
+              items: [
+                {
+                  label: t('massCopyProcess.overwriteAlias.label'),
+                  value: 'overwrite',
+                },
+              ],
+            },
+            cancel: true,
+            persistent: true,
+          })
+            .onOk((picked) => resolve(picked.includes('overwrite')))
+            .onCancel(() => resolve(null));
+        });
+
+        // Aborted at the alias prompt — do not run the copy.
+        if (overwriteAliases === null) {
+          return;
+        }
+
         try {
           const { data } = await api.post(
             `operation/${props.operation._key}/copy`,
             {
               target_product_keys: selectedProducts.map(({ _key }) => _key),
+              overwrite_aliases: overwriteAliases,
             },
           );
           Notify.create({
