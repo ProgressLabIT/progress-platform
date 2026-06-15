@@ -214,7 +214,8 @@ export default {
                 },
               ],
             },
-            cancel: true,
+            ok: { label: t('confirm'), color: 'primary' },
+            cancel: { label: t('cancel'), color: 'theme-grey', flat: true },
             persistent: true,
           })
             .onOk((picked) => resolve(picked.includes('overwrite')))
