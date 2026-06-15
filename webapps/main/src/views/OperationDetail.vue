@@ -163,6 +163,7 @@ import ProcessParameters from '@/components/ProcessParameters.vue';
 import ProductionNotes from '@/components/ProductionNotes.vue';
 import ProcessSteps from '@/components/process-steps/ProcessSteps.vue';
 import MassCopyToProductDialog from '../components/MassCopyToProductDialog.vue';
+import OverwriteAliasDialog from '../components/OverwriteAliasDialog.vue';
 
 export default {
   name: 'OperationDetail',
@@ -202,23 +203,9 @@ export default {
         // (cancel) aborts the whole copy so an accidental close is safe.
         const overwriteAliases = await new Promise((resolve) => {
           Dialog.create({
-            title: t('massCopyProcess.overwriteAlias.title'),
-            message: t('massCopyProcess.overwriteAlias.message'),
-            options: {
-              type: 'checkbox',
-              model: [],
-              items: [
-                {
-                  label: t('massCopyProcess.overwriteAlias.label'),
-                  value: 'overwrite',
-                },
-              ],
-            },
-            ok: { label: t('confirm'), color: 'primary' },
-            cancel: { label: t('cancel'), color: 'theme-grey', flat: true },
-            persistent: true,
+            component: OverwriteAliasDialog,
           })
-            .onOk((picked) => resolve(picked.includes('overwrite')))
+            .onOk((overwrite) => resolve(overwrite))
             .onCancel(() => resolve(null));
         });
 
