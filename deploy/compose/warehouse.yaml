@@ -12,11 +12,12 @@ services:
   warehouse:
     image: registry.gitlab.com/progresslab/progress-platform/warehouse:${VERSION}
     volumes:
-      - type: volume
-        source: config
+      # Swarm ignores volume.subpath (Compose/`docker run` only) and mounts the
+      # whole `config` volume as a directory — nginx then 301-redirects /config.js
+      # → /config.js/ over http, breaking as Mixed Content. Bind-mount the file.
+      - type: bind
+        source: /opt/progress/config/appConfig.js
         target: /usr/share/nginx/html/config.js
-        volume:
-          subpath: appConfig.js
         read_only: true
       - media:/usr/share/nginx/html/media
     depends_on:

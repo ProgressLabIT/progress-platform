@@ -61,6 +61,16 @@ services:
   broker:
     networks:
       - progress
+    volumes:
+      # base.yaml runs `nats-server -c /etc/nats/nats-server.conf` but only mounts
+      # nats_data:/data. Supply the config file via a bind mount. Swarm ignores
+      # volume.subpath (Compose/`docker run` only) and would mount the whole
+      # `config` volume as a directory, so NATS would start with no config
+      # (no JetStream / KV / MQTT). Place nats-server.conf in /opt/progress/config.
+      - type: bind
+        source: /opt/progress/config/nats-server.conf
+        target: /etc/nats/nats-server.conf
+        read_only: true
     environment:
       - PROGRESS_PRINT_SERVICE_NATS_URL=${PROGRESS_PRINT_SERVICE_NATS_URL:-nats://broker:4222}
       - PROGRESS_PRINT_SERVICE_API_URL=${PROGRESS_PRINT_SERVICE_API_URL:-http://api:8000/api}
@@ -68,11 +78,11 @@ services:
   api:
     image: registry.gitlab.com/progresslab/progress-platform/api:${VERSION}
     volumes:
-      - type: volume
-        source: config
+      # Swarm ignores volume.subpath (Compose/`docker run` only) and would mount
+      # the whole `config` volume as a directory at /api/.env. Bind-mount the file.
+      - type: bind
+        source: /opt/progress/config/api.env
         target: /api/.env
-        volume:
-          subpath: api.env
         read_only: true
     depends_on:
       - db
@@ -117,11 +127,12 @@ services:
   app:
     image: registry.gitlab.com/progresslab/progress-platform/app:${VERSION}
     volumes:
-      - type: volume
-        source: config
+      # Swarm ignores volume.subpath (Compose/`docker run` only) and mounts the
+      # whole `config` volume as a directory — nginx then 301-redirects /config.js
+      # → /config.js/ over http, breaking as Mixed Content. Bind-mount the file.
+      - type: bind
+        source: /opt/progress/config/appConfig.js
         target: /usr/share/nginx/html/config.js
-        volume:
-          subpath: appConfig.js
         read_only: true
       - media:/usr/share/nginx/html/media
     depends_on:
