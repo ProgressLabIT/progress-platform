@@ -1,5 +1,5 @@
 <template>
-  <q-dialog ref="dialogRef" persistent @hide="onDialogHide">
+  <BaseDialog :show="true" :get-dialog-ref="getDialogRef" @close="onDialogHide">
     <q-card class="surface1 column" style="min-width: 420px; max-width: 90vw">
       <q-card-section class="display text-h5 col-auto">
         {{ $t('massCopyProcess.overwriteAlias.title') }}
@@ -33,17 +33,21 @@
         />
       </q-card-actions>
     </q-card>
-  </q-dialog>
+  </BaseDialog>
 </template>
 
 <script setup>
 import { useDialogPluginComponent } from 'quasar';
 import { ref } from 'vue';
+import BaseDialog from '@/components/BaseDialog.vue';
 
 defineEmits(useDialogPluginComponent.emitsObject);
 
 const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } =
   useDialogPluginComponent();
+// This can't be inside the template due to unwrapping
+// See: https://github.com/vuejs/composition-api/issues/317#issuecomment-1069145915
+const getDialogRef = () => dialogRef;
 
 const overwrite = ref(false);
 </script>
