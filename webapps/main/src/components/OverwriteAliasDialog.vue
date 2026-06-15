@@ -1,6 +1,6 @@
 <template>
   <BaseDialog :show="true" :get-dialog-ref="getDialogRef" @close="onDialogHide">
-    <q-card class="surface1 column" style="min-width: 420px; max-width: 90vw">
+    <q-card class="surface1 column" style="width: 480px">
       <q-card-section class="display text-h5 col-auto">
         {{ $t('massCopyProcess.overwriteAlias.title') }}
       </q-card-section>
@@ -13,6 +13,7 @@
         </div>
         <q-checkbox
           v-model="overwrite"
+          color="theme-orange"
           :label="$t('massCopyProcess.overwriteAlias.label')"
         />
       </q-card-section>
@@ -28,7 +29,7 @@
         />
         <q-btn
           :color="overwrite ? 'theme-orange' : 'theme-blue'"
-          :label="$t('confirm')"
+          :label="$t('copy')"
           @click="onDialogOK(overwrite)"
         />
       </q-card-actions>

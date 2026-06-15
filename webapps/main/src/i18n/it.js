@@ -473,7 +473,7 @@ export default {
       operation: "Errore durante la copia dell'operazione",
     },
     overwriteAlias: {
-      title: 'Sovrascrivere i nomi delle fasi?',
+      title: 'Modalità di copia',
       message:
         "Sostituire il nome di ogni fase corrispondente con il nome dell'operazione? Questo sovrascrive i nomi delle fasi specifici per prodotto. Lascia deselezionato per mantenerli.",
       label: "Sovrascrivi i nomi delle fasi con il nome dell'operazione",
