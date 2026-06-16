@@ -164,8 +164,12 @@ async def force_delete_work_order_data(work_order_key: str):
   if not db.collection('WorkOrder').has(work_order_key):
     raise HTTPException(status_code=404, detail="Work order key could not be found in the database")
 
-  # 0. Setup transaction
-  tx = db.begin_transaction(write=traceability_collections)
+  # 0. Setup transaction — Queue is a shared site singleton; lock it exclusively
+  # so concurrent force-deletes serialize instead of racing for the doc lock.
+  tx = db.begin_transaction(
+    write=[c for c in traceability_collections if c != 'Queue'],
+    exclusive=['Queue'],
+  )
 
   try:
     match = dict(work_order_key=work_order_key)

@@ -73,7 +73,7 @@ def update_config(config: dict):
   }
 
   try:
-    tx = db.begin_transaction(write=['Config', 'Queue'])
+    tx = db.begin_transaction(exclusive=['Config', 'Queue'])
 
     to_insert = []
     to_update = []

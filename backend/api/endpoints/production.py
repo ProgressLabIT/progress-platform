@@ -54,7 +54,7 @@ async def create_work_order(new_wo: WorkOrderNew):
   """
 
   # Initialize transaction
-  tx = db.begin_transaction(write=['WorkOrder', 'Job', 'Queue'], exclusive=['Counter'], read=['Phase', 'Product', 'Config'])
+  tx = db.begin_transaction(write=['WorkOrder', 'Job'], exclusive=['Counter', 'Queue'], read=['Phase', 'Product', 'Config'])
   wo_coll = tx.collection('WorkOrder')
   product_coll = tx.collection('Product')
 
@@ -277,7 +277,7 @@ async def update_work_order_quantities(
 
   try:
     # Include Event, Task, and event_source collections to ensure JobClosed events are stored correctly
-    tx = db.begin_transaction(write=['WorkOrder', 'Job', 'Queue', 'Event', 'Task', 'event_source'])
+    tx = db.begin_transaction(write=['WorkOrder', 'Job', 'Event', 'Task', 'event_source'], exclusive=['Queue'])
     wo_data = WorkOrderFull(**tx.collection('WorkOrder').get(wo_key))
 
     for update in job_updates:
@@ -945,7 +945,7 @@ async def update_jobs(job_updates:List[JobUpdate]):
   **Required scope:** `production:job:update`
   """
 
-  tx = db.begin_transaction(write=['Job', 'Queue', 'WorkOrder', 'Event', 'event_source'])
+  tx = db.begin_transaction(write=['Job', 'WorkOrder', 'Event', 'event_source'], exclusive=['Queue'])
   job_db = tx.collection('Job')
 
   results = []
