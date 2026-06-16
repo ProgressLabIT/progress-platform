@@ -193,7 +193,7 @@ async def create_position(new_position: PositionNew):
   **Required scope:** `inventory:position:create`
   """
 
-  tx = db.begin_transaction(write=['Position', 'Counter', 'is_in_position'], read=['Config', 'Position'])
+  tx = db.begin_transaction(write=['Position', 'is_in_position'], exclusive=['Counter'], read=['Config', 'Position'])
 
   try:
     if not new_position.code:

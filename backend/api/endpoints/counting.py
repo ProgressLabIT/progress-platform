@@ -55,7 +55,7 @@ def create_counting_session(
   **Required scope:** `inventory:count:create`
   """
   try:
-    tx = db.begin_transaction(write=['InventoryCountSession', 'InventoryCountAssignment', 'Config', 'Counter'])
+    tx = db.begin_transaction(write=['InventoryCountSession', 'InventoryCountAssignment', 'Config'], exclusive=['Counter'])
 
     # Generate counting session code if not provided
     if count_session.code is None:
