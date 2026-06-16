@@ -8,6 +8,7 @@
 - `km/architecture/iiot-architecture.md` — IIoT architecture (topology, data plane, edge deployment, protocols, federation, HA). **The architecture half of this reference lives there.**
 - `km/strategy/defense-aerospace-roadmap.md` — security & compliance posture roadmap (five cert-gated stages)
 - `km/security/tokens.md` — current API token lifecycle (HS256 today; Ed25519 on roadmap)
+- `km/security/nats-nkey-auth.md` — NATS NKey/JWT auth mechanism + operator bring-up runbook (the detail behind §5 and §3.3)
 - `km/security/https.md` — Traefik / TLS termination and custom-cert handling
 - `km/decisions/0011-database-substrate.md`
 - `km/decisions/0012-graph-query-substrate.md`
@@ -145,6 +146,8 @@ The dual-host and data-diode variants (`km/architecture/iiot-architecture.md` §
 
 ## 5. Provisioning and identity
 
+> The NKey/JWT mechanism behind this section (signing chain, connect handshake, ACL-as-JWT-claims) and the operator bring-up runbook (hub / edge leaf / clients, `nsc` issuance, revocation) live in [`nats-nkey-auth.md`](./nats-nkey-auth.md). This section owns the *identity hierarchy and enrollment policy*; that doc owns *how the identities are issued and wired*.
+
 **Edge enrollment** (replaces the original spec's USB cloud-init):
 
 1. Edge IPC is built and tested in a controlled staging facility.
@@ -215,6 +218,7 @@ Security-specific open questions; the architecture set is in `km/architecture/ii
 - `km/strategy/defense-aerospace-roadmap.md` — security / compliance posture roadmap
 - `km/security/https.md` — Traefik / TLS setup
 - `km/security/tokens.md` — current API token lifecycle
+- `km/security/nats-nkey-auth.md` — NATS NKey/JWT auth mechanism + operator bring-up runbook
 - `km/architecture/sparkplug.md` — Sparkplug B integration details
 - `km/decisions/0002-nats-subject-taxonomy.md`
 - `km/decisions/0008-natsmqtt-subject-mapping.md`
