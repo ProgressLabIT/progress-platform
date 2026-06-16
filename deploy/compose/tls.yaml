@@ -74,6 +74,16 @@ services:
       labels:
         - "traefik.http.routers.app.tls.certresolver=letsencrypt"
 
+  # TLS configuration for NATS WebSocket route (broker).
+  # Without this the natsws router has no tls config, so on :443 it only matches
+  # plain HTTP and the encrypted `wss://` handshake falls through to the `app`
+  # router (PathPrefix `/`), which returns the SPA's 200 instead of a 101 upgrade.
+  broker:
+    deploy:
+      labels:
+        - "traefik.http.routers.natsws.entrypoints=websecure"
+        - "traefik.http.routers.natsws.tls.certresolver=letsencrypt"
+
   # TLS configuration for workflow server
   wf-server:
     deploy:

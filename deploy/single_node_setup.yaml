@@ -185,6 +185,7 @@
           loop:
             - appConfig.js
             - api.env
+            - nats-server.conf
 
         - name: Copy reports application files
           ansible.builtin.copy:
