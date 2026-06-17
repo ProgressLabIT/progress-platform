@@ -32,6 +32,9 @@ Filename convention: `NNNN-kebab-title.md`. NNNN is zero-padded to 4 digits, ass
 | [0011](0011-database-substrate.md) | Database substrate: migrate from ArangoDB to PostgreSQL (cross-cutting / defense-readiness) | discussion | 2026-05-21 |
 | [0012](0012-graph-query-substrate.md) | Graph queries stay in the database; in-memory rejected as primary substrate | discussion | 2026-05-21 |
 | [0013](0013-retire-gsd-branch-worktree-to-dev.md) | Retire perpetual GSD branch; features integrate worktree → DEV (cross-cutting / process) | decided | 2026-05-26 |
+| [0015](0015-device-consumer-identity-model.md) | Device & consumer identity model (unified registry, dual credentials) | discussion | 2026-06-17 |
+| [0016](0016-reactive-event-automation-contract.md) | Reactive event/automation contract (device channels, subscriber-validated side effects) | discussion | 2026-06-17 |
+| [0017](0017-physical-credentials-station-identity.md) | Physical credentials & station device identity (card-as-key, installed station builds) | discussion | 2026-06-17 |
 
 ### Reserved / incoming
 

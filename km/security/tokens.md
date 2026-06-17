@@ -78,6 +78,17 @@ Browser `EventSource` cannot set request headers, so a short-lived ticket is use
 
 **Implementation:** `backend/api/endpoints/notification.py` (`mint_ticket`, `_verify_stream_access`), `backend/api/utils/auth.py` (`issue_sse_ticket`, `verify_sse_ticket`, `SSE_TICKET_TTL_SECONDS`), `webapps/main/src/composables/useSSE.js`.
 
+## Planned: device tokens & consumer-type taxonomy (ADR-0015, discussion)
+
+> Forward-looking — not yet implemented. See [ADR-0015](../decisions/0015-device-consumer-identity-model.md) (status: `discussion`). Today's `ConsumerType` is `{ USER, PROGRESS_APP, EQUIPMENT }`; only `USER` is in live use.
+
+ADR-0015 proposes a non-human **device identity** usable by NFC/biometric readers, kiosks, and IIoT edge nodes, minted from one **Device registry** via the existing NATS enrollment service. What touches this document:
+
+- **`ConsumerType` → `{ PROGRESS, DEVICE, 3PSW, USER }`** (no migration — `PROGRESS_APP`/`EQUIPMENT` have no live references). `PROGRESS` = trusted first-party services + IIoT bridges; `DEVICE` = constrained edge identity; `3PSW` = third-party software (ERP, external plugins); `USER` = humans.
+- **Device token** = a `ConsumerType.DEVICE` Progress-API JWT (HS256 + `Token` record, same mechanism as today) with a **flat `scope`**. NATS pub/sub permissions live in the *separate* NATS user JWT (`nats-nkey-auth.md`), never here — identity is unified at the registry, enforcement stays per-plane.
+- **Two-layer sessions:** a long-lived **device session** (the kiosk/station; holds the SSE channel; the trust anchor) + a short-lived **operator session** overlay (who is at the station now). The backend holds the `station ↔ operator` binding, so a browser refresh recovers the operator session.
+- **Device ≠ Asset:** `DEVICE` is an auth/identity type; `Asset`/`AssetClass` is the OT domain model. Related, not equal — the registry links a Device to an Asset only when one exists.
+
 ## Related
 
 - **Endpoints**: `backend/api/endpoints/auth.py` (login, session, whoami), `backend/api/endpoints/org.py` (api-token, user/api-tokens), `backend/api/endpoints/notification.py` (SSE ticket issuance, SSE stream).

@@ -292,6 +292,12 @@ the conversion table and the debugging recipe.
 `ServerEventManager` which has its own buffering for SSE; no JetStream
 persistence is added there either.
 
+### Device-owned channels & inbound-context class (ADR-0016, discussion)
+
+> Forward-looking extension — not part of the frozen v1 demo contract. See [ADR-0016](0016-reactive-event-automation-contract.md) (status: `discussion`).
+
+Beyond the read-only `progress.sparkplug.*` consumer hierarchy above, the reactive-apps work introduces **device-owned channels** scoped per `DEVICE` identity (ADR-0015): a device publishes its own *report* channel and subscribes its own *command* channel, both derivable from `device_id`. A second channel class — **inbound-context** (route-to-page + data injection, e.g. JobStep fields / BoM serials) — carries effects toward the app. Unlike the trust-on-origin telemetry here, inbound-context/command payloads must be **validated by the subscriber** (the channel proves origin, not payload truth). Exact prefixes land when ADR-0016 moves to `decided`.
+
 ## Trade-offs and rejected options
 
 **Per-metric subject vs per-device subject.** A naive 1:1 metric→subject
