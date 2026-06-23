@@ -67,23 +67,33 @@ A high-level overview of the Progress Platform architecture for visitors browsin
 ## Repository layout
 
 ```
-├── backend/
+├── backend/            Real services — one directory each
 │   ├── api/            FastAPI application (endpoints, models, events, managers)
 │   ├── workflow/       Prefect flows (inventory, production, cleanup)
-│   ├── commons/        Shared logic across backend services
-│   └── reports/        Reporting service
+│   ├── print_service/  Label/print service (NATS request-reply)
+│   ├── sparkplug_bridge/  Sparkplug B → NATS ingress service (vendored proto in backend/sparkplug/)
+│   └── commons/        Shared logic across backend services
+├── demos/              Demo-only code (see ADR-0018)
+│   ├── reports/        Streamlit reports app (Sparkplug + MillTwin pages)
+│   ├── sparkplug_sim/  Fake-PLC Sparkplug simulator
+│   ├── mill_twin/      Mill HMI (demo_twin) + threshold→Issue automation (mill_automation)
+│   └── seed/           Demo data seeders
 ├── webapps/
 │   ├── main/           Primary SPA (Vue 3 + Quasar + Vite)
 │   └── warehouse/      Mobile-first warehouse app (Vue 3 + Quasar + Vite + Capacitor)
 ├── deploy/
-│   ├── compose/        Docker Compose files (dev / prod / TLS / etc.)
+│   ├── compose/        Docker Compose files — all orchestration, incl. demo stacks
 │   └── config/         Environment configs, Traefik, Prometheus
 ├── db/                 Migrations, queries, backup scripts
 ├── testing/            Test suites (pytest + Robot Framework)
-├── km/                 Living documentation (architecture, domain logic)
+├── km/                 Living documentation (architecture, domain logic, decisions)
 ├── cli/                CLI tools (data generation, utilities)
 └── docs/               Public documentation site (VitePress) — published to GitHub Pages
 ```
+
+> Demo code (HMIs, simulators, seeders, reports) lives in `demos/`; `backend/`
+> holds only shippable services. All compose/config — including demo stacks —
+> stays in `deploy/`. See [ADR-0018](km/decisions/0018-demos-dir-and-backend-service-layout.md).
 
 ## Tech stack
 
