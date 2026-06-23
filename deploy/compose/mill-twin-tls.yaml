@@ -1,0 +1,23 @@
+# TLS overlay for the Aerospace Mill Live Twin demo panel.
+#
+# Companion to mill-twin.yaml. Adds the HTTPS entrypoint + Let's Encrypt resolver
+# to the demo_twin router, mirroring the per-service blocks in tls.yaml. Kept in
+# its own file (rather than in tls.yaml) so the demo's TLS wiring ships with the
+# demo overlay: a non-TLS deploy simply omits this file and demo_twin stays on
+# the default `web` entrypoint.
+#
+# The demo_twin service itself (and its base routing labels) is defined in
+# mill-twin.yaml; this file only layers TLS labels onto its deploy.labels, so it
+# MUST be included AFTER mill-twin.yaml in the stack deploy:
+#
+#   docker stack deploy \
+#     -c base.yaml -c stack.yaml -c tls.yaml [-c <other overlays>] \
+#     -c reporting.yaml -c mill-twin.yaml -c mill-twin-tls.yaml \
+#     progress
+
+services:
+  demo_twin:
+    deploy:
+      labels:
+        - "traefik.http.routers.demo_twin.entrypoints=websecure"
+        - "traefik.http.routers.demo_twin.tls.certresolver=letsencrypt"

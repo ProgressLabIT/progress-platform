@@ -1,0 +1,7 @@
+{
+  "_note": "Live Issue binding for mill_automation. Re-read on EVERY fire — edit any time, no restart. Set issue_type_key to a valid IssueType _key (curl -s https://<host>/api/issue-type | jq .). serial/work_order/operation are the linked record keys the Issue attaches to; keep them matching twinConfig.js WO_LINKS. Any key left blank falls back to the MILL_AUTO_* env value.",
+  "issue_type_key": "",
+  "serial": "WING-DEMO-001",
+  "work_order": "WO-DEMO-001",
+  "operation": "OP-DEMO-001"
+}

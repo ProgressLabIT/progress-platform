@@ -1,0 +1,35 @@
+# NATS-over-WebSocket exposure for off-site browser clients (the mill-twin HMI panel).
+#
+# This is a backport of DEV's broker `natsws` route (stack.yaml) + its TLS
+# (tls.yaml) into a single standalone overlay, because this worktree forked before
+# that work landed. It publishes the broker's WebSocket listener at
+# wss://${HOST}/nats → broker:8090, so the panel (served over https) can reach NATS.
+#
+# REQUIRES a matching listener in the broker's nats-server.conf:
+#   websocket { port: 8090, no_tls: true }       # TLS is terminated by Traefik
+# (add it on the server and restart the broker — see notes below).
+#
+# Include AFTER stack.yaml in the deploy, with HOST/PROTOCOL exported:
+#   export HOST=demo.progresslab.it PROTOCOL=https
+#   docker stack deploy --resolve-image=never \
+#     -c base.yaml -c stack.yaml -c tls.yaml [-c …] \
+#     -c reporting.yaml -c mill-twin.yaml -c mill-twin-tls.yaml -c nats-ws.yaml progress
+#
+# NOTE: if the server later syncs DEV's stack.yaml (which already defines natsws),
+# drop this file to avoid a duplicate router definition.
+
+services:
+  broker:
+    volumes:
+      - /opt/progress/config/nats-server.conf:/etc/nats/nats-server.conf:ro
+    deploy:
+      labels:
+        - "traefik.enable=true"
+        - "traefik.docker.network=progress"
+        - "traefik.http.routers.natsws.rule=Host(`${HOST}`) && PathPrefix(`/nats`)"
+        - "traefik.http.routers.natsws.priority=10"
+        - "traefik.http.routers.natsws.entrypoints=websecure"
+        - "traefik.http.routers.natsws.tls.certresolver=letsencrypt"
+        - "traefik.http.routers.natsws.middlewares=natsws_strip"
+        - "traefik.http.middlewares.natsws_strip.stripprefix.prefixes=/nats"
+        - "traefik.http.services.natsws.loadbalancer.server.port=8090"

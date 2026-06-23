@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 150" width="360" height="150">
+  <!-- Background -->
+  <rect width="360" height="150" fill="#1C232C" rx="10"/>
+
+  <!-- Machine body - gantry frame -->
+  <rect x="20" y="30" width="320" height="90" fill="#0D1014" rx="4"/>
+
+  <!-- Gantry cross-beam -->
+  <rect x="30" y="35" width="300" height="18" fill="#232B35" rx="3"/>
+
+  <!-- Left column -->
+  <rect x="30" y="35" width="22" height="80" fill="#1F2630" rx="2"/>
+  <!-- Right column -->
+  <rect x="308" y="35" width="22" height="80" fill="#1F2630" rx="2"/>
+
+  <!-- Spindle head -->
+  <rect x="140" y="53" width="80" height="40" fill="#2B333E" rx="4"/>
+  <rect x="155" y="58" width="50" height="30" fill="#1F2630" rx="3"/>
+  <!-- Spindle -->
+  <circle cx="180" cy="78" r="12" fill="#0D1014" stroke="#4A9FD8" stroke-width="2"/>
+  <circle cx="180" cy="78" r="5" fill="#4A9FD8"/>
+
+  <!-- Tool -->
+  <rect x="177" y="88" width="6" height="18" fill="#93A0B0" rx="1"/>
+  <polygon points="177,106 183,106 180,116" fill="#4A9FD8"/>
+
+  <!-- Table/work surface -->
+  <rect x="50" y="108" width="260" height="10" fill="#2B333E" rx="2"/>
+  <!-- Workpiece -->
+  <rect x="90" y="92" width="180" height="16" fill="#232B35" rx="2" stroke="#2B333E" stroke-width="1"/>
+
+  <!-- Left guide rail -->
+  <rect x="32" y="50" width="6" height="65" fill="#1F2630"/>
+  <!-- Right guide rail -->
+  <rect x="322" y="50" width="6" height="65" fill="#1F2630"/>
+
+  <!-- Chip conveyor hint -->
+  <rect x="20" y="118" width="320" height="6" fill="#0D1014" rx="3"/>
+
+  <!-- Status indicator light - green (running) -->
+  <circle cx="336" cy="42" r="5" fill="#35C98A" opacity="0.9"/>
+  <circle cx="336" cy="42" r="5" fill="#35C98A" opacity="0.3">
+    <animate attributeName="r" values="5;8;5" dur="2s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0.3;0;0.3" dur="2s" repeatCount="indefinite"/>
+  </circle>
+
+  <!-- Label band at bottom -->
+  <rect x="20" y="124" width="320" height="20" fill="#151A21" rx="0 0 8 8"/>
+  <text x="180" y="138" font-family="monospace" font-size="10" font-weight="600" letter-spacing="1.5" fill="#5E6A78" text-anchor="middle">GANTRY MILL · CELL 03</text>
+</svg>

@@ -1,0 +1,162 @@
+# Overlay for the Aerospace Mill Live Twin demo.
+#
+# Brings up demo_twin (HMI + physics engine + NATS publisher) and
+# mill_automation (NATS subscriber → Issue creation) on the existing
+# progress Docker network.
+#
+# Build commands (from repo root, before first compose up):
+#   docker build -t progress-demo-twin:dev -f demos/mill_twin/demo_twin/Dockerfile demos/mill_twin/
+#   docker build -t progress-mill-automation:dev -f demos/mill_twin/mill_automation/Dockerfile demos/mill_twin/
+#
+# Start (full local stack + mill-twin overlay):
+#   docker compose -f deploy/compose/base.yaml -f deploy/compose/dev.yaml \
+#     -f deploy/compose/reporting.yaml -f deploy/compose/mill-twin.yaml \
+#     -p progress-local up -d
+#
+# NOTE: -p progress-local avoids a project-name collision with the main repo
+# stack (default project name derived from directory would be "mill-twin").
+#
+# Prerequisites (must be done ONCE before compose up):
+#   1. Mint the mill-automation JWT:
+#        curl -s -X POST http://progress.localhost/api/auth \
+#          -d 'username=cadmin&password=<pwd>' \
+#          | jq -r '.access_token' \
+#          > ${PROGRESS_SECRETS_DIR:-./secrets}/mill-automation.token
+#   2. Set MILL_AUTO_ISSUE_TYPE_KEY in deploy/compose/.env (see REQUIRED note below).
+#
+# Kill switch — automation only (leave panel running):
+#   Edit deploy/compose/.env: MILL_AUTO_ENABLED=false
+#   docker compose ... up -d --force-recreate mill_automation
+#
+# Kill switch — panel:
+#   docker compose -f deploy/compose/base.yaml -f deploy/compose/dev.yaml \
+#     -f deploy/compose/reporting.yaml -f deploy/compose/mill-twin.yaml \
+#     -p progress-local stop demo_twin
+
+networks:
+  progress:
+    external: true   # created by dev.yaml as name: progress
+
+secrets:
+  mill_automation_jwt:
+    file: ${PROGRESS_SECRETS_DIR:-./secrets}/mill-automation.token
+
+volumes:
+  # The same external config volume the base stack uses (stack.yaml mounts
+  # appConfig.js / api.env from it) — on the server it's /opt/progress/config.
+  # Holds twinConfig.js (mounted OVER demo_twin's static/config.js, exactly like
+  # app/appConfig.js) and mill_automation.json (the automation's Issue binding).
+  # Edit those files + redeploy the affected service — no image rebuild.
+  config:
+    external: true
+
+services:
+
+  demo_twin:
+    image: progress-demo-twin:dev
+    hostname: demo_twin
+    restart: unless-stopped
+    networks:
+      - progress
+    environment:
+      - TWIN_NATS_URL=nats://broker:4222
+      # Decimal form of 0xDEADBEEF — pydantic int coercion is base-10 only, so a
+      # raw hex string here crashes demo_twin at startup. config.py also tolerates
+      # hex now, but the default stays decimal so it's safe regardless.
+      - TWIN_RNG_SEED=${TWIN_RNG_SEED:-3735928559}
+      - TWIN_HTTP_HOST=0.0.0.0
+      - TWIN_HTTP_PORT=8001
+      - TWIN_CORS_ALLOW_ORIGINS=${TWIN_CORS_ALLOW_ORIGINS:-${PROTOCOL:-https}://${HOST},http://localhost:9000}
+    # No published port here: on swarm `ports:` goes on the public ingress mesh,
+    # needlessly exposing :8001 to the internet. The panel is reached via Traefik
+    # /twin. Direct :8001 for local dev is published in dev.yaml (local-only overlay).
+    depends_on:
+      - broker
+    volumes:
+      # Live panel config: twinConfig.js from the shared config volume is mounted
+      # directly OVER the baked static/config.js (same pattern as app/appConfig.js
+      # in stack.yaml). Edit /opt/progress/config/twinConfig.js (WO links, NATS URL)
+      # and redeploy demo_twin — NO image rebuild. Without the volume (local dev),
+      # the baked static/config.js is served as the fallback.
+      - type: bind
+        source: /opt/progress/config/twinConfig.js
+        target: /app/demo_twin/static/config.js
+        read_only: true
+    # Traefik labels applied at BOTH levels via the &demo_twin_labels anchor:
+    #   top-level `labels:` → docker provider in plain compose (local dev / dev.yaml)
+    #   `deploy.labels:`     → docker provider in swarmMode (the demo server)
+    # The server runs `--providers.docker.swarmMode`, which reads ONLY deploy.labels;
+    # with labels at top-level alone the /twin router is invisible on swarm → 404.
+    # TLS (websecure entrypoint + certresolver) is layered on per-service in tls.yaml.
+    labels: &demo_twin_labels
+      - "traefik.enable=true"
+      - "traefik.docker.network=progress"
+      - "traefik.http.services.demo_twin.loadbalancer.server.port=8001"
+      - "traefik.http.routers.demo_twin.priority=10"
+      # Bare ${HOST} (no :-default) to match stack.yaml/reporting.yaml: a missing
+      # HOST then breaks every route consistently (loud) instead of silently
+      # substituting progress.localhost here, which masks the misconfig on the
+      # server and routes /twin to nowhere. HOST/PROTOCOL come from the deploy env
+      # (server: export at stack-deploy time) or deploy/compose/.env (local).
+      - "traefik.http.routers.demo_twin.rule=Host(`${HOST}`) && PathPrefix(`/twin`)"
+      - "traefik.http.routers.demo_twin.middlewares=twin-slash,demo-twin-embed,strip-twin-prefix"
+      # framedeny=false so the Streamlit report iframe can load the panel (B-04 / T-05-06)
+      - "traefik.http.middlewares.demo-twin-embed.headers.framedeny=false"
+      # CSP frame-ancestors: only allow embedding from the Progress host (B-04 / T-05-06)
+      - "traefik.http.middlewares.demo-twin-embed.headers.customresponseheaders.Content-Security-Policy=frame-ancestors 'self' ${PROTOCOL:-https}://${HOST} http://localhost:9000"
+      # Redirect bare /twin → /twin/ (runs FIRST in the chain). The panel's index.html
+      # uses relative asset paths; at /twin (no slash) the browser resolves them against
+      # root (GET /charts.js), which misses this PathPrefix(`/twin`) router and falls
+      # through to the SPA catch-all (priority 1) → text/html → module MIME errors.
+      # At /twin/ they resolve to /twin/charts.js and route here. $$ / $${1} are
+      # compose-escaped so Traefik receives $ / ${1}. 302 (not 301) avoids sticky
+      # browser-cached redirects during rehearsal.
+      - "traefik.http.middlewares.twin-slash.redirectregex.regex=^(https?://[^/]+)/twin$$"
+      - "traefik.http.middlewares.twin-slash.redirectregex.replacement=$${1}/twin/"
+      # Strip the /twin prefix before forwarding to demo_twin (which serves at /) — MANDATORY.
+      # Without this, POST /twin/setpoints hits FastAPI as /twin/setpoints and 404s (Pitfall 2).
+      - "traefik.http.middlewares.strip-twin-prefix.stripprefix.prefixes=/twin"
+      - "traefik.http.middlewares.strip-twin-prefix.stripprefix.forceslash=false"
+    deploy:
+      replicas: 1
+      labels: *demo_twin_labels
+
+  mill_automation:
+    image: progress-mill-automation:dev
+    hostname: mill_automation
+    restart: unless-stopped
+    networks:
+      - progress
+    secrets:
+      - source: mill_automation_jwt
+        mode: 0400   # restrict to owner-read only inside the container (WR-01)
+    volumes:
+      # Live Issue binding (mill_automation.json) — re-read on every fire so the
+      # operator can retarget the Issue type / linked WO at any time, no restart.
+      - type: bind
+        source: /opt/progress/config/mill_automation.json
+        target: /config
+        read_only: true
+    environment:
+      - MILL_AUTO_NATS_URL=nats://broker:4222
+      - MILL_AUTO_API_BASE_URL=http://api:8000/api
+      - MILL_AUTO_TOKEN_PATH=/run/secrets/mill_automation_jwt
+      # Demo WO/serial/operation link keys — must match records in the seeded local
+      # Progress and window.WO_LINKS in the panel config.js (D-08 / C-01).
+      - MILL_AUTO_LINKED_SERIAL_KEY=${MILL_AUTO_LINKED_SERIAL_KEY:-WING-DEMO-001}
+      - MILL_AUTO_LINKED_WORK_ORDER_KEY=${MILL_AUTO_LINKED_WORK_ORDER_KEY:-WO-DEMO-001}
+      - MILL_AUTO_LINKED_OPERATION_KEY=${MILL_AUTO_LINKED_OPERATION_KEY:-OP-DEMO-001}
+      # Fallback only — the live value is read from /config/mill_automation.json on
+      # every fire. If both the file key and this env are empty, the automation
+      # skips firing (logs why) instead of 422-ing. Valid IssueType _key:
+      #   curl -s http://progress.localhost/api/issue-type | jq .
+      - MILL_AUTO_ISSUE_TYPE_KEY=${MILL_AUTO_ISSUE_TYPE_KEY:-}
+      # Identity attached to the auto-created Issue; must match the JWT's consumer_key.
+      - MILL_AUTO_USER_KEY=${MILL_AUTO_USER_KEY:-USR-MILL-AUTOMATION}
+      - MILL_AUTO_USER_SESSION_KEY=${MILL_AUTO_USER_SESSION_KEY:-mill-automation}
+      - MILL_AUTO_CREATED_BY=${MILL_AUTO_CREATED_BY:-User/USR-MILL-AUTOMATION}
+      # Kill switch: set false + `compose ... up -d --force-recreate mill_automation`.
+      - MILL_AUTO_ENABLED=${MILL_AUTO_ENABLED:-true}
+    depends_on:
+      - broker
+      - api

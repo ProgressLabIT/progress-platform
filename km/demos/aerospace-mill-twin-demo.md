@@ -1,6 +1,6 @@
 # Demo Brief — Aerospace Mill Live Twin
 
-**Status:** draft for discussion · **Date:** 2026-05-29 · **Audience:** demo planning (internal)
+**Status:** built — v1.0 code-complete, DEMO-01 rehearsal-ready · **Date:** 2026-05-29 (updated 2026-06-18) · **Audience:** demo planning (internal)
 **One-liner:** An interactive digital twin of a large 3-axis gantry mill carving aircraft
 wing skins from 25 m aluminium billets — the customer turns the knobs, the real Progress
 platform reacts.
@@ -57,34 +57,38 @@ physics and does **not** natively speak Sparkplug B, so it publishes **normalize
 NATS** (the `progress.sparkplug.*` subjects the bridge would otherwise emit after decode) — the
 platform's real data plane. Encoding into Sparkplug B just so the bridge could decode it straight back
 buys nothing; Sparkplug B is reserved for equipment that already emits it. Everything that consumes the
-JSON — UNS browser, historian, and the threshold→Issue automation (here a NATS subscriber, not
-in-bridge) — is unchanged; only the MQTT/Sparkplug hop is dropped. The customer drives a *twin* feeding
-the *real* product pipeline; the *product* (UNS browser + Issues page) reacts.
+JSON — UNS browser, historian, and the threshold→Issue automation (the standalone `mill_automation`
+NATS subscriber, not in-bridge) — is unchanged; only the MQTT/Sparkplug hop is dropped. The customer
+drives a *twin* feeding the *real* product pipeline; the *product* (UNS browser + Issues page) reacts.
 
 ## The interaction
 
-Drag **Tool wear** (or crank feed/depth) → spindle torque climbs past the limit → 5 s dwell →
-an **Issue auto-appears in the real Progress UI**, linked to the wing serial + work order +
-operation, attributed to the machine user. Hit **Snap tool** → torque collapses → breakage Issue.
-Same `pump_anomaly` logic, retargeted.
+Drag **Tool wear** to max **and** raise **feed/tooth** → spindle torque climbs past the **45 N·m limit**
+(`torque ∝ depth × feed/tooth × (1 + 0.5·wear)`; wear alone tops out ~39 N·m, so a second lever is
+needed) → ~5 s dwell → an **Issue auto-appears in the real Progress UI**, linked to the wing serial +
+work order + operation, attributed to the machine user. Hit **Snap tool** → torque collapses → breakage
+Issue (instant, no dwell). Implemented as the standalone `mill_automation` subscriber — the `pump_anomaly`
+threshold logic, retargeted to torque.
 
-## Build scope (small)
+## Build scope (as built)
 
 | New | Reused as-is |
 |---|---|
-| `demo-twin/` FastAPI service + asyncio loop | `simulator/physics.py` (dynamics helpers) |
-| `control-panel.html` (sliders, gauges, WebSocket) | `simulator/topology.py` (→ gantry metric set) |
+| `demos/mill_twin/demo_twin/` FastAPI service + asyncio physics loop | `simulator/physics.py` (dynamics helpers) |
+| `static/control-panel.html` + `config.js` (sliders, gauges, `nats.ws` WebSocket) | `simulator/topology.py` (→ gantry metric set) |
 | thin NATS JSON publisher → `progress.sparkplug.*` (replaces `simulator/encoder.py` Sparkplug encode) | historian · UNS browser · Issue/event path (NATS-JSON consumers) |
-| setpoint→physics map; retarget anomaly to torque + breakage |  |
+| `demos/mill_twin/mill_automation/` threshold→Issue NATS subscriber (`pump_anomaly` logic, retargeted to torque + breakage) |  |
 
-## Open decisions for Tuesday
+## Decisions (resolved)
 
-1. **Lead anomaly:** tool-wear torque rise (headline) vs. also wiring breakage/hard-spot day one.
-2. **Customer framing:** AS9100D traceability angle vs. energy/OEE angle (changes narration, not build).
+1. **Lead anomaly — resolved:** tool-wear torque rise is the headline DEMO-01 beat; **Snap-tool** breakage is wired as the instant backup beat (no dwell). Hard-spot/spike is not wired.
+2. **Customer framing — narration choice:** AS9100D traceability vs. energy/OEE angle — both are supported by the same build; pick per audience.
 3. **Data path — decided:** twin publishes normalized JSON straight to NATS (no Sparkplug B — the twin doesn't natively emit it). Point the bridge at a real machine that already speaks Sparkplug B and that ingress lights up unchanged.
-4. **Live gauges:** engine WebSocket (default) vs. `nats.ws` round-trip to prove the full loop.
-5. **Sim vs. their data:** bundled gantry metrics vs. a metric set shaped like the customer's machine.
+4. **Live gauges — resolved:** the panel subscribes to NATS over WebSocket (`nats.ws`) — the connect chip proves the full loop. Anonymous WS connections map to a restricted sub-only `ws_browser` identity (the browser sends no credentials).
+5. **Sim vs. their data — resolved:** the bundled gantry metric set ships; a customer-shaped metric set is deferred.
 
-## Next step
+## Operating it
 
-Scaffold `demo-twin` via `/gsd:quick` once the anomaly + framing are locked.
+The demo is built and rehearsal-ready (local compose **and** the deployed Swarm/HTTPS server).
+For run/reset/kill-switch steps, smoke checks, and troubleshooting see the
+[Rehearsal Runbook](aerospace-mill-twin-demo-runbook.md).

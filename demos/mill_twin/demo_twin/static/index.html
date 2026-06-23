@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Aerospace Mill Live Twin — Control Panel</title>
+  <link rel="stylesheet" href="styles.css?v=2">
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       HEADER (LxtaY)
+       fill #151A21, padding [11,18], gap 16, bottom border 1px #2B333E
+       justify-content: space-between, align-items: center
+       ════════════════════════════════════════════════════════════════════ -->
+  <header id="header">
+
+    <!-- Identity: Logo + title/subtitle -->
+    <div class="identity">
+      <div class="logo-box">
+        <!-- Mill glyph: simplified M letterform on accent bg -->
+        <svg viewBox="0 0 20 20" fill="var(--bg-base)" xmlns="http://www.w3.org/2000/svg">
+          <rect x="2" y="4" width="2.5" height="12" rx="1"/>
+          <rect x="8.75" y="4" width="2.5" height="12" rx="1"/>
+          <rect x="15.5" y="4" width="2.5" height="12" rx="1"/>
+          <rect x="2" y="4" width="16" height="2.5" rx="1"/>
+        </svg>
+      </div>
+      <div class="identity-text">
+        <span class="identity-title">GANTRY MILL · WING SPAR LINE</span>
+        <span class="identity-subtitle">CELL 03 — UNIFIED TWIN OVERVIEW</span>
+      </div>
+    </div>
+
+    <!-- Status block: run chip + conn indicator + clock -->
+    <div class="status-block">
+
+      <!-- Run chip — seeded "CONNECTING" amber per D-17; 04-02 switches to green -->
+      <div id="run-chip" class="run-chip connecting">
+        <span id="run-chip-dot" class="run-chip-dot"></span>
+        <span id="run-chip-label" class="run-chip-label">CONNECTING</span>
+      </div>
+
+      <!-- Conn indicator — seeded grey per D-17; 04-02 updates on NATS connect -->
+      <div id="conn-indicator" class="conn-indicator">
+        <span id="conn-dot" class="conn-dot grey"></span>
+        <span id="conn-label" class="conn-label">Connecting…</span>
+      </div>
+
+      <!-- Clock — 04-02 drives the live time; seeded static for pre-telemetry -->
+      <div class="clock">
+        <span id="clock-time" class="clock-time">—:—:—</span>
+        <span id="clock-sub" class="clock-sub">SHIFT B · UPTIME 06:21</span>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       BODY — 3 columns: Physical 360px / Charts fill / Controls 320px
+       padding: 14px, gap: 12px
+       ════════════════════════════════════════════════════════════════════ -->
+  <div id="body">
+
+    <!-- ════════════════════════════════════════════════════════════════════
+         COL 1 — PHYSICAL (width 360px, vertical, gap 12)
+         ══════════════════════════════════════════════════════════════════ -->
+    <div id="col-physical">
+
+      <!-- Machine Photo (W5EdN) — static, height 150, cornerRadius 10, clip -->
+      <div class="machine-photo">
+        <!-- Sim "monitor camera" feed. Relative src so the /twin prefix is inherited.
+             muted+playsinline required for autoplay; loop replays continuously.
+             Click toggles pause/play (chromeless — no controls bar). -->
+        <video src="img/mill-cam.mp4" autoplay loop muted playsinline
+               title="Click to pause / play"
+               onclick="this.paused ? this.play() : this.pause()"></video>
+      </div>
+
+      <!-- Work Order Ticket (raujn) — cornerRadius 8, #151A21, 1px border -->
+      <div class="wo-ticket panel panel-r8">
+        <!-- Title Bar: amber tick + order no. + LIVE badge -->
+        <div class="panel-title-bar">
+          <div class="panel-title-left">
+            <div class="amber-tick"></div>
+            <span class="wo-title-text">ORDER · WO-A350-SPAR-0488</span>
+          </div>
+          <span class="wo-live-badge">LIVE</span>
+        </div>
+        <!-- Body -->
+        <div class="wo-body">
+          <!-- Part row -->
+          <div class="wo-part-row">
+            <span id="wo-part" class="wo-part-number">SPAR-OUTBD-R12</span>
+            <div class="status-pill">
+              <span class="status-pill-dot"></span>
+              <span class="status-pill-label">IN CYCLE</span>
+            </div>
+          </div>
+          <!-- KV grid -->
+          <div class="kv-grid">
+            <div class="kv-row">
+              <span class="kv-key">ALLOY</span>
+              <span class="kv-value">7050-T7451</span>
+            </div>
+            <div class="kv-row">
+              <span class="kv-key">OPERATION</span>
+              <span id="wo-kv-operation" class="kv-value">OP 040 / 12</span>
+            </div>
+            <div class="kv-row">
+              <span class="kv-key">PROGRAM</span>
+              <span id="wo-kv-program" class="kv-value">O4408</span>
+            </div>
+            <div class="kv-row">
+              <span class="kv-key">CYCLE EST</span>
+              <span class="kv-value">08:00</span>
+            </div>
+            <div class="kv-row">
+              <span class="kv-key">ELAPSED</span>
+              <span class="kv-value">06:21</span>
+            </div>
+            <div class="kv-row">
+              <span class="kv-key">PIECES</span>
+              <span id="wo-kv-pieces" class="kv-value">7 / 11</span>
+            </div>
+          </div>
+          <!-- Completion progress bar (68%) -->
+          <div class="wo-progress-block">
+            <div class="wo-progress-head">
+              <span class="wo-progress-label">COMPLETION</span>
+              <span class="wo-progress-value">68%</span>
+            </div>
+            <div class="progress-track">
+              <div class="progress-fill" style="width:68%"></div>
+            </div>
+          </div>
+        </div>
+        <!-- D-08 note: wo-order id for Phase-5 config injection -->
+        <span id="wo-order" style="display:none">WO-A350-SPAR-0488</span>
+      </div>
+
+      <!-- Watchlist Panel (t9HOVE) — fill_container height, radius 8 -->
+      <div class="watchlist-panel panel panel-r8">
+        <!-- Title Bar -->
+        <div class="panel-title-bar">
+          <div class="panel-title-left">
+            <div class="amber-tick"></div>
+            <span class="watchlist-title">MON · PROCESS CHANNELS</span>
+          </div>
+          <span class="watchlist-count">7 / 15 CH</span>
+        </div>
+        <!-- Head row -->
+        <div class="watchlist-head">
+          <span class="wl-head-label wl-col-channel">CHANNEL</span>
+          <span class="wl-head-label wl-col-last">LAST</span>
+          <span class="wl-head-label wl-col-trend">TREND</span>
+          <span class="wl-head-label wl-col-st">ST</span>
+        </div>
+        <!-- Data rows (7 rows, DOM contract: data-leaf attribute) -->
+        <div class="watchlist-body">
+          <table class="watchlist-table">
+            <tbody id="watchlist-rows">
+
+              <!-- SPDL LOAD — spindle_load_pct -->
+              <tr data-leaf="spindle_load_pct">
+                <td class="wl-channel">SPDL LOAD</td>
+                <td class="wl-last">—</td>
+                <td class="wl-spark">
+                  <svg class="wl-spark-svg" width="40" height="18" viewBox="0 0 40 18">
+                    <polyline class="wl-sparkline" points="0,9 20,9 40,9" stroke="#35C98A" fill="none" stroke-width="1.5" stroke-linejoin="round"/>
+                  </svg>
+                </td>
+                <td class="wl-dot"><span class="wl-status-dot"></span></td>
+              </tr>
+
+              <!-- SPINDLE RPM — spindle_rpm -->
+              <tr data-leaf="spindle_rpm">
+                <td class="wl-channel">SPINDLE RPM</td>
+                <td class="wl-last">—</td>
+                <td class="wl-spark">
+                  <svg class="wl-spark-svg" width="40" height="18" viewBox="0 0 40 18">
+                    <polyline class="wl-sparkline" points="0,9 20,9 40,9" stroke="#35C98A" fill="none" stroke-width="1.5" stroke-linejoin="round"/>
+                  </svg>
+                </td>
+                <td class="wl-dot"><span class="wl-status-dot"></span></td>
+              </tr>
+
+              <!-- FEED RATE — feed_rate -->
+              <tr data-leaf="feed_rate">
+                <td class="wl-channel">FEED RATE</td>
+                <td class="wl-last">—</td>
+                <td class="wl-spark">
+                  <svg class="wl-spark-svg" width="40" height="18" viewBox="0 0 40 18">
+                    <polyline class="wl-sparkline" points="0,9 20,9 40,9" stroke="#35C98A" fill="none" stroke-width="1.5" stroke-linejoin="round"/>
+                  </svg>
+                </td>
+                <td class="wl-dot"><span class="wl-status-dot"></span></td>
+              </tr>
+
+              <!-- SPDL POWER — spindle_power -->
+              <tr data-leaf="spindle_power">
+                <td class="wl-channel">SPDL POWER</td>
+                <td class="wl-last">—</td>
+                <td class="wl-spark">
+                  <svg class="wl-spark-svg" width="40" height="18" viewBox="0 0 40 18">
+                    <polyline class="wl-sparkline" points="0,9 20,9 40,9" stroke="#4A9FD8" fill="none" stroke-width="1.5" stroke-linejoin="round"/>
+                  </svg>
+                </td>
+                <td class="wl-dot"><span class="wl-status-dot"></span></td>
+              </tr>
+
+              <!-- VIBRATION — FIXED CONSTANT 4.6, no live binding (D-07) -->
+              <tr data-leaf="VIBRATION">
+                <td class="wl-channel">VIBRATION</td>
+                <td class="wl-last">4.6</td>
+                <td class="wl-spark">
+                  <svg class="wl-spark-svg" width="40" height="18" viewBox="0 0 40 18">
+                    <polyline class="wl-sparkline" points="0,14 8,4 16,12 24,2 32,10 40,6" stroke="#F0533B" fill="none" stroke-width="1.5" stroke-linejoin="round"/>
+                  </svg>
+                </td>
+                <td class="wl-dot"><span class="wl-status-dot alarm"></span></td>
+              </tr>
+
+              <!-- SPDL TEMP — spindle_temp -->
+              <tr data-leaf="spindle_temp">
+                <td class="wl-channel">SPDL TEMP</td>
+                <td class="wl-last">—</td>
+                <td class="wl-spark">
+                  <svg class="wl-spark-svg" width="40" height="18" viewBox="0 0 40 18">
+                    <polyline class="wl-sparkline" points="0,12 10,10 20,8 30,6 40,5" stroke="#F2B23E" fill="none" stroke-width="1.5" stroke-linejoin="round"/>
+                  </svg>
+                </td>
+                <td class="wl-dot"><span class="wl-status-dot warn"></span></td>
+              </tr>
+
+              <!-- COOLANT FLOW — coolant_flow -->
+              <tr data-leaf="coolant_flow">
+                <td class="wl-channel">COOLANT FLOW</td>
+                <td class="wl-last">—</td>
+                <td class="wl-spark">
+                  <svg class="wl-spark-svg" width="40" height="18" viewBox="0 0 40 18">
+                    <polyline class="wl-sparkline" points="0,6 10,8 20,10 30,12 40,14" stroke="#35C98A" fill="none" stroke-width="1.5" stroke-linejoin="round"/>
+                  </svg>
+                </td>
+                <td class="wl-dot"><span class="wl-status-dot"></span></td>
+              </tr>
+
+            </tbody>
+          </table>
+        </div>
+      </div><!-- /watchlist-panel -->
+
+    </div><!-- /col-physical -->
+
+    <!-- ════════════════════════════════════════════════════════════════════
+         COL 2 — CHARTS (fill_container, vertical, gap 12)
+         ══════════════════════════════════════════════════════════════════ -->
+    <div id="col-charts">
+
+      <!-- Lifetime & Totals (ztsdg / nAjxV) — height 176, radius 10 -->
+      <div class="lifetime-panel panel panel-r10">
+        <div class="lifetime-title">Lifetime &amp; Totals</div>
+        <div class="lifetime-tiles">
+
+          <!-- TOOL BIT LIFE -->
+          <div class="lifetime-tile">
+            <span class="lt-key">TOOL BIT LIFE</span>
+            <span class="lt-value">62</span>
+            <div class="progress-track" style="margin: 2px 0">
+              <div class="progress-fill" style="width:62%"></div>
+            </div>
+            <span class="lt-sub">T-217 · ~4.8 h to change</span>
+          </div>
+
+          <!-- TOTAL POWER -->
+          <div class="lifetime-tile">
+            <span class="lt-key">TOTAL POWER</span>
+            <span class="lt-value">1 284</span>
+            <span class="lt-sub" style="font-size:9px;color:var(--text-muted)">kWh</span>
+            <span class="lt-sub">Since shift start (06:11)</span>
+          </div>
+
+          <!-- WORKING TIME -->
+          <div class="lifetime-tile">
+            <span class="lt-key">WORKING TIME</span>
+            <span class="lt-value">06:21</span>
+            <div class="progress-track" style="margin: 2px 0">
+              <div class="progress-fill" style="width:78%"></div>
+            </div>
+            <span class="lt-sub">78% of planned cycle</span>
+          </div>
+
+        </div>
+      </div><!-- /lifetime-panel -->
+
+      <!-- Charts Row (kkYbz) — height 360, horizontal gap 12 -->
+      <div class="charts-row">
+
+        <!-- Coolant Tank (NBOLn) — width 190, radius 10, padding 16 -->
+        <div class="coolant-panel panel panel-r10">
+          <div class="coolant-head">
+            <!-- Lucide droplet icon (inline SVG) -->
+            <span class="coolant-head-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                   stroke="#4A9FD8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+              </svg>
+            </span>
+            <span class="coolant-title">Coolant Tank</span>
+            <span id="coolant-value" class="coolant-value">—</span>
+          </div>
+          <div class="coolant-gauge-area">
+            <div class="coolant-track-wrap">
+              <!-- fillable rect, height proportional to value -->
+              <div id="coolant-measure" class="coolant-measure" style="height:74%"></div>
+              <!-- target tick line -->
+              <div id="coolant-tick" class="coolant-tick" style="bottom:74%"></div>
+            </div>
+            <div class="coolant-scale">
+              <span class="coolant-scale-label">100</span>
+              <span class="coolant-scale-label">75</span>
+              <span class="coolant-scale-label">50</span>
+              <span class="coolant-scale-label">25</span>
+              <span class="coolant-scale-label">0</span>
+            </div>
+          </div>
+        </div><!-- /coolant-panel -->
+
+        <!-- Charts Stack (lFrxm) — 3 trend cards, vertical gap 10 -->
+        <div class="charts-stack">
+
+          <!-- Power Consumption chart — bind spindle_power -->
+          <div class="trend-card">
+            <div class="trend-card-header">
+              <div class="trend-card-left">
+                <span class="trend-card-title">Power Consumption</span>
+                <span class="trend-card-period">· 24H</span>
+              </div>
+              <span id="chart-power-val" class="trend-card-val" style="color:#4A9FD8">—</span>
+            </div>
+            <div id="chart-power" class="trend-card-plot"></div>
+          </div>
+
+          <!-- Material Removal chart — bind mrr -->
+          <div class="trend-card">
+            <div class="trend-card-header">
+              <div class="trend-card-left">
+                <span class="trend-card-title">Material Removal</span>
+                <span class="trend-card-period">· 24H</span>
+              </div>
+              <span id="chart-mrr-val" class="trend-card-val" style="color:#35C98A">—</span>
+            </div>
+            <div id="chart-mrr" class="trend-card-plot"></div>
+          </div>
+
+          <!-- Spindle Torque chart (D-21: rebadged from "Spindle Load") — bind spindle_torque
+               axis 0-60 N·m, visible 45 N·m limit line (#F0533B dashed) -->
+          <div class="trend-card">
+            <div class="trend-card-header">
+              <div class="trend-card-left">
+                <span class="trend-card-title">Spindle Torque</span>
+                <span class="trend-card-period">· 24H</span>
+              </div>
+              <span id="chart-torque-val" class="trend-card-val" style="color:#35C98A">—</span>
+            </div>
+            <div id="chart-torque" class="trend-card-plot"></div>
+          </div>
+
+        </div><!-- /charts-stack -->
+
+      </div><!-- /charts-row -->
+
+      <!-- Event History (KhfFK / Z4HhU) — fill_container height -->
+      <div class="event-history panel panel-r8">
+        <!-- Title Bar: red tick + title + right side meta/ack -->
+        <div class="panel-title-bar">
+          <div class="panel-title-left">
+            <div class="red-tick"></div>
+            <span class="event-history-title">MSG · EVENT HISTORY</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="event-history-meta">24H · 47</span>
+            <span class="event-history-ack">ACK ALL</span>
+          </div>
+        </div>
+        <!-- Event rows container — 04-03 prepends live rows here -->
+        <div id="event-log-rows" class="event-log-rows">
+
+          <!-- Pre-seeded rows (D-11) — static demo history -->
+
+          <div class="event-row">
+            <span class="event-time">14:31:52</span>
+            <span class="severity-tag alarm">ALARM</span>
+            <span class="event-message">Vibration over limit</span>
+            <span class="event-value alarm">4.6 mm/s</span>
+          </div>
+
+          <div class="event-row">
+            <span class="event-time">14:28:10</span>
+            <span class="severity-tag warn">WARN</span>
+            <span class="event-message">Spindle temp rising</span>
+            <span class="event-value warn">61 °C</span>
+          </div>
+
+          <div class="event-row">
+            <span class="event-time">14:22:45</span>
+            <span class="severity-tag info">INFO</span>
+            <span class="event-message">Tool T-217 wear 62%</span>
+            <span class="event-value info">62 %</span>
+          </div>
+
+          <div class="event-row">
+            <span class="event-time">14:15:03</span>
+            <span class="severity-tag info">INFO</span>
+            <span class="event-message">WCS G54 re-established</span>
+            <span class="event-value ok">OK</span>
+          </div>
+
+          <div class="event-row">
+            <span class="event-time">14:09:37</span>
+            <span class="severity-tag warn">WARN</span>
+            <span class="event-message">Coolant flow dip detected</span>
+            <span class="event-value warn">31 L/min</span>
+          </div>
+
+          <div class="event-row">
+            <span class="event-time">13:58:21</span>
+            <span class="severity-tag info">INFO</span>
+            <span class="event-message">OP 040 roughing started</span>
+            <span class="event-value info">O4408</span>
+          </div>
+
+        </div><!-- /event-log-rows -->
+      </div><!-- /event-history -->
+
+    </div><!-- /col-charts -->
+
+    <!-- ════════════════════════════════════════════════════════════════════
+         COL 3 — CONTROLS (width 320px, vertical, gap 12)
+         ══════════════════════════════════════════════════════════════════ -->
+    <div id="col-controls">
+
+      <!-- State Distribution (BFWG9) — D-19: horizontal bars, NOT donut -->
+      <div class="state-panel panel panel-r8">
+        <div class="panel-title-bar">
+          <div class="panel-title-left">
+            <div class="amber-tick"></div>
+            <span class="state-title">STATE · LAST 8H</span>
+          </div>
+          <span class="state-sub">TIME-IN-STATE</span>
+        </div>
+        <div class="state-body">
+
+          <!-- CUTTING — 72%, green -->
+          <div class="state-row" data-state="CUTTING">
+            <span class="state-label">CUTTING</span>
+            <div class="state-bar-area">
+              <div class="state-bar cutting" style="width:72%"></div>
+            </div>
+            <span class="state-val">72%</span>
+          </div>
+
+          <!-- RAPID_POS — 11%, accent -->
+          <div class="state-row" data-state="RAPID_POS">
+            <span class="state-label">RAPID/POS</span>
+            <div class="state-bar-area">
+              <div class="state-bar rapid" style="width:11%"></div>
+            </div>
+            <span class="state-val">11%</span>
+          </div>
+
+          <!-- TOOL_CHANGE — 6%, amber -->
+          <div class="state-row" data-state="TOOL_CHANGE">
+            <span class="state-label">TOOL CHANGE</span>
+            <div class="state-bar-area">
+              <div class="state-bar toolchg" style="width:6%"></div>
+            </div>
+            <span class="state-val">6%</span>
+          </div>
+
+          <!-- PROBING — 5%, accent -->
+          <div class="state-row" data-state="PROBING">
+            <span class="state-label">PROBING</span>
+            <div class="state-bar-area">
+              <div class="state-bar probing" style="width:5%"></div>
+            </div>
+            <span class="state-val">5%</span>
+          </div>
+
+          <!-- IDLE — 4%, muted -->
+          <div class="state-row" data-state="IDLE">
+            <span class="state-label">IDLE</span>
+            <div class="state-bar-area">
+              <div class="state-bar idle" style="width:4%"></div>
+            </div>
+            <span class="state-val">4%</span>
+          </div>
+
+          <!-- ALARM — 2%, red -->
+          <div class="state-row" data-state="ALARM">
+            <span class="state-label">ALARM</span>
+            <div class="state-bar-area">
+              <div class="state-bar alarm" style="width:2%"></div>
+            </div>
+            <span class="state-val">2%</span>
+          </div>
+
+        </div>
+      </div><!-- /state-panel -->
+
+      <!-- Setpoints & Faults (GP8VL) — fill_container height, radius 10, padding 18 -->
+      <div class="setpoints-panel panel panel-r10">
+
+        <!-- Controls head -->
+        <div class="setpoints-head">
+          <div class="setpoints-heading">Process Setpoints</div>
+          <div class="setpoints-sub">Drag a control — the twin recomputes spindle torque live.</div>
+        </div>
+
+        <!-- Sliders (5 total) -->
+        <div class="sliders-list">
+
+          <!-- 1. Spindle RPM — key: n, range: 6000–12000 -->
+          <div class="slider-block" data-key="n">
+            <div class="slider-head">
+              <span class="slider-label">Spindle RPM</span>
+              <span class="slider-value">12 000 rpm</span>
+            </div>
+            <input type="range" class="slider" data-key="n"
+                   min="6000" max="12000" step="100" value="12000">
+            <div class="slider-foot">
+              <span class="slider-min">6 000</span>
+              <span class="slider-max">12 000</span>
+            </div>
+            <span class="slider-error"></span>
+          </div>
+
+          <!-- 2. Feed per tooth — key: fz, range: 0.05–0.30 -->
+          <div class="slider-block" data-key="fz">
+            <div class="slider-head">
+              <span class="slider-label">Feed per tooth</span>
+              <span class="slider-value">0.12 mm/tooth</span>
+            </div>
+            <input type="range" class="slider" data-key="fz"
+                   min="0.05" max="0.30" step="0.01" value="0.12">
+            <div class="slider-foot">
+              <span class="slider-min">0.05</span>
+              <span class="slider-max">0.30</span>
+            </div>
+            <span class="slider-error"></span>
+          </div>
+
+          <!-- 3. Depth of cut — key: ap, range: 0.5–8.0 -->
+          <div class="slider-block" data-key="ap">
+            <div class="slider-head">
+              <span class="slider-label">Depth of cut</span>
+              <span class="slider-value">8.0 mm</span>
+            </div>
+            <input type="range" class="slider" data-key="ap"
+                   min="0.5" max="8.0" step="0.1" value="8.0">
+            <div class="slider-foot">
+              <span class="slider-min">0.5</span>
+              <span class="slider-max">8.0</span>
+            </div>
+            <span class="slider-error"></span>
+          </div>
+
+          <!-- 4. Tool wear — key: wear, range: 0–100 (sent as /100 to backend) -->
+          <!-- Amber fill/thumb per spec -->
+          <div class="slider-block" data-key="wear">
+            <div class="slider-head">
+              <span class="slider-label">Tool wear</span>
+              <span class="slider-value">10 %</span>
+            </div>
+            <input type="range" class="slider" data-key="wear"
+                   min="0" max="100" step="1" value="10">
+            <div class="slider-foot">
+              <span class="slider-min">0</span>
+              <span class="slider-max">100</span>
+            </div>
+            <span class="slider-error"></span>
+          </div>
+
+          <!-- 5. Coolant temp — key: coolant_temp_sp, range: 0–80 °C (D-22)
+               NOTE: design labels this slider "Coolant flow" but the backend key is
+               coolant_temp_sp (°C, range 0-80). Per D-20 binding note: label/unit
+               matches the real setpoint the backend controls. -->
+          <div class="slider-block" data-key="coolant_temp_sp">
+            <div class="slider-head">
+              <span class="slider-label">Coolant temp</span>
+              <span class="slider-value">20 °C</span>
+            </div>
+            <input type="range" class="slider" data-key="coolant_temp_sp"
+                   min="0" max="80" step="1" value="20">
+            <div class="slider-foot">
+              <span class="slider-min">0 °C</span>
+              <span class="slider-max">80 °C</span>
+            </div>
+            <span class="slider-error"></span>
+          </div>
+
+        </div><!-- /sliders-list -->
+
+        <div class="divider"></div>
+
+        <!-- Fault Injection -->
+        <div class="fault-head">
+          <div class="fault-heading">Fault Injection</div>
+          <div class="fault-sub">Trigger a failure mode instantly — same path as the live anomaly detector.</div>
+        </div>
+
+        <div class="fault-buttons">
+
+          <!-- Snap Tool — POST /fault {"fault":"snap_tool"} -->
+          <button id="btn-snap-tool" class="fault-btn fault-btn-snap" type="button">
+            <div class="fault-btn-icon">
+              <!-- Lucide scissors icon (inline SVG) -->
+              <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="6" cy="6" r="3"/>
+                <circle cx="6" cy="18" r="3"/>
+                <line x1="20" y1="4" x2="8.12" y2="15.88"/>
+                <line x1="14.47" y1="14.48" x2="20" y2="20"/>
+                <line x1="8.12" y1="8.12" x2="12" y2="12"/>
+              </svg>
+            </div>
+            <div class="fault-btn-text">
+              <span class="fault-btn-title">Snap Tool</span>
+              <span class="fault-btn-desc">Torque collapses → breakage</span>
+            </div>
+          </button>
+
+          <!-- Hard Spot — POST /fault {"fault":"hard_spot"} -->
+          <button id="btn-hard-spot" class="fault-btn fault-btn-hard" type="button">
+            <div class="fault-btn-icon">
+              <!-- Lucide zap icon (inline SVG) -->
+              <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+              </svg>
+            </div>
+            <div class="fault-btn-text">
+              <span class="fault-btn-title">Hard Spot</span>
+              <span class="fault-btn-desc">Torque spike → feed-hold</span>
+            </div>
+          </button>
+
+        </div><!-- /fault-buttons -->
+
+        <!-- Reset — POST /reset -->
+        <button id="btn-reset" class="reset-btn" type="button">
+          <!-- Lucide rotate-ccw icon (inline SVG) -->
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <polyline points="1 4 1 10 7 10"/>
+            <path d="M3.51 15a9 9 0 1 0 .49-4.95"/>
+          </svg>
+          <span class="reset-btn-label">Reset to nominal</span>
+        </button>
+
+      </div><!-- /setpoints-panel -->
+
+    </div><!-- /col-controls -->
+
+  </div><!-- /body -->
+
+</div><!-- /app -->
+
+<!-- =========================================================================
+     Script load order (Pitfall 2):
+     1. config.js    — runtime constants on window (no deps)
+     2. echarts.min.js — UMD, sets global `echarts` (no defer so global is ready before modules)
+     3. Module scripts — import from vendor/nats.js; access window.echarts
+     ========================================================================= -->
+<script src="config.js?v=2"></script>
+<script src="vendor/echarts.min.js"></script>
+<!-- 04-02 creates: charts.js (ECharts init + NATS telemetry), telemetry.js (watchlist/gauges) -->
+<!-- 04-03 creates: controls.js (slider commands), alarms.js (alarm log + fault buttons) -->
+<!-- ?v= is a one-time cache-bust; Cache-Control:no-cache keeps assets fresh thereafter -->
+<script type="module" src="charts.js?v=2"></script>
+<script type="module" src="telemetry.js?v=2"></script>
+<script type="module" src="controls.js?v=2"></script>
+<script type="module" src="alarms.js?v=2"></script>
+
+</body>
+</html>
