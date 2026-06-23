@@ -35,6 +35,7 @@ Filename convention: `NNNN-kebab-title.md`. NNNN is zero-padded to 4 digits, ass
 | [0015](0015-device-consumer-identity-model.md) | Device & consumer identity model (unified registry, dual credentials) | discussion | 2026-06-17 |
 | [0016](0016-reactive-event-automation-contract.md) | Reactive event/automation contract (device channels, subscriber-validated side effects) | discussion | 2026-06-17 |
 | [0017](0017-physical-credentials-station-identity.md) | Physical credentials & station device identity (card-as-key, installed station builds) | discussion | 2026-06-17 |
+| [0018](0018-demos-dir-and-backend-service-layout.md) | `demos/` for demo code; `backend/` for real services (cross-cutting / structure) | implemented | 2026-06-23 |
 
 ### Reserved / incoming
 
