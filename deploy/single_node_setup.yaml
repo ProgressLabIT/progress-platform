@@ -189,7 +189,7 @@
 
         - name: Copy reports application files
           ansible.builtin.copy:
-            src: scripts/reports/
+            src: ../demos/reports/
             dest: "{{ root_dir }}/reports/"
 
         - name: Create progress.env file with non-secret environment variables

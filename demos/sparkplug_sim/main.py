@@ -5,7 +5,8 @@ Per CONTEXT.md D-01..D-04 + ADR-0007:
   - One aiomqtt client PER EDGE so each edge's LWT (NDEATH) fires independently
     if that edge's connection drops (RESEARCH §Open Question #1 — preferred
     because it faithfully models real Sparkplug edge gateways).
-  - The bridge package's heartbeat module is reused (PATTERNS.md "DRY wins").
+  - Heartbeat is published via a local copy of the bridge's heartbeat module
+    (the sim was separated from the bridge package; kept in sync by contract).
 """
 import asyncio
 import logging
@@ -15,7 +16,7 @@ from aiomqtt import Client, MqttError, ProtocolVersion, Will
 
 from utils import nats_client  # backend/api/utils/nats_client.py via PYTHONPATH
 
-from sparkplug_bridge.heartbeat import heartbeat_loop  # SHARED with bridge
+from .heartbeat import heartbeat_loop
 
 from .config import get_config
 from .encoder import build_ndeath_will

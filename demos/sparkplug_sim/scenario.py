@@ -97,8 +97,9 @@ def load_scenario_params(path: Path) -> ScenarioParams:
     """
     import yaml
 
-    # ADR-0010 lock — must equal automations/pump_anomaly.py THRESHOLD.
-    from sparkplug_bridge.automations.pump_anomaly import THRESHOLD  # type: ignore
+    # ADR-0010 contract value — MUST equal backend/sparkplug_bridge/automations/pump_anomaly.py THRESHOLD.
+    # ponytail: inlined constant (the sim is decoupled from the bridge package); sync by contract.
+    THRESHOLD = 100.0
 
     raw = yaml.safe_load(Path(path).read_text())
     if raw.get("version") != 1:

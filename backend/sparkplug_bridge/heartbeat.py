@@ -5,9 +5,9 @@ Per CONTEXT.md D-09 (LOCKED): the payload MUST include `subtopic` keyed exactly
 as `health.sparkplug.<service>` — server_event_manager.enqueue() KeyErrors on
 its absence and the SSE path silently goes dark.
 
-This module is reused by both `backend/sparkplug_bridge/main.py` (service="bridge")
-and `backend/sparkplug_bridge/simulator/main.py` (service="sim") per PATTERNS.md
-recommendation. Single source of truth.
+Used by `backend/sparkplug_bridge/main.py` (service="bridge"). The simulator
+(now at `demos/sparkplug_sim/`) keeps its own decoupled copy of this loop; the
+two are synced by contract, not by import.
 
 Phase 2 enrichment per CONTEXT.md D-02:
   - subtopic, ts, ok, service preserved (docker healthcheck rule)

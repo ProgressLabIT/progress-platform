@@ -79,7 +79,7 @@ build:workflow:
 build:print-service:
   variables:
     SERVICE: print-service
-    BUILD_DIR: backend/print-service
+    BUILD_DIR: backend/print_service
     DOCKERFILE: Dockerfile
   <<: *service-template
 
@@ -92,7 +92,7 @@ package:print-service:
     - version-info
   script:
     - apk add --no-cache zip curl
-    - cd backend/print-service
+    - cd backend/print_service
     - >
       zip print-service-${VERSION}.zip
       main.py

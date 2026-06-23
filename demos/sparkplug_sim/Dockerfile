@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1.7
-# Build context: `backend/` (so we can COPY both sparkplug_bridge/ and api/utils/).
+# Build context: repo root `.` (needs demos/sparkplug_sim/ + backend/api/utils/).
 # Build command (from repo root):
-#   docker build -t progress-sparkplug-sim:dev -f backend/sparkplug_bridge/simulator/Dockerfile backend/
+#   docker build -t progress-sparkplug-sim:dev -f demos/sparkplug_sim/Dockerfile .
 
 FROM python:3.11-slim
 
@@ -22,20 +22,18 @@ RUN nats --version
 WORKDIR /app
 
 # Simulator deps first for layer cache.
-COPY sparkplug_bridge/simulator/requirements.txt /app/sparkplug_bridge/simulator/requirements.txt
-RUN pip install --no-cache-dir -r /app/sparkplug_bridge/simulator/requirements.txt
+COPY demos/sparkplug_sim/requirements.txt /app/sparkplug_sim/requirements.txt
+RUN pip install --no-cache-dir -r /app/sparkplug_sim/requirements.txt
 
 # Copy:
-#  - the simulator package itself,
-#  - the parent bridge package (for shared heartbeat.py per PATTERNS.md "DRY wins"),
-#  - api/utils/ (for nats_client + config helpers).
-# Note: we do NOT need the vendored Tahu protobuf in the simulator image — the
-# simulator uses pysparkplug for encoding, not Tahu.
-COPY sparkplug_bridge/ /app/sparkplug_bridge/
-COPY api/utils/        /app/backend/api/utils/
+#  - the self-contained simulator package (its own heartbeat.py — no bridge dep),
+#  - backend/api/utils/ (for nats_client + config helpers) on PYTHONPATH.
+# Note: no vendored Tahu protobuf needed — the simulator encodes via pysparkplug.
+COPY demos/sparkplug_sim/ /app/sparkplug_sim/
+COPY backend/api/utils/   /app/backend/api/utils/
 
 RUN touch /app/backend/__init__.py /app/backend/api/__init__.py
 
 ENV PYTHONPATH=/app:/app/backend/api
 
-CMD ["python", "-m", "sparkplug_bridge.simulator.main"]
+CMD ["python", "-m", "sparkplug_sim.main"]

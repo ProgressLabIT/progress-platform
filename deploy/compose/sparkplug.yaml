@@ -64,7 +64,7 @@ services:
       - ${PROGRESS_SECRETS_DIR:-./secrets}:/opt/progress/config:ro
 
   sparkplug_sim:
-    image: progress-sparkplug-sim:dev   # build: docker build -t progress-sparkplug-sim:dev -f backend/sparkplug_bridge/simulator/Dockerfile backend/
+    image: progress-sparkplug-sim:dev   # build: docker build -t progress-sparkplug-sim:dev -f demos/sparkplug_sim/Dockerfile .
     hostname: sparkplug_sim
     restart: unless-stopped
     environment:

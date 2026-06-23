@@ -99,7 +99,7 @@ This mapping lives in `backend/api/utils/nats_client.py`.
 | `backend/api/main.py` | Worker startup: NATS connect + subscribe |
 | `backend/api/endpoints/print.py` | Print job endpoint (NATS request/reply) |
 | `backend/api/endpoints/notification.py` | SSE endpoint (`GET /notification/{topic}`) |
-| `backend/print-service/main.py` | Print service (NATS subscribe + reply) |
+| `backend/print_service/main.py` | Print service (NATS subscribe + reply) |
 | `webapps/main/src/composables/useSSE.js` | Client-side shared SSE composable |
 
 ## Adding Targeted Notifications to a New Domain
