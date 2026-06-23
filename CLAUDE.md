@@ -34,7 +34,7 @@ yarn lint && yarn format                  # eslint + prettier
 
 ## Architecture (1-paragraph)
 
-Event-sourced backend (`backend/api/`): FastAPI endpoints instantiate **immutable Event objects** (`backend/api/events/`, 50+ types) which mutate state inside an ArangoDB transaction (`Event.save()` → `pre_processing()` → `apply()` → `store_event()` → commit/abort). Side effects (notifications, downstream domain events) flow through Managers (`backend/api/managers/`) and **NATS JetStream** — *not* Kafka, despite stale references elsewhere. Frontends are Quasar 2 / Vue 3 SPAs (`webapps/main/` desktop, `webapps/warehouse/` Capacitor mobile). Workflows on Prefect 3 (`backend/workflow/`).
+Event-sourced backend (`backend/api/`): FastAPI endpoints instantiate **immutable Event objects** (`backend/api/events/`, 50+ types) which mutate state inside an ArangoDB transaction (`Event.save()` → `pre_processing()` → `apply()` → `store_event()` → commit/abort). Side effects (notifications, downstream domain events) flow through Managers (`backend/api/managers/`) and **NATS JetStream** — *not* Kafka, despite stale references elsewhere. Frontends are Quasar 2 / Vue 3 SPAs (`webapps/main/` desktop, `webapps/warehouse/` Capacitor mobile). Workflows on Prefect 3 (`backend/workflow/`). Demo-only code (HMIs, simulators, seeders, Streamlit reports) lives in `demos/`, **not** `backend/` — `backend/` holds shippable services only; all orchestration (incl. demo compose stacks) stays in `deploy/`. See [ADR-0018](km/decisions/0018-demos-dir-and-backend-service-layout.md).
 
 Full layer map: `.planning/codebase/STACK.md` and `.planning/codebase/ARCHITECTURE.md` (regenerable via `/gsd-map-codebase`; current copies still mention Kafka in places — historical drift, NATS is canonical).
 
@@ -114,3 +114,5 @@ A session that needs to deviate from its phase plan or the locked ADR contracts 
 - Solo-maintainer project: no SLAs, no triage scaffolding, prefer toggles over commitments.
 - See `AGENTS.md` for the "explain first, change after" stance on multi-line edits.
 - Developer profile lives in global `~/.claude/CLAUDE.md` — not duplicated here.
+- Always check the /km folder for knowledge about architecture, patterns, etc. before searching autonomously
+- Whenever you find new information about platform architecture, design choices, patterns, quirks, risks, that were not present in the km, notify th euser and propose an update, adding/amending content in the most appropriate document or creating a new one if necessary.
