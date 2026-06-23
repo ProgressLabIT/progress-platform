@@ -251,7 +251,7 @@ decode would log a warning during the demo, which we don't want.
 - S5 (demo data) seeds the demo work order, phase, and service user keys
   referenced here. Walkthrough script is written against the timeline
   above with named cues at each `t = X:YY` point.
-- The `backend/sparkplug_bridge/simulator/scenario.yaml` file is the
+- The `demos/sparkplug_sim/scenario.yaml` file is the
   single source of truth for tweakable scenario timing + dynamics
   parameters. Changes to its values do NOT require an ADR amendment;
   changes to its *schema* (new keys, removed keys, changed semantics)
@@ -289,7 +289,7 @@ Two adjustments are made to keep the demo self-consistent:
    t = 3:50).
 
 2. **Tweakable scenario parameters externalized** into a YAML config
-   file at `backend/sparkplug_bridge/simulator/scenario.yaml` so that
+   file at `demos/sparkplug_sim/scenario.yaml` so that
    future calibration (slope, threshold, anomaly start/end times,
    correlated pressure slope, etc.) does not require code changes or
    image rebuilds during rehearsal. ADR-0010's `THRESHOLD` constant

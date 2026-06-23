@@ -11,7 +11,7 @@
  * No image rebuild. (In-place edits reflect on reload; an editor that replaces
  * the file needs the force-update above to re-point the bind mount.)
  *
- * The image's baked backend/demo_twin/static/config.js is the fallback used only
+ * The image's baked demos/mill_twin/demo_twin/static/config.js is the fallback used only
  * when this file is not mounted (e.g. local dev without the config volume).
  */
 
