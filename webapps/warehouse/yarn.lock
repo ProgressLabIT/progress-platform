@@ -785,6 +785,11 @@
     semver "^7.3.5"
     tar "^6.1.11"
 
+"@microsoft/fetch-event-source@^2.0.1":
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/@microsoft/fetch-event-source/-/fetch-event-source-2.0.1.tgz#9ceecc94b49fbaa15666e38ae8587f64acce007d"
+  integrity sha512-W6CLUJ2eBMw3Rec70qrsEW0jOm/3twwJv21mrmj2yORiaVmVYGS4sSS5yUwvQc1ZlDLYGPnClVWmUUMagKNsfA==
+
 "@nodelib/fs.scandir@2.1.5":
   version "2.1.5"
   resolved "https://registry.npmjs.org/@nodelib/fs.scandir/-/fs.scandir-2.1.5.tgz"
@@ -2202,11 +2207,6 @@ brotli@^1.3.2:
   integrity sha512-oTKjJdShmDuGW94SyyaoQvAjf30dZaHnjJ8uAF+u2/vGJkJbJPJAT1gDiOJP5v1Zb6f9KEyW/1HpuaWIXtGHPg==
   dependencies:
     base64-js "^1.1.2"
-
-browserprint-es@^0.0.5:
-  version "0.0.5"
-  resolved "https://registry.yarnpkg.com/browserprint-es/-/browserprint-es-0.0.5.tgz#908298f9d8d18e7b9e679723880f75d1f470c824"
-  integrity sha512-hVRFhRrOCyyL6ihx7n+Gw1uqn6vMdC8ESAsafOiiiXWPc2qsMB/eGWXYE7VHxpRDB8YlnR7cYxaRvRlWT7Dyaw==
 
 browserslist@^4.23.3:
   version "4.24.2"

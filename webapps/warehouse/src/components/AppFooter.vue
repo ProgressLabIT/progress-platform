@@ -21,23 +21,9 @@
           <div class="cursor-pointer" @click="cycleDrawer"></div>
         </q-card-section>
 
-        <!-- HANDLE PRINT LABEL -->
-        <q-card-section
-          v-if="drawerMode !== 'handler' && show_print_label"
-          class="col"
-        >
-          <PrintLabelForm
-            :product="product"
-            :supplier="supplier"
-            :containers="containers"
-            :print_templates="print_templates"
-            :available_height="available_height"
-          />
-        </q-card-section>
-
         <!-- HANDLE CREATE CONTAINER -->
         <q-card-section
-          v-else-if="drawerMode !== 'handler' && show_create_container"
+          v-if="drawerMode !== 'handler' && show_create_container"
           class="col"
         >
           <CreateContainerForm :available_height="available_height" />
@@ -67,7 +53,6 @@
 <script>
 import { DateTime } from 'luxon';
 import CreateContainerForm from '@/components/CreateContainerForm.vue';
-import PrintLabelForm from '@/components/print/PrintLabelForm.vue';
 import { useConfigStore } from '../stores/config';
 
 const drawerMinHeight = 30;
@@ -77,7 +62,7 @@ const drawerOpenRatioHalf = 50;
 export default {
   name: 'AppFooter',
 
-  components: { PrintLabelForm, CreateContainerForm },
+  components: { CreateContainerForm },
 
   setup() {
     const { config } = useConfigStore();
@@ -94,11 +79,7 @@ export default {
         ShipmentRoot: 'mdi-export',
         InventoryRoot: 'mdi-warehouse',
       },
-      show_print_label: false,
       show_create_container: false,
-      print_templates: undefined,
-      product: undefined,
-      supplier: undefined,
       available_height: 0,
       now: 0,
       lorem:
@@ -146,7 +127,7 @@ export default {
     },
 
     hasSecondaryContent() {
-      return this.show_print_label;
+      return this.show_create_container;
     },
   },
 
@@ -156,19 +137,8 @@ export default {
       this.now = DateTime.local();
     }, 1000);
 
-    this.$bus.on('show-print-templates', (context) => {
-      this.show_print_label = true;
-      this.show_create_container = false;
-      this.product = context.product;
-      this.supplier = context.supplier;
-      this.containers = context.containers;
-      this.print_templates = context.print_templates;
-      this.forceShow();
-    });
-
     this.$bus.on('show-create-container', () => {
       this.show_create_container = true;
-      this.show_print_label = false;
       this.forceShow();
     });
 
@@ -183,13 +153,7 @@ export default {
 
   methods: {
     clean() {
-      this.show_print_label = false;
-      this.product = undefined;
-      this.supplier = undefined;
-      this.print_templates = undefined;
-
       this.show_create_container = false;
-      this.containers = undefined;
     },
 
     slideDrawer(ev) {
