@@ -128,7 +128,11 @@ if (persistedState) {
     DT.utc().toMillis() - restored_state.last_interaction;
   const FIVE_MINUTES_MILLISECONDS = 5 * 60 * 1000;
   if (elapsed_milliseconds < FIVE_MINUTES_MILLISECONDS) {
-    store.replaceState(restored_state);
+    // Merge over the freshly-initialized state so module keys missing from an
+    // older persisted snapshot (e.g. after an app update that adds a module)
+    // keep their defaults instead of becoming undefined. Without this, Vuex
+    // resolves a module's local state to undefined and its mutations throw.
+    store.replaceState({ ...store.state, ...restored_state });
     store.commit('TOGGLE_SESSION_LOCK', true);
   }
   window.localStorage.removeItem('TEMP_SESSION');
