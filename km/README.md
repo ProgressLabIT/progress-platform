@@ -53,6 +53,7 @@ Security model, identity, and transport hardening.
 
 ### 🛠️ Operations
 Runbooks and operational procedures for production / customer deployments.
+- [System Error Log](operations/system-error-log.md) — API 5xx persistence in the `ErrorLog` collection (30-day TTL, Arango UI).
 - [Workflow DB Recovery](operations/workflow-db-recovery.md) — `progress_workflow-db` crash-loop diagnosis and `pg_resetwal` recovery.
 - [Workflow DB Backup](operations/workflow-db-backup.md) — `pg_dump` backup strategy and restore procedure.
 
