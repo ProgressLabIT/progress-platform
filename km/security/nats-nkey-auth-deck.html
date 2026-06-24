@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Digital Identity on the Factory Network — Progress Platform</title>
+<style>
+  :root{
+    --bg:#0d1117; --bg2:#161b22; --panel:#1c2330; --line:#2d3748;
+    --ink:#e6edf3; --mut:#9aa7b8; --dim:#5b6678;
+    --root:#f0883e;   /* root authority / vault */
+    --cust:#58a6ff;   /* customer / account     */
+    --dev:#3fb950;    /* device / user          */
+    --warn:#f85149;
+    --gold:#e3b341;
+    --mono:'SF Mono',ui-monospace,'Cascadia Code','JetBrains Mono',Menlo,Consolas,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,Roboto,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{background:var(--bg); color:var(--ink); font-family:var(--sans); overflow:hidden; -webkit-font-smoothing:antialiased}
+  .deck{height:100vh;width:100vw;position:relative}
+  .slide{
+    position:absolute; inset:0; display:none; flex-direction:column; justify-content:center;
+    padding:4.2vh 8vw 5.5vh; opacity:0; transition:opacity .28s ease;
+    background:
+      radial-gradient(1200px 600px at 85% -10%, rgba(88,166,255,.06), transparent 60%),
+      radial-gradient(900px 500px at 0% 110%, rgba(240,136,62,.05), transparent 55%);
+  }
+  .slide.active{display:flex; opacity:1}
+  .kicker{font-family:var(--mono); font-size:.78rem; letter-spacing:.18em; text-transform:uppercase; color:var(--root); margin-bottom:1.1rem; display:flex; align-items:center; gap:.7rem}
+  .kicker::before{content:"";width:34px;height:2px;background:var(--root)}
+  h1{font-size:3.3rem; line-height:1.07; font-weight:700; letter-spacing:-.02em}
+  h2{font-size:2.15rem; line-height:1.12; font-weight:700; letter-spacing:-.015em; margin-bottom:1.5rem}
+  .sub{color:var(--mut); font-size:1.18rem; margin-top:1.3rem; max-width:52ch; line-height:1.55}
+  .lead{font-size:1.22rem; line-height:1.5; max-width:60ch; color:var(--mut)}
+  .lead b{color:var(--ink)}
+  .mono{font-family:var(--mono)}
+  .punch{margin-top:1.7rem; font-size:1.12rem; line-height:1.5; max-width:62ch; border-left:3px solid var(--dev); padding-left:1.1rem; color:var(--ink)}
+  .punch.warn{border-color:var(--warn)} .punch.cust{border-color:var(--cust)}
+
+  .row{display:flex; gap:1.4rem}
+  .col{flex:1}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:1.3rem}
+  .grid3{display:grid; grid-template-columns:repeat(3,1fr); gap:1.2rem}
+
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:1.25rem 1.35rem}
+  .card h3{font-size:1.05rem; margin-bottom:.5rem; display:flex; align-items:center; gap:.55rem}
+  .card p{color:var(--mut); font-size:.97rem; line-height:1.5}
+  .card .ico{font-size:1.3rem}
+
+  .techbox{margin-top:1.7rem; display:flex; gap:1.1rem; align-items:baseline; max-width:88ch; background:linear-gradient(90deg, rgba(227,179,65,.08), rgba(227,179,65,.01)); border:1px solid var(--line); border-left:3px solid var(--gold); border-radius:8px; padding:.7rem 1.15rem}
+  .techbox .tlab{font-family:var(--mono); font-size:.64rem; letter-spacing:.16em; text-transform:uppercase; color:var(--gold); white-space:nowrap; flex:0 0 auto; font-weight:700; display:flex; align-items:center; gap:.45rem}
+  .techbox .tlab::before{content:"{ }"; font-size:.72rem; opacity:.8}
+  .techbox .tbody{font-family:var(--mono); font-size:.83rem; line-height:1.55; color:var(--mut)}
+  .techbox .term{color:var(--gold); font-weight:600}
+
+  /* split-key diagram */
+  .keys{display:grid; grid-template-columns:1fr 1fr; gap:1.4rem; align-items:stretch}
+  .key{border-radius:14px; padding:1.5rem; border:1px solid var(--line); background:var(--bg2); position:relative; overflow:hidden}
+  .key.priv{border-color:var(--dev)} .key.pub{border-color:var(--cust)}
+  .key .big{font-size:2.6rem; margin-bottom:.5rem}
+  .key .lab{font-family:var(--mono); font-size:.78rem; letter-spacing:.1em; text-transform:uppercase}
+  .key.priv .lab{color:var(--dev)} .key.pub .lab{color:var(--cust)}
+  .key h3{font-size:1.25rem; margin:.3rem 0 .55rem}
+  .key p{color:var(--mut); font-size:1rem; line-height:1.5}
+  .key .stay{position:absolute; top:1.2rem; right:1.3rem; font-family:var(--mono); font-size:.72rem; padding:.25em .6em; border-radius:5px; border:1px solid}
+  .key.priv .stay{color:var(--dev); border-color:var(--dev)} .key.pub .stay{color:var(--cust); border-color:var(--cust)}
+
+  /* chain of trust */
+  .chain{display:flex; flex-direction:column; gap:0; align-items:flex-start}
+  .cnode{border-radius:12px; padding:1rem 1.3rem; border:1px solid; background:var(--bg2); min-width:430px; display:flex; align-items:center; gap:1rem}
+  .cnode .seal{font-size:1.6rem; flex:0 0 auto}
+  .cnode .t{font-weight:700; font-size:1.12rem}
+  .cnode .d{color:var(--mut); font-size:.92rem; margin-top:.2rem}
+  .cnode.r{border-color:var(--root)} .cnode.r .t{color:var(--root)}
+  .cnode.c{border-color:var(--cust); margin-left:2.6rem} .cnode.c .t{color:var(--cust)}
+  .cnode.d2{border-color:var(--dev); margin-left:5.2rem} .cnode.d2 .t{color:var(--dev)}
+  .vouch{font-family:var(--mono); font-size:.78rem; color:var(--dim); padding:.45rem 0 .45rem 1.3rem; display:flex; align-items:center; gap:.5rem}
+  .vouch::before{content:"↓ stamps / vouches for"}
+  .vouch.v1{margin-left:1.3rem} .vouch.v2{margin-left:3.9rem}
+
+  /* id card */
+  .idcard{width:430px; border-radius:16px; overflow:hidden; border:1px solid var(--line); background:linear-gradient(160deg,#1f2733,#161b22); box-shadow:0 20px 50px -20px rgba(0,0,0,.7)}
+  .idcard .strip{background:linear-gradient(90deg,var(--dev),#2ea043); padding:.85rem 1.4rem; font-weight:700; letter-spacing:.04em; color:#06210f; display:flex; justify-content:space-between; align-items:center}
+  .idcard .strip .badge{font-family:var(--mono); font-size:.72rem; background:rgba(0,0,0,.25); padding:.25em .6em; border-radius:5px; color:#0c2b14}
+  .idcard .body{padding:1.3rem 1.4rem; display:flex; flex-direction:column; gap:1rem}
+  .idcard .field .l{font-family:var(--mono); font-size:.7rem; letter-spacing:.12em; text-transform:uppercase; color:var(--dim)}
+  .idcard .field .v{font-size:1.05rem; margin-top:.2rem}
+  .idcard .seal{display:flex; align-items:center; gap:.6rem; border-top:1px dashed var(--line); padding-top:1rem; color:var(--mut); font-size:.92rem}
+  .idcard .seal .stamp{font-size:1.5rem}
+
+  /* handshake */
+  .hs{display:flex; flex-direction:column; gap:.85rem}
+  .hsrow{display:grid; grid-template-columns:90px 1fr; align-items:center; gap:1.1rem; background:var(--panel); border:1px solid var(--line); border-radius:11px; padding:.9rem 1.2rem}
+  .hsrow .who{font-family:var(--mono); font-size:.78rem; text-align:center; padding:.35em 0; border-radius:6px; font-weight:700}
+  .hsrow .who.srv{color:var(--root); border:1px solid var(--root)}
+  .hsrow .who.dev{color:var(--dev); border:1px solid var(--dev)}
+  .hsrow .msg .h{font-weight:600; font-size:1.05rem}
+  .hsrow .msg .h .arrow{color:var(--dim); font-family:var(--mono)}
+  .hsrow .msg .m{color:var(--mut); font-size:.94rem; margin-top:.15rem}
+
+  /* doors */
+  .doors{display:flex; gap:1rem; align-items:flex-end; justify-content:flex-start; margin:.5rem 0 .3rem}
+  .door{width:120px; text-align:center}
+  .door .frame{height:150px; border-radius:8px 8px 4px 4px; border:2px solid var(--line); background:var(--bg2); display:flex; align-items:center; justify-content:center; font-size:1.8rem; position:relative}
+  .door.open .frame{border-color:var(--dev); background:rgba(63,185,80,.1); box-shadow:0 0 30px -6px rgba(63,185,80,.4)}
+  .door.locked .frame{opacity:.5}
+  .door .lab{font-size:.82rem; color:var(--mut); margin-top:.5rem}
+  .door.open .lab{color:var(--dev); font-weight:600}
+  .door .state{position:absolute; bottom:.4rem; font-family:var(--mono); font-size:.62rem; letter-spacing:.1em}
+  .door.open .state{color:var(--dev)} .door.locked .state{color:var(--dim)}
+
+  /* tiers / topology */
+  .tiers{display:flex; flex-direction:column; gap:.15rem; align-items:center; width:100%}
+  .tier{border:1px solid var(--line); border-radius:13px; background:var(--panel); padding:1.05rem 1.5rem; text-align:center; position:relative}
+  .tier .lab{font-family:var(--mono); font-size:.82rem; letter-spacing:.08em; text-transform:uppercase}
+  .tier .desc{color:var(--mut); font-size:.96rem; margin-top:.3rem}
+  .tier.cloud{width:74%; border-color:var(--root)} .tier.cloud .lab{color:var(--root)}
+  .tier.relay{width:60%; border-color:var(--cust)} .tier.relay .lab{color:var(--cust)}
+  .tier.mach{width:48%; border-color:var(--dev)} .tier.mach .lab{color:var(--dev)}
+  .conn{font-family:var(--mono); font-size:.76rem; color:var(--dim); padding:.3rem}
+
+  table{width:100%; border-collapse:collapse; font-size:.98rem; margin-top:.3rem}
+  th,td{text-align:left; padding:.7rem .9rem; border-bottom:1px solid var(--line)}
+  th{font-family:var(--mono); font-size:.74rem; letter-spacing:.08em; text-transform:uppercase; color:var(--mut)}
+  td:first-child{font-weight:600}
+
+  .scope{border-left:3px solid var(--warn); background:rgba(248,81,73,.06); padding:.85rem 1.2rem; border-radius:0 8px 8px 0; color:var(--mut); font-size:.97rem; max-width:64ch}
+  .footnote{color:var(--dim); font-size:.82rem; margin-top:1.4rem; font-family:var(--mono)}
+  .pill{display:inline-flex; align-items:center; gap:.45rem; font-family:var(--mono); font-size:.8rem; padding:.3em .7em; border-radius:999px; border:1px solid var(--line); background:var(--bg2); color:var(--mut)}
+  .dot{width:8px;height:8px;border-radius:50%}
+
+  .chrome{position:fixed; bottom:0; left:0; right:0; height:46px; display:flex; align-items:center; justify-content:space-between; padding:0 8vw; font-family:var(--mono); font-size:.74rem; color:var(--dim); border-top:1px solid var(--line); background:rgba(13,17,23,.7); backdrop-filter:blur(6px)}
+  .progress{position:fixed; top:0; left:0; height:3px; background:var(--root); transition:width .28s ease; z-index:10}
+  @media print{.slide{display:flex!important; opacity:1!important; position:relative; page-break-after:always; height:100vh}.chrome,.progress{display:none}}
+</style>
+</head>
+<body>
+<div class="progress" id="bar"></div>
+<div class="deck" id="deck">
+
+  <!-- 1 — TITLE -->
+  <section class="slide active">
+    <div class="kicker">Progress Platform · Security Briefing</div>
+    <h1>Who's Allowed<br>on the Network?</h1>
+    <p class="sub">How every machine, on-site server, and cloud service on the platform proves its identity — and is limited to exactly what it needs — without storing a single password.</p>
+    <div class="row" style="margin-top:2.3rem; gap:.7rem">
+      <span class="pill"><span class="dot" style="background:var(--root)"></span>Root authority</span>
+      <span class="pill"><span class="dot" style="background:var(--cust)"></span>Customer</span>
+      <span class="pill"><span class="dot" style="background:var(--dev)"></span>Device</span>
+    </div>
+    <div class="techbox"><span class="tlab">In technical terms</span><span class="tbody">Decentralized <span class="term">NKey</span> + <span class="term">JWT</span> authentication on <span class="term">NATS</span> — the platform's messaging backbone.</span></div>
+    <div class="footnote">A plain-language briefing · full technical reference: km/security/nats-nkey-auth.md</div>
+  </section>
+
+  <!-- 2 — THE CHALLENGE -->
+  <section class="slide">
+    <div class="kicker">The problem</div>
+    <h2>A factory network is crowded and high-stakes</h2>
+    <p class="lead">The platform links thousands of machines, on-site servers, and cloud applications — often across many customer sites at once. Every one of them must be trusted, and kept inside its lane.</p>
+    <div class="grid3" style="margin-top:2rem">
+      <div class="card">
+        <h3><span class="ico">🪪</span>Prove identity</h3>
+        <p>Know exactly who or what is connecting. No impostors slipping in.</p>
+      </div>
+      <div class="card">
+        <h3><span class="ico">📈</span>Scale across customers</h3>
+        <p>Add a new factory without rewiring the central system or taking it offline.</p>
+      </div>
+      <div class="card">
+        <h3><span class="ico">🧯</span>Contain the damage</h3>
+        <p>If one device is compromised, it must not reach anything beyond its own job.</p>
+      </div>
+    </div>
+    <div class="punch warn">Passwords solve none of these well: they can be stolen, they pile up into a central list that becomes a prime target, and they say nothing about what the holder is allowed to do.</div>
+    <div class="techbox"><span class="tlab">In technical terms</span><span class="tbody">The classic failure modes of centralized <span class="term">credential stores</span> and shared secrets, plus coarse, all-or-nothing access in a <span class="term">multi-tenant</span> system.</span></div>
+  </section>
+
+  <!-- 3 — PASSWORDLESS IDENTITY -->
+  <section class="slide">
+    <div class="kicker">The core idea</div>
+    <h2>Replace passwords with unforgeable signatures</h2>
+    <p class="lead" style="margin-bottom:1.7rem">Each participant holds a matched pair: a private signature only it can produce, and a public sample anyone can use to check that signature.</p>
+    <div class="keys">
+      <div class="key priv">
+        <span class="stay">never shared</span>
+        <div class="big">🔏</div>
+        <div class="lab">Private signature</div>
+        <h3>Stays with the holder</h3>
+        <p>Impossible to forge or copy. The device uses it to sign — but never sends it to anyone, ever.</p>
+      </div>
+      <div class="key pub">
+        <span class="stay">shared freely</span>
+        <div class="big">🔎</div>
+        <div class="lab">Public sample</div>
+        <h3>Everyone can hold a copy</h3>
+        <p>Used only to verify a signature is genuine. It reveals nothing secret — useless on its own.</p>
+      </div>
+    </div>
+    <div class="punch">The central server keeps only the public samples. It stores no secret at all — so if the server is breached, there is nothing worth stealing.</div>
+    <div class="techbox"><span class="tlab">In technical terms</span><span class="tbody"><span class="term">Public-key cryptography</span>. Each identity is an <span class="term">NKey</span> (an Ed25519 keypair) — the public key is the identity, the private key is the <span class="term">seed</span>. No secret material is stored server-side.</span></div>
+  </section>
+
+  <!-- 4 — CHAIN OF TRUST -->
+  <section class="slide">
+    <div class="kicker">Chain of trust</div>
+    <h2>Trust flows down from a single root</h2>
+    <div class="row" style="gap:3rem; align-items:center">
+      <div class="chain">
+        <div class="cnode r"><span class="seal">🏛️</span><div><div class="t">Root authority — the platform</div><div class="d">Kept offline in a vault. Vouches for each customer.</div></div></div>
+        <div class="vouch v1"></div>
+        <div class="cnode c"><span class="seal">🏢</span><div><div class="t">Customer — one per factory</div><div class="d">Vouches for that factory's own devices and apps.</div></div></div>
+        <div class="vouch v2"></div>
+        <div class="cnode d2"><span class="seal">⚙️</span><div><div class="t">Device or app</div><div class="d">The actual machine or service connecting.</div></div></div>
+      </div>
+      <div class="col" style="max-width:28ch">
+        <p class="lead" style="font-size:1.12rem">Each level <b>stamps</b> the one below it — like a government licensing a passport office, which in turn issues you a passport.</p>
+        <p class="sub" style="font-size:1rem; margin-top:1.1rem">The server only has to trust the one root. Everyone else is vouched for down the chain — so onboarding a new customer never means reconfiguring the core system.</p>
+      </div>
+    </div>
+    <div class="techbox"><span class="tlab">In technical terms</span><span class="tbody">A signing hierarchy — <span class="term">Operator → Account → User</span>. Each level is a token signed by its parent's key; the server trusts only the pinned <span class="term">operator</span> key.</span></div>
+  </section>
+
+  <!-- 5 — THE ID CARD -->
+  <section class="slide">
+    <div class="kicker">The credential</div>
+    <h2>Everyone carries a tamper-proof ID card</h2>
+    <div class="row" style="gap:3rem; align-items:center">
+      <div class="idcard">
+        <div class="strip">NETWORK ID CARD <span class="badge">SEALED</span></div>
+        <div class="body">
+          <div class="field"><div class="l">Issued to</div><div class="v">Line 3 — temperature sensor</div></div>
+          <div class="field"><div class="l">Issued by</div><div class="v">ACME Aerospace · customer authority</div></div>
+          <div class="field"><div class="l">May do</div><div class="v">Report temperature for Line 3 — and nothing else</div></div>
+          <div class="seal"><span class="stamp">🔱</span> Unforgeable seal from the issuer — break it and the card is void</div>
+        </div>
+      </div>
+      <div class="col" style="max-width:32ch">
+        <p class="lead" style="font-size:1.12rem">The card states <b>who you are</b> and <b>what you may do</b>, sealed by the authority above it.</p>
+        <p class="sub" style="font-size:1rem; margin-top:1.1rem">Change a single character and the seal breaks. It cannot be forged, and it cannot quietly grant itself more access.</p>
+      </div>
+    </div>
+    <div class="techbox"><span class="tlab">In technical terms</span><span class="tbody">A <span class="term">JWT</span> (JSON Web Token). The fields are <span class="term">claims</span>; the seal is a cryptographic <span class="term">signature</span> that makes it tamper-evident.</span></div>
+  </section>
+
+  <!-- 6 — LOGGING IN -->
+  <section class="slide">
+    <div class="kicker">Connecting</div>
+    <h2>Logging in without sending a password</h2>
+    <div class="row" style="gap:2.6rem">
+      <div class="hs col">
+        <div class="hsrow"><div class="who srv">SERVER</div><div class="msg"><div class="h">“Prove it — sign this random number.” <span class="arrow">→</span></div><div class="m">A fresh, one-time challenge for this connection.</div></div></div>
+        <div class="hsrow"><div class="who dev">DEVICE</div><div class="msg"><div class="h"><span class="arrow">←</span> Signs the number, presents its ID card</div><div class="m">Signed with its private signature, which never leaves the device.</div></div></div>
+        <div class="hsrow"><div class="who srv">SERVER</div><div class="msg"><div class="h">Checks the signature and the card's seals</div><div class="m">Signature against the public sample; card against the chain of trust.</div></div></div>
+      </div>
+      <div class="col" style="max-width:26ch">
+        <div class="card" style="border-color:var(--dev)">
+          <h3><span class="ico">🛂</span>Like a bouncer's check</h3>
+          <p>You don't hand over a secret — you demonstrate you own one.</p>
+        </div>
+        <div class="card" style="margin-top:1.1rem; border-color:var(--cust)">
+          <h3><span class="ico">🔁</span>Can't be replayed</h3>
+          <p>The random number is different every time, so a captured login is worthless.</p>
+        </div>
+      </div>
+    </div>
+    <div class="punch">No password — and no secret of any kind — ever crosses the wire.</div>
+    <div class="techbox"><span class="tlab">In technical terms</span><span class="tbody">A <span class="term">challenge–response</span> handshake: the server sends a one-time <span class="term">nonce</span>, the client signs it with its seed. Credentials sit in a local <span class="term">.creds</span> file and never transit the wire.</span></div>
+  </section>
+
+  <!-- 7 — LEAST PRIVILEGE -->
+  <section class="slide">
+    <div class="kicker">Containment</div>
+    <h2>Each ID card opens only its own doors</h2>
+    <div class="row" style="gap:2.8rem; align-items:center">
+      <div class="doors">
+        <div class="door open"><div class="frame">🌡️<span class="state">OPEN</span></div><div class="lab">Line 3 temperature</div></div>
+        <div class="door locked"><div class="frame">🔒<span class="state">LOCKED</span></div><div class="lab">Other lines</div></div>
+        <div class="door locked"><div class="frame">🔒<span class="state">LOCKED</span></div><div class="lab">Controls</div></div>
+        <div class="door locked"><div class="frame">🔒<span class="state">LOCKED</span></div><div class="lab">Other customers</div></div>
+      </div>
+      <div class="col" style="max-width:30ch">
+        <div class="card" style="border-color:var(--warn)">
+          <h3><span class="ico">🚫</span>Locked by default</h3>
+          <p>Nothing is permitted unless the card explicitly grants it. Every grant is checked against intent before a device ships.</p>
+        </div>
+        <div class="card" style="margin-top:1rem">
+          <h3><span class="ico">📌</span>Fixed when issued</h3>
+          <p>Permissions are printed into the card. To change access, you reissue the card — leaving a clean, auditable trail.</p>
+        </div>
+      </div>
+    </div>
+    <div class="punch">A compromised sensor can still only do the one thing its card allows.</div>
+    <div class="techbox"><span class="tlab">In technical terms</span><span class="tbody">An <span class="term">ACL</span> (Access Control List) — publish/subscribe <span class="term">allow-lists</span> minted into each user's JWT. A credential can only reach the <span class="term">subjects</span> it explicitly names; everything else is denied.</span></div>
+  </section>
+
+  <!-- 8 — TOPOLOGY -->
+  <section class="slide">
+    <div class="kicker">How it's deployed</div>
+    <h2>Three layers: cloud, factory, machine</h2>
+    <div class="tiers">
+      <div class="tier cloud"><div class="lab">☁️ Cloud headquarters</div><div class="desc">The central system. Holds the one root of trust.</div></div>
+      <div class="conn">▲ secure outbound link</div>
+      <div class="tier relay"><div class="lab">🏭 On-site factory relay</div><div class="desc">A local hub on the factory floor that gathers and forwards data.</div></div>
+      <div class="conn">▲ local network</div>
+      <div class="tier mach"><div class="lab">⚙️ Machines &amp; apps</div><div class="desc">Sensors, controllers, and the software that reads them.</div></div>
+    </div>
+    <div class="grid2" style="margin-top:1.6rem">
+      <div class="card" style="border-color:var(--dev)"><h3><span class="ico">🔌</span>No inbound door</h3><p>The factory relay only ever dials <i>out</i> to the cloud. Nothing on the outside can reach in.</p></div>
+      <div class="card" style="border-color:var(--cust)"><h3><span class="ico">📦</span>Survives outages</h3><p>If the internet link drops, the relay keeps collecting and forwards everything once it's back. No data lost.</p></div>
+    </div>
+    <div class="techbox"><span class="tlab">In technical terms</span><span class="tbody">A <span class="term">hub</span> cluster, edge <span class="term">leaf nodes</span>, and clients. The leaf runs <span class="term">JetStream</span> for <span class="term">store-and-forward</span>, dialing out over <span class="term">WSS:443</span> — outbound-only, no inbound listener.</span></div>
+  </section>
+
+  <!-- 9 — DAY-2 OPS -->
+  <section class="slide">
+    <div class="kicker">Running it day to day</div>
+    <h2>Onboard, revoke, and guard the master key</h2>
+    <div class="grid2">
+      <div class="card"><h3><span class="ico">➕</span>Add a customer</h3><p>Issue them an account and they're live — the running system keeps serving everyone else, with no downtime.</p></div>
+      <div class="card"><h3><span class="ico">⛔</span>Revoke a device</h3><p>A lost or compromised device is cut off across the whole network within minutes.</p></div>
+      <div class="card" style="border-color:var(--root)"><h3><span class="ico">🏦</span>Master key in a vault</h3><p>The root authority is kept offline. Daily work uses limited, delegated keys — so the crown jewels are never exposed.</p></div>
+      <div class="card"><h3><span class="ico">👥</span>Separation of duties</h3><p>If a delegated key is stolen, it can be cancelled on its own — without ever touching the master key.</p></div>
+    </div>
+    <div class="techbox"><span class="tlab">In technical terms</span><span class="tbody">The root key lives in an <span class="term">HSM</span> (Hardware Security Module); daily issuance uses delegated <span class="term">signing keys</span>. Onboarding and <span class="term">revocation</span> propagate through the <span class="term">account resolver</span> with no restart.</span></div>
+  </section>
+
+  <!-- 10 — WHY IT MATTERS -->
+  <section class="slide">
+    <div class="kicker">The bottom line</div>
+    <h2>What this buys the business</h2>
+    <table>
+      <tbody>
+        <tr><td>🛡️ Breach-resistant</td><td>No passwords or secrets stored centrally — a server breach has nothing to steal.</td></tr>
+        <tr><td>📈 Scales per customer</td><td>Onboard new factories without downtime or reconfiguring the core system.</td></tr>
+        <tr><td>🧯 Built-in containment</td><td>Least-privilege access limits the blast radius of any single compromise.</td></tr>
+        <tr><td>⛔ Instant revocation</td><td>Cut off one device — or a whole site — within minutes.</td></tr>
+        <tr><td>📋 Audit &amp; compliance ready</td><td>Every identity and permission is explicit and traceable — suited to aerospace and defense requirements.</td></tr>
+      </tbody>
+    </table>
+    <div class="techbox" style="margin-top:1.5rem"><span class="tlab">In technical terms</span><span class="tbody"><span class="term">Operator → Account → User</span> trust, <span class="term">NKey</span> identities carrying <span class="term">JWT</span>-borne <span class="term">ACLs</span>, an <span class="term">HSM</span>-protected root, and a full <span class="term">account resolver</span> for zero-downtime onboarding.</span></div>
+    <div class="scope" style="margin-top:1.1rem"><b style="color:var(--ink)">Where this stands.</b> This is the target security model on the roadmap. It is being phased into the platform in stages; today's live demo uses a simpler interim scheme.</div>
+  </section>
+
+</div>
+
+<div class="chrome">
+  <div>Digital Identity on the Factory Network — Progress Platform</div>
+  <div class="nav"><span id="curr">01</span> / <span id="total">10</span> &nbsp;·&nbsp; ← → navigate &nbsp;·&nbsp; F fullscreen</div>
+</div>
+
+<script>
+  const slides=[...document.querySelectorAll('.slide')];
+  const bar=document.getElementById('bar');
+  const curr=document.getElementById('curr');
+  document.getElementById('total').textContent=String(slides.length).padStart(2,'0');
+  let i=0;
+  function show(n){
+    i=Math.max(0,Math.min(slides.length-1,n));
+    slides.forEach((s,k)=>s.classList.toggle('active',k===i));
+    bar.style.width=((i+1)/slides.length*100)+'%';
+    curr.textContent=String(i+1).padStart(2,'0');
+  }
+  function next(){show(i+1)} function prev(){show(i-1)}
+  document.addEventListener('keydown',e=>{
+    if(['ArrowRight','ArrowDown',' ','PageDown'].includes(e.key)){e.preventDefault();next()}
+    else if(['ArrowLeft','ArrowUp','PageUp'].includes(e.key)){e.preventDefault();prev()}
+    else if(e.key==='Home'){show(0)} else if(e.key==='End'){show(slides.length-1)}
+    else if(e.key==='f'||e.key==='F'){document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen()}
+  });
+  let sx=0;
+  document.addEventListener('touchstart',e=>sx=e.touches[0].clientX,{passive:true});
+  document.addEventListener('touchend',e=>{const d=e.changedTouches[0].clientX-sx; if(Math.abs(d)>50)(d<0?next():prev())},{passive:true});
+  document.getElementById('deck').addEventListener('click',e=>{ if(e.clientX>window.innerWidth*0.62)next(); else if(e.clientX<window.innerWidth*0.38)prev() });
+  show(0);
+</script>
+</body>
+</html>
