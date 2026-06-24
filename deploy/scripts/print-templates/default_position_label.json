@@ -1,0 +1,51 @@
+{
+  "_key": "default_position_label",
+  "name": "Default position label",
+  "description": "Reproduces the warehouse app's pre-v2 hard-coded position/container label: position code text above a Code 39 barcode of the code. Geometry ported from the legacy ZPL at 203 DPI.",
+  "template": {
+    "basePdf": { "width": 50, "height": 32, "padding": [0, 0, 0, 0] },
+    "pdfmeVersion": "5.5.0",
+    "sampledata": [
+      {
+        "position_code": "A-01-02-03",
+        "position_code_barcode": "A-01-02-03"
+      }
+    ],
+    "schemas": [
+      [
+        {
+          "name": "position_code",
+          "type": "text",
+          "position": { "x": 3.1, "y": 2.4 },
+          "width": 44,
+          "height": 8,
+          "rotate": 0,
+          "alignment": "left",
+          "verticalAlignment": "top",
+          "fontSize": 18,
+          "characterSpacing": 0,
+          "lineHeight": 1,
+          "fontColor": "#000000",
+          "content": "",
+          "linkType": "preset",
+          "linkValue": "position.code",
+          "readOnly": true,
+          "required": false
+        },
+        {
+          "name": "position_code_barcode",
+          "type": "code39",
+          "position": { "x": 3.75, "y": 12.5 },
+          "width": 44,
+          "height": 13.8,
+          "rotate": 0,
+          "content": "",
+          "linkType": "preset",
+          "linkValue": "position.code",
+          "readOnly": true,
+          "required": false
+        }
+      ]
+    ]
+  }
+}

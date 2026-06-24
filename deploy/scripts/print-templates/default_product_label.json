@@ -1,0 +1,71 @@
+{
+  "_key": "default_product_label",
+  "name": "Default product label",
+  "description": "Reproduces the warehouse app's pre-v2 hard-coded product label: large product code, Code 128 barcode of the code, and product description. Geometry ported from the legacy ZPL at 203 DPI.",
+  "template": {
+    "basePdf": { "width": 73, "height": 35, "padding": [0, 0, 0, 0] },
+    "pdfmeVersion": "5.5.0",
+    "sampledata": [
+      {
+        "product_code": "ABC-1234",
+        "product_code_barcode": "ABC-1234",
+        "product_description": "Sample product description text"
+      }
+    ],
+    "schemas": [
+      [
+        {
+          "name": "product_code",
+          "type": "text",
+          "position": { "x": 3.75, "y": 3.75 },
+          "width": 65.7,
+          "height": 8,
+          "rotate": 0,
+          "alignment": "left",
+          "verticalAlignment": "top",
+          "fontSize": 21,
+          "characterSpacing": 0,
+          "lineHeight": 1,
+          "fontColor": "#000000",
+          "content": "",
+          "linkType": "preset",
+          "linkValue": "product.code",
+          "readOnly": true,
+          "required": false
+        },
+        {
+          "name": "product_code_barcode",
+          "type": "code128",
+          "position": { "x": 3.75, "y": 13.8 },
+          "width": 60,
+          "height": 7.5,
+          "rotate": 0,
+          "content": "",
+          "linkType": "preset",
+          "linkValue": "product.code",
+          "readOnly": true,
+          "required": false
+        },
+        {
+          "name": "product_description",
+          "type": "text",
+          "position": { "x": 3.75, "y": 23.8 },
+          "width": 62.6,
+          "height": 9,
+          "rotate": 0,
+          "alignment": "left",
+          "verticalAlignment": "top",
+          "fontSize": 7,
+          "characterSpacing": 0,
+          "lineHeight": 1,
+          "fontColor": "#000000",
+          "content": "",
+          "linkType": "preset",
+          "linkValue": "product.description",
+          "readOnly": true,
+          "required": false
+        }
+      ]
+    ]
+  }
+}
