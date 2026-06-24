@@ -102,6 +102,9 @@ export function resolveExpression(expr, context, customFields, formModel) {
       const key = token.slice(4);
       return String(context.getCustomFieldValue(key) ?? '');
     }
-    return String(context.getPresetValue(token) ?? '');
+    // Canonical preset token is {{preset.key}}, but getPresetValue keys on the bare
+    // name (serial.code). Strip the prefix; bare {{serial.code}} tokens still resolve.
+    const presetKey = token.startsWith('preset.') ? token.slice(7) : token;
+    return String(context.getPresetValue(presetKey) ?? '');
   });
 }

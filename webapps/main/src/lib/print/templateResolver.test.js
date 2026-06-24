@@ -51,6 +51,14 @@ describe('resolveExpression', () => {
     ).toBe('Product: ABC - Qty: 10 pcs');
   });
 
+  it('strips the documented preset. prefix before getPresetValue', () => {
+    // Regression: barcode {{preset.serial.qt}} rendered empty because the raw
+    // token (incl. prefix) was passed to getPresetValue, which keys on bare names.
+    expect(
+      resolveExpression('(01)08057592610003(21){{preset.serial.qt}}', mockCtx, [])
+    ).toBe('(01)08057592610003(21)10');
+  });
+
   it('resolves custom field variables using getCustomFieldValue', () => {
     expect(
       resolveExpression('{{cf::abc123}}', mockCtx, [{ _key: 'abc123' }])

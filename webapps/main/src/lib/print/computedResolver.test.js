@@ -559,6 +559,15 @@ describe('buildValuesMap', () => {
     expect(map.get('serial.code')).toBe('SN-001');
   });
 
+  it('strips the documented preset. prefix before getPresetValue', () => {
+    const mockContext = {
+      getPresetValue: (key) => (key === 'serial.code' ? 'SN-001' : undefined),
+      getCustomFieldValue: () => undefined,
+    };
+    const map = buildValuesMap({}, mockContext, []);
+    expect(map.get('preset.serial.code')).toBe('SN-001');
+  });
+
   it('resolves cf:: tokens lazily from context', () => {
     const mockContext = {
       getPresetValue: () => undefined,

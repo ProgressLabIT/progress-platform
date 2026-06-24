@@ -723,6 +723,11 @@ function encodeTemplateExpressions(template, fields) {
   cloned.schemas.forEach((pageSchema) => {
     const schemaFields = Array.isArray(pageSchema) ? pageSchema : Object.values(pageSchema);
     schemaFields.forEach((field) => {
+      // extraPath only applies to .extra presets. Reset it whenever the link is
+      // anything else, so changing a field away from an .extra preset can't leave a
+      // stale path behind (which would otherwise build a malformed preset key).
+      const isExtraPreset = field.linkType === 'preset' && String(field.linkValue || '').endsWith('.extra');
+      if (!isExtraPreset && field.extraPath) field.extraPath = '';
       if (field.linkType === 'template_expression') {
         field.templateExpression = encodeExpression(field.templateExpression, fields);
       }

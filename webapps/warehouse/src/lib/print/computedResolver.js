@@ -492,8 +492,10 @@ class LazyValuesMap extends Map {
       // Field not in form model — return empty
       resolved = '';
     } else {
-      // Treat as preset
-      resolved = this._context.getPresetValue(key);
+      // Treat as preset. Canonical token is {{preset.key}}; strip the prefix so it
+      // matches getPresetValue's bare keys (bare {{serial.code}} tokens still resolve).
+      const presetKey = key.startsWith('preset.') ? key.slice(7) : key;
+      resolved = this._context.getPresetValue(presetKey);
     }
 
     const value = String(resolved ?? '');

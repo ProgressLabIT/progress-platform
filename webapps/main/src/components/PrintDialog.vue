@@ -327,8 +327,11 @@ function getFieldNamesAndLinks(data) {
         if (field.linkType && field.linkType !== 'none') {
           // Support both new linkValue field and old customFieldKey for backward compatibility
           let value = field.linkValue || field.customFieldKey || '';
-          if (field.linkType === 'preset' && field.extraPath) {
-            value = value ? `${value}.${field.extraPath}` : field.extraPath;
+          // extraPath is an optional drill-down for .extra presets. Append it only when
+          // the preset is an .extra type; ignore a stale path on any other preset. When
+          // absent, the bare .extra preset resolves to the whole extra value.
+          if (field.linkType === 'preset' && field.extraPath && String(value).endsWith('.extra')) {
+            value = `${value}.${field.extraPath}`;
           }
           linkByField[name] = {
             type: field.linkType,
