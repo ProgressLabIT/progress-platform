@@ -1,6 +1,7 @@
 import httpx
 from arango import ArangoClient
 from prefect import task, flow
+from prefect.cache_policies import NO_CACHE
 from prefect.blocks.system import Secret
 from prefect.schedules import Cron
 
@@ -43,7 +44,7 @@ def check_offline_jobs() -> list:
   print(f'Found { len(result) } jobs to pause')
   return result
 
-@task
+@task(cache_policy=NO_CACHE)
 def pause_job(api, job_data):
   """
   Use the event API to pause jobs
