@@ -10,6 +10,7 @@ Welcome to the **Progress Platform Knowledge Base**. This documentation serves a
 High-level technical decisions and system design.
 - [Overview](architecture/overview.md) - System context, stack, and deployment topology.
 - [Event Sourcing](architecture/event-sourcing.md) - **CRITICAL**: How business logic is implemented via immutable events.
+- [Query-Derived Read Endpoints](architecture/query-endpoints.md) - AQL/FastAPI gotchas when cloning a list query into an export/report endpoint (bind-var strictness, model query-param flattening).
 - [Database Schema](architecture/database-schema.md) - ArangoDB graph model explanation.
 - [Mobile & Offline](architecture/mobile-offline.md) - Warehouse app offline capability strategies.
 
