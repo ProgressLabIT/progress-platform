@@ -508,6 +508,12 @@ def verify_user(password, username=None, user_key=None, db=db):
   except DocumentGetError:
     raise UserNotFoundError
 
+  # Domain errors raised in the try body above are auth outcomes (401), not
+  # server faults — let them propagate to the endpoint's credentials handler
+  # instead of being swallowed by the catch-all below and re-wrapped as 500.
+  except (UserNotFoundError, UserDisabledError, UserPasswordMismatchError):
+    raise
+
   except Exception as e:
       raise HTTPException(
         status_code=500,
