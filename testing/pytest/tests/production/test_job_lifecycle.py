@@ -19,7 +19,7 @@ def _event_payload(event_type, g, **extra):
         "user_key": g["user"]["_key"],
         "user_session_key": "test-session-key",
         "job_key": g["job"]["_key"],
-        "product_key": g["product"]["_key"],
+        "product_key": g["product"]["product_key"],
         "work_order_key": g["work_order"]["_key"],
         "phase_key": g["target_phase"]["_key"],
         "timestamp": datetime.now(timezone.utc).isoformat(),
