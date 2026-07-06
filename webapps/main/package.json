@@ -15,6 +15,7 @@
     "format:base": "prettier \"**/*.{js,vue,scss,html,md,json}\" --ignore-path .gitignore",
     "format:check": "yarn format:base --check",
     "format": "yarn format:base --write",
+    "i18n:check": "node scripts/check-i18n-parity.js",
     "test": "echo \"No test specified\" && exit 0",
     "test:components": "vitest --config vitest.component.config.js run"
   },
