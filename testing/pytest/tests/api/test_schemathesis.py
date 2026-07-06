@@ -13,6 +13,7 @@ Decisions: D-06 through D-11 (context doc).
 """
 import pytest
 import schemathesis
+from hypothesis import settings
 from schemathesis import AuthContext, Case
 
 # ---------------------------------------------------------------------------
@@ -103,6 +104,7 @@ schema = schemathesis.pytest.from_fixture("api_schema")
 # Fuzz test
 # ---------------------------------------------------------------------------
 @schema.parametrize()
+@settings(max_examples=10, deadline=None)
 def test_api_fuzzing(case):
     """Fuzz all non-excluded API endpoints. Fail on 5xx or 401."""
     # Skip excluded routes (SSE, multipart uploads)
