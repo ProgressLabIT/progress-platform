@@ -146,6 +146,17 @@ class Queries:
     FOR j IN Job
     FILTER j._key == @job_key
 
+    // Serials currently produced by the active batch. A component link whose
+    // parent serial is NOT one of these (nor the batch-level sentinel) belongs
+    // to a regenerated/defunct output serial and must not count toward
+    // completion — otherwise the BOM line reads complete while the serial
+    // dialog (which filters by the current parent) shows nothing.
+    // See km/domains/production/serial-management.md.
+    LET current_batch_serials = (
+      FOR s IN 1..1 OUTBOUND CONCAT('Batch/', j.active_batch_key) batch_serial
+        RETURN s._key
+    )
+
     LET wo_bom = (
       FOR bom_line IN DOCUMENT(WorkOrder, j.wo_key).wo_bom
 
@@ -155,6 +166,10 @@ class Queries:
           && c.component_key == bom_line.component_key
           && c.phase_key == bom_line.phase_key
           && c.batch_key == j.active_batch_key
+          && (
+            PARSE_IDENTIFIER(c._from).key IN current_batch_serials
+            || c._from == CONCAT('Batch/', j.active_batch_key)
+          )
           LET component_serial = DOCUMENT(c._to)
           RETURN {
             _key: component_serial._key,

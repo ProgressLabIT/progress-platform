@@ -1,0 +1,69 @@
+// Remediation — orphaned temporary component links after in-place output-serial
+// regeneration. See km/domains/production/serial-management.md
+// ("Regenerated output serial → phantom-complete BOM line").
+//
+// An unconfirmed `contains` edge (temporary component link) whose parent output
+// serial is no longer produced by its batch makes the BOM line read complete
+// while the serial dialog shows nothing. The parent-aware `declared_serials`
+// query stops *counting* these; this script *removes* the stale edges.
+//
+// SAFE: only unconfirmed (temporary) links are touched — confirmed genealogy of
+// record is never removed. The batch-level sentinel (`_from == Batch/<key>`,
+// non-traceable output) is preserved.
+//
+// Run against the Progress ArangoDB (arangosh / _api/cursor). ALWAYS run the
+// DRY-RUN first and eyeball the rows before running the REMOVE.
+
+// ---------------------------------------------------------------------------
+// 1) DRY-RUN — list every orphan that would be removed (global).
+// ---------------------------------------------------------------------------
+FOR c IN contains
+  FILTER !c.confirmed && c.batch_key != null
+  FILTER PARSE_IDENTIFIER(c._from).collection == 'Serial'   // skip Batch/<key> sentinel links
+  LET is_current = LENGTH(
+    FOR bs IN batch_serial
+      FILTER bs._from == CONCAT('Batch/', c.batch_key) && bs._to == c._from
+      LIMIT 1
+      RETURN 1
+  ) > 0
+  FILTER !is_current
+  RETURN {
+    link_key: c._key,
+    batch_key: c.batch_key,
+    defunct_parent: c._from,
+    child: c._to,
+    component_key: c.component_key,
+    phase_key: c.phase_key
+  }
+
+// ---------------------------------------------------------------------------
+// 2) REMOVE — global cleanup. Uncomment to execute after reviewing the dry-run.
+// ---------------------------------------------------------------------------
+// FOR c IN contains
+//   FILTER !c.confirmed && c.batch_key != null
+//   FILTER PARSE_IDENTIFIER(c._from).collection == 'Serial'
+//   LET is_current = LENGTH(
+//     FOR bs IN batch_serial
+//       FILTER bs._from == CONCAT('Batch/', c.batch_key) && bs._to == c._from
+//       LIMIT 1
+//       RETURN 1
+//   ) > 0
+//   FILTER !is_current
+//   REMOVE c IN contains
+//   RETURN OLD._key
+
+// ---------------------------------------------------------------------------
+// 3) TARGETED — the specific batch from the 2026-07-03 report. Scope to one
+//    batch when you don't want a global sweep. (Preview: swap REMOVE for RETURN.)
+// ---------------------------------------------------------------------------
+// LET batch_key = "47886960"
+// LET current_batch_serials = (
+//   FOR s IN 1..1 OUTBOUND CONCAT('Batch/', batch_key) batch_serial RETURN s._key
+// )
+// FOR c IN contains
+//   FILTER !c.confirmed
+//     && c.batch_key == batch_key
+//     && c._from != CONCAT('Batch/', batch_key)
+//     && PARSE_IDENTIFIER(c._from).key NOT IN current_batch_serials
+//   REMOVE c IN contains
+//   RETURN OLD._key

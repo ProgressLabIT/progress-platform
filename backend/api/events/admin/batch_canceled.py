@@ -131,6 +131,15 @@ class BatchCanceledEvent(BaseAdmin):
       REMOVE e IN contains
     """, bind_vars=dict(batch_key=self.info.batch_key, batch_serial_keys=batch_serial_keys))
 
+    # The traversal above only reaches links parented to the batch's current
+    # serials. Sweep any orphaned temp links left by a prior in-place serial
+    # regeneration (parent serial no longer in the batch) so cancellation
+    # leaves no dangling component genealogy behind.
+    self.tx.aql.execute(
+      SerialQueries.PRUNE_ORPHANED_COMPONENT_LINKS,
+      bind_vars=dict(batch_key=self.info.batch_key)
+    )
+
     if self.job.first_phase:
       # Delete partial serials
       for serial_key in batch_serial_keys:

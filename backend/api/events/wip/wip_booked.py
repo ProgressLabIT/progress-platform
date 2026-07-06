@@ -125,5 +125,13 @@ class WIPBookedEvent(BaseProductionEvent):
         serial_keys=serials_to_update
       )
 
+      # Re-booking replaces the batch's output serials in place; drop temp
+      # component links still pointing at the previous serials so the BOM line
+      # doesn't read as phantom-complete against a defunct parent.
+      self.tx.aql.execute(
+        SerialQueries.PRUNE_ORPHANED_COMPONENT_LINKS,
+        bind_vars=dict(batch_key=self.info.batch_key)
+      )
+
 
     self.update_wip_availability_for_phases(phase_keys=[self.info.phase_key])

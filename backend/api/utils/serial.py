@@ -355,6 +355,27 @@ class Queries:
     REMOVE c IN contains
   """
 
+  # Remove unconfirmed component links whose parent is no longer a current
+  # output serial of the batch. When a batch's output serials are regenerated
+  # in place (qty change, wip re-book), the old temporary `contains` edges keep
+  # the batch_key but point at a defunct parent serial. Those orphans are
+  # counted by GET_WORKING_JOB_DATA (parent-agnostic historically) yet hidden by
+  # the serial dialog (parent-specific) → phantom-complete BOM lines. The
+  # batch-level sentinel (`_from == Batch/<key>`, non-traceable output) is kept.
+  # See km/domains/production/serial-management.md.
+  PRUNE_ORPHANED_COMPONENT_LINKS = """
+    LET current_batch_serials = (
+      FOR s IN 1..1 OUTBOUND CONCAT('Batch/', @batch_key) batch_serial
+        RETURN s._key
+    )
+    FOR c IN contains
+      FILTER !c.confirmed
+        && c.batch_key == @batch_key
+        && c._from != CONCAT('Batch/', @batch_key)
+        && PARSE_IDENTIFIER(c._from).key NOT IN current_batch_serials
+      REMOVE c IN contains
+  """
+
   REMOVE_PHASE_DATA_FROM_SERIAL = """
     FOR s IN Serial
     FILTER s._key == @serial_key

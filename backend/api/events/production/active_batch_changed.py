@@ -77,17 +77,6 @@ class ActiveBatchChangedEvent(BaseProductionEvent):
     # WITH TRACEABILITY
     # ------------------------------------------------
     else:
-      # Clean up temporary component serial links, removing those linked
-      # to serials that are no longer in the batch
-      self.tx.aql.execute("""
-        FOR c IN contains
-        FILTER
-          !c.confirmed
-          && c.batch_key == @batch_key
-          && PARSE_IDENTIFIER(c._from).key NOT IN @batch_serials
-        REMOVE c IN contains
-      """, bind_vars=dict(batch_key=self.batch.key, batch_serials=self.info.batch_serials))
-
       if self.job.first_phase:
         # Create or delete serials and batch_serial records as needed
 
@@ -136,6 +125,14 @@ class ActiveBatchChangedEvent(BaseProductionEvent):
           **shared_event_data,
           quantity=self.info.new_active_batch_qt,
         ))
+
+      # Serials/batch_serial edges now reflect the new batch. Drop any temp
+      # component links left pointing at output serials that are no longer in
+      # the batch (would otherwise show the BOM line as phantom-complete).
+      self.tx.aql.execute(
+        SerialQueries.PRUNE_ORPHANED_COMPONENT_LINKS,
+        bind_vars=dict(batch_key=self.batch.key)
+      )
 
     # ================================================
     # RESPONSE
