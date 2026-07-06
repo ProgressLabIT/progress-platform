@@ -327,7 +327,7 @@ def create_user(db):
             "surname": "User",
             "active": True,
             # Static bcrypt hash for the password 'test' — avoids passlib import at fixture time
-            "psw_hash": "$2b$12$LJ3m4ys3HIssFIGMqx0E3OIq2GRNyGeUxBRjLJSAVaKSrv2VMQHIS",
+            "psw_hash": "$2b$12$LJ3m4ys3HIssFIGMqx0E3OIBT9lwNPQQcv/tCK/1Wpw.8fe0YTtLi",
             "scope": scope,
             "site_key": "0",
             "reset_password": False,
