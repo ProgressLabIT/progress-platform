@@ -107,6 +107,7 @@ COLLECTIONS = [
         DBIndex(fields=['field_key'], name='clv-field')
     ]),
     Collection(name='Department'),
+    Collection(name='ErrorLog'),
     Collection(name='Event', indexes=[
         DBIndex(fields=['issue_key'], name='event-issue'),
         DBIndex(fields=['serial_key'], name='event-serial'),
