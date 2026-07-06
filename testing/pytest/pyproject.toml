@@ -10,8 +10,8 @@ dependencies = [
     "pytest-cov>=7.1",
     "python-arango>=8",
     "PyJWT>=2.0",
-    "passlib>=1.7",
-    "bcrypt>=4.3",
+    "passlib==1.7.2",
+    "bcrypt==4.3.*",
     "python-jose",
     "cryptography>=41.0",
     "pydantic>=2",
@@ -37,6 +37,7 @@ dependencies = [
 ]
 
 [tool.pytest.ini_options]
+addopts = "-m 'not integration'"
 asyncio_mode = "auto"
 pythonpath = ["../../backend/api"]
 testpaths = ["tests"]
