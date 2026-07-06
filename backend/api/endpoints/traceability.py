@@ -519,6 +519,7 @@ async def store_temp_step_data(data: ExecutionDataUpdate):
     responses={
       403: {"description": "Confirmed link or link not related to this batch"},
       404: {"description": "Batch or serial not found"},
+      422: {"description": "Mixed parent links (parent serials and batch-level sentinel in one payload)"},
     },
     dependencies=[Depends(auth.verify_token)])
 def create_temporary_link(batch_key: str, links: list[SerialLink]):
@@ -539,11 +540,24 @@ def create_temporary_link(batch_key: str, links: list[SerialLink]):
       detail=f"Batch {batch_key} not found"
     )
 
-  # If all links are for the batch, connect to the batch
-  connect_to_batch = set(link.parent_serial_key for link in links) in [set(['components']), set([None])]
+  # A batch's components must all share one parent type: either every component
+  # is linked to a parent serial (traceable output), or every component is
+  # linked to the batch via the `components`/None sentinel (non-traceable
+  # output). A mixed set is a client bug (e.g. a stale/undefined output-serial
+  # index in the UI) and would otherwise persist a component under a phantom
+  # `Serial/components`. Fail loud instead of guessing. See km serial-management.md.
+  parents = set(link.parent_serial_key for link in links)
+  real_parents = parents - set([None, 'components'])
+  batch_level = bool(parents & set([None, 'components']))
 
-  # Check if all links are valid
-  serial_keys = (set(link.parent_serial_key for link in links) | set(link.child_serial_key for link in links)) - set([None, 'components'])
+  if real_parents and batch_level:
+    raise HTTPException(
+      status_code=422,
+      detail="Mixed parent links: some components target a parent serial and others the batch. All component links in a batch must share the same parent type."
+    )
+
+  # Check that all real parent serials and child serials exist
+  serial_keys = real_parents | (set(link.child_serial_key for link in links) - set([None, 'components']))
   for serial_key in serial_keys:
     if not db.collection('Serial').has(serial_key):
       raise HTTPException(
@@ -569,7 +583,9 @@ def create_temporary_link(batch_key: str, links: list[SerialLink]):
   # Delete all existing temporary links for these serials
   db.collection('contains').delete_match(dict(batch_key=batch_key))
 
-  if connect_to_batch:
+  # Homogeneous batch-level payload (guaranteed by the mixed-set check above):
+  # rewrite the `components`/None sentinel to the real batch reference.
+  if batch_level:
     for link in links:
       link.parent_serial_key = f'Batch/{batch_key}'
 

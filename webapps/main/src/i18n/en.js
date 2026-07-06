@@ -1324,6 +1324,8 @@ export default {
   },
   serial_autocomplete_hint:
     'Input the text to search (min {minChars} characters) between serials. Will show first 100 results.',
+  serial_parent_not_ready:
+    'The parent serial for this unit is not ready yet. Wait for the output serials to load before linking components.',
   serial_used_confirmation: 'Serial already in use',
   serial_used_confirmation_message:
     'This serial is already in use. Proceeding will unlink it from the current parent product. Do you want to continue?',

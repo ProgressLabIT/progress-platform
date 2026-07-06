@@ -103,6 +103,7 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue';
+import { Notify } from 'quasar';
 import { useI18n } from 'vue-i18n';
 import { useStore } from 'vuex';
 import { api } from '@/boot/axios';
@@ -143,6 +144,19 @@ const faked_batch_serials = computed(() => store.state.traceability.current_batc
 const serialLinks = computed(() => store.state.traceability.bom_serials);
 const usedSerialsKeys = computed(() => serialLinks.value.map(serial => serial._key));
 
+// Parent serial key for the current output unit. The `components` value is the
+// batch-level sentinel ("link to the batch"), legitimate ONLY when the output
+// product has no traceability (`fakeBatchSerials` makes batchSerials a single
+// {_key:'components'} node). In a traceable batch, a missing batchSerials[index]
+// means the output serials aren't loaded/declared yet — returning the sentinel
+// there would orphan the component under a phantom Serial/components
+// (see km/domains/production/serial-management.md), so return null and block.
+const currentParentSerialKey = () => {
+  const key = batchSerials.value[index.value]?._key;
+  if (key) return key; // real parent serial, or the 'components' node when output is non-traceable
+  return props.traceability_enabled ? null : 'components';
+};
+
 const formLines = computed(() => props.bom.filter(c => c.traceability_level !== null && c.phase_key === job.value.phase_key).map(line => ({
   ...line,
   serials: getLineSerials(line),
@@ -155,7 +169,7 @@ function getLineSerials(bomLine) {
     link.phase_key == bomLine.phase_key
     && link.component_key == bomLine.component_key
     && link.batch_key == props.batch_key
-    && link.parent_serial_key == (batchSerials.value[index.value]?._key ?? 'components')
+    && link.parent_serial_key == currentParentSerialKey()
   )
   // Return array of serial keys if qt > 1 (multiple selection),
   // otherwise return single serial key
@@ -193,7 +207,18 @@ const fakeBatchSerials = async () => {
 };
 
 const onSelect = (selection, bomLine) => {
-  emit('select', {selection: selection, bomLine: bomLine, parentSerialKey: batchSerials.value[index.value]?._key ?? 'components'})
+  const parentSerialKey = currentParentSerialKey();
+  if (parentSerialKey === null) {
+    // Traceable output, but the parent serial for this unit isn't ready yet.
+    // Block rather than emit the 'components' sentinel and orphan the component.
+    Notify.create({
+      message: t('serial_parent_not_ready'),
+      color: 'theme-red',
+      position: 'top',
+    });
+    return;
+  }
+  emit('select', { selection, bomLine, parentSerialKey });
 }
 
 const save = async () => {

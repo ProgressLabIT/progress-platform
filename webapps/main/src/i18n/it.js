@@ -1341,6 +1341,8 @@ export default {
   },
   serial_autocomplete_hint:
     'Inserisci il testo da ricercare (min {minChars} caratteri) fra le matricole. Verranno mostrati i primi 100 risultati.',
+  serial_parent_not_ready:
+    'La matricola padre per questa unità non è ancora pronta. Attendi il caricamento delle matricole di output prima di collegare i componenti.',
   serial_delete_confirm_title: 'Cancella matricola',
   serial_delete_confirm_question:
     'Sei sicuro di voler cancellare questa matricola?',
