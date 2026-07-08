@@ -37,12 +37,13 @@ dependencies = [
 ]
 
 [tool.pytest.ini_options]
-addopts = "-m 'not integration'"
+addopts = "-m 'not integration and not fuzz'"
 asyncio_mode = "auto"
 pythonpath = ["../../backend/api"]
 testpaths = ["tests"]
 markers = [
     "integration: tests that require an already-deployed docker stack (e.g. Sparkplug spike)",
+    "fuzz: schemathesis API fuzzing — slow (hours) and mutates skip-truncate collections; run explicitly with -m fuzz, pre-release only",
 ]
 
 [tool.hatch.build.targets.wheel]

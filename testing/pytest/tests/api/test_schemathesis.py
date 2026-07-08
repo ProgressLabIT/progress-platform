@@ -16,6 +16,14 @@ import schemathesis
 from hypothesis import settings
 from schemathesis import AuthContext, Case
 
+# Excluded from the default run (addopts -m 'not fuzz'):
+# - even at max_examples=10, ~165 operations × ASGI-lifespan-per-case + shrinking
+#   on failing endpoints runs for hours
+# - fuzzed requests mutate skip-truncate collections (Counter, Config),
+#   poisoning tests that run afterwards in the same session
+# Run explicitly: uv run pytest -m fuzz
+pytestmark = pytest.mark.fuzz
+
 # ---------------------------------------------------------------------------
 # Excluded route patterns — SSE and multipart file upload endpoints
 # ---------------------------------------------------------------------------
