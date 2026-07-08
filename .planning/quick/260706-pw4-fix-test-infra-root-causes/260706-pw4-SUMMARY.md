@@ -95,3 +95,34 @@ None.
 None — test-infra only; no new endpoints, auth paths, or trust-boundary changes. Dependency change is a pin-down to production versions (T-q260706pw4-SC accepted per plan).
 
 ## Self-Check: PASSED
+
+---
+
+## Follow-up (2026-07-08): fuzz exclusion — commit 3446cb7e
+
+The Fix 5 cap (`max_examples=10`) was insufficient. The 2026-07-07 full run
+still took **7h10m**: ~165 operations each fire the ASGI lifespan per case,
+and hypothesis shrinking ran on ~90 failing operations. Worse, fuzzed
+requests mutate skip-truncate collections (Counter, Config), poisoning
+subsequent tests in the same session (`test_counter_default_exists` failed
+in-suite, passes in isolation).
+
+**Fix:** `pytestmark = pytest.mark.fuzz` on test_schemathesis.py;
+`addopts = "-m 'not integration and not fuzz'"`. Opt-in via `pytest -m fuzz`.
+
+**Final default-suite baseline: 190 passed / 21 failed in 25s** (was 46
+failed / 175 passed, with fuzzing pushing the wall clock past an hour).
+
+Remaining 21 failures (all root-caused, none test-infra):
+- 1 auth: `test_11_first_token_revoked_on_re_auth` — backend doesn't revoke
+  first token on re-auth (pre-existing behavior)
+- 11 collaboration: real bug unmasked by ErrorLog fix —
+  `DocumentUpdateError [ERR 1227] invalid document type` from
+  `events/collaboration/issue_updated.py:16`; messages 422 payload-shape drift
+- 2 production: `JobIsStartedError` missing from 422-mapping in
+  `endpoints/traceability.py`; ACTIVE_BATCH_CHANGED accepts inactive jobs
+- 6 serial: test/code drift (overlaps in-flight serial workstream)
+- 1 flaky: `test_queue_reordered_when_job_reopened` (passes in isolation)
+
+The ~90 fuzz-found endpoint failures (5xx on fuzzed input) are logged in
+/tmp/new-baseline.log — a separate hardening backlog, visible via `-m fuzz`.
