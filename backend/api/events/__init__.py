@@ -97,6 +97,9 @@ from events.work_session.work_session_canceled import WorkSessionCanceledEvent
 from events.work_session.work_session_closed import WorkSessionClosedEvent
 from events.work_session.work_session_created import WorkSessionCreatedEvent
 
+#PRODUCT EVENTS
+from events.product.product_imported import ProductImportedEvent
+
 
 # Registration util
 from utils.event import register_event_class

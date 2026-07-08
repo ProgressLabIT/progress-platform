@@ -116,6 +116,9 @@ class EventType(str, Enum):
   #Queue
   QUEUE_UPDATED = 'QUEUE_UPDATED'
 
+  # Product Events
+  PRODUCT_IMPORTED = 'PRODUCT_IMPORTED'
+
 class EventContextType(str, Enum):
   TASK = 'task'
 

@@ -53,6 +53,38 @@
 
         <div class="col-auto">
           <q-btn
+            flat
+            dense
+            icon="mdi-upload"
+            :label="$t('product.import.import')"
+            @click="showImportDialog = true"
+          />
+        </div>
+
+        <div class="col-auto">
+          <q-btn-dropdown
+            :loading="exporting"
+            icon="mdi-download"
+            flat
+            dense
+            :label="$t('export')"
+          >
+            <q-list>
+              <q-item v-close-popup clickable @click="exportProducts(filters, 'xlsx')">
+                <q-item-section>{{ $t('product.export_xlsx') }}</q-item-section>
+              </q-item>
+              <q-item v-close-popup clickable @click="exportProducts(filters, 'csv')">
+                <q-item-section>{{ $t('product.export_csv') }}</q-item-section>
+              </q-item>
+              <q-item v-close-popup clickable @click="exportProducts(filters, 'template')">
+                <q-item-section>{{ $t('product.export_template') }}</q-item-section>
+              </q-item>
+            </q-list>
+          </q-btn-dropdown>
+        </div>
+
+        <div class="col-auto">
+          <q-btn
             color="theme-blue"
             @click="$router.push({ name: 'newProduct' })"
           >
@@ -91,6 +123,11 @@
         </div>
       </div>
 
+      <ProductImportDialog
+        v-model="showImportDialog"
+        @imported="fetchProducts"
+      />
+
       <router-view />
     </q-page>
   </q-page-container>
@@ -101,6 +138,9 @@ import { mapGetters } from 'vuex';
 import BaseAutocompleteTag from '@/components/BaseAutocompleteTag.vue';
 import NoDataAlert from '@/components/NoDataAlert.vue';
 import ProductCard from '@/components/ProductCard.vue';
+import ProductImportDialog from '@/components/ProductImportDialog.vue';
+import { useProductExport } from '@/composables/useProductExport';
+import { useProductImport } from '@/composables/useProductImport';
 import multiMatch from '@/lib/MultiFieldSearch.js';
 import queryModel from '@/lib/queryModelFactory.js';
 
@@ -111,6 +151,11 @@ export default {
     NoDataAlert,
     ProductCard,
     BaseAutocompleteTag,
+    ProductImportDialog,
+  },
+
+  setup() {
+    return { ...useProductExport(), ...useProductImport() }
   },
 
   data() {

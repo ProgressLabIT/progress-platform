@@ -1,8 +1,10 @@
+import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import vue from 'vue';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const _require = createRequire(import.meta.url);
+const vueVersion = _require('./node_modules/vue/package.json').version;
 
 export default {
   // https://eslint.org/docs/user-guide/configuring#configuration-cascading-and-hierarchy
@@ -78,7 +80,7 @@ export default {
     'vue/no-unsupported-features': [
       'error',
       {
-        version: vue.version,
+        version: vueVersion,
       },
     ],
     'vue/padding-line-between-blocks': 'warn',

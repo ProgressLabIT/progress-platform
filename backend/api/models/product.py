@@ -3,7 +3,7 @@ from enum import Enum
 from random import randrange, uniform
 from typing import Any, List, Optional, Literal
 
-from pydantic import BaseModel, ByteSize, Field
+from pydantic import BaseModel, ByteSize, ConfigDict, Field
 
 from models.base_models import FlexModel
 from models.tag import Tag
@@ -104,3 +104,26 @@ class ProductSearchParams(BaseModel):
   details: bool = Field(False, description="Return full ProductDetails instead of lightweight ProductBaseData.", examples=[False])
   limit: None | int = Field(None, description="Maximum number of results to return; null returns all matching products.", examples=[100])
   offset: int = Field(0, description="Number of results to skip for pagination.", examples=[0])
+
+
+class ImportRowResult(BaseModel):
+    """Per-row classification returned in dry-run response rows[]."""
+    row: int
+    code: str
+    action: str  # 'create' | 'update' | 'error' | 'skipped'
+    errors: list[str] = Field(default_factory=list)
+
+
+class ImportDryRunResponse(BaseModel):
+    """Enriched dry-run response — carries per-row rows[] alongside aggregate counts."""
+    model_config = ConfigDict(populate_by_name=True)
+    status: str
+    file_key: str
+    filename: str
+    rows_total: int
+    created_count: int
+    updated_count: int
+    skipped_count: int = 0
+    error_count: int
+    ignored_columns: list[str] = Field(default_factory=list)
+    rows: list[ImportRowResult] = Field(default_factory=list)

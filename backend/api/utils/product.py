@@ -3,6 +3,17 @@ from models.product import ProductDoc, ProductFull
 from utils.db import db
 from utils.file import FileHandler
 
+# Phase 2 import depends on this exact column order — do NOT reorder without updating the import plan
+# Serialization rules:
+#   tags, print_templates: ";"-delimited string; empty list → ""
+#   manage_inventory: lowercase string "true" / "false" (not Python bool)
+#   counter: Counter.name (or "" if counter_key is None or Counter.name is empty string)
+#   default_consumption_position / default_production_position: Position.code (or "" if key is None)
+EXPORT_COLUMNS = [
+    'code', 'description', 'tags', 'print_templates', 'counter',
+    'manage_inventory', 'default_consumption_position', 'default_production_position'
+]
+
 class Queries:
   GET_PRODUCT_LIST = """
     LET products_with_operation = (
@@ -65,6 +76,83 @@ class Queries:
 
   # DEPRECATED: Use GET_PRODUCT_LIST instead with the new parameters
   SEARCH_PRODUCT = GET_PRODUCT_LIST
+
+  EXPORT_PRODUCT = """
+    LET products_with_operation = (
+      FOR product, edge IN 2..2 INBOUND CONCAT('Operation/', @has_operation_key) requires
+      FILTER product != null
+      RETURN product._key
+    )
+
+    FOR product IN Product
+      FILTER !product.trash
+      FILTER @has_operation_key == null || product._key IN products_with_operation
+      FILTER @active_only != true || product.active == true
+      FILTER @traceability_only != true || product.traceability_level
+
+      LET search_context = @search_description ? product.description : product.code
+
+      // Regex search mode
+      LET text_match = @search_string == null || REGEX_TEST(search_context, @search_string, true) // true for case insensitive search
+      FILTER text_match
+
+      LET tags = (
+        FOR edge IN has_tag
+          FILTER edge._from == product._id
+          RETURN DOCUMENT(Tag, edge._to)
+      )
+      LET tag_keys = NOT_NULL(tags[*]._key, [])
+
+      // Simple tag search mode
+      LET simple_tag_match = @tag_key == null || @tag_key IN tag_keys
+      FILTER simple_tag_match
+
+      // ADVANCED MODE FILTERS
+
+      // Advanced text search mode
+      LET include_text_match = @include_text == null || REGEX_TEST(search_context, @include_text, true)
+      LET exclude_text_match = @exclude_text == null || !REGEX_TEST(search_context, @exclude_text, true)
+
+      // Advanced tag matching logic
+      LET include_tags_match = @include_tags == null || (
+        @include_tags_operator == "ALL" ? @include_tags ALL IN tag_keys : @include_tags ANY IN tag_keys
+      )
+
+      LET exclude_tags_match = @exclude_tags == null || !(
+        @exclude_tags_operator == "ALL" ? @exclude_tags ALL IN tag_keys : @exclude_tags ANY IN tag_keys
+      )
+
+      // Combine filters based on global operator
+      LET adv_filters = [include_text_match, exclude_text_match, include_tags_match, exclude_tags_match]
+
+      FILTER adv_filters ALL == true
+
+      LET print_templates = (
+        FOR edge IN can_use_print_template
+          FILTER edge._from == product._id
+          LET tmpl = DOCUMENT(PrintTemplate, edge._to)
+          FILTER tmpl != null
+          RETURN tmpl.name
+      )
+
+      LET counter_name = product.counter_key ? DOCUMENT(Counter, product.counter_key).name : null
+      LET consumption_code = product.default_consumption_position_key ? DOCUMENT(Position, product.default_consumption_position_key).code : null
+      LET production_code = product.default_production_position_key ? DOCUMENT(Position, product.default_production_position_key).code : null
+
+      SORT product.code
+      LIMIT @offset, @limit || null
+
+      RETURN {
+        code: product.code,
+        description: product.description,
+        tags: tags[*].name,
+        print_templates: print_templates,
+        counter: counter_name,
+        manage_inventory: product.manage_inventory,
+        default_consumption_position: consumption_code,
+        default_production_position: production_code
+      }
+  """
 
 
 def get_product_data_from_code(product_code: str) -> ProductFull:
