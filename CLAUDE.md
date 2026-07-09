@@ -97,7 +97,7 @@ A session that needs to deviate from its phase plan or the locked ADR contracts 
 
 - Do NOT cherry-pick a feature branch's atomic commits one-by-one — DEV's history is for ship-grained units, not WIP atoms.
 - Prefer a 3-way `git merge --squash <feature>` so DEV-side fixes are preserved, then `git reset` and commit by scope. Avoid `git checkout <feature> -- <paths>`, which silently reverts any file where DEV is ahead of the feature branch.
-- Exclude `.planning/` from DEV — planning artifacts stay on the feature branch. After a squash merge, `git checkout HEAD -- .planning` restores DEV's own planning state and drops the feature's.
+- Exclude `.planning/` from DEV — planning artifacts stay on the feature branch. After a squash merge, `git restore --source=HEAD --staged --worktree -- .planning` restores DEV's own planning state and drops the feature's. (Not `git checkout HEAD -- .planning`: checkout only restores paths that exist in HEAD, so the feature's newly *added* planning files stay silently staged.)
 - Compare with the two-dot diff (`git diff DEV <feature>`) for the true net delta — the three-dot `DEV...<feature>` over-counts content DEV already has via shared history.
 - Commit message: short title + bullet body documenting what shipped. Reference "Squashed from N atomic commits" if N > 5.
 - Atomic commits remain on the feature branch for forensics (review, bisect, undo); DEV stays clean.
