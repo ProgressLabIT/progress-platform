@@ -820,6 +820,7 @@ export default {
   processing_cost: 'processing cost',
   processing_time: 'processing time',
   product: {
+    none_found: 'No products found',
     actions: {
       active: 'active',
       components: 'components',
@@ -843,6 +844,14 @@ export default {
     },
     key: 'Product ID',
     label: 'Product | Products',
+    layout_toggle: 'Switch between card and table layout',
+    list_headers: {
+      code: 'code',
+      description: 'description',
+      tags: 'tags',
+      active: 'active',
+      actions: 'actions',
+    },
     minimum_order: 'minimum order',
     new_modal_title: 'new product',
     no_image: 'no image',

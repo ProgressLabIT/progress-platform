@@ -832,6 +832,7 @@ export default {
   processing_cost: 'costo lavorazione',
   processing_time: 't. lavorazione',
   product: {
+    none_found: 'Nessun prodotto trovato',
     actions: {
       active: 'attivo',
       components: 'componenti',
@@ -855,6 +856,14 @@ export default {
     },
     key: 'ID prodotto',
     label: 'Prodotto | Prodotti',
+    layout_toggle: 'Cambia tra visualizzazione a schede e tabella',
+    list_headers: {
+      code: 'codice',
+      description: 'descrizione',
+      tags: 'tag',
+      active: 'attivo',
+      actions: 'azioni',
+    },
     minimum_order: 'ordine minimo',
     new_modal_title: 'nuovo prodotto',
     no_image: 'nessuna immagine',
