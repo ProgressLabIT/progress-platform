@@ -439,9 +439,8 @@ def create_product(db):
                 step_global_idx += 1
 
         # Link phases to product.process_phases so POST /work-order resolves
-        # the phase sequence instead of falling back to the ['default'] sentinel.
-        # Without this, PhaseData(alias='default') is called and fails under Pydantic v2
-        # because product_key and operation_key are required fields with no default.
+        # the phase sequence. A product with no process_phases is rejected as
+        # non-producible (HTTP 422), so factory products must have phases linked.
         phase_keys = [p["_key"] for p in phases]
         db.collection("Product").update({"_key": product_key, "process_phases": phase_keys})
         product["process_phases"] = phase_keys

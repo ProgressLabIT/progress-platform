@@ -108,11 +108,18 @@ async def create_work_order(new_wo: WorkOrderNew):
     if not new_wo.product_description:
       new_wo.product_description = product_data.description
 
-    if len(product_data.process_phases):
-      new_wo.phase_sequence = product_data.process_phases
-    else:
-      new_wo.phase_sequence = ['default']
-      # TODO: replace default alias with default operation (stored and cached in config)
+    if not product_data.process_phases:
+      tx.abort_transaction()
+      status_code = 422
+      raise HTTPException(
+        status_code=status_code,
+        detail=dict(
+          status=status_code,
+          message=f"Product {new_wo.product_code} has no production phases and cannot be produced"
+        )
+      )
+
+    new_wo.phase_sequence = product_data.process_phases
 
     if product_data.traceability_level:
       new_wo.traceability_level = product_data.traceability_level
@@ -133,6 +140,9 @@ async def create_work_order(new_wo: WorkOrderNew):
       status_code=status_code,
       detail=response
     )
+
+  except HTTPException:
+    raise
 
   except Exception:
     tx.abort_transaction()

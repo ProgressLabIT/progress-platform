@@ -536,10 +536,7 @@ def create_job_record(
   next_batch_available: bool | None = None,
   **kwargs
   ):
-  if phase_key == 'default':
-    phase = PhaseData(alias='default')
-  else:
-    phase = PhaseData(**tx.document(f'Phase/{phase_key}'))
+  phase = PhaseData(**tx.document(f'Phase/{phase_key}'))
 
   first_phase = phase_key == wo_data.phase_sequence[0]
   last_phase = phase_key == wo_data.phase_sequence[-1]

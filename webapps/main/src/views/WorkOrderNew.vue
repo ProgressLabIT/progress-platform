@@ -230,7 +230,10 @@ export default {
             this.$router.back();
           })
           .catch((err) => {
-            window.alert(err);
+            // detail is a dict ({ status, message }) for most errors, but a
+            // plain string for some (e.g. duplicate wo_code). Fall back gracefully.
+            const detail = err.response?.data?.detail;
+            window.alert(detail?.message || detail || err.message || err);
             this.loading = false;
           });
       }

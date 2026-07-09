@@ -46,7 +46,7 @@ class WorkOrderNew(BaseModel):
   product_key: str | None = Field(None, description="ArangoDB key of the product to manufacture.", examples=["Product/12345"])
   product_code: str | None = Field(None, description="Human-readable product code. Used to look up product_key if key is absent.", examples=["PRD-GEAR-42"])
   product_description: str | None = Field(None, description="Product display description, copied from the Product record.", examples=["Planetary gear assembly 42mm"])
-  phase_sequence: list[str] = Field(default_factory=list, description="Ordered list of phase keys defining the production routing.", examples=[["default"], ["assembly", "qc"]])
+  phase_sequence: list[str] = Field(default_factory=list, description="Ordered list of phase keys defining the production routing.", examples=[["assembly", "qc"]])
   qt_planned: PositiveFloat = Field(..., description="Planned production quantity (must be positive).", examples=[100.0])
   priority: bool | None = Field(False, description="Whether the work order is flagged as high priority.", examples=[False])
   project_code: str | None = Field(None, description="Optional project code to group related work orders.", examples=["PROJ-2026-Q1"])
